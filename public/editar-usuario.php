@@ -1,6 +1,6 @@
 <?php
 /** /editar-usuario.php?id=N — edición del perfil de otro usuario por moderadores y admin:
- *  nick, frase y foto (mods y admin); correo y estado de activación (solo admin). */
+ *  nick, frase y foto (mods y admin); correo, estado de activación y nueva contraseña (solo admin). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/imagen.php';
@@ -15,7 +15,7 @@ if (!$p) { http_response_code(404); page_header('Editar usuario'); echo "<p clas
 // un moderador no toca a admins ni a otros moderadores; el admin puede con todos
 if (!is_admin() && $p['level'] !== 'normal') { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo el admin puede editar a moderadores y admins.</p>"; page_footer(); exit; }
 
-$err = null; $ok = isset($_GET['ok']) ? 'Perfil guardado.' : null;
+$err = null; $ok = ($_GET['ok'] ?? '') === '2' ? 'Perfil guardado y contraseña cambiada.' : (isset($_GET['ok']) ? 'Perfil guardado.' : null);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = post('login') ?: $p['login'];
@@ -44,10 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($q->fetchColumn()) $err = 'Ese correo ya lo usa otra cuenta.';
         }
         $verified = post('verified') === '1' ? 1 : 0;
+        $newpass = (string)($_POST['pass'] ?? '');
+        if ($newpass !== '' && strlen($newpass) < 8) $err = 'La contraseña nueva debe tener al menos 8 caracteres.';
     }
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, email = ?, verified = ? WHERE user_id = ?")
             ->execute([$login, $bio ?: null, $avatar, $email, $verified, $id]);
+        if (is_admin() && $newpass !== '') {
+            $pdo->prepare("UPDATE users SET pass = ?, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([password_hash($newpass, PASSWORD_DEFAULT), $id]);
+            redirect("/editar-usuario.php?id=$id&ok=2");
+        }
         redirect("/editar-usuario.php?id=$id&ok=1");
     }
     $p = array_merge($p, ['login' => $login, 'bio' => $bio, 'avatar' => $avatar, 'email' => $email, 'verified' => $verified]);
@@ -67,6 +73,7 @@ if ($p['avatar']) echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"
 if (is_admin()) {
     echo "<label>Correo</label><input type=\"email\" name=\"email\" required value=\"" . h($p['email']) . "\" autocomplete=\"off\">";
     echo "<label><input type=\"checkbox\" name=\"verified\" value=\"1\"" . ((int)$p['verified'] ? ' checked' : '') . "> correo validado (sin marcar, no puede iniciar sesión)</label>";
+    echo "<label>Nueva contraseña (vacío = no cambiar)</label><input type=\"password\" name=\"pass\" minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";
 } else {
     echo "<label>Correo</label><p class=\"meta\" style=\"padding:0\">" . h($p['email']) . " <small>(solo lo cambia el admin)</small></p>";
 }
