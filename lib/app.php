@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 32);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 33);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -331,7 +331,7 @@ function nav_tabs(string $tab, string $cls): void {
     echo "</nav>";
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/estadisticas.php\">Estadísticas</a> · <a href=\"/procesos.php\">Procesos</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
+    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">moderación</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;
@@ -344,9 +344,9 @@ function page_footer(): void {
     echo "<p>" . footer_links() . "</p></footer>";
     echo "</div>";
     // muelle fijo (PC: enlaces + iconos; movil: solo iconos)
-    echo "<div class=\"dock\"><footer class=\"docked\"><p>" . footer_links() . "</p></footer>";
+    echo "<div class=\"dock\">";
     nav_tabs(current_tab(), 'tabs-bottom');
-    echo "</div>";
+    echo "<footer class=\"docked\"><p>" . footer_links() . "</p></footer></div>";
     echo "</body></html>";
 }
 function current_tab(): string { global $DDD_TAB; return $DDD_TAB ?? ''; }

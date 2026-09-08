@@ -9,8 +9,9 @@ cd deltha && sudo ./install.sh   # crea BD, usuario deltha, /etc/deltha/config.i
 ```
 Apuntar el vhost a `public/` (ver `apache.conf.example`) y añadir el cron:
 ```
-*/5 * * * * /usr/bin/php /var/www/deltha/scripts/promocionar.php >> /var/log/deltha-promo.log 2>&1
+* * * * * /usr/bin/php /var/www/deltha/scripts/promocionar.php >> /var/log/deltha-promo.log 2>&1
 ```
+El cron llama cada minuto, pero el ciclo solo se ejecuta en los minutos múltiplos de `cycle_minutes` (config, editable en admin → Ciclo; 5 por defecto). `php scripts/promocionar.php --force` lo ejecuta siempre.
 
 La zona horaria la fija `lib/app.php` (`[app] timezone` en config.ini, por defecto Europe/Madrid) para que web y cron compartan el mismo `NOW()`. Si el cron no promociona nada, ejecutarlo a mano y comparar: `php scripts/promocionar.php` y `php -r 'echo date("P");'`.
 
