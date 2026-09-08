@@ -1,12 +1,15 @@
 <?php
-/** /delta/clave.php — puerta de acceso mientras Deltha es privada (config.access_key) */
+/** /delta/clave.php — puerta de acceso mientras Deltha es privada (config.access_key).
+ *  Enlace directo sin presentacion: /delta/clave.php?k=CLAVE */
 define('DDD_PUBLIC', true);
 require __DIR__ . '/../../lib/app.php';
 if (gate_open()) redirect('/');
 
 $err = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (hash_equals(trim((string)cfg('access_key')), post('clave'))) {
+// Clave por formulario (POST) o por enlace directo /delta/clave.php?k=CLAVE (salta la presentacion).
+$clave = $_SERVER['REQUEST_METHOD'] === 'POST' ? post('clave') : trim((string)($_GET['k'] ?? ''));
+if ($clave !== '') {
+    if (hash_equals(trim((string)cfg('access_key')), $clave)) {
         setcookie(DDD_KEY_COOKIE, gate_token(), [
             'expires'  => time() + 30 * 86400,
             'path'     => '/',
