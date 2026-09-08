@@ -10,14 +10,22 @@ function run_cycle(PDO $pdo): array {
     $ttlHours = (int)cfg('thread_ttl_hours');
 
     // 1. nuevas -> candidatas: cada ciclo sube UNA, la de mayor delta
-    //    entre las que ya cumplen la antiguedad minima
-    $n = $pdo->prepare("UPDATE stories s JOIN topics t ON t.topic_id = s.topic_id
+    //    entre las que ya cumplen la antiguedad minima.
+    //    En dos pasos (SELECT + UPDATE por id): MySQL 8 no admite ORDER BY/LIMIT
+    //    en un UPDATE con JOIN (error 1221); MariaDB si, y por eso funcionaba antes.
+    $sel = $pdo->prepare("SELECT s.story_id FROM stories s JOIN topics t ON t.topic_id = s.topic_id
+                           WHERE s.status = 'nuevas' AND s.sent_date <= NOW() - INTERVAL ? MINUTE
+                           ORDER BY " . delta_sql() . " DESC, s.sent_date ASC LIMIT 1");
+    $sel->execute([$minAge]);
+    $sube = (int)$sel->fetchColumn();
+    if ($sube) {
+        $pdo->prepare("UPDATE stories s JOIN topics t ON t.topic_id = s.topic_id
                           SET s.status = 'candidatas', s.delta = " . delta_sql() . ", s.delta_calc = NOW()
-                        WHERE s.status = 'nuevas' AND s.sent_date <= NOW() - INTERVAL ? MINUTE
-                        ORDER BY " . delta_sql() . " DESC, s.sent_date ASC LIMIT 1");
-    $n->execute([$minAge]);
-    if ($n->rowCount()) $log[] = "candidata nueva: 1";
-    else $log[] = "sin nuevas que asciendan (ninguna con >= $minAge min)";
+                        WHERE s.story_id = ? AND s.status = 'nuevas'")->execute([$sube]);
+        $log[] = "candidata nueva: #$sube";
+    } else {
+        $log[] = "sin nuevas que asciendan (ninguna con >= $minAge min)";
+    }
 
     // 2. delta de candidatas
     $pdo->prepare("UPDATE stories s JOIN topics t ON t.topic_id = s.topic_id
