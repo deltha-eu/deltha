@@ -36,11 +36,18 @@ header('Vary: Cookie');
  * Reproduce la regla del cron (lib/ciclo.php): en cada ciclo sube UNA, la de
  * mayor delta entre las que llevan >= delta_min_age_min. Se asume que los
  * deltas no cambian (no llegan votos): es una estimacion, y asi se dice. */
+/** Instante del proximo ciclo: el cron llama cada minuto y promocionar.php actua
+ *  cuando el minuto de la hora es multiplo de cycle_minutes (mismo criterio). */
+function proximo_ciclo(): int {
+    $cycle = max(1, (int)cfg('cycle_minutes', 5));
+    $t = time() - (time() % 60) + 60;                 // siguiente minuto en punto
+    while (((int)date('i', $t)) % $cycle !== 0) $t += 60;
+    return $t;
+}
 function cola_eta(array $rows): array {
     $cycle  = max(1, (int)cfg('cycle_minutes', 5)) * 60;
     $minAge = (int)cfg('delta_min_age_min', 30) * 60;
-    $now = time();
-    $t = $now - ($now % $cycle) + $cycle;            // el cron corre en multiplos de cycle_minutes
+    $t = proximo_ciclo();
     $pend = array_values($rows);                      // ya vienen por delta DESC, sent_date ASC
     $eta = []; $guard = 0;
     while ($pend && $guard++ < 5000) {
@@ -68,8 +75,7 @@ foreach ($VIEWS as $k => $label) echo "<a href=\"/procesos.php" . ($k === 'cola'
 echo "</nav>";
 
 if ($v === 'cola') {
-    $cycle = max(1, (int)cfg('cycle_minutes', 5));
-    $next  = (int)ceil(($cycle * 60 - (time() % ($cycle * 60))) / 60);
+    $next  = max(1, (int)ceil((proximo_ciclo() - time()) / 60));
     $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' ORDER BY delta_live DESC, s.sent_date ASC");
     $rows = $st->fetchAll();
     $total = count($rows);

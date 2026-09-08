@@ -72,7 +72,7 @@ apachectl configtest
 systemctl reload apache2
 
 echo "== 6. Cron"
-( crontab -l 2>/dev/null | grep -v promocionar.php; echo "*/5 * * * * /usr/bin/php $DIR/scripts/promocionar.php >> /var/log/deltha-promo.log 2>&1" ) | crontab -
+( crontab -l 2>/dev/null | grep -v promocionar.php; echo "* * * * * /usr/bin/php $DIR/scripts/promocionar.php >> /var/log/deltha-promo.log 2>&1" ) | crontab -   # el intervalo real es config.cycle_minutes
 
 echo "== 7. Correo saliente: Postfix + DKIM"
 postconf -e "myhostname = $DOMAIN" "myorigin = $DOMAIN" "inet_interfaces = loopback-only" "mydestination = localhost" \
