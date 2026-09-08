@@ -7,7 +7,7 @@ if (!user()) redirect('/login.php');
 $rows = $pdo->query("SELECT login, aura, avatar, bio, created FROM users WHERE verified = 1 ORDER BY created DESC, user_id DESC LIMIT 20")->fetchAll();
 $total = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE verified = 1")->fetchColumn();
 
-page_header('Usuarios');
+page_header('Usuarios', 'usuarios');
 echo "<h1>Últimos registros</h1><p class=\"notice\">Los 20 más recientes de $total. Pulsa en un nombre para ver su perfil público.</p>";
 foreach ($rows as $r) {
     echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u.php?u=' . rawurlencode($r['login']));

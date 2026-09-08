@@ -32,6 +32,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('ghost_minutes',       '30',   'Minutos que dura el alias Ghost de cada envio/comentario antes de mostrar el nombre real'),
 ('per_page',            '20',   'Envios por pagina'),
 ('cycle_minutes',       '5',    'Minutos entre ciclos del cron (para estimar en /procesos.php cuando asciende cada nueva)'),
+('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),
 ('anon_alias_mode',     'ip_hash', 'ip_hash = alias estable por hilo sin cookie | random = alias nuevo por comentario'),
 ('anon_can_comment',    '1',    '1 = los anonimos pueden comentar'),

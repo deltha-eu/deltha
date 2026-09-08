@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 30);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 31);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -272,6 +272,8 @@ function icon(string $n): string {
         'art'    => '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h6"/>',
         'stats'  => '<path d="M4 20h16"/><path d="M7 16V10"/><path d="M12 16V5"/><path d="M17 16v-3"/>',
         'proc'   => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+        'users'  => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15.5 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M17 13.6a6.5 6.5 0 0 1 4.5 6.4"/>',
+        'msg'    => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
         'reply'  => '<path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1.1-3.9A8 8 0 1 1 20 12z"/>',
         'up'     => '<path d="M12 19V5"/><path d="m6 11 6-6 6 6"/>',
         'down'   => '<path d="M12 5v14"/><path d="m6 13 6 6 6-6"/>',
@@ -303,19 +305,25 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     nav_tabs($tab, 'tabs-top');
     echo "<main>";
 }
+/* Dos menus: arriba el contenido (las fases del ciclo), abajo la comunidad y las
+ * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
 function nav_tabs(string $tab, string $cls): void {
-    $tabs = [
-        'portada'    => ['/', 'Portada', 'home'],
-        'candidatas' => ['/candidatas.php', 'Candidatas', 'cand'],
-        'nuevas'     => ['/nuevas.php', 'Nuevas', 'new'],
-        'procesos'   => ['/procesos.php', 'Procesos', 'proc'],
-        'articulos'  => ['/articulos.php', 'Artículos', 'art'],
+    $tabs = $cls === 'tabs-top' ? [
+        'portada'      => ['/', 'Portada', 'home'],
+        'candidatas'   => ['/candidatas.php', 'Candidatas', 'cand'],
+        'nuevas'       => ['/nuevas.php', 'Nuevas', 'new'],
+        'articulos'    => ['/articulos.php', 'Artículos', 'art'],
+    ] : [
+        'usuarios'     => ['/usuarios.php', 'Usuarios', 'users'],
+        'procesos'     => ['/procesos.php', 'Procesos', 'proc'],
         'estadisticas' => ['/estadisticas.php', 'Estadísticas', 'stats'],
+        'mensajes'     => [null, 'Mensajes', 'msg'],
     ];
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';
-        echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . "<span>" . h($label) . "</span></a>";
+        if ($href === null) echo "<span class=\"soon\" title=\"pronto\">" . icon($ic) . "<span>" . h($label) . "</span></span>";
+        else echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . "<span>" . h($label) . "</span></a>";
     }
     echo "</nav>";
 }
