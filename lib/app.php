@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 29);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 30);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -271,6 +271,7 @@ function icon(string $n): string {
         'new'    => '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5l3 2"/>',
         'art'    => '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h6"/>',
         'stats'  => '<path d="M4 20h16"/><path d="M7 16V10"/><path d="M12 16V5"/><path d="M17 16v-3"/>',
+        'proc'   => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
         'reply'  => '<path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1.1-3.9A8 8 0 1 1 20 12z"/>',
         'up'     => '<path d="M12 19V5"/><path d="m6 11 6-6 6 6"/>',
         'down'   => '<path d="M12 5v14"/><path d="m6 13 6 6 6-6"/>',
@@ -282,7 +283,8 @@ function icon(string $n): string {
 }
 
 /* ---- layout (estilo timeline) -------------------------------------- */
-function page_header(string $title, string $tab = ''): void {
+/** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php) */
+function page_header(string $title, string $tab = '', string $head = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $u = user();
     $theme = $u && in_array($u['theme'] ?? 'auto', ['light', 'dark'], true) ? $u['theme'] : null;   // null = sigue al sistema
@@ -291,7 +293,7 @@ function page_header(string $title, string $tab = ''): void {
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
     echo "<link rel=\"icon\" href=\"/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"/img/icon-180.png\">";
     echo "<title>" . h($title) . " · " . h(cfg('site_name')) . "</title>";
-    echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\"></head><body>";
+    echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
     echo "<div class=\"shell\">";
     echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"/img/logo.png\" alt=\"\" class=\"l\"><img src=\"/img/logo-dark.png\" alt=\"\" class=\"d\"></a>";
     echo "<span class=\"ttl\">" . h($title) . ($tab === 'portada' ? " <a class=\"que\" href=\"/delta/\">¿Qué es Deltha?</a>" : "") . "</span>";
@@ -306,6 +308,7 @@ function nav_tabs(string $tab, string $cls): void {
         'portada'    => ['/', 'Portada', 'home'],
         'candidatas' => ['/candidatas.php', 'Candidatas', 'cand'],
         'nuevas'     => ['/nuevas.php', 'Nuevas', 'new'],
+        'procesos'   => ['/procesos.php', 'Procesos', 'proc'],
         'articulos'  => ['/articulos.php', 'Artículos', 'art'],
         'estadisticas' => ['/estadisticas.php', 'Estadísticas', 'stats'],
     ];
@@ -317,7 +320,7 @@ function nav_tabs(string $tab, string $cls): void {
     echo "</nav>";
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/estadisticas.php\">Estadísticas</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
+    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/estadisticas.php\">Estadísticas</a> · <a href=\"/procesos.php\">Procesos</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">moderación</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;

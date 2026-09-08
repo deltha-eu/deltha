@@ -87,7 +87,8 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
         elseif ($s['status'] === 'nuevas') {
             $age = (int)cfg('delta_min_age_min') - intdiv(time() - strtotime($s['sent_date']), 60);
             $st = $age > 0 ? "elegible en $age min" : "elegible: sube la de mayor delta cada ciclo";
-            echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · $st</div>";
+            echo "<div class=\"delta\">δ " . h(delta_explica($s)) . (isset($s['eta_txt']) ? '' : " · $st") . "</div>";
+            if (isset($s['eta_txt'])) echo "<div class=\"delta eta\">" . h($s['eta_txt']) . "</div>";   // /procesos.php: puesto en la cola y estimacion de ascenso
         }
     }
     echo "<div class=\"actions\">";
@@ -149,10 +150,11 @@ function paginate(string $base, int $page, int $total): void {
     $per = (int)cfg('per_page', 20);
     $pages = max(1, (int)ceil($total / $per));
     if ($pages <= 1) { echo "<p class=\"end\">Esto es todo lo que hay ahora.</p>"; return; }
+    $sep = str_contains($base, '?') ? '&amp;' : '?';   // /procesos.php?v=votos&p=2
     echo "<nav class=\"pages\">";
-    if ($page > 1)      echo "<a href=\"$base?p=" . ($page - 1) . "\">← anterior</a>";
+    if ($page > 1)      echo "<a href=\"$base{$sep}p=" . ($page - 1) . "\">← anterior</a>";
     echo "<span>$page / $pages</span>";
-    if ($page < $pages) echo "<a href=\"$base?p=" . ($page + 1) . "\">siguiente →</a>";
+    if ($page < $pages) echo "<a href=\"$base{$sep}p=" . ($page + 1) . "\">siguiente →</a>";
     echo "</nav>";
 }
 function page_num(): int { return max(1, (int)($_GET['p'] ?? 1)); }

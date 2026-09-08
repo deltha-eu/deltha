@@ -16,6 +16,7 @@ try {
         $old = $prev->fetchColumn();
         if ($old === false) {
             $pdo->prepare("INSERT INTO votes (story_id, user_id, value) VALUES (?,?,?)")->execute([$id, $u['user_id'], $v]);
+            alias_user($pdo, $id, (int)$u['user_id']);   // alias Ghost con el que se vera el voto en /procesos.php
             $col = $v === 1 ? 'votes_pos' : 'votes_neg';
             $pdo->prepare("UPDATE stories SET $col = $col + 1 WHERE story_id = ?")->execute([$id]);
         } elseif ((int)$old !== $v) {

@@ -22,6 +22,7 @@ Por defecto sigue al sistema (`prefers-color-scheme`). Un registrado puede fijar
 
 ## Qué hay
 - `/` Portada (destacadas) — con clave activa y sin ella, redirige a `/delta/` · `/candidatas.php` (una asciende por ciclo, la nueva de mayor delta; ordenadas por delta calculado al cargar) · `/nuevas.php` (con delta en vivo y cuenta atrás de elegibilidad) · `/articulos.php` (vacía)
+- `/procesos.php` la «fisgona» (pestaña Procesos): `En cola` = nuevas ordenadas por delta en vivo con el puesto y la estimación «candidata en ~X min» (simula el ciclo: una por ciclo, la de mayor δ entre las que llevan `delta_min_age_min`; `cycle_minutes` en config, `sql/migra-013-procesos.sql`); `Todo` / `Envíos` / `Comentarios` / `Votos` / `Portadas` = flujo cronológico de actividad. Quien vota aparece con su alias Ghost del hilo (se le asigna al votar, `votar.php`) hasta pasados `ghost_minutes`. Meta refresh cada 60 s, sin JS
 - `/hilo.php?id=N` noticia + comentarios cronológicos con alias Ghost (Apellido-Lugar: `Mozart-Alburquerque`, listas en `lib/app.php`) y halo de aura
 - `/enviar.php` URL + titular + entradilla + tema + foto (subida → og:image → color plano). Recorte 3:2 en servidor, JPEG sin EXIF.
 - `/votar.php` solo registrados; un voto por envío, cambio de sentido permitido, autovoto ignorado
