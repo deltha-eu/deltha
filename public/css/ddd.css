@@ -240,4 +240,11 @@ nav.sub a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bo
 .fz .neg { color: var(--neg); }
 .fz .delta { display: inline; margin: 0 0 0 4px; }
 .fz > .i { flex: none; color: var(--muted); opacity: .6; }
-.delta.eta { color: var(--fg); margin-top: 0; }
+/* cola de procesos: lineas, sin avatar ni foto */
+.fz.cola { align-items: flex-start; }
+.fz.cola .n { flex: none; width: 24px; padding-top: 1px; font-family: var(--serif); font-size: 15px; color: var(--muted); text-align: right; }
+.fz.cola .meta { display: block; font-size: 13px; }
+.fz.cola .delta { display: block; margin: 3px 0 0; color: var(--fg); }
+.fz.cola .vt { flex: none; font-size: 12px; color: var(--muted); white-space: nowrap; padding-top: 2px; }
+.fz.cola .vt .i { width: 14px; height: 14px; vertical-align: -2px; margin-left: 6px; }
+.fz.cola .vt .i:first-child { margin-left: 0; }

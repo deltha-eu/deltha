@@ -87,8 +87,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
         elseif ($s['status'] === 'nuevas') {
             $age = (int)cfg('delta_min_age_min') - intdiv(time() - strtotime($s['sent_date']), 60);
             $st = $age > 0 ? "elegible en $age min" : "elegible: sube la de mayor delta cada ciclo";
-            echo "<div class=\"delta\">δ " . h(delta_explica($s)) . (isset($s['eta_txt']) ? '' : " · $st") . "</div>";
-            if (isset($s['eta_txt'])) echo "<div class=\"delta eta\">" . h($s['eta_txt']) . "</div>";   // /procesos.php: puesto en la cola y estimacion de ascenso
+            echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · $st</div>";
         }
     }
     echo "<div class=\"actions\">";
