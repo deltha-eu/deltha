@@ -70,16 +70,25 @@ echo "</nav>";
 if ($v === 'cola') {
     $cycle = max(1, (int)cfg('cycle_minutes', 5));
     $next  = (int)ceil(($cycle * 60 - (time() % ($cycle * 60))) / 60);
-    $st = $pdo->query(story_query_base() . " WHERE s.status='nuevas' ORDER BY " . delta_sql() . " DESC, s.sent_date ASC");
+    $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' ORDER BY delta_live DESC, s.sent_date ASC");
     $rows = $st->fetchAll();
     $total = count($rows);
     $eta = cola_eta($rows);
     echo "<p class=\"notice\">$total en cola · próximo ciclo en $next min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de " . (int)cfg('delta_min_age_min') . " min. La estimación supone que no cambian los votos; se recalcula sola cada minuto.</p>";
     $n = 0;
+    // una linea por noticia: puesto, titular, quien/tema/cuando, delta y estimacion; sin avatar ni foto
     foreach (array_slice($rows, page_offset($page), $per) as $i => $s) {
         $pos = page_offset($page) + $i + 1;
-        $s['eta_txt'] = "#$pos en la cola · " . (isset($eta[(int)$s['story_id']]) ? eta_txt($eta[(int)$s['story_id']]) : 'sin estimación');
-        story_post($pdo, $s, 'compact'); $n++;
+        $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
+        $who = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
+        $sid = (int)$s['story_id'];
+        $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid]) : 'sin estimación';
+        echo "<div class=\"fz cola\" id=\"s$sid\"><span class=\"n\">$pos</span><div class=\"fzt\">";
+        echo "<a class=\"t\" href=\"/hilo.php?id=$sid\">" . h($s['title']) . "</a>";
+        echo "<span class=\"meta\">" . h($who) . " · " . topic_link($s) . " · " . h(hace($s['sent_date'])) . "</span>";
+        echo "<div class=\"delta\" title=\"" . h(delta_explica($s)) . "\">δ " . number_format((float)$s['delta_live'], 1, ',', '') . " · " . h($etaTxt) . "</div></div>";
+        echo "<span class=\"vt\">" . icon('up') . (int)$s['votes_pos'] . " " . icon('down') . (int)$s['votes_neg'] . " " . icon('reply') . (int)$s['comments'] . "</span></div>";
+        $n++;
     }
     if ($n === 0) echo "<p class=\"end\">No hay nada en cola. <a href=\"/enviar.php\">Envía algo</a>.</p>";
     paginate('/procesos.php', $page, $total);
