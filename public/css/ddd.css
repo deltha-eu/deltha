@@ -177,18 +177,21 @@ main > p { padding: 0 16px; }
 .legal h2 { font-family: var(--serif); font-size: 18px; margin: 18px 0 4px; }
 .legal p { margin: 6px 0; line-height: 1.5; }
 .legal a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
-.admin { padding: 0 16px; }
+.admin { padding: 8px 16px 32px; }
+.admin h3 { margin: 24px 0 10px; }
+.admin p { margin: 10px 0; }
+.admin form > p:last-child { margin-top: 14px; }
 .admin table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .admin td, .admin th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .admin input[type=text] { width: 100%; font: inherit; padding: 4px 6px; border: 1px solid var(--line2); border-radius: 6px; background: var(--bg); color: var(--fg); }
-.admin pre { border: 1px solid var(--line); padding: 10px; border-radius: 8px; font-size: 12px; overflow: auto; }
+.admin pre { border: 1px solid var(--line); padding: 10px; border-radius: 8px; font-size: 12px; overflow: auto; margin: 0 0 16px; }
 .admin .btn, .admin button { font: inherit; font-size: 13px; border: 1px solid var(--line2); background: none; color: var(--fg); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
 .admin .btn.sm { font-size: 12px; padding: 2px 9px; }
 /* pestañas del admin */
-.admin nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 16px; overflow-x: auto; }
+.admin nav.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin: 0 0 20px; }
 .admin nav.tabs a { padding: 9px 12px 8px; color: var(--muted); font-size: 14px; white-space: nowrap; position: relative; text-decoration: none; }
 .admin nav.tabs a.on { color: var(--fg); font-weight: 700; }
-.admin nav.tabs a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 3px; border-radius: 2px; background: var(--accent); }
+.admin nav.tabs a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 2px; background: var(--accent); }
 /* tabla de usuarios: dos lineas por fila (nick / correo · registro), acciones compactas */
 .admin table.users td { padding: 10px 6px; vertical-align: middle; }
 .admin table.users th { padding: 6px; }
