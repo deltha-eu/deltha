@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 28);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 29);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -91,6 +91,10 @@ function gate_open(): bool {
 if (!defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/');
 
 /* ---- helpers ------------------------------------------------------- */
+/** Casilla «mostrar contraseña» para un formulario (la activa /app/pw.js; sin JS no aparece). */
+function pw_toggle(): string {
+    return "<span class=\"showpw\" hidden><label><input type=\"checkbox\"> mostrar contraseña</label></span><script src=\"/app/pw.js\" defer></script>";
+}
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function redirect(string $to): never { header("Location: $to"); exit; }
 function post(string $k, string $d = ''): string { return trim((string)($_POST[$k] ?? $d)); }
