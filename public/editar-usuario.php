@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $verified = post('verified') === '1' ? 1 : 0;
         $newpass = (string)($_POST['pass'] ?? '');
         if ($newpass !== '' && strlen($newpass) < 8) $err = 'La contraseña nueva debe tener al menos 8 caracteres.';
+        elseif ($newpass !== '' && $newpass !== (string)($_POST['pass2'] ?? '')) $err = 'Las dos contraseñas no coinciden.';
     }
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, email = ?, verified = ? WHERE user_id = ?")
@@ -73,7 +74,9 @@ if ($p['avatar']) echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"
 if (is_admin()) {
     echo "<label>Correo</label><input type=\"email\" name=\"email\" required value=\"" . h($p['email']) . "\" autocomplete=\"off\">";
     echo "<label><input type=\"checkbox\" name=\"verified\" value=\"1\"" . ((int)$p['verified'] ? ' checked' : '') . "> correo validado (sin marcar, no puede iniciar sesión)</label>";
-    echo "<label>Nueva contraseña (vacío = no cambiar)</label><input type=\"password\" name=\"pass\" minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";
+    echo "<label>Nueva contraseña (vacío = no cambiar)</label><input type=\"password\" name=\"pass\" data-pw minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";
+    echo "<label>Repite la nueva contraseña</label><input type=\"password\" name=\"pass2\" data-pw minlength=\"8\" autocomplete=\"new-password\">";
+    echo pw_toggle();
 } else {
     echo "<label>Correo</label><p class=\"meta\" style=\"padding:0\">" . h($p['email']) . " <small>(solo lo cambia el admin)</small></p>";
 }

@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $err = 'Correo no válido.';
     elseif ($r = email_rejected($pdo, $email)) $err = $r;
     elseif (strlen($pass) < 8) $err = 'Contraseña de al menos 8 caracteres.';
+    elseif ($pass !== (string)($_POST['pass2'] ?? '')) $err = 'Las dos contraseñas no coinciden.';
     else {
         try {
             $pdo->prepare("INSERT INTO users (login, email, pass, verified, aura) VALUES (?,?,?,0,?)")
@@ -39,5 +40,7 @@ echo "<h1>Crear cuenta</h1><p class=\"notice\">Con cuenta publicas en modo Ghost
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><label>Usuario</label><input type=\"text\" name=\"login\" required value=\"" . h(post('login')) . "\">";
 echo "<label>Correo</label><input type=\"email\" name=\"email\" required value=\"" . h(post('email')) . "\">";
-echo "<label>Contraseña</label><input type=\"password\" name=\"pass\" required><button>Crear</button></form>";
+echo "<label>Contraseña (mínimo 8 caracteres)</label><input type=\"password\" name=\"pass\" data-pw required minlength=\"8\" autocomplete=\"new-password\">";
+echo "<label>Repite la contraseña</label><input type=\"password\" name=\"pass2\" data-pw required minlength=\"8\" autocomplete=\"new-password\">";
+echo pw_toggle() . "<button>Crear</button></form>";
 page_footer();
