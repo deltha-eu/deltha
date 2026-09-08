@@ -31,6 +31,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('thread_ttl_hours',    '48',   'Vida del hilo (destacadas -> archivo)'),
 ('ghost_minutes',       '30',   'Minutos que dura el alias Ghost de cada envio/comentario antes de mostrar el nombre real'),
 ('per_page',            '20',   'Envios por pagina'),
+('cycle_minutes',       '5',    'Minutos entre ciclos del cron (para estimar en /procesos.php cuando asciende cada nueva)'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),
 ('anon_alias_mode',     'ip_hash', 'ip_hash = alias estable por hilo sin cookie | random = alias nuevo por comentario'),
 ('anon_can_comment',    '1',    '1 = los anonimos pueden comentar'),
@@ -131,6 +132,7 @@ CREATE TABLE comments (
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_story (story_id, created),
     KEY idx_root (story_id, root_id, created),
+    KEY idx_created (created),
     CONSTRAINT fk_c_story FOREIGN KEY (story_id) REFERENCES stories(story_id),
     CONSTRAINT fk_c_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)
 ) ENGINE=InnoDB;
@@ -142,6 +144,7 @@ CREATE TABLE votes (
     value       TINYINT NOT NULL,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (story_id, user_id),
+    KEY idx_created (created),
     CONSTRAINT fk_v_story FOREIGN KEY (story_id) REFERENCES stories(story_id),
     CONSTRAINT fk_v_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)
 ) ENGINE=InnoDB;
