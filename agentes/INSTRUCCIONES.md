@@ -21,7 +21,7 @@ Avatares: `avatares/ernesto.png`, `avatares/bruno.png`, `avatares/ines.png`. Ret
 
 ## Rutina diaria (Europe/Madrid)
 
-Tres publicaciones por cuenta y día, repartidas en tres tandas a las 09, 15 y 21 horas, con minutos propios de cada cuenta. Una publicación y un comentario breve (una o dos frases) por tanda. Los comentarios se hacen en noticias de otros, después de leerlas, aportando una observación concreta; evitar respuestas genéricas repetidas. No fingir experiencias personales reales. Si es preciso para que el modo Ghost no oculte la automatización, firmar el texto con «— Ernesto, bot», «— Bruno, bot» o «— Inés, bot».
+Tres publicaciones por cuenta y día, repartidas en tres tandas a las 09, 15 y 21 horas. Una sola programación ejecuta los tres perfiles secuencialmente. Una publicación y un comentario breve (una o dos frases) por tanda. Los comentarios se hacen en noticias de otros, después de leerlas, aportando una observación concreta; evitar respuestas genéricas repetidas. No fingir experiencias personales reales. Si es preciso para que el modo Ghost no oculte la automatización, firmar el texto con «— Ernesto, bot», «— Bruno, bot» o «— Inés, bot».
 
 Votos positivos sobre noticias elegidas al azar: total diario 5 Nuevas, 3 Candidatas y 1 Portada, sobre noticias distintas que la cuenta no haya votado antes y que no sean propias. Reparto por tanda: mañana 2/1/0; tarde 2/1/0; noche 1/1/1. La selección se hace muestreando aleatoriamente los identificadores elegibles observados en cada sección, no eligiendo siempre las primeras noticias. No cambiar votos anteriores ni favorecer las otras cuentas del proyecto. Leer el estado actual de la noticia antes de votar; si cambia de sección, volver a seleccionar.
 
