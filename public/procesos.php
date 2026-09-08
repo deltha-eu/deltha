@@ -10,7 +10,9 @@
  *
  * Los votantes aparecen con su alias Ghost del hilo (el mismo que tendrian al
  * comentar) hasta que pasan los ghost_minutes desde el voto. La pagina se recarga
- * sola cada 60 s (meta refresh, sin JS).
+ * sola cada 60 s (meta refresh, sin JS). El flujo se limita a procesos_days dias
+ * (los indices idx_created de votes/comments lo hacen barato) y para anonimos se
+ * emite Cache-Control: max-age=60 para que Cloudflare la sirva desde su cache.
  */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -21,6 +23,14 @@ if (!isset($VIEWS[$v])) $v = 'cola';
 $page = page_num();
 $per  = (int)cfg('per_page', 20);
 $VIVAS = "('nuevas','candidatas','destacadas','archived')";   // lo que es publico
+$DIAS  = max(1, (int)cfg('procesos_days', 7));                    // ventana del flujo: lo demas ya esta en los hilos
+
+/* Cache: la pagina es identica para todos los anonimos (sin cookie), asi que
+ * Cloudflare puede servirla durante el minuto que dura el refresco y el servidor
+ * la genera una vez. Los registrados ven sus botones de voto: sin cache. */
+if (user()) header('Cache-Control: private, no-cache');
+else        header('Cache-Control: public, max-age=60');
+header('Vary: Cookie');
 
 /* ---- estimacion: en que ciclo asciende cada nueva -------------------
  * Reproduce la regla del cron (lib/ciclo.php): en cada ciclo sube UNA, la de
@@ -82,23 +92,23 @@ $parts = [];
 if (in_array($v, ['todo', 'envios'], true))
     $parts[] = "SELECT 'envio' AS kind, s.story_id, s.story_id AS ref, s.sent_date AS ts, s.user_id, s.author_alias AS alias, NULL AS value,
                        s.title, s.status, s.revealed, s.sent_date, s.delta
-                  FROM stories s WHERE s.status IN $VIVAS";
+                  FROM stories s WHERE s.status IN $VIVAS AND s.sent_date >= NOW() - INTERVAL $DIAS DAY";
 if (in_array($v, ['todo', 'comentarios'], true))
     $parts[] = "SELECT 'comentario' AS kind, c.story_id, c.comment_id AS ref, c.created AS ts, c.user_id, c.alias, NULL AS value,
                        s.title, s.status, s.revealed, s.sent_date, s.delta
                   FROM comments c JOIN stories s ON s.story_id = c.story_id
-                 WHERE c.status='ok' AND s.status IN $VIVAS";
+                 WHERE c.status='ok' AND c.created >= NOW() - INTERVAL $DIAS DAY AND s.status IN $VIVAS";
 if (in_array($v, ['todo', 'votos'], true))
     $parts[] = "SELECT 'voto' AS kind, vt.story_id, vt.story_id AS ref, vt.created AS ts, vt.user_id, ta.alias, vt.value,
                        s.title, s.status, s.revealed, s.sent_date, s.delta
                   FROM votes vt JOIN stories s ON s.story_id = vt.story_id
              LEFT JOIN thread_aliases ta ON ta.story_id = vt.story_id AND ta.user_id = vt.user_id
-                 WHERE s.status IN $VIVAS";
+                 WHERE vt.created >= NOW() - INTERVAL $DIAS DAY AND s.status IN $VIVAS";
 if (in_array($v, ['todo', 'portadas'], true))
     $parts[] = "SELECT 'portada' AS kind, p.story_id, p.id AS ref, p.created AS ts, NULL AS user_id, NULL AS alias, NULL AS value,
                        s.title, s.status, s.revealed, s.sent_date, p.delta
                   FROM promo_log p JOIN stories s ON s.story_id = p.story_id
-                 WHERE s.status IN $VIVAS";
+                 WHERE p.created >= NOW() - INTERVAL $DIAS DAY AND s.status IN $VIVAS";
 
 $total = 0;
 foreach ($parts as $p) $total += (int)$pdo->query("SELECT COUNT(*) FROM (" . $p . ") x")->fetchColumn();
@@ -115,7 +125,7 @@ if ($ids) {
     foreach ($pdo->query("SELECT user_id, login, avatar, aura FROM users WHERE user_id IN (" . implode(',', $ids) . ")") as $r) $U[(int)$r['user_id']] = $r;
 }
 
-echo "<p class=\"notice\">Lo que pasa en el sitio, en orden. Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta " . (int)cfg('ghost_minutes', 30) . " min después; luego con su nombre.</p>";
+echo "<p class=\"notice\">Lo que pasa en el sitio, en orden (últimos $DIAS días). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta " . (int)cfg('ghost_minutes', 30) . " min después; luego con su nombre.</p>";
 if (!$ev) echo "<p class=\"end\">Todavía no hay actividad de este tipo.</p>";
 foreach ($ev as $e) {
     $sid = (int)$e['story_id'];
