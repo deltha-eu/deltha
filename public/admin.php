@@ -201,13 +201,14 @@ echo "<h3 id=\"usuarios\">Usuarios ($nU)</h3>";
 echo "<form method=\"get\" action=\"/admin.php#usuarios\" style=\"display:flex;gap:6px;margin-bottom:8px\"><input type=\"text\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"usuario o correo\" style=\"flex:1\"><button class=\"btn\">Buscar</button>" . ($q !== '' ? " <a class=\"btn\" href=\"/admin.php#usuarios\">todos</a>" : "") . "</form>";
 $rows = $l->fetchAll();
 echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"mods\"><input type=\"hidden\" name=\"ids\" value=\"" . implode(',', array_column($rows, 'user_id')) . "\">";
-echo "<table><tr><th>#</th><th>usuario</th><th>correo</th><th>aura</th><th>registro</th><th>moderador</th><th></th></tr>";
+echo "<table class=\"users\"><tr><th>#</th><th>usuario</th><th>aura</th><th>mod</th><th></th></tr>";
 foreach ($rows as $r) {
     $cell = $r['level'] === 'admin' ? 'admin' : "<input type=\"checkbox\" name=\"mod[{$r['user_id']}]\" value=\"1\"" . ($r['level'] === 'mod' ? ' checked' : '') . ">";
     // los botones usan formularios propios (atributo form=) para no anidarlos en el de moderadores
-    $acc = (int)$r['verified'] === 0 ? "<button class=\"btn\" form=\"ver{$r['user_id']}\" title=\"marcar el correo como validado\">validar</button> " : "";
-    if ($r['level'] !== 'admin') $acc .= "<button class=\"btn\" form=\"del{$r['user_id']}\" title=\"borrar la cuenta y todo lo suyo\">borrar</button>";
-    echo "<tr><td>{$r['user_id']}</td><td><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></td><td>" . h($r['email']) . ((int)$r['verified'] === 0 ? " <small>(sin activar)</small>" : "") . "</td><td>" . h($r['aura']) . "</td><td>" . h($r['created']) . "</td><td style=\"text-align:center\">$cell</td><td style=\"white-space:nowrap\">$acc</td></tr>";
+    $acc = (int)$r['verified'] === 0 ? "<button class=\"btn sm\" form=\"ver{$r['user_id']}\" title=\"marcar el correo como validado\">validar</button> " : "";
+    if ($r['level'] !== 'admin') $acc .= "<button class=\"btn sm\" form=\"del{$r['user_id']}\" title=\"borrar la cuenta y todo lo suyo\">borrar</button>";
+    $meta = h($r['email']) . ((int)$r['verified'] === 0 ? " (sin activar)" : "") . " · " . h(substr($r['created'], 0, 16));
+    echo "<tr><td class=\"num\">{$r['user_id']}</td><td class=\"who\"><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a><small>$meta</small></td><td>" . h($r['aura']) . "</td><td style=\"text-align:center\">$cell</td><td class=\"acc\">$acc</td></tr>";
 }
 echo "</table><p><button class=\"btn\">Guardar moderadores</button></p></form>";
 foreach ($rows as $r) {
