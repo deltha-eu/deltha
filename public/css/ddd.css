@@ -184,6 +184,11 @@ main > p { padding: 0 16px; }
 .admin pre { border: 1px solid var(--line); padding: 10px; border-radius: 8px; font-size: 12px; overflow: auto; }
 .admin .btn, .admin button { font: inherit; font-size: 13px; border: 1px solid var(--line2); background: none; color: var(--fg); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
 .admin .btn.sm { font-size: 12px; padding: 2px 9px; }
+/* pestañas del admin */
+.admin nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 16px; overflow-x: auto; }
+.admin nav.tabs a { padding: 9px 12px 8px; color: var(--muted); font-size: 14px; white-space: nowrap; position: relative; text-decoration: none; }
+.admin nav.tabs a.on { color: var(--fg); font-weight: 700; }
+.admin nav.tabs a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 3px; border-radius: 2px; background: var(--accent); }
 /* tabla de usuarios: dos lineas por fila (nick / correo · registro), acciones compactas */
 .admin table.users td { padding: 10px 6px; vertical-align: middle; }
 .admin table.users th { padding: 6px; }
