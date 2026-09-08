@@ -1,0 +1,8 @@
+# Deltha — fuera del repositorio
+deltha.zip
+config.ini
+public/media/
+*.log
+.vscode/
+Thumbs.db
+desktop.ini

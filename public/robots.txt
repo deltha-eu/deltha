@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin.php
+Disallow: /moderacion.php
+Disallow: /votar.php
+Disallow: /comentar.php
+Disallow: /salir.php
+Disallow: /delta/clave.php
+Disallow: /activar.php
+Disallow: /reenviar.php

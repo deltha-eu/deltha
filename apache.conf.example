@@ -1,0 +1,79 @@
+# /etc/apache2/sites-available/deltha.conf
+# Delta de Dirac — vhost de pruebas (Apache 2.4 + PHP-FPM)
+#
+# Ajustar: ServerName, DocumentRoot y la versión de php-fpm en SetHandler.
+#
+# Módulos necesarios (comprobar con apachectl -M):
+#   a2enmod rewrite headers expires proxy_fcgi setenvif
+#   a2enconf php8.3-fpm            # o la versión que tengas (ls /run/php/)
+# Activar:
+#   a2ensite deltha && apachectl configtest && systemctl reload apache2
+#   certbot --apache -d deltha.eu -d www.deltha.eu
+
+<VirtualHost *:80>
+    ServerName deltha.eu
+    ServerAlias www.deltha.eu
+
+    DocumentRoot /var/www/deltha/public
+
+    ErrorLog  ${APACHE_LOG_DIR}/deltha.error.log
+    CustomLog ${APACHE_LOG_DIR}/deltha.access.log combined
+
+    # PHP via FPM (si el servidor usa mod_php en vez de FPM, borra este bloque: PHP ya funciona)
+    <FilesMatch "\.php$">
+        SetHandler "proxy:unix:/run/php/php8.3-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+
+    <Directory /var/www/deltha/public>
+        Options -Indexes -MultiViews +FollowSymLinks
+        AllowOverride None
+        Require all granted
+        DirectoryIndex index.php
+    </Directory>
+
+    # --- cabeceras: sin rastreo, sin terceros; el único JS es /app/register.js (service worker de la PWA).
+    #     style-src lleva 'unsafe-inline' porque fotos, velos y halos de aura se pintan con style= en línea ---
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "interest-cohort=(), browsing-topics=(), geolocation=(), camera=(), microphone=()"
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'"
+
+    # --- estáticos: caché larga ---
+    <Directory /var/www/deltha/public/media>
+        ExpiresActive On
+        ExpiresDefault "access plus 30 days"
+        Header set Cache-Control "public, immutable"
+        # nunca ejecutar nada subido
+        <FilesMatch "\.(php|phtml|phar)$">
+            Require all denied
+        </FilesMatch>
+    </Directory>
+    # --- PWA (/app): el service worker vive en /app/ pero controla todo el sitio ---
+    <Files "sw.js">
+        Header set Service-Worker-Allowed "/"
+        Header set Cache-Control "no-cache"
+    </Files>
+    <Files "manifest.webmanifest">
+        ForceType application/manifest+json
+    </Files>
+    <DirectoryMatch "^/var/www/deltha/public/(css|img|app)">
+        ExpiresActive On
+        ExpiresDefault "access plus 7 days"
+        Header set Cache-Control "public"
+    </DirectoryMatch>
+
+    # --- nada del repo servible por accidente ---
+    <FilesMatch "\.(ini|sql|sh|md|example)$">
+        Require all denied
+    </FilesMatch>
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+
+    # subida de fotos (img_max_bytes = 6 MB)
+    LimitRequestBody 8388608
+
+    # robots
+    Alias /robots.txt /var/www/deltha/public/robots.txt
+</VirtualHost>

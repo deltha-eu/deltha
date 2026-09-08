@@ -1,0 +1,18 @@
+; Copiar a /etc/deltha/config.ini (o a la raiz del proyecto en desarrollo)
+[db]
+dsn  = "mysql:host=127.0.0.1;dbname=deltha;charset=utf8mb4"
+user = "deltha"
+pass = "CAMBIAR"
+
+[app]
+; secreto para los alias anonimos (hash de ip+hilo). Cambiarlo invalida los alias de anonimos.
+secret = "CAMBIAR-por-algo-largo-y-aleatorio"
+; zona horaria comun a web y cron (por defecto Europe/Madrid)
+timezone = "Europe/Madrid"
+
+[mail]
+; Vacio = mail() del servidor (sendmail/postfix). Con smtp_host se usa SMTP: 587 = STARTTLS, 465 = SSL.
+smtp_host = ""
+smtp_port = 587
+smtp_user = ""
+smtp_pass = ""

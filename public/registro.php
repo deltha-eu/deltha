@@ -1,0 +1,43 @@
+<?php
+require __DIR__ . '/../lib/app.php';
+require __DIR__ . '/../lib/mail.php';
+if (user()) redirect('/');
+$err = null; $done = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $login = post('login'); $email = mb_strtolower(post('email')); $pass = post('pass');
+    // limite por IP (huella HMAC, sin guardar la IP)
+    $fp = substr(hash_hmac('sha256', 'reg|' . client_ip(), $DDD_SECRET), 0, 16);
+    $pdo->exec("DELETE FROM reg_attempts WHERE created < NOW() - INTERVAL 1 DAY");
+    $n = $pdo->prepare("SELECT COUNT(*) FROM reg_attempts WHERE fp = ? AND created >= NOW() - INTERVAL 1 HOUR"); $n->execute([$fp]);
+
+    if ((int)$n->fetchColumn() >= (int)cfg('reg_per_ip_hour', 3)) $err = 'Demasiados registros desde esta conexión. Prueba más tarde.';
+    elseif (!preg_match('/^[a-z0-9_\-]{3,32}$/i', $login)) $err = 'Usuario: 3–32 caracteres, letras, números, guion o guion bajo.';
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $err = 'Correo no válido.';
+    elseif ($r = email_rejected($pdo, $email)) $err = $r;
+    elseif (strlen($pass) < 8) $err = 'Contraseña de al menos 8 caracteres.';
+    else {
+        try {
+            $pdo->prepare("INSERT INTO users (login, email, pass, verified, aura) VALUES (?,?,?,0,?)")
+                ->execute([$login, $email, password_hash($pass, PASSWORD_DEFAULT), (float)cfg('aura_start', 5)]);
+            $uid = (int)$pdo->lastInsertId();
+            $pdo->prepare("INSERT INTO reg_attempts (fp) VALUES (?)")->execute([$fp]);
+            if (send_activation($pdo, $uid, $email)) $done = $email;
+            else $err = 'No se ha podido enviar el correo de activación. Inténtalo de nuevo en unos minutos o escríbenos.';
+        } catch (PDOException $e) { $err = 'Ese usuario o correo ya existe.'; }
+    }
+}
+
+page_header('Crear cuenta');
+if ($done) {
+    echo "<h1>Revisa tu correo</h1>";
+    echo "<p class=\"notice\">Hemos enviado un enlace de activación a <b>" . h($done) . "</b>. Ábrelo para terminar: la cuenta no funciona hasta entonces. Si no lo ves, mira en la carpeta de spam.</p>";
+    echo "<p class=\"end\">¿No llega? <a href=\"/reenviar.php\">Pedir otro enlace</a>.</p>";
+    page_footer(); exit;
+}
+echo "<h1>Crear cuenta</h1><p class=\"notice\">Con cuenta publicas en modo Ghost: cada envío o comentario sale con un alias y tu nombre aparece a los " . (int)cfg('ghost_minutes', 30) . " minutos. Puedes votar y tu aura crece con lo que aportas. Te enviaremos un correo para activar la cuenta.</p>";
+if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
+echo "<form class=\"plain\" method=\"post\"><label>Usuario</label><input type=\"text\" name=\"login\" required value=\"" . h(post('login')) . "\">";
+echo "<label>Correo</label><input type=\"email\" name=\"email\" required value=\"" . h(post('email')) . "\">";
+echo "<label>Contraseña</label><input type=\"password\" name=\"pass\" required><button>Crear</button></form>";
+page_footer();

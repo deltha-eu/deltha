@@ -1,0 +1,38 @@
+<?php
+require __DIR__ . '/../lib/app.php';
+require __DIR__ . '/../lib/aura.php';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/');
+$id = (int)post('id');
+$content = mb_substr(post('content'), 0, 4000);
+$u = user();
+if (!$u && cfg('anon_can_comment') !== '1') redirect('/login.php');
+if (mb_strlen($content) < 2) redirect("/hilo.php?id=$id");
+
+$st = $pdo->prepare("SELECT status FROM stories WHERE story_id = ?");
+$st->execute([$id]);
+$status = $st->fetchColumn();
+if (!in_array($status, ['nuevas','candidatas','destacadas'], true)) redirect("/hilo.php?id=$id");
+
+if ($u) { $alias = alias_user($pdo, $id, (int)$u['user_id']); $key = null; $aura = (float)$u['aura']; $uid = $u['user_id']; }
+else    { [$alias, $key] = alias_anon($id); $aura = (float)cfg('aura_anon', 5); $uid = null; }
+
+$parent = (int)post('parent'); $root = null;
+if ($parent > 0) {
+    $q = $pdo->prepare("SELECT comment_id, root_id FROM comments WHERE comment_id = ? AND story_id = ? AND status = 'ok'");
+    $q->execute([$parent, $id]);
+    if ($pr = $q->fetch()) $root = $pr['root_id'] ?: (int)$pr['comment_id'];
+    else $parent = 0;
+}
+$cstatus = cfg('mod_enabled') === '1' ? 'pending_mod' : 'ok';
+$pdo->beginTransaction();
+$pdo->prepare("INSERT INTO comments (story_id, parent_id, root_id, user_id, alias, anon_key, aura, content, status) VALUES (?,?,?,?,?,?,?,?,?)")
+    ->execute([$id, $parent ?: null, $root, $uid, $alias, $key, $aura, $content, $cstatus]);
+$cid = (int)$pdo->lastInsertId();
+if ($cstatus === 'ok') {
+    $pdo->prepare("UPDATE stories SET comments = comments + 1 WHERE story_id = ?")->execute([$id]);
+} else {
+    $pdo->prepare("INSERT INTO mod_queue (item_type, ref_id) VALUES ('comment', ?)")->execute([$cid]);
+}
+if ($u && $cstatus === 'ok') aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_comentario', 0.02), 'comentario', $cid);
+$pdo->commit();
+redirect("/hilo.php?id=$id#c$cid");

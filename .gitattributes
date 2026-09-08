@@ -1,0 +1,11 @@
+# Todo texto con fin de linea LF (los .sh y hooks deben llegar al droplet sin CRLF)
+* text=auto eol=lf
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.zip binary
