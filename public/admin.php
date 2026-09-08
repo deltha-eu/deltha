@@ -47,15 +47,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("UPDATE mod_queue SET status = ?, processed = NOW() WHERE item_id = ?")->execute([$dec === 'ok' ? 'ok' : 'reject', $item]);
             $out[] = "Item $item: $dec.";
         }
+    } elseif ($act === 'verificar') {
+        $id = (int)post('uid');
+        $pdo->prepare("UPDATE users SET verified = 1, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([$id]);
+        $out[] = "Usuario $id: correo validado a mano.";
+    } elseif ($act === 'borrar') {
+        $id = (int)post('uid');
+        $q = $pdo->prepare("SELECT user_id, login, level FROM users WHERE user_id = ?"); $q->execute([$id]);
+        $victima = $q->fetch();
+        if (!$victima) $out[] = "Usuario $id no existe.";
+        elseif ($victima['level'] === 'admin') $out[] = "No se borra a un admin (quítale el nivel antes).";
+        elseif (post('confirmar') !== $victima['login']) {
+            $pedir_confirmacion = $victima;   // se pinta abajo
+        } else {
+            $out = array_merge($out, borrar_usuario($pdo, $id));
+        }
     }
     // recargar config tras cambios
     $CFG = [];
     foreach ($pdo->query("SELECT ckey, cvalue FROM config") as $r) $CFG[$r['ckey']] = $r['cvalue'];
 }
 
+/**
+ * Borra una cuenta con todo lo suyo, en cascada y de verdad (no "discard"):
+ *  - sus envíos, con TODOS los comentarios, votos, alias, cola de moderación, log de promociones y foto de cada uno
+ *    (también los comentarios y votos de otros usuarios en esos hilos: el hilo desaparece entero)
+ *  - sus comentarios en hilos ajenos, con las respuestas que cuelgan de ellos (aunque sean de otros)
+ *  - sus votos (ajustando los contadores de la noticia), alias por hilo, log de aura, avatar
+ */
+function borrar_usuario(PDO $pdo, int $uid): array {
+    $log = []; $ficheros = [];
+    $pdo->beginTransaction();
+    try {
+        $u = $pdo->prepare("SELECT login, avatar FROM users WHERE user_id = ? FOR UPDATE"); $u->execute([$uid]); $u = $u->fetch();
+        if (!$u) throw new RuntimeException("no existe");
+        if ($u['avatar']) $ficheros[] = DDD_MEDIA_DIR . '/avatars/' . $u['avatar'];
+
+        // --- 1. hilos que envió: se llevan por delante todo lo que cuelga de ellos
+        $st = $pdo->prepare("SELECT story_id, image FROM stories WHERE user_id = ?"); $st->execute([$uid]);
+        $hilos = $st->fetchAll();
+        $ncom_ajenos = 0;
+        foreach ($hilos as $h) {
+            $sid = (int)$h['story_id'];
+            if ($h['image']) $ficheros[] = DDD_MEDIA_DIR . '/' . $h['image'];
+            $c = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE story_id = ? AND (user_id IS NULL OR user_id <> ?)"); $c->execute([$sid, $uid]);
+            $ncom_ajenos += (int)$c->fetchColumn();
+            $pdo->prepare("DELETE FROM mod_queue WHERE item_type = 'comment' AND ref_id IN (SELECT comment_id FROM comments WHERE story_id = ?)")->execute([$sid]);
+            $pdo->prepare("DELETE FROM mod_queue WHERE item_type = 'story' AND ref_id = ?")->execute([$sid]);
+            $pdo->prepare("DELETE FROM comments WHERE story_id = ?")->execute([$sid]);
+            $pdo->prepare("DELETE FROM votes WHERE story_id = ?")->execute([$sid]);
+            $pdo->prepare("DELETE FROM thread_aliases WHERE story_id = ?")->execute([$sid]);
+            $pdo->prepare("DELETE FROM promo_log WHERE story_id = ?")->execute([$sid]);
+            $pdo->prepare("DELETE FROM stories WHERE story_id = ?")->execute([$sid]);
+        }
+        $log[] = count($hilos) . " envíos borrados (con $ncom_ajenos comentarios de otros que había en ellos)";
+
+        // --- 2. sus comentarios en hilos ajenos + las respuestas que cuelgan de ellos
+        $c = $pdo->prepare("SELECT comment_id FROM comments WHERE user_id = ?"); $c->execute([$uid]);
+        $ids = array_map('intval', $c->fetchAll(PDO::FETCH_COLUMN));
+        $todos = $ids; $frontera = $ids;
+        while ($frontera) {                       // descendientes por parent_id, nivel a nivel
+            $in = implode(',', $frontera);
+            $hijos = array_map('intval', $pdo->query("SELECT comment_id FROM comments WHERE parent_id IN ($in)")->fetchAll(PDO::FETCH_COLUMN));
+            $hijos = array_values(array_diff($hijos, $todos));
+            $todos = array_merge($todos, $hijos); $frontera = $hijos;
+        }
+        if ($todos) {
+            $in = implode(',', $todos);
+            // contadores de comentarios de cada hilo afectado (solo los que estaban en 'ok' cuentan)
+            foreach ($pdo->query("SELECT story_id, COUNT(*) n FROM comments WHERE comment_id IN ($in) AND status = 'ok' GROUP BY story_id") as $r)
+                $pdo->prepare("UPDATE stories SET comments = GREATEST(0, comments - ?) WHERE story_id = ?")->execute([(int)$r['n'], (int)$r['story_id']]);
+            $pdo->exec("DELETE FROM mod_queue WHERE item_type = 'comment' AND ref_id IN ($in)");
+            $pdo->exec("DELETE FROM comments WHERE comment_id IN ($in)");
+        }
+        $log[] = count($ids) . " comentarios suyos borrados (+" . (count($todos) - count($ids)) . " respuestas de otros que colgaban de ellos)";
+
+        // --- 3. votos: se retiran y se corrigen los contadores
+        $v = $pdo->prepare("SELECT story_id, value FROM votes WHERE user_id = ?"); $v->execute([$uid]);
+        $nv = 0;
+        foreach ($v->fetchAll() as $r) {
+            $col = (int)$r['value'] > 0 ? 'votes_pos' : 'votes_neg';
+            $pdo->prepare("UPDATE stories SET $col = GREATEST(0, $col - 1) WHERE story_id = ?")->execute([(int)$r['story_id']]);
+            $nv++;
+        }
+        $pdo->prepare("DELETE FROM votes WHERE user_id = ?")->execute([$uid]);
+        $log[] = "$nv votos retirados";
+
+        // --- 4. resto de rastro y la cuenta
+        $pdo->prepare("DELETE FROM thread_aliases WHERE user_id = ?")->execute([$uid]);
+        $pdo->prepare("DELETE FROM aura_log WHERE user_id = ?")->execute([$uid]);
+        $pdo->prepare("UPDATE banned_domains SET added_by = NULL WHERE added_by = ?")->execute([$uid]);
+        $pdo->prepare("DELETE FROM users WHERE user_id = ?")->execute([$uid]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        return ["ERROR: no se ha borrado nada (" . $e->getMessage() . ")"];
+    }
+    $nf = 0;
+    foreach ($ficheros as $f) if (is_file($f) && @unlink($f)) $nf++;
+    $log[] = "cuenta «{$u['login']}» (#$uid) eliminada · $nf ficheros de media borrados";
+    return $log;
+}
+
 page_header('Admin');
 echo "<div class=\"admin\"><h1>Admin</h1>";
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
+if (!empty($pedir_confirmacion)) {
+    $pc = $pedir_confirmacion;
+    $ns = $pdo->prepare("SELECT (SELECT COUNT(*) FROM stories WHERE user_id = ?) s, (SELECT COUNT(*) FROM comments WHERE user_id = ?) c, (SELECT COUNT(*) FROM votes WHERE user_id = ?) v");
+    $ns->execute([$pc['user_id'], $pc['user_id'], $pc['user_id']]); $ns = $ns->fetch();
+    echo "<div class=\"error\" style=\"padding:12px 16px;margin-bottom:16px\"><strong>Borrar la cuenta «" . h($pc['login']) . "» (#{$pc['user_id']})</strong><br>"
+       . "Se eliminarán de verdad sus {$ns['s']} envíos (con todos los comentarios y votos de cualquiera que haya en esos hilos), sus {$ns['c']} comentarios (con las respuestas de otros que cuelguen de ellos), sus {$ns['v']} votos, alias, aura y avatar. No hay vuelta atrás.<br>"
+       . "<form method=\"post\" style=\"display:flex;gap:6px;margin-top:8px;align-items:center\"><input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"uid\" value=\"{$pc['user_id']}\">"
+       . "Escribe el nombre de usuario para confirmar: <input type=\"text\" name=\"confirmar\" autocomplete=\"off\" style=\"width:160px\"> <button class=\"btn\">Borrar definitivamente</button> <a class=\"btn\" href=\"/admin.php#usuarios\">cancelar</a></form></div>";
+}
 
 $counts = $pdo->query("SELECT status, COUNT(*) n FROM stories GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
 echo "<p>"; foreach ($counts as $k => $n) echo h($k) . ": $n &nbsp; "; echo "</p>";
@@ -96,12 +201,19 @@ echo "<h3 id=\"usuarios\">Usuarios ($nU)</h3>";
 echo "<form method=\"get\" action=\"/admin.php#usuarios\" style=\"display:flex;gap:6px;margin-bottom:8px\"><input type=\"text\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"usuario o correo\" style=\"flex:1\"><button class=\"btn\">Buscar</button>" . ($q !== '' ? " <a class=\"btn\" href=\"/admin.php#usuarios\">todos</a>" : "") . "</form>";
 $rows = $l->fetchAll();
 echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"mods\"><input type=\"hidden\" name=\"ids\" value=\"" . implode(',', array_column($rows, 'user_id')) . "\">";
-echo "<table><tr><th>#</th><th>usuario</th><th>correo</th><th>aura</th><th>registro</th><th>moderador</th></tr>";
+echo "<table><tr><th>#</th><th>usuario</th><th>correo</th><th>aura</th><th>registro</th><th>moderador</th><th></th></tr>";
 foreach ($rows as $r) {
     $cell = $r['level'] === 'admin' ? 'admin' : "<input type=\"checkbox\" name=\"mod[{$r['user_id']}]\" value=\"1\"" . ($r['level'] === 'mod' ? ' checked' : '') . ">";
-    echo "<tr><td>{$r['user_id']}</td><td><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></td><td>" . h($r['email']) . ((int)$r['verified'] === 0 ? " <small>(sin activar)</small>" : "") . "</td><td>" . h($r['aura']) . "</td><td>" . h($r['created']) . "</td><td style=\"text-align:center\">$cell</td></tr>";
+    // los botones usan formularios propios (atributo form=) para no anidarlos en el de moderadores
+    $acc = (int)$r['verified'] === 0 ? "<button class=\"btn\" form=\"ver{$r['user_id']}\" title=\"marcar el correo como validado\">validar</button> " : "";
+    if ($r['level'] !== 'admin') $acc .= "<button class=\"btn\" form=\"del{$r['user_id']}\" title=\"borrar la cuenta y todo lo suyo\">borrar</button>";
+    echo "<tr><td>{$r['user_id']}</td><td><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></td><td>" . h($r['email']) . ((int)$r['verified'] === 0 ? " <small>(sin activar)</small>" : "") . "</td><td>" . h($r['aura']) . "</td><td>" . h($r['created']) . "</td><td style=\"text-align:center\">$cell</td><td style=\"white-space:nowrap\">$acc</td></tr>";
 }
 echo "</table><p><button class=\"btn\">Guardar moderadores</button></p></form>";
+foreach ($rows as $r) {
+    echo "<form id=\"ver{$r['user_id']}\" method=\"post\" action=\"/admin.php#usuarios\"><input type=\"hidden\" name=\"act\" value=\"verificar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
+    echo "<form id=\"del{$r['user_id']}\" method=\"post\" action=\"/admin.php\"><input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
+}
 $pages = max(1, (int)ceil($nU / $per));
 if ($pages > 1) {
     $qs = $q !== '' ? "&q=" . rawurlencode($q) : "";
