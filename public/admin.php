@@ -155,7 +155,7 @@ if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
 
 page_header('Admin');
-echo "<div class=\"admin\"><h1>Admin</h1>";
+echo "<div class=\"admin\">";
 echo "<nav class=\"tabs\">";
 foreach ($TABS as $k => $v) echo "<a href=\"/admin.php?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v</a>";
 echo "</nav>";
