@@ -3,7 +3,7 @@ require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
 $login = trim((string)($_GET['u'] ?? ''));
-$st = $pdo->prepare("SELECT user_id, login, aura, avatar, bio, created FROM users WHERE login = ?");
+$st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, created FROM users WHERE login = ?");
 $st->execute([$login]);
 $p = $st->fetch();
 if (!$p) { http_response_code(404); page_header('No existe'); echo "<p class=\"end\">No existe ese usuario.</p>"; page_footer(); exit; }
@@ -15,6 +15,7 @@ if ($p['bio']) echo "<p class=\"bio\">" . h($p['bio']) . "</p>";
 $nPub = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE user_id = {$p['user_id']} AND status NOT IN ('rejected','discard') AND (revealed = 1 OR sent_date <= NOW() - INTERVAL " . (int)cfg('ghost_minutes', 30) . " MINUTE)")->fetchColumn();
 echo "<p class=\"meta\">aura " . number_format((float)$p['aura'], 1, ',', '') . " · desde " . date('M Y', strtotime($p['created'])) . " · $nPub envíos revelados";
 if ($own) echo " · <a href=\"/perfil.php\">editar</a>";
+elseif (is_mod() && (is_admin() || $p['level'] === 'normal')) echo " · <a href=\"/editar-usuario.php?id={$p['user_id']}\">editar perfil</a>";
 echo "</p></div></div>";
 
 // Solo lo revelado es publico; el dueño ve ademas sus hilos vivos

@@ -28,6 +28,7 @@ Por defecto sigue al sistema (`prefers-color-scheme`). Un registrado puede fijar
 - `/comentar.php` anónimos (alias estable por hilo vía hash ip+hilo+secreto, sin cookie) y registrados (alias Ghost por hilo)
 - `/privacidad.php` política de privacidad, aviso legal y contacto (info@deltha.eu); visible sin clave; enlazada en el pie; texto editable desde admin (tabla `pages`, `sql/migra-009-paginas.sql`; marcadores `{site}` `{ttl}` `{gm}`)
 - `/usuarios.php` últimos 20 registrados (solo registrados) · en perfil: cambio de nick y tema
+- `/editar-usuario.php?id=N` moderadores y admin editan el perfil de otro usuario (nick, frase, foto; el admin además correo y estado de activación). Un moderador solo edita cuentas `normal`. Enlace «editar perfil» en `/u.php` y botón «editar» en admin → Usuarios
 - `/moderacion.php` cola de revisión humana (lo que la IA no decide); para `level=mod` y admin; enlace en perfil y pie. Con `mod_enabled=0` todo se publica directo y la cola queda vacía
 - `/tema.php?t=ID` feed de un tema: todo lo enviado (enlaces y artículos, cualquier fase) por fecha; enlazado desde la etiqueta gris sobre la foto y desde el nombre del tema en cada post
 - `/estadisticas.php` registrados, conectados con cuenta (`users.last_seen`, `sql/migra-010-last-seen.sql`), lectores sin cuenta (tabla `presence`: huella HMAC truncada de ip+navegador+día, borrada a los 10 min, `sql/migra-011-presencia.sql`), actividad
