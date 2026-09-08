@@ -88,7 +88,10 @@ function gate_open(): bool {
     if (!gate_active() || user()) return true;
     return isset($_COOKIE[DDD_KEY_COOKIE]) && hash_equals(gate_token(), (string)$_COOKIE[DDD_KEY_COOKIE]);
 }
-if (!defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/');
+// En CLI (cron: promocionar.php, moderar.php) no hay cookie ni sesion: sin esta
+// excepcion, con la clave activa redirect() hacia exit y el ciclo moria en silencio
+// (las nuevas no subian a candidatas, ni revelado, ni archivo, ni decaimiento de aura).
+if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/');
 
 /* ---- helpers ------------------------------------------------------- */
 /** Casilla «mostrar contraseña» para un formulario (la activa /app/pw.js; sin JS no aparece). */
