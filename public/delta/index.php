@@ -30,7 +30,7 @@ $SK = [
 <!doctype html><html lang="<?= lang() ?>"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<link rel="icon" href="/img/favicon.png">
+<link rel="icon" href="<?= icon_src(64) ?>">
 <title>Deltha · <?= t('presentación') ?></title>
 <link rel="stylesheet" href="/css/ddd.css?v=<?= DDD_CSS_VER ?>">
 <style>

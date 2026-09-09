@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 52);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 53);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -47,6 +47,13 @@ function logo_src(string $mode): string {
     $f = cfg($mode === 'dark' ? 'logo_dark' : 'logo_light');
     if (!$f && $mode === 'dark') $f = cfg('logo_light');
     return $f ? '/media/logo/' . rawurlencode($f) : ($mode === 'dark' ? '/img/logo-dark.png' : '/img/logo.png');
+}
+/** Icono del sitio (favicon, pantalla de inicio, PWA): el subido en Admin > Logo (config logo_icon = base del nombre en /media/logo,
+ *  con variantes -64/-180/-192/-512/-512m) o los de serie. $size: 64 | 180 | 192 | 512 | '512m' (maskable). */
+function icon_src($size): string {
+    $b = (string)cfg('logo_icon');
+    if ($b) return '/media/logo/' . rawurlencode($b) . "-$size.png";
+    return ['64' => '/img/favicon.png', '180' => '/img/icon-180.png', '192' => '/app/icon-192.png', '512' => '/app/icon-512.png', '512m' => '/app/icon-512-maskable.png'][(string)$size] ?? '/img/favicon.png';
 }
 
 /* ---- sesion solo si ya hay cookie (nunca para anonimos) ------------ */
@@ -423,7 +430,11 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
     echo "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">";
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
-    echo "<link rel=\"icon\" href=\"/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"/img/icon-180.png\">";
+    echo "<link rel=\"icon\" href=\"" . icon_src(64) . "\"><link rel=\"apple-touch-icon\" href=\"" . icon_src(180) . "\">";
+    // PWA: manifiesto dinamico (lleva los iconos en vigor), color de barra y registro del service worker
+    echo "<link rel=\"manifest\" href=\"/app/manifest.php\"><meta name=\"theme-color\" content=\"#ffffff\" media=\"(prefers-color-scheme: light)\"><meta name=\"theme-color\" content=\"#000000\" media=\"(prefers-color-scheme: dark)\">";
+    echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
+    echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
     echo "<title>" . h($title) . " · " . h(cfg('site_name')) . "</title>";
     echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
     require_once __DIR__ . '/lateral.php';
