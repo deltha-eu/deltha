@@ -15,9 +15,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([post('slug', 'privacidad'), post('title', 'Privacidad y contacto'), (string)($_POST['body'] ?? '')]);
         $out[] = 'Página guardada.';
     } elseif ($act === 'topics') {
-        $st = $pdo->prepare("UPDATE topics SET coef = ? WHERE topic_id = ?");
-        foreach (($_POST['coef'] ?? []) as $id => $c) $st->execute([(float)$c, (int)$id]);
+        $st = $pdo->prepare("UPDATE topics SET coef = ?, color = ? WHERE topic_id = ?");
+        foreach (($_POST['coef'] ?? []) as $id => $c) {
+            $col = (string)($_POST['color'][$id] ?? '');
+            if (!preg_match('/^#[0-9a-fA-F]{6}$/', $col)) $col = '#534AB7';
+            $st->execute([(float)$c, $col, (int)$id]);
+        }
         $out[] = 'Temas guardados.';
+    } elseif ($act === 'tema_nuevo') {
+        $name = mb_strtolower(trim(post('name')));
+        $coef = (float)(post('coef') ?: 1);
+        $col  = post('color') ?: '#534AB7';
+        if (!preg_match('/^[\p{L}\p{N} \-]{2,32}$/u', $name)) $out[] = 'Nombre de tema no válido (2–32 letras, números, espacio o guion).';
+        elseif ($coef < 0.1 || $coef > 5) $out[] = 'El coeficiente debe estar entre 0,10 y 5,00.';
+        elseif (!preg_match('/^#[0-9a-fA-F]{6}$/', $col)) $out[] = 'Color no válido (formato #rrggbb).';
+        else {
+            try { $pdo->prepare("INSERT INTO topics (name, coef, color) VALUES (?,?,?)")->execute([$name, $coef, $col]); $out[] = "Tema «" . h($name) . "» creado."; }
+            catch (PDOException $e) { $out[] = 'Ese tema ya existe.'; }
+        }
     } elseif ($act === 'ciclo') {
         $out = run_cycle($pdo);
         if (!$out) $out[] = 'Ciclo sin cambios.';
@@ -235,11 +250,15 @@ if ($tab === 'usuarios') {
     echo "</table><p><button class=\"btn\">Guardar config</button></p></form>";
 
 } elseif ($tab === 'temas') {
-    echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>coef</th></tr>";
-    foreach ($pdo->query("SELECT * FROM topics ORDER BY topic_id") as $t) {
-        echo "<tr><td>" . h($t['name']) . "</td><td><input type=\"text\" name=\"coef[{$t['topic_id']}]\" value=\"" . h($t['coef']) . "\"></td></tr>";
+    echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>envíos</th><th style=\"width:90px\">coef</th><th style=\"width:70px\">color</th></tr>";
+    foreach ($pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.topic_id") as $t) {
+        echo "<tr><td><a href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a></td><td class=\"num\">{$t['n']}</td><td><input type=\"text\" name=\"coef[{$t['topic_id']}]\" value=\"" . h($t['coef']) . "\"></td>";
+        echo "<td><input type=\"color\" name=\"color[{$t['topic_id']}]\" value=\"" . h($t['color']) . "\" title=\"color del velo y la etiqueta\"></td></tr>";
     }
-    echo "</table><p><button class=\"btn\">Guardar temas</button> · <a href=\"/moderacion.php#temas\">añadir tema</a></p></form>";
+    echo "</table><p><button class=\"btn\">Guardar temas</button></p></form>";
+    echo "<h3>Nuevo tema</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"tema_nuevo\">";
+    echo "<input type=\"text\" name=\"name\" placeholder=\"nombre (minúsculas)\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> coef <input type=\"text\" name=\"coef\" value=\"1.00\" style=\"width:60px\"> <input type=\"color\" name=\"color\" value=\"#534AB7\"> <button class=\"btn\">Crear tema</button></form>";
+    echo "<p><small>El coeficiente multiplica los votos en el δ (1,10 da un 10 % de ventaja al tema). El color es el velo de la foto y la etiqueta. Los temas no se borran: si uno sobra, se le cambia el nombre.</small></p>";
 
 } elseif ($tab === 'privacidad') {
     $pg = page_get($pdo, 'privacidad');

@@ -91,7 +91,7 @@ function gate_open(): bool {
 // En CLI (cron: promocionar.php, moderar.php) no hay cookie ni sesion: sin esta
 // excepcion, con la clave activa redirect() hacia exit y el ciclo moria en silencio
 // (las nuevas no subian a candidatas, ni revelado, ni archivo, ni decaimiento de aura).
-if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/');
+if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/clave.php');   // la presentacion (/delta/) queda solo tras «¿Que es Deltha?»
 
 /* ---- helpers ------------------------------------------------------- */
 /** Casilla «mostrar contraseña» para un formulario (la activa /app/pw.js; sin JS no aparece). */

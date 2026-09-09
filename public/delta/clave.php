@@ -54,6 +54,6 @@ html, body { height: 100%; }
     <input type="password" name="clave" required autocomplete="off" autofocus placeholder="clave">
     <button>Entrar</button>
   </form>
-  <p class="back"><a href="/delta/">Volver a la presentación</a> · <a href="/login.php">Ya tengo cuenta</a> · <a href="/privacidad.php">Privacidad</a></p>
+  <p class="back"><a href="/delta/">¿Qué es Deltha?</a> · <a href="/login.php">Ya tengo cuenta</a> · <a href="/privacidad.php">Privacidad</a></p>
 </div>
 </body></html>
