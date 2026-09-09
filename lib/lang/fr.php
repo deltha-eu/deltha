@@ -391,4 +391,7 @@ return [
 'Nada llega aún al δ mínimo.' => 'Rien n’atteint encore le δ minimum.',
 'ver la cola entera' => 'voir toute la file',
 'En comunidades' => 'Dans les communautés',
+'Temas' => 'Thèmes',
+'esta semana' => 'cette semaine',
+'coeficiente %s' => 'coefficient %s',
 ];
