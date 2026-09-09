@@ -26,6 +26,17 @@ $SK = [
     'zen'       => ['Zen',           '#eef3f2', '#2b3a55', '#d98ba0', '#eef3f2', '3px'],
     'orange'    => ['Orange',        '#F5F5F3', '#1a1a1a', '#FF6400', '#F5F5F3', '6px'],
     'foro'      => ['Foro',          '#DAE0E6', '#1c1c1c', '#FF4500', '#ffffff', '16px'],
+    'hyperpop'  => ['Hyperpop / Y2K','#F6F7FB', '#111111', '#FF4FD8', '#ffffff', '18px'],
+    'neobrutal' => ['Neo-Brutal',    '#FFFCE6', '#111111', '#FFE600', '#FFFCE6', '2px'],
+    'stickerbomb' => ['Stickerbomb', '#ECEBE7', '#111111', '#FFE14D', '#ECEBE7', '12px'],
+    'riso'      => ['Riso / Zine',   '#F3E7D3', '#1a1a1a', '#2450FF', '#F3E7D3', '0'],
+    'aero'      => ['Frutiger Aero', '#EAF6FF', '#12324a', '#24A4F5', '#ffffff', '20px'],
+    'hud'       => ['Game HUD',      '#050807', '#e6efe9', '#34FF79', '#050807', '5px'],
+    'acid'      => ['Acid Web',      '#0a0a0a', '#f4f4f4', '#C8FF00', '#0a0a0a', '3px'],
+    'pixel'     => ['Pixel / 16-bit','#e9ecf5', '#14172b', '#3854D8', '#e9ecf5', '0'],
+    'dopamine'  => ['Dopamine',      '#FFFCF5', '#111111', '#FF6B6B', '#FFFCF5', '22px'],
+    'www1998'   => ['WWW 1998',      '#C0C0C0', '#000000', '#0000EE', '#C0C0C0', '0'],
+    'solarpunk' => ['Solarpunk',     '#F4F0DF', '#23301f', '#557C4C', '#F4F0DF', '10px'],
 ];
 ?>
 <!doctype html><html lang="<?= lang() ?>"><head><meta charset="utf-8">

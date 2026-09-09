@@ -172,13 +172,25 @@ function paginate(string $base, int $page, int $total): void {
 function page_num(): int { return max(1, (int)($_GET['p'] ?? 1)); }
 function page_offset(int $page): int { return ($page - 1) * (int)cfg('per_page', 20); }
 
+/** Descripcion corta de cada plantilla (perfil, /plantilla.php, comunidades). '' = la del sitio. */
+function skin_descs(): array {
+    return ['' => t('La del sitio (%s)', DDD_SKINS[cfg('skin_default', 'editorial')]),
+        'editorial' => t('Editorial — limpia, aire de revista'), 'comunidad' => t('Comunidad — tarjetas, más presencia de la gente'), 'delta' => t('Delta — la identidad gráfica de Deltha, δ a la vista'), 'flujo' => t('Flujo — fotos al lado, más noticias en pantalla'), 'retro' => t('Retrocomputer — ordenador clásico, crema y verde, monoespaciada'), 'manga' => t('Manga — blanco y negro de página impresa, bordes gruesos'), 'punk' => t('Punk — fanzine fotocopiado: negro, fucsia, amarillo ácido'), 'popart' => t('Pop Art — revista gráfica de los sesenta: amarillo, rojo, bordes negros'), 'zen' => t('Zen — agua, flor y silencio; casi un lector'), 'orange' => t('Orange — guiño a Menéame: densa, naranja, votos grandes'), 'foro' => t('Foro — tarjetas sobre gris y pastillas de votos, comentarios y compartir'),
+        'hyperpop' => t('Hyperpop / Y2K — nostalgia y futuro: brillante, irreverente, optimista'), 'neobrutal' => t('Neo-Brutal — directo, sin florituras: la información al grano'), 'stickerbomb' => t('Stickerbomb — tu Deltha, tu estilo: pegatinas, personalizable y único'), 'riso' => t('Riso / Zine — estética independiente: cultura en estado puro'), 'aero' => t('Frutiger Aero — optimismo tecnológico: un internet más limpio'), 'hud' => t('Game HUD — información en modo misión'), 'acid' => t('Acid Web — energía, contraste, actitud: para mentes inquietas'), 'pixel' => t('Pixel / 16-bit — espíritu gamer: clásico y atemporal'), 'dopamine' => t('Dopamine — color, energía y claridad: noticias que inspiran'), 'www1998' => t('WWW 1998 — la web antes de los algoritmos: pura esencia'), 'solarpunk' => t('Solarpunk — tecnología con propósito: un futuro más verde')];
+}
+/** Enlaces «ver antes de elegir»: cada plantilla con ?skin= (solo esa pagina, no se guarda). */
+function skin_preview_links(): string {
+    $a = [];
+    foreach (DDD_SKINS as $k => $v) $a[] = "<a href=\"/?skin=$k\">" . h($v) . "</a>";
+    return implode(' · ', $a);
+}
+
 /** Selector de plantilla visual de una comunidad ('' = ninguna: cada cual ve la suya). Lo usan comunidades.php y comunidad.php. */
 function skin_select(string $cur): string {
     $h = "<label>" . t('Plantilla visual de la comunidad') . "</label><select name=\"skin\"><option value=\"\">" . t('Ninguna: cada cual ve la suya') . "</option>";
     foreach (DDD_SKINS as $k => $v) $h .= "<option value=\"$k\"" . ($cur === $k ? ' selected' : '') . ">" . h($v) . "</option>";
-    return $h . "</select><small class=\"hint\">" . t('Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ') . "<a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> · <a href=\"/?skin=retro\">Retrocomputer</a> · <a href=\"/?skin=manga\">Manga</a> · <a href=\"/?skin=punk\">Punk</a> · <a href=\"/?skin=popart\">Pop Art</a> · <a href=\"/?skin=zen\">Zen</a> · <a href=\"/?skin=orange\">Orange</a> · <a href=\"/?skin=foro\">Foro</a></small>";
+    return $h . "</select><small class=\"hint\">" . t('Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ') . skin_preview_links() . "</small>";
 }
-
 
 /** «Compartir»: enlace absoluto al hilo. Con JS (/app/share.js) copia el enlace al portapapeles o abre el menu nativo de compartir; sin JS, lleva al hilo. */
 function share_link(array $s): string {
