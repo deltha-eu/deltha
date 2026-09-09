@@ -6,9 +6,10 @@ require __DIR__ . '/../lib/aura.php';
 if (!user() && cfg('anon_can_submit') !== '1') redirect('/login.php');
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY topic_id")->fetchAll();
+$comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
 $err = null;
 $step = post('step') ?: '1';
-$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'image' => null];
+$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['url'] = post('url');
@@ -33,6 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $f['title']   = mb_substr(post('title'), 0, 200);
         $f['content'] = mb_substr(post('content'), 0, 2000);
         $f['topic']   = (int)post('topic');
+        $f['community'] = (int)post('community');
+        if ($f['community'] && !in_array($f['community'], array_column($comms, 'community_id'), false)) $f['community'] = 0;
         $f['image']   = post('image') ?: null;
         if ($f['image'] && (!preg_match('/^[a-f0-9]{24}\.jpg$/', $f['image']) || !is_file(DDD_MEDIA_DIR . '/' . $f['image']))) $f['image'] = null;
         if (post('quitar') === '1') $f['image'] = null;
@@ -45,9 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $u = user();
             $status = cfg('mod_enabled') === '1' ? 'pending_mod' : 'nuevas';
             $pdo->beginTransaction();
-            $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, title, url, source, content, image, status)
-                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?)")
-                ->execute([$u['user_id'] ?? null, $f['topic'], $f['title'], $f['url'] ?: null, source_of($f['url']), $f['content'] ?: null, $f['image'], $status]);
+            $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status)
+                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), $f['content'] ?: null, $f['image'], $status]);
             $sid = (int)$pdo->lastInsertId();
             $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
             $pdo->prepare("UPDATE stories SET author_alias = ? WHERE story_id = ?")->execute([$alias, $sid]);
@@ -82,6 +85,11 @@ if ($step === '1') {
         echo "<option value=\"{$t['topic_id']}\"$sel>" . h($t['name']) . "</option>";
     }
     echo "</select>";
+    if ($comms) {
+        echo "<label>Comunidad (opcional)</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
+        foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$f['community'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
+        echo "</select>";
+    }
     if ($f['image']) {
         echo "<input type=\"hidden\" name=\"image\" value=\"" . h($f['image']) . "\">";
         echo "<label>Foto encontrada en la página</label><div class=\"media sm\" style=\"background-image:url('/media/" . h($f['image']) . "')\"></div>";

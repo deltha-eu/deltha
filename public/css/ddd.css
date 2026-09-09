@@ -437,3 +437,18 @@ form.plain label.radio { display: flex; gap: 8px; align-items: center; font-size
 .admin .repacts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .admin .repacts form { display: inline; }
 .admin .btn.danger, form.plain button.danger { border-color: var(--neg); color: var(--neg); }
+
+/* ---- comunidades ---- */
+.fz.comm .dot, .commhead .dot { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--cc, var(--line2)); margin-top: 4px; }
+.fz.comm { align-items: flex-start; }
+.fz.comm .prev { color: var(--muted); font-size: 14px; }
+.commhead { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-bottom: 1px solid var(--line); }
+.commhead .dot { width: 18px; height: 18px; margin-top: 8px; }
+.commhead h1 { padding: 0; font-size: 22px; }
+.commhead .bio { margin: 4px 0 6px; }
+.commhead .meta { color: var(--muted); font-size: 13px; }
+.commhead .meta a { text-decoration: underline; text-underline-offset: 2px; }
+details.editbox { border-bottom: 1px solid var(--line); }
+details.editbox summary { padding: 10px 16px; font-size: 14px; color: var(--muted); cursor: pointer; }
+details.editbox[open] summary { color: var(--fg); }
+details.editbox form.plain { padding-top: 0; }

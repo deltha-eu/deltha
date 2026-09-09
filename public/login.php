@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
         session_regenerate_id(true);
         $_SESSION['uid'] = (int)$row['user_id'];
-        redirect('/');
+        $lu = $pdo->prepare("SELECT landing FROM users WHERE user_id = ?"); $lu->execute([(int)$row['user_id']]);
+        redirect(landing_url($pdo, ['landing' => (string)$lu->fetchColumn()]));
     }
     if (!$err) $err = 'Usuario o contraseña incorrectos.';
 }

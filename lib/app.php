@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 39);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 40);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -49,7 +49,7 @@ session_name(DDD_SESSION);
 if (isset($_COOKIE[DDD_SESSION])) {
     session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
     if (!empty($_SESSION['uid'])) {
-        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin FROM users WHERE user_id = ? AND verified = 1");
+        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
         if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas.php)
@@ -131,6 +131,45 @@ function source_of(?string $url): ?string {
 /** El velo Ghost de una aportacion ha caducado? (fecha de la aportacion + ghost_minutes) */
 function ghost_over(string $dt): bool {
     return time() - strtotime($dt) >= (int)cfg('ghost_minutes', 30) * 60;
+}
+
+/* ---- comunidades ----------------------------------------------------
+ * Segunda clasificacion de los envios, ortogonal a los temas: cada envio tiene un
+ * tema y, opcionalmente, una comunidad. Las crean los usuarios con aura > comm_min_aura,
+ * hasta comm_max_per_user cada uno. El creador (y los mods) editan nombre, descripcion y color. */
+function community_slug(string $name): string {
+    $s = mb_strtolower(trim($name));
+    $s = strtr($s, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n','à'=>'a','è'=>'e','ì'=>'i','ò'=>'o','ù'=>'u','ç'=>'c']);
+    $s = preg_replace('/[^a-z0-9]+/', '-', $s);
+    return trim(substr($s, 0, 40), '-');
+}
+function community_by_slug(PDO $pdo, string $slug): ?array {
+    $st = $pdo->prepare("SELECT c.*, u.login AS owner FROM communities c JOIN users u ON u.user_id = c.owner_id WHERE c.slug = ?");
+    $st->execute([$slug]);
+    return $st->fetch() ?: null;
+}
+/** Cuantas comunidades mas puede crear este usuario (0 = ninguna) */
+function community_quota(PDO $pdo, ?array $u): int {
+    if (!$u) return 0;
+    $max = max(0, (int)cfg('comm_max_per_user', 3));
+    if (!is_admin() && (float)$u['aura'] <= (float)cfg('comm_min_aura', 10)) return 0;
+    $st = $pdo->prepare("SELECT COUNT(*) FROM communities WHERE owner_id = ?"); $st->execute([$u['user_id']]);
+    return is_admin() ? 99 : max(0, $max - (int)$st->fetchColumn());
+}
+function community_link(array $s): string {
+    return "<a href=\"/comunidad.php?c=" . rawurlencode((string)$s['comm_slug']) . "\">" . h($s['comm_name']) . "</a>";
+}
+/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID */
+function landing_url(PDO $pdo, ?array $u): string {
+    $l = (string)($u['landing'] ?? '');
+    if (preg_match('/^t:(\d+)$/', $l, $m)) {
+        $st = $pdo->prepare("SELECT 1 FROM topics WHERE topic_id = ?"); $st->execute([(int)$m[1]]);
+        if ($st->fetchColumn()) return '/tema.php?t=' . (int)$m[1];
+    } elseif (preg_match('/^c:(\d+)$/', $l, $m)) {
+        $st = $pdo->prepare("SELECT slug FROM communities WHERE community_id = ? AND status = 'ok'"); $st->execute([(int)$m[1]]);
+        if ($slug = $st->fetchColumn()) return '/comunidad.php?c=' . rawurlencode($slug);
+    }
+    return '/';
 }
 
 /* ---- reportes y borrado de comentarios ------------------------------ */
@@ -389,7 +428,7 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/normas.php\">Normas de uso</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
+    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/normas.php\">Normas de uso</a> · <a href=\"/comunidades.php\">Comunidades</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">moderación" . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;

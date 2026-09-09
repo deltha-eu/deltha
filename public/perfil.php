@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $theme = in_array(post('theme'), ['auto', 'light', 'dark'], true) ? post('theme') : 'auto';
     $skin  = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
+    $landing = preg_match('/^(t|c):\d{1,9}$/', post('landing')) ? post('landing') : '';
     $avatar = $u['avatar'];
     if (!empty($_FILES['photo']['name'])) {
         $new = avatar_desde_subida($_FILES['photo']);
@@ -26,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (post('quitar') === '1' && $avatar) { @unlink(DDD_MEDIA_DIR . '/avatars/' . $avatar); $avatar = null; }
     if (!$err) {
-        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $u['user_id']]);
+        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $u['user_id']]);
         redirect('/perfil.php?ok=1');
     }
 }
@@ -53,5 +54,10 @@ $desc = ['' => 'La del sitio (' . DDD_SKINS[cfg('skin_default', 'editorial')] . 
 echo "<label>Plantilla</label><select name=\"skin\">";
 foreach ($desc as $k => $v) echo "<option value=\"$k\"" . (($u['skin'] ?? '') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
 echo "</select><small class=\"hint\">Para verlas antes de elegir: <a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> (solo esa página; se guarda aquí).</small>";
+echo "<label id=\"aterrizar\">Al abrir Deltha, entrar en…</label><select name=\"landing\"><option value=\"\">La portada</option><optgroup label=\"Un tema\">";
+foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) echo "<option value=\"t:{$t['topic_id']}\"" . (($u['landing'] ?? '') === "t:{$t['topic_id']}" ? ' selected' : '') . ">" . h($t['name']) . "</option>";
+echo "</optgroup><optgroup label=\"Una comunidad\">";
+foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) echo "<option value=\"c:{$co['community_id']}\"" . (($u['landing'] ?? '') === "c:{$co['community_id']}" ? ' selected' : '') . ">" . h($co['name']) . "</option>";
+echo "</optgroup></select><small class=\"hint\">Se aplica al entrar con tu cuenta y al abrir Deltha desde fuera (un marcador, la app); la pestaña Portada sigue llevando a la portada.</small>";
 echo "<button>Guardar</button></form>";
 page_footer();
