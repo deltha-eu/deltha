@@ -1824,7 +1824,7 @@ details.editbox form.plain { padding-top: 0; }
   /* --- rail: tercer grupo — plantilla, aspecto e idioma en desplegables (details, sin JS) --- */
   .rail details.rail-dd { border-top: 1px solid var(--line); }
   .rail details.rail-dd.skins { margin-top: 10px; padding-top: 6px; }
-  .rail details.rail-dd:not(.skins) { border-top: 0; }
+  .rail details.rail-dd:not(.skins) { padding-top: 4px; }   /* cada uno con su raya arriba: Plantilla · Aspecto · Idioma */
   .rail details.rail-dd summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-radius: 999px; font-size: 15px; color: var(--fg); cursor: pointer; }
   .rail details.rail-dd summary::-webkit-details-marker { display: none; }
   .rail details.rail-dd summary:hover { background: var(--hover); }
