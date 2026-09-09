@@ -405,4 +405,5 @@ return [
 'oscuro' => 'sombre',
 'Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto' => 'Pas de cookies sans connexion (sauf habillage, thème et langue, si vous les choisissez) · pas de pistage · pas d’algorithme caché',
 'Aspecto' => 'Apparence',
+'Como el sistema' => 'Comme le système',
 ];

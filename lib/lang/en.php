@@ -405,4 +405,5 @@ return [
 'oscuro' => 'dark',
 'Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto' => 'No cookies unless you sign in (except template, theme and language, if you pick them) · no tracking · no hidden algorithm',
 'Aspecto' => 'Appearance',
+'Como el sistema' => 'Like the system',
 ];
