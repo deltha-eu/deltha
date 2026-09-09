@@ -298,9 +298,12 @@ if ($tab === 'usuarios') {
     echo "<h3>Tiempos</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"config\"><p>";
     echo "Un ciclo cada <input type=\"text\" name=\"cfg[cycle_minutes]\" value=\"" . h(cfg('cycle_minutes', 5)) . "\" style=\"width:60px\"> min &nbsp;·&nbsp; ";
     echo "una nueva puede ser candidata a los <input type=\"text\" name=\"cfg[delta_min_age_min]\" value=\"" . h(cfg('delta_min_age_min', 30)) . "\" style=\"width:60px\"> min &nbsp;·&nbsp; ";
-    echo "vida en portada <input type=\"text\" name=\"cfg[thread_ttl_hours]\" value=\"" . h(cfg('thread_ttl_hours', 48)) . "\" style=\"width:60px\"> h ";
+    echo "vida en portada <input type=\"text\" name=\"cfg[thread_ttl_hours]\" value=\"" . h(cfg('thread_ttl_hours', 48)) . "\" style=\"width:60px\"> h</p><p>";
+    echo "δ mínimo para ascender a candidata <input type=\"text\" name=\"cfg[delta_min_candidate]\" value=\"" . h(cfg('delta_min_candidate', 0.5)) . "\" style=\"width:60px\"> &nbsp;·&nbsp; ";
+    echo "δ mínimo para portada <input type=\"text\" name=\"cfg[delta_min_publish]\" value=\"" . h(cfg('delta_min_publish', 1)) . "\" style=\"width:60px\"> &nbsp;·&nbsp; ";
+    echo "caducan sin llegar a portada a las <input type=\"text\" name=\"cfg[nuevas_ttl_hours]\" value=\"" . h(cfg('nuevas_ttl_hours', 48)) . "\" style=\"width:60px\"> h (0 = nunca) ";
     echo "<button class=\"btn\">Guardar</button></p>";
-    echo "<p><small>El cron llama al script cada minuto y el ciclo se ejecuta en los minutos múltiplos del intervalo; en cada ciclo sube una nueva a candidatas y se publica la mejor candidata. El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
+    echo "<p><small>El cron llama al script cada minuto y el ciclo se ejecuta en los minutos múltiplos del intervalo; en cada ciclo sube una nueva a candidatas (la de mayor δ, si llega al mínimo: sin votos no se asciende) y se publica la mejor candidata si llega al suyo. Lo que pasa las horas indicadas sin llegar a portada se archiva. El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
     $nq = (int)$pdo->query("SELECT COUNT(*) FROM mod_queue WHERE status IN ('needs_human','queued','processing')")->fetchColumn();
     echo "<h3>Cola de moderación</h3><p>$nq pendientes de la IA · " . open_reports() . " comentarios reportados · <a href=\"/moderacion.php\">ir a moderación</a> (la ven también los moderadores)</p>";
     echo "<h3>Últimas promociones</h3><table>";
@@ -348,7 +351,7 @@ if ($tab === 'usuarios') {
        . " · config: logo_light=<code>" . h((string)cfg('logo_light')) . "</code> logo_dark=<code>" . h((string)cfg('logo_dark')) . "</code></small></p>";
 
 } elseif ($tab === 'privacidad') {
-    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";
+    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{mincand}</code> <code>{newttl}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";
     foreach (['privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso', 'algoritmo' => 'Cómo funciona el δ'] as $slug => $lbl) {
         $pg = page_get($pdo, $slug);
         echo "<h3>$lbl</h3><p><small>Se muestra en <a href=\"/$slug.php\">/$slug.php</a>" . ($pg['updated'] ? " · última edición " . h($pg['updated']) : "") . ".</small></p>";
