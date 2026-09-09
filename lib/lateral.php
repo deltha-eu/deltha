@@ -21,25 +21,33 @@ function rail(string $tab): void {
     echo "</aside>";
 }
 
-/** Tercer grupo del rail: cambio rapido de plantilla (tambien sin cuenta). Un <details> para no alargar el menu. */
-function rail_skins(): void {
-    $cur = skin();
-    $u = user();
-    $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');
-    echo "<details class=\"rail-skins\"><summary>" . icon('skin') . "<span>" . t('Plantilla') . "<small>" . h(DDD_SKINS[$cur] ?? $cur) . "</small></span></summary><div class=\"list\">";
-    foreach (DDD_SKINS as $k => $v) echo "<a href=\"/cambiar-skin.php?s=$k\"" . ($k === $cur ? ' class="on"' : '') . "><i class=\"sw sw-$k\"></i>" . h($v) . "</a>";
-    if ($saved !== '') echo "<a class=\"reset\" href=\"/cambiar-skin.php?s=\">" . t('la del sitio') . "</a>";
+/** Tercer grupo del rail: plantilla, aspecto (claro/oscuro) e idioma, cada uno en un desplegable <details> (sin JS), tambien sin cuenta. */
+function rail_dd(string $icon, string $label, string $current, array $items, string $cls = ''): void {
+    echo "<details class=\"rail-dd $cls\"><summary>" . icon($icon) . "<span>" . h($label) . "<small>" . h($current) . "</small></span></summary><div class=\"list\">";
+    foreach ($items as $it) { [$href, $txt, $on, $sw] = $it; $extra = $it[4] ?? '';
+        echo "<a href=\"" . h($href) . "\"" . (($on || $extra) ? ' class="' . trim(($on ? 'on ' : '') . $extra) . '"' : '') . ">" . ($sw ? "<i class=\"sw sw-$sw\"></i>" : '') . h($txt) . "</a>"; }
     echo "</div></details>";
-    // tema claro/oscuro: tres opciones en una fila
+}
+function rail_skins(): void {
+    $u = user();
+    // plantilla
+    $cur = skin();
+    $items = [];
+    foreach (DDD_SKINS as $k => $v) $items[] = ["/cambiar-skin.php?s=$k", $v, $k === $cur, $k];
+    $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');
+    if ($saved !== '') $items[] = ["/cambiar-skin.php?s=", t('la del sitio'), false, null, 'reset'];
+    rail_dd('skin', t('Plantilla'), DDD_SKINS[$cur] ?? $cur, $items, 'skins');
+    // aspecto: claro / oscuro / como el sistema
     $th = theme() ?? 'auto';
-    echo "<div class=\"rail-opts\">" . icon('theme') . "<span>" . t('Aspecto') . "</span><span class=\"opts\">";
-    foreach (['auto' => t('auto'), 'light' => t('claro'), 'dark' => t('oscuro')] as $k => $v) echo "<a href=\"/cambiar-skin.php?t=$k\"" . ($k === $th ? ' class="on"' : '') . ">" . h($v) . "</a>";
-    echo "</span></div>";
+    $opts = ['auto' => t('Como el sistema'), 'light' => t('Claro'), 'dark' => t('Oscuro')];
+    $items = [];
+    foreach ($opts as $k => $v) $items[] = ["/cambiar-skin.php?t=$k", $v, $k === $th, null];
+    rail_dd('theme', t('Aspecto'), $opts[$th], $items);
     // idioma
     $cl = lang();
-    echo "<div class=\"rail-opts\">" . icon('lang') . "<span>" . t('Idioma') . "</span><span class=\"opts\">";
-    foreach (DDD_LANGS as $k => $v) echo "<a href=\"/cambiar-skin.php?l=$k\"" . ($k === $cl ? ' class="on"' : '') . " title=\"" . h($v) . "\">" . strtoupper($k) . "</a>";
-    echo "</span></div>";
+    $items = [];
+    foreach (DDD_LANGS as $k => $v) $items[] = ["/cambiar-skin.php?l=$k", $v, $k === $cl, null];
+    rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
 }
 
 /** Columna derecha. */
