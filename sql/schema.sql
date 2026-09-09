@@ -33,6 +33,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('per_page',            '20',   'Envios por pagina'),
 ('cycle_minutes',       '5',    'Minutos entre ciclos del cron (para estimar en /procesos.php cuando asciende cada nueva)'),
 ('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
+('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
+('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),
 ('anon_alias_mode',     'ip_hash', 'ip_hash = alias estable por hilo sin cookie | random = alias nuevo por comentario'),
 ('anon_can_comment',    '1',    '1 = los anonimos pueden comentar'),
@@ -182,4 +184,19 @@ CREATE TABLE aura_log (
     ref_id      INT UNSIGNED DEFAULT NULL,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_user (user_id)
+) ENGINE=InnoDB;
+
+-- Mensajes privados entre registrados
+CREATE TABLE messages (
+    msg_id      INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    from_id     INT UNSIGNED NOT NULL,
+    to_id       INT UNSIGNED NOT NULL,
+    content     TEXT NOT NULL,
+    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at     DATETIME DEFAULT NULL,
+    KEY idx_to_unread (to_id, read_at),
+    KEY idx_from (from_id, created),
+    KEY idx_pair (from_id, to_id, msg_id),
+    CONSTRAINT fk_m_from FOREIGN KEY (from_id) REFERENCES users(user_id),
+    CONSTRAINT fk_m_to   FOREIGN KEY (to_id)   REFERENCES users(user_id)
 ) ENGINE=InnoDB;

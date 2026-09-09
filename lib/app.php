@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 34);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 35);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -320,15 +320,27 @@ function nav_tabs(string $tab, string $cls): void {
         'usuarios'     => ['/usuarios.php', 'Usuarios', 'users'],
         'procesos'     => ['/procesos.php', 'Procesos', 'proc'],
         'estadisticas' => ['/estadisticas.php', 'Estadísticas', 'stats'],
-        'mensajes'     => [null, 'Mensajes', 'msg'],
+        'mensajes'     => ['/mensajes.php', 'Mensajes', 'msg'],
     ];
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';
-        if ($href === null) echo "<span class=\"soon\" title=\"pronto\">" . icon($ic) . "<span>" . h($label) . "</span></span>";
-        else echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . "<span>" . h($label) . "</span></a>";
+        if ($href === null) { echo "<span class=\"soon\" title=\"pronto\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
+        $badge = ($k === 'mensajes' && ($n = unread_msgs()) > 0) ? "<i class=\"badge\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
+        echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . $badge . "<span>" . h($label) . "</span></a>";
     }
     echo "</nav>";
+}
+/** Mensajes privados sin leer del usuario actual (una consulta por pagina, cacheada) */
+function unread_msgs(): int {
+    static $n = null; global $pdo;
+    if ($n !== null) return $n;
+    $n = 0;
+    if (user() && (string)cfg('msg_enabled', '1') === '1') {
+        try { $st = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE to_id = ? AND read_at IS NULL"); $st->execute([user()['user_id']]); $n = (int)$st->fetchColumn(); }
+        catch (Throwable $e) { /* tabla aun sin crear */ }
+    }
+    return $n;
 }
 function footer_links(): string {
     $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";

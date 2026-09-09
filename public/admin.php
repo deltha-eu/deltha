@@ -136,6 +136,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
         // --- 4. resto de rastro y la cuenta
         $pdo->prepare("DELETE FROM thread_aliases WHERE user_id = ?")->execute([$uid]);
         $pdo->prepare("DELETE FROM aura_log WHERE user_id = ?")->execute([$uid]);
+        try { $pdo->prepare("DELETE FROM messages WHERE from_id = ? OR to_id = ?")->execute([$uid, $uid]); } catch (Throwable $e) {}
         $pdo->prepare("UPDATE banned_domains SET added_by = NULL WHERE added_by = ?")->execute([$uid]);
         $pdo->prepare("DELETE FROM users WHERE user_id = ?")->execute([$uid]);
         $pdo->commit();

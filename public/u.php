@@ -15,6 +15,7 @@ if ($p['bio']) echo "<p class=\"bio\">" . h($p['bio']) . "</p>";
 $nPub = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE user_id = {$p['user_id']} AND status NOT IN ('rejected','discard') AND (revealed = 1 OR sent_date <= NOW() - INTERVAL " . (int)cfg('ghost_minutes', 30) . " MINUTE)")->fetchColumn();
 echo "<p class=\"meta\">aura " . number_format((float)$p['aura'], 1, ',', '') . " · desde " . date('M Y', strtotime($p['created'])) . " · $nPub envíos revelados";
 if ($own) echo " · <a href=\"/perfil.php\">editar</a>";
+elseif (user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes.php?u=" . rawurlencode($p['login']) . "\">enviar mensaje</a>";
 elseif (is_mod() && (is_admin() || $p['level'] === 'normal')) echo " · <a href=\"/editar-usuario.php?id={$p['user_id']}\">editar perfil</a>";
 echo "</p></div></div>";
 
