@@ -2,6 +2,12 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
+// Aterrizaje: si el usuario eligio un tema o comunidad como entrada, se le lleva alli cuando llega
+// desde fuera (sin referer del propio sitio). Navegando por dentro, Portada es Portada.
+if (user() && (user()['landing'] ?? '') !== '' && empty($_GET) && !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', (string)($_SERVER['HTTP_REFERER'] ?? ''))) {
+    $to = landing_url($pdo, user());
+    if ($to !== '/') redirect($to);
+}
 $page = page_num();
 $total = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE status='destacadas'")->fetchColumn();
 $st = $pdo->prepare(story_query_base() . " WHERE s.status='destacadas' ORDER BY s.published_date DESC LIMIT ? OFFSET ?");

@@ -34,7 +34,7 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 page_header('Hilo', $tab);
 echo "<div class=\"hilo\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
-echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . ($s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span></div>";
+echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . (!empty($s['comm_slug']) ? " · " . community_link($s) : '') . ($s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span></div>";
 $dest = $s['url'] ?: null;
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
@@ -58,7 +58,11 @@ if (is_mod()) {   // moderadores y admin: cambiar el tema del envio
     foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) {
         echo "<option value=\"{$t['topic_id']}\"" . ((int)$t['topic_id'] === (int)$s['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
     }
-    echo "</select><button class=\"btn\">Cambiar</button> <a href=\"/editar.php?id=$id\">editar · eliminar</a> · <a href=\"/moderacion.php#temas\">añadir tema</a></form>";
+    echo "</select><label>Comunidad</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
+    foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) {
+        echo "<option value=\"{$co['community_id']}\"" . ((int)$co['community_id'] === (int)$s['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
+    }
+    echo "</select><button class=\"btn\">Cambiar</button> <a href=\"/editar.php?id=$id\">editar · eliminar</a></form>";
 }
 
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">Gracias: el comentario queda avisado a los moderadores.</p>";

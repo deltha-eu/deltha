@@ -36,6 +36,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
 ('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
 ('skin_default',        'editorial', 'Plantilla visual por defecto (anonimos y quien no elija): editorial | comunidad | delta | flujo'),
+('comm_min_aura',       '10',   'Aura minima (estricta: mayor que) para poder crear comunidades'),
+('comm_max_per_user',   '3',    'Comunidades que puede crear cada usuario'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),
 ('anon_alias_mode',     'ip_hash', 'ip_hash = alias estable por hilo sin cookie | random = alias nuevo por comentario'),
 ('anon_can_comment',    '1',    '1 = los anonimos pueden comentar'),
@@ -60,6 +62,7 @@ CREATE TABLE users (
     bio         VARCHAR(160) DEFAULT NULL,
     theme       ENUM('auto','light','dark') NOT NULL DEFAULT 'auto',
     skin        VARCHAR(16) NOT NULL DEFAULT '',   -- plantilla visual ('' = la del sitio, config.skin_default)
+    landing     VARCHAR(24) NOT NULL DEFAULT '',   -- aterrizaje: '' portada | t:ID tema | c:ID comunidad
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_login (login),
@@ -92,6 +95,7 @@ CREATE TABLE stories (
     author_alias    VARCHAR(48) DEFAULT NULL,        -- alias Ghost del autor en este hilo
     revealed        TINYINT(1) NOT NULL DEFAULT 0,
     topic_id        SMALLINT UNSIGNED NOT NULL,
+    community_id    INT UNSIGNED DEFAULT NULL,       -- comunidad (opcional), segunda clasificacion
     title           VARCHAR(200) NOT NULL,
     url             VARCHAR(600) DEFAULT NULL,
     source          VARCHAR(100) DEFAULT NULL,       -- dominio de la fuente (eldiario.es)
@@ -110,6 +114,7 @@ CREATE TABLE stories (
     KEY idx_status_delta (status, delta),
     KEY idx_status_pub (status, published_date),
     KEY idx_source (source),
+    KEY idx_comm (community_id, sent_date),
     CONSTRAINT fk_st_user  FOREIGN KEY (user_id)  REFERENCES users(user_id),
     CONSTRAINT fk_st_topic FOREIGN KEY (topic_id) REFERENCES topics(topic_id)
 ) ENGINE=InnoDB;
@@ -219,4 +224,20 @@ CREATE TABLE comment_reports (
     UNIQUE KEY uq_fp   (comment_id, fp),
     KEY idx_status (status, created),
     CONSTRAINT fk_cr_comment FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
+) ENGINE=InnoDB;
+
+-- Comunidades creadas por los usuarios (segunda clasificacion, ortogonal a los temas)
+CREATE TABLE communities (
+    community_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    slug         VARCHAR(40) NOT NULL,
+    name         VARCHAR(48) NOT NULL,
+    descr        VARCHAR(200) DEFAULT NULL,
+    color        CHAR(7) NOT NULL DEFAULT '#534AB7',
+    owner_id     INT UNSIGNED NOT NULL,
+    status       ENUM('ok','hidden') NOT NULL DEFAULT 'ok',
+    created      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_slug (slug),
+    UNIQUE KEY uq_name (name),
+    KEY idx_owner (owner_id),
+    CONSTRAINT fk_co_owner FOREIGN KEY (owner_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB;

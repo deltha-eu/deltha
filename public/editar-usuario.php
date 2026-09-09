@@ -53,10 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$login, $bio ?: null, $avatar, $email, $verified, $id]);
         if (is_admin() && $newpass !== '') {
             $pdo->prepare("UPDATE users SET pass = ?, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([password_hash($newpass, PASSWORD_DEFAULT), $id]);
+            if (post('back') === 'u') redirect('/u.php?u=' . rawurlencode($login) . '&ok=2#modedit');
             redirect("/editar-usuario.php?id=$id&ok=2");
         }
+        if (post('back') === 'u') redirect('/u.php?u=' . rawurlencode($login) . '&ok=1#modedit');
         redirect("/editar-usuario.php?id=$id&ok=1");
     }
+    if ($err && post('back') === 'u') redirect('/u.php?u=' . rawurlencode($p['login']) . '&err=' . rawurlencode($err) . '#modedit');
     $p = array_merge($p, ['login' => $login, 'bio' => $bio, 'avatar' => $avatar, 'email' => $email, 'verified' => $verified]);
 }
 

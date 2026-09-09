@@ -12,6 +12,7 @@ $s = $st->fetch();
 if (!$s) { http_response_code(404); page_header('Editar'); echo "<p class=\"end\">Ese envío no existe.</p>"; page_footer(); exit; }
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
+$comms  = $pdo->query("SELECT community_id, name FROM communities ORDER BY name")->fetchAll();
 $isArt = $s['content_type'] === 'article';
 $maxLen = $isArt ? 12000 : 2000;
 $err = null;
@@ -28,6 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     $title   = mb_substr(post('title'), 0, 200);
     $content = mb_substr(post('content'), 0, $maxLen);
     $topic   = (int)post('topic');
+    $comm    = (int)post('community');
+    if ($comm && !in_array($comm, array_column($comms, 'community_id'), false)) $comm = 0;
+    $pdo->prepare("UPDATE stories SET community_id = ? WHERE story_id = ?")->execute([$comm ?: null, $id]);
     $url     = $isArt ? null : post('url');
     $image   = $s['image'];
     if (post('quitar') === '1') $image = null;
@@ -66,6 +70,8 @@ if (!$isArt) echo "<label>Enlace (vacío = sin enlace)</label><input type=\"url\
 echo "<label>" . ($isArt ? 'Texto del artículo' : 'Entradilla') . "</label><textarea name=\"content\" rows=\"" . ($isArt ? 16 : 5) . "\" maxlength=\"$maxLen\">" . h((string)$s['content']) . "</textarea>";
 echo "<label>Tema</label><select name=\"topic\">";
 foreach ($topics as $t) echo "<option value=\"{$t['topic_id']}\"" . ((int)$s['topic_id'] === (int)$t['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
+echo "</select><label>Comunidad</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
+foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$s['community_id'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
 echo "</select>";
 if ($s['image']) {
     echo "<label>Foto actual</label><div class=\"media sm\" style=\"background-image:url('/media/" . h($s['image']) . "')\"></div>";
