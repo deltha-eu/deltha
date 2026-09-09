@@ -9,10 +9,12 @@ declare(strict_types=1);
 
 const DDD_CHAT_DELETED_TXT = 'Mensaje eliminado por incumplir las normas de uso';
 
-/** Alias estable + huella del anonimo en el Chat (mismo esquema que en los hilos, con id de hilo 0). */
+/** Alias estable + huella del anonimo en el Chat. Va por IP **y navegador** (User-Agent): dos personas en la misma
+ *  conexion (casa, oficina, movil y PC por wifi) no comparten alias; la misma persona en el mismo navegador lo conserva. */
 function chat_anon(): array {
     global $DDD_SECRET;
-    $key = substr(hash_hmac('sha256', client_ip() . '|chat', $DDD_SECRET), 0, 16);
+    $ua = substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 200);
+    $key = substr(hash_hmac('sha256', client_ip() . '|' . $ua . '|chat', $DDD_SECRET), 0, 16);
     $n = hexdec(substr($key, 0, 8));
     return [DDD_NOMBRES[$n % count(DDD_NOMBRES)] . '-' . DDD_LUGARES[intdiv($n, 997) % count(DDD_LUGARES)], $key];
 }
