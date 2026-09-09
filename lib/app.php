@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 40);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 41);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -213,7 +213,7 @@ function page_body(array $pg): string {
  * editorial (la clasica, con mas aire) | comunidad (tarjetas, usuarios)
  * | delta (identidad grafica: espiga, δ visible, fotos en gris) | flujo (fotos laterales, denso).
  * Orden de preferencia: ?skin= en la URL (probar sin guardar) > users.skin > config.skin_default. */
-const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo'];
+const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk'];
 function skin(): string {
     static $s = null;
     if ($s !== null) return $s;
