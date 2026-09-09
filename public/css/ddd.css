@@ -1825,7 +1825,7 @@ details.editbox form.plain { padding-top: 0; }
   .rail details.rail-dd { border-top: 1px solid var(--line); }
   .rail details.rail-dd.skins { margin-top: 10px; padding-top: 6px; }
   .rail details.rail-dd:not(.skins) { border-top: 0 !important; }   /* solo el grupo lleva raya (la de .skins), como entre los otros dos grupos */
-  .rail details.rail-dd summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-radius: 999px; font-size: 15px; color: var(--fg); cursor: pointer; }
+  .rail details.rail-dd summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-radius: 999px; font: inherit; font-size: 17px; line-height: 1.2; color: var(--fg); cursor: pointer; }   /* misma letra y tamaño que las pestañas del rail */
   .rail details.rail-dd summary::-webkit-details-marker { display: none; }
   .rail details.rail-dd summary:hover { background: var(--hover); }
   .rail details.rail-dd summary .i { width: 24px; height: 24px; flex: none; }
@@ -1845,7 +1845,7 @@ details.editbox form.plain { padding-top: 0; }
   /* el tercer grupo (Plantilla · Aspecto · Idioma) sigue a cada plantilla: misma letra y radios que sus pestañas del rail,
      y la opcion elegida con el mismo relleno que la pestaña activa */
   [data-skin="delta"] .rail details.rail-dd summary, [data-skin="zen"] .rail details.rail-dd summary, [data-skin="solarpunk"] .rail details.rail-dd summary { font-family: var(--serif); }
-  [data-skin="solarpunk"] .rail details.rail-dd summary { font-family: var(--disp); font-size: 16px; }
+  [data-skin="solarpunk"] .rail details.rail-dd summary { font-family: var(--disp); font-size: 18px; }
   [data-skin="delta"] .rail details.rail-dd .list a.on, [data-skin="zen"] .rail details.rail-dd .list a.on, [data-skin="solarpunk"] .rail details.rail-dd .list a.on { color: var(--accent); background: transparent; }
   [data-skin="retro"] .rail details.rail-dd, [data-skin="retro"] .rail details.rail-dd summary, [data-skin="retro"] .rail details.rail-dd .list a { border-radius: 0; font-family: var(--mono); }
   [data-skin="retro"] .rail details.rail-dd { border-top: 2px solid var(--line); }
@@ -1858,18 +1858,16 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="punk"] .rail details.rail-dd .list a.on { background: var(--pink); color: #101010; transform: rotate(-1deg); }
   [data-skin="popart"] .rail details.rail-dd summary, [data-skin="popart"] .rail details.rail-dd .list a { border-radius: 3px; }
   [data-skin="popart"] .rail details.rail-dd { border-top: 3px solid var(--line); }
-  [data-skin="popart"] .rail details.rail-dd summary { font-family: var(--black); font-size: 13px; text-transform: uppercase; }
   [data-skin="popart"] .rail details.rail-dd .list a.on { background: var(--y); color: #111; border: 2px solid var(--ink); }
   [data-skin="orange"] .rail details.rail-dd summary, [data-skin="orange"] .rail details.rail-dd .list a { border-radius: 6px; }
   [data-skin="orange"] .rail details.rail-dd .list a.on { color: var(--or); background: var(--or2); }
   [data-skin="foro"] .rail details.rail-dd .list a.on { background: var(--card); color: var(--blue); }
   [data-skin="comunidad"] .rail details.rail-dd .list a.on { background: var(--card); }
-  [data-skin="hyperpop"] .rail details.rail-dd summary { font-family: var(--grot); font-weight: 700; }
+  [data-skin="hyperpop"] .rail details.rail-dd summary { font-family: var(--grot); }
   [data-skin="hyperpop"] .rail details.rail-dd { border-top: 2px solid var(--line2); }
   [data-skin="hyperpop"] .rail details.rail-dd .list a.on { background: var(--li); color: #111; border: 2px solid var(--ink); }
   [data-skin="neobrutal"] .rail details.rail-dd summary, [data-skin="neobrutal"] .rail details.rail-dd .list a { border-radius: 2px; }
   [data-skin="neobrutal"] .rail details.rail-dd { border-top: 3px solid var(--line); }
-  [data-skin="neobrutal"] .rail details.rail-dd summary { font-weight: 800; }
   [data-skin="neobrutal"] .rail details.rail-dd .list a.on { background: var(--y); color: #111; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
   [data-skin="stickerbomb"] .rail details.rail-dd summary, [data-skin="stickerbomb"] .rail details.rail-dd .list a { border-radius: 10px; }
   [data-skin="stickerbomb"] .rail details.rail-dd .list a.on { background: var(--sy); color: #111; border: 2px solid var(--ink); transform: rotate(-1deg); }
@@ -1884,18 +1882,19 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="hud"] .rail details.rail-dd { border-top: 1px solid var(--line2); }
   [data-skin="hud"] .rail details.rail-dd .list a.on { color: var(--gr); background: transparent; border-left: 3px solid var(--gr); border-radius: 0; }
   [data-skin="acid"] .rail details.rail-dd summary, [data-skin="acid"] .rail details.rail-dd .list a { border-radius: 0; font-family: var(--black); text-transform: uppercase; }
-  [data-skin="acid"] .rail details.rail-dd summary { font-size: 13px; }
+  [data-skin="acid"] .rail details.rail-dd summary { font-size: 14px; }
   [data-skin="acid"] .rail details.rail-dd summary small { font-family: var(--mono); text-transform: none; }
   [data-skin="acid"] .rail details.rail-dd { border-top: 3px solid var(--ink); }
   [data-skin="acid"] .rail details.rail-dd .list a.on { background: #C8FF00; color: #0a0a0a; transform: skewX(-6deg); }
   [data-skin="pixel"] .rail details.rail-dd summary, [data-skin="pixel"] .rail details.rail-dd .list a { border-radius: 0; font-family: var(--px); font-size: 9px; text-transform: uppercase; }
+  [data-skin="pixel"] .rail details.rail-dd summary { font-size: 10px; }
   [data-skin="pixel"] .rail details.rail-dd summary small { font-family: var(--sans); text-transform: none; font-size: 12px; }
   [data-skin="pixel"] .rail details.rail-dd { border-top: 2px solid var(--line); }
   [data-skin="pixel"] .rail details.rail-dd .list a.on { background: var(--pb); color: #fff; box-shadow: 2px 2px 0 var(--ink); }
-  [data-skin="dopamine"] .rail details.rail-dd summary { font-family: var(--grot); font-weight: 700; }
+  [data-skin="dopamine"] .rail details.rail-dd summary { font-family: var(--grot); }
   [data-skin="dopamine"] .rail details.rail-dd .list a.on { background: var(--ye); color: #111; }
   [data-skin="www1998"] .rail details.rail-dd summary, [data-skin="www1998"] .rail details.rail-dd .list a { border-radius: 0; font-family: var(--ar); }
-  [data-skin="www1998"] .rail details.rail-dd summary { font-size: 13px; font-weight: 700; }
+  [data-skin="www1998"] .rail details.rail-dd summary { font-size: 14px; }
   [data-skin="www1998"] .rail details.rail-dd { border-top: 2px groove var(--btn); }
   [data-skin="www1998"] .rail details.rail-dd .list a { color: var(--lk); text-decoration: underline; }
   [data-skin="www1998"] .rail details.rail-dd .list a.on { color: var(--fg); text-decoration: none; background: transparent; }
