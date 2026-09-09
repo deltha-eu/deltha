@@ -50,10 +50,10 @@ foreach (['auto' => 'Automático (como el sistema)', 'light' => 'Claro', 'dark' 
     echo "<option value=\"$k\"" . (($u['theme'] ?? 'auto') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
 }
 echo "</select>";
-$desc = ['' => 'La del sitio (' . DDD_SKINS[cfg('skin_default', 'editorial')] . ')', 'editorial' => 'Editorial — limpia, aire de revista', 'comunidad' => 'Comunidad — tarjetas, más presencia de la gente', 'delta' => 'Delta — la identidad gráfica de Deltha, δ a la vista', 'flujo' => 'Flujo — fotos al lado, más noticias en pantalla'];
+$desc = ['' => 'La del sitio (' . DDD_SKINS[cfg('skin_default', 'editorial')] . ')', 'editorial' => 'Editorial — limpia, aire de revista', 'comunidad' => 'Comunidad — tarjetas, más presencia de la gente', 'delta' => 'Delta — la identidad gráfica de Deltha, δ a la vista', 'flujo' => 'Flujo — fotos al lado, más noticias en pantalla', 'retro' => 'Retrocomputer — ordenador clásico, crema y verde, monoespaciada', 'manga' => 'Manga — blanco y negro de página impresa, bordes gruesos', 'punk' => 'Punk — fanzine fotocopiado: negro, fucsia, amarillo ácido'];
 echo "<label>Plantilla</label><select name=\"skin\">";
 foreach ($desc as $k => $v) echo "<option value=\"$k\"" . (($u['skin'] ?? '') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
-echo "</select><small class=\"hint\">Para verlas antes de elegir: <a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> (solo esa página; se guarda aquí).</small>";
+echo "</select><small class=\"hint\">Para verlas antes de elegir: <a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> · <a href=\"/?skin=retro\">Retrocomputer</a> · <a href=\"/?skin=manga\">Manga</a> · <a href=\"/?skin=punk\">Punk</a> (solo esa página; se guarda aquí). El tema claro/oscuro de arriba se aplica también a estas plantillas.</small>";
 echo "<label id=\"aterrizar\">Al abrir Deltha, entrar en…</label><select name=\"landing\"><option value=\"\">La portada</option><optgroup label=\"Un tema\">";
 foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) echo "<option value=\"t:{$t['topic_id']}\"" . (($u['landing'] ?? '') === "t:{$t['topic_id']}" ? ' selected' : '') . ">" . h($t['name']) . "</option>";
 echo "</optgroup><optgroup label=\"Una comunidad\">";
