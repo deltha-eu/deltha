@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 60);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 61);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -256,9 +256,30 @@ function page_body(array $pg): string {
  * editorial (la clasica, con mas aire) | comunidad (tarjetas, usuarios)
  * | delta (identidad grafica: espiga, δ visible, fotos en gris) | flujo (fotos laterales, denso).
  * Orden de preferencia: ?skin= en la URL (probar sin guardar) > communities.skin (en la comunidad y sus hilos) > users.skin > cookie ddd_skin (solo anonimos que eligieron) > config.skin_default. */
-const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk', 'popart' => 'Pop Art', 'zen' => 'Zen', 'orange' => 'Orange', 'foro' => 'Foro'];
-/** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin.php). */
+const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk', 'popart' => 'Pop Art', 'zen' => 'Zen', 'orange' => 'Orange', 'foro' => 'Foro',
+    'hyperpop' => 'Hyperpop / Y2K', 'neobrutal' => 'Neo-Brutal', 'stickerbomb' => 'Stickerbomb', 'riso' => 'Riso / Zine', 'aero' => 'Frutiger Aero', 'hud' => 'Game HUD', 'acid' => 'Acid Web', 'pixel' => 'Pixel / 16-bit', 'dopamine' => 'Dopamine', 'www1998' => 'WWW 1998', 'solarpunk' => 'Solarpunk'];
+/** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin.php) o en /plantilla.php. */
 const DDD_SKIN_COOKIE = 'ddd_skin';
+/** Cookie de preferencia (plantilla, tema, idioma) para quien no tiene cuenta: un año, y solo porque la persona la pidio; '' la borra. */
+function pref_cookie(string $name, string $v): void {
+    $secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    if ($v === '') setcookie($name, '', ['expires' => time() - 3600, 'path' => '/', 'secure' => $secure, 'samesite' => 'Lax']);
+    else setcookie($name, $v, ['expires' => time() + 365 * 86400, 'path' => '/', 'secure' => $secure, 'httponly' => true, 'samesite' => 'Lax']);
+}
+/** Guarda la plantilla elegida: con cuenta en users.skin (y borra la cookie); sin cuenta, cookie. '' = la del sitio. */
+function save_skin_pref(string $s): void {
+    global $pdo; $u = user();
+    if (!isset(DDD_SKINS[$s])) $s = '';
+    if ($u) { $pdo->prepare("UPDATE users SET skin = ? WHERE user_id = ?")->execute([$s, $u['user_id']]); pref_cookie(DDD_SKIN_COOKIE, ''); }
+    else pref_cookie(DDD_SKIN_COOKIE, $s);
+}
+/** Guarda el tema (auto|light|dark) igual que la plantilla. */
+function save_theme_pref(string $t): void {
+    global $pdo; $u = user();
+    $t = in_array($t, ['light', 'dark'], true) ? $t : 'auto';
+    if ($u) { $pdo->prepare("UPDATE users SET theme = ? WHERE user_id = ?")->execute([$t, $u['user_id']]); pref_cookie('ddd_theme', ''); }
+    else pref_cookie('ddd_theme', $t === 'auto' ? '' : $t);
+}
 /** Tema claro/oscuro: users.theme o, sin cuenta, la cookie ddd_theme (solo si se eligio en el menu). null = sigue al sistema. */
 function theme(): ?string {
     $u = user();
@@ -471,10 +492,12 @@ function nav_tabs(string $tab, string $cls): void {
         'articulos'    => ['/articulos.php', t('Artículos'), 'art'],
     ] : [
         'usuarios'     => ['/usuarios.php', t('Usuarios'), 'users'],
+        'plantilla'    => ['/plantilla.php', t('Plantilla'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
         'procesos'     => ['/procesos.php', t('Procesos'), 'proc'],
         'estadisticas' => ['/estadisticas.php', t('Estadísticas'), 'stats'],
         'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
     ];
+    if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';

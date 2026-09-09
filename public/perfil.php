@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $theme = in_array(post('theme'), ['auto', 'light', 'dark'], true) ? post('theme') : 'auto';
-    $skin  = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
+    $skin  = (string)($u['skin'] ?? '');   // la plantilla se elige en /plantilla.php
     $landing = preg_match('/^(t|c):\d{1,9}$/', post('landing')) ? post('landing') : '';
     $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
     $avatar = $u['avatar'];
@@ -54,10 +54,8 @@ foreach (['auto' => t('Automático (como el sistema)'), 'light' => t('Claro'), '
     echo "<option value=\"$k\"" . (($u['theme'] ?? 'auto') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
 }
 echo "</select>";
-$desc = ['' => t('La del sitio (%s)', DDD_SKINS[cfg('skin_default', 'editorial')]), 'editorial' => t('Editorial — limpia, aire de revista'), 'comunidad' => t('Comunidad — tarjetas, más presencia de la gente'), 'delta' => t('Delta — la identidad gráfica de Deltha, δ a la vista'), 'flujo' => t('Flujo — fotos al lado, más noticias en pantalla'), 'retro' => t('Retrocomputer — ordenador clásico, crema y verde, monoespaciada'), 'manga' => t('Manga — blanco y negro de página impresa, bordes gruesos'), 'punk' => t('Punk — fanzine fotocopiado: negro, fucsia, amarillo ácido'), 'popart' => t('Pop Art — revista gráfica de los sesenta: amarillo, rojo, bordes negros'), 'zen' => t('Zen — agua, flor y silencio; casi un lector'), 'orange' => t('Orange — guiño a Menéame: densa, naranja, votos grandes'), 'foro' => t('Foro — tarjetas sobre gris y pastillas de votos, comentarios y compartir')];
-echo "" . t('<label>Plantilla</label>') . "<select name=\"skin\">";
-foreach ($desc as $k => $v) echo "<option value=\"$k\"" . (($u['skin'] ?? '') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
-echo "</select><small class=\"hint\">" . t('Para verlas antes de elegir: ') . "<a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> · <a href=\"/?skin=retro\">Retrocomputer</a> · <a href=\"/?skin=manga\">Manga</a> · <a href=\"/?skin=punk\">Punk</a> · <a href=\"/?skin=popart\">Pop Art</a> · <a href=\"/?skin=zen\">Zen</a> · <a href=\"/?skin=orange\">Orange</a> · <a href=\"/?skin=foro\">Foro</a>" . t(' (solo esa página; se guarda aquí). El tema claro/oscuro de arriba se aplica también a estas plantillas.') . "</small>";
+$cur = (string)($u['skin'] ?? '');
+echo "" . t('<label>Plantilla</label>') . "<p class=\"skinnow\"><b>" . h($cur !== '' ? DDD_SKINS[$cur] : skin_descs()['']) . "</b> · <a href=\"/plantilla.php\">" . t('elegir otra') . "</a></p><small class=\"hint\">" . t('Las plantillas se eligen en su propia pestaña, con muestra y descripción de cada una; el tema claro/oscuro de arriba se aplica a todas.') . "</small>";
 echo "<label id=\"aterrizar\">" . t('Al abrir Deltha, entrar en…') . "</label><select name=\"landing\"><option value=\"\"" . t('>La portada</option>') . "<optgroup label=\"" . t('Un tema') . "\">";
 foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) echo "<option value=\"t:{$t['topic_id']}\"" . (($u['landing'] ?? '') === "t:{$t['topic_id']}" ? ' selected' : '') . ">" . h($t['name']) . "</option>";
 echo "</optgroup><optgroup label=\"" . t('Una comunidad') . "\">";
