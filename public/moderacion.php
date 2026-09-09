@@ -1,6 +1,7 @@
 <?php
 /** /moderacion.php — cola de revision humana: lo que la IA no ha sabido decidir. Para moderadores y admin. */
 require __DIR__ . '/../lib/app.php';
+require __DIR__ . '/../lib/chat.php';
 if (!user()) redirect('/login.php');
 if (!is_mod()) { http_response_code(403); page_header('Moderación'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
@@ -32,6 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['rep_borrar'
     $cid = (int)post('cid');
     if (post('act') === 'rep_borrar') { comment_delete($pdo, $cid); $out[] = "Comentario #$cid eliminado (texto sustituido por el aviso)."; }
     else { $pdo->prepare("UPDATE comment_reports SET status = 'dismissed' WHERE comment_id = ? AND status = 'open'")->execute([$cid]); $out[] = "Reportes del comentario #$cid descartados."; }
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['chat_borrar', 'chat_descartar'], true)) {
+    $mid = (int)post('mid');
+    if (post('act') === 'chat_borrar') { chat_delete_mod($pdo, $mid); $out[] = "Mensaje #$mid del chat eliminado (texto sustituido por el aviso)."; }
+    else { $pdo->prepare("UPDATE chat_reports SET status = 'dismissed' WHERE msg_id = ? AND status = 'open'")->execute([$mid]); $out[] = "Reportes del mensaje #$mid descartados."; }
+    if (post('back') === '1') redirect("/chat.php?m=$mid#m$mid");   // «eliminar» desde el propio chat
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'humano') {
     $item = (int)post('item'); $dec = post('dec') === 'ok' ? 'ok' : 'reject';
@@ -79,6 +86,24 @@ foreach ($reps as $r) {
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_borrar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar comentario</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_descartar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn\" title=\"el comentario se queda; los reportes se cierran\">Descartar reporte</button></form>";
     echo "<a class=\"btn\" href=\"/editar-comentario.php?id={$r['comment_id']}\">editar</a></div></div>";
+}
+/* ---- mensajes del chat reportados ---- */
+try {
+    $creps = $pdo->query("SELECT c.msg_id, c.content, c.alias, c.created, c.user_id, u.login,
+                                 COUNT(*) n, MIN(r.created) first_rep, GROUP_CONCAT(DISTINCT r.reason ORDER BY r.reason) reasons
+                            FROM chat_reports r JOIN chat c ON c.msg_id = r.msg_id LEFT JOIN users u ON u.user_id = c.user_id
+                           WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0
+                           GROUP BY c.msg_id ORDER BY n DESC, first_rep ASC LIMIT 100")->fetchAll();
+} catch (Throwable $e) { $creps = []; }
+echo "<h3 id=\"chat\">Mensajes del chat reportados (" . count($creps) . ")</h3>";
+if (!$creps) echo "<p>No hay reportes pendientes.</p>";
+foreach ($creps as $r) {
+    $motivos = implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', $r['reasons'])));
+    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h(chat_who($r)) . "</b> <a href=\"/chat.php?m={$r['msg_id']}#m{$r['msg_id']}\">#{$r['msg_id']}</a>";
+    echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
+    echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
+    echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar mensaje</button></form>";
+    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_descartar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn\" title=\"el mensaje se queda; los reportes se cierran\">Descartar reporte</button></form></div></div>";
 }
 echo "<h3 id=\"temas\">Temas</h3><p>";
 foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) echo "<a class=\"tag\" href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a> ";

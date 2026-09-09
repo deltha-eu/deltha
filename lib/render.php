@@ -158,8 +158,8 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     echo "<button>" . ($parent ? t('Responder') : t('Comentar')) . "</button></div></form>";
 }
 
-function paginate(string $base, int $page, int $total): void {
-    $per = (int)cfg('per_page', 20);
+function paginate(string $base, int $page, int $total, ?int $per = null): void {
+    $per = $per ?: (int)cfg('per_page', 20);
     $pages = max(1, (int)ceil($total / $per));
     if ($pages <= 1) { echo "<p class=\"end\">" . t('Esto es todo lo que hay ahora.') . "</p>"; return; }
     $sep = str_contains($base, '?') ? '&amp;' : '?';   // /procesos.php?v=votos&p=2
