@@ -164,7 +164,7 @@ a.hint { text-decoration: none; }
   </div>
   <ul>
     <li><b><?= t('%d plantillas visuales.', count($SK)) ?></b> <?= t('Misma portada, mismos números, distinta piel: de revista, de tarjetas, de terminal, de manga, de fanzine… Se elige en el perfil, y cada una tiene versión clara y oscura.') ?></li>
-    <li><b><?= t('En tu idioma y en tu bolsillo.') ?></b> <?= t('Español, inglés y francés. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.') ?></li>
+    <li><b><?= t('En tu idioma y en tu bolsillo.') ?></b> <?= t('Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.') ?></li>
   </ul>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>

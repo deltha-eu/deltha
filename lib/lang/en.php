@@ -371,7 +371,6 @@ return [
 '%d plantillas visuales.' => '%d visual templates.',
 'Misma portada, mismos números, distinta piel: de revista, de tarjetas, de terminal, de manga, de fanzine… Se elige en el perfil, y cada una tiene versión clara y oscura.' => 'Same front page, same numbers, different skin: magazine, cards, terminal, manga, fanzine… Chosen in your profile, each with a light and a dark version.',
 'En tu idioma y en tu bolsillo.' => 'In your language and in your pocket.',
-'Español, inglés y francés. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Spanish, English and French. It installs as an app on your phone, with private messages between members. None of this changes what you see: only how you see it.',
 'Plantilla visual de la comunidad' => 'Community visual template',
 'Ninguna: cada cual ve la suya' => 'None: everyone sees their own',
 'Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ' => 'Applies to the community page and its threads, over each user’s template. To preview them: ',
@@ -406,4 +405,5 @@ return [
 'Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto' => 'No cookies unless you sign in (except template, theme and language, if you pick them) · no tracking · no hidden algorithm',
 'Aspecto' => 'Appearance',
 'Como el sistema' => 'Like the system',
+'Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Eight languages: Spanish, Catalan, Basque, Galician, English, French, German and Italian. It installs as an app on your phone, with private messages between members. None of this changes what you see: only how you see it.',
 ];
