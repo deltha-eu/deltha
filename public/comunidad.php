@@ -16,10 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEdit) {
         redirect('/comunidad.php?c=' . rawurlencode($slug));
     }
     $name = trim(preg_replace('/\s+/', ' ', post('name'))); $descr = mb_substr(trim(post('descr')), 0, 200); $color = post('color') ?: $c['color'];
+    $skin = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
     if (mb_strlen($name) < 3 || mb_strlen($name) > 48) $err = t('El nombre debe tener entre 3 y 48 caracteres.');
     elseif (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $err = t('Color no válido.');
     else {
-        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $c['community_id']]); redirect('/comunidad.php?c=' . rawurlencode($slug) . '&ok=1'); }
+        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ?, skin = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $skin, $c['community_id']]); redirect('/comunidad.php?c=' . rawurlencode($slug) . '&ok=1'); }
         catch (PDOException $e) { $err = t('Ya existe otra comunidad con ese nombre.'); }
     }
 }
@@ -34,6 +35,7 @@ $st->bindValue(2, (int)cfg('per_page', 20), PDO::PARAM_INT);
 $st->bindValue(3, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 
+if (!empty($c['skin'])) community_skin($c['skin']);   // la comunidad se ve con su plantilla
 page_header($c['name']);
 echo "<div class=\"commhead\" style=\"--cc:" . h($c['color']) . "\"><span class=\"dot\"></span><div><h1>" . h($c['name']) . "</h1>";
 if ($c['descr']) echo "<p class=\"bio\">" . h($c['descr']) . "</p>";
@@ -41,7 +43,7 @@ echo "<p class=\"meta\">" . t('comunidad creada por') . " <a href=\"/u.php?u=" .
 if ($c['status'] !== 'ok') echo " · <b>" . t('oculta') . "</b>";
 if ($u && $u['landing'] !== 'c:' . $c['community_id']) echo " · <a href=\"/perfil.php#aterrizar\">" . t('entrar aquí al abrir Deltha') . "</a>";
 echo "</p></div></div>";
-if (isset($_GET['nueva'])) echo "<p class=\"notice\">" . t('Comunidad creada. Ya se puede elegir al enviar una noticia; abajo puedes ajustar el nombre, la descripción y el color.') . "</p>";
+if (isset($_GET['nueva'])) echo "<p class=\"notice\">" . t('Comunidad creada. Ya se puede elegir al enviar una noticia; abajo puedes ajustar el nombre, la descripción, el color y la plantilla.') . "</p>";
 if (isset($_GET['ok'])) echo "<p class=\"notice\">" . t('Guardado.') . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($canEdit) {
@@ -49,6 +51,7 @@ if ($canEdit) {
     echo "" . t('<label>Nombre</label>') . "<input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($c['name']) . "\">";
     echo "" . t('<label>De qué va</label>') . "<input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h((string)$c['descr']) . "\">";
     echo "" . t('<label>Color</label>') . "<input type=\"color\" name=\"color\" value=\"" . h($c['color']) . "\">";
+    echo skin_select((string)($c['skin'] ?? ''));
     echo "" . t('<button>Guardar</button>') . "</form>";
     if (is_mod()) echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"c\" value=\"" . h($slug) . "\"><input type=\"hidden\" name=\"act\" value=\"ocultar\"><button class=\"danger\">" . ($c['status'] === 'ok' ? t('Ocultar comunidad (moderación)') : t('Volver a mostrar')) . "</button></form>";
     echo "</details>";

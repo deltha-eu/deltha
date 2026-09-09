@@ -13,6 +13,7 @@ if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true)
     page_footer();
     exit;
 }
+if (!empty($s['comm_skin'])) community_skin($s['comm_skin']);   // el hilo se ve con la plantilla de su comunidad
 $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
 $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
 $aura = $s['user_id'] ? (float)($s['author_aura'] ?? 5) : (float)cfg('aura_anon', 5);

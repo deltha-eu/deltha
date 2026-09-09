@@ -8,7 +8,7 @@ function display_name(array $row, bool $revealed): string {
 }
 
 function story_query_base(): string {
-    return "SELECT s.*, t.name AS topic, t.coef, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug
+    return "SELECT s.*, t.name AS topic, t.coef, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug, co.skin AS comm_skin
               FROM stories s
               JOIN topics t ON t.topic_id = s.topic_id
          LEFT JOIN users  u ON u.user_id  = s.user_id
@@ -168,3 +168,10 @@ function paginate(string $base, int $page, int $total): void {
 }
 function page_num(): int { return max(1, (int)($_GET['p'] ?? 1)); }
 function page_offset(int $page): int { return ($page - 1) * (int)cfg('per_page', 20); }
+
+/** Selector de plantilla visual de una comunidad ('' = ninguna: cada cual ve la suya). Lo usan comunidades.php y comunidad.php. */
+function skin_select(string $cur): string {
+    $h = "<label>" . t('Plantilla visual de la comunidad') . "</label><select name=\"skin\"><option value=\"\">" . t('Ninguna: cada cual ve la suya') . "</option>";
+    foreach (DDD_SKINS as $k => $v) $h .= "<option value=\"$k\"" . ($cur === $k ? ' selected' : '') . ">" . h($v) . "</option>";
+    return $h . "</select><small class=\"hint\">" . t('Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ') . "<a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> · <a href=\"/?skin=retro\">Retrocomputer</a> · <a href=\"/?skin=manga\">Manga</a> · <a href=\"/?skin=punk\">Punk</a> · <a href=\"/?skin=popart\">Pop Art</a> · <a href=\"/?skin=zen\">Zen</a> · <a href=\"/?skin=orange\">Orange</a></small>";
+}

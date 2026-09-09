@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 45);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 46);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -245,14 +245,19 @@ function page_body(array $pg): string {
 /* ---- plantillas visuales ----------------------------------------------
  * editorial (la clasica, con mas aire) | comunidad (tarjetas, usuarios)
  * | delta (identidad grafica: espiga, δ visible, fotos en gris) | flujo (fotos laterales, denso).
- * Orden de preferencia: ?skin= en la URL (probar sin guardar) > users.skin > config.skin_default. */
-const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk'];
+ * Orden de preferencia: ?skin= en la URL (probar sin guardar) > communities.skin (en la comunidad y sus hilos) > users.skin > config.skin_default. */
+const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk', 'popart' => 'Pop Art', 'zen' => 'Zen', 'orange' => 'Orange'];
+/** Plantilla propia de la comunidad que se esta viendo (su pagina y sus hilos): la fija la pagina antes de page_header().
+ *  Manda sobre la del usuario, pero no sobre ?skin= (probar). '' = la comunidad no tiene plantilla propia. */
+$DDD_COMM_SKIN = '';
+function community_skin(?string $skin): void { global $DDD_COMM_SKIN; $DDD_COMM_SKIN = isset(DDD_SKINS[(string)$skin]) ? (string)$skin : ''; }
 function skin(): string {
     static $s = null;
     if ($s !== null) return $s;
+    global $DDD_COMM_SKIN;
     $q = (string)($_GET['skin'] ?? '');
     $u = user();
-    foreach ([$q, (string)($u['skin'] ?? ''), (string)cfg('skin_default', 'editorial')] as $c) {
+    foreach ([$q, $DDD_COMM_SKIN, (string)($u['skin'] ?? ''), (string)cfg('skin_default', 'editorial')] as $c) {
         if (isset(DDD_SKINS[$c])) return $s = $c;
     }
     return $s = 'editorial';
