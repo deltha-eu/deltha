@@ -35,7 +35,7 @@ self.addEventListener('fetch', e => {
   }
 
   // Estáticos propios (/css, /img, /app): caché primero, y se rellena al vuelo.
-  if (/^\/(css|img|app)\//.test(url.pathname) && !url.pathname.endsWith('sw.js')) {
+  if (/^\/(css|img|app)\//.test(url.pathname) && !url.pathname.endsWith('sw.js') && !url.pathname.endsWith('.php')) {   // manifest.php es dinamico: nunca en cache
     e.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }

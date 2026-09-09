@@ -70,6 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE users SET verified = 1, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([$id]);
         $out[] = "Usuario $id: correo validado a mano.";
     } elseif ($act === 'logo') {
+        // icono cuadrado (favicon, pantalla de inicio, PWA)
+        if (post('quitar_icon') === '1') {
+            if ($b = cfg('logo_icon')) foreach (glob(DDD_MEDIA_DIR . '/logo/' . $b . '-*.png') ?: [] as $f) @unlink($f);
+            config_set($pdo, 'logo_icon', ''); $out[] = 'Icono: restaurado el de serie.';
+        } elseif (!empty($_FILES['logo_icon']['name'])) {
+            $r = icono_desde_subida($_FILES['logo_icon']);
+            if (str_starts_with($r, 'ERR:')) $out[] = 'Icono: ' . substr($r, 4);
+            else { if ($b = cfg('logo_icon')) foreach (glob(DDD_MEDIA_DIR . '/logo/' . $b . '-*.png') ?: [] as $f) @unlink($f); config_set($pdo, 'logo_icon', $r); $out[] = 'Icono guardado (favicon, iOS y PWA). Los navegadores tardan en soltar el favicon viejo: cierra la pestaña y vuelve a abrirla.'; }
+        }
         foreach (['light' => 'claro', 'dark' => 'oscuro'] as $m => $lbl) {
             $key = "logo_$m"; $actual = cfg($key);
             if (post("quitar_$m") === '1') {
@@ -145,6 +154,38 @@ function logo_desde_subida(array $file, string $mode): string {
     if (!is_dir($dir)) mkdir($dir, 0775, true);
     $name = "logo-$mode-" . bin2hex(random_bytes(6)) . ".$ext";
     return file_put_contents("$dir/$name", $bytes) ? $name : 'ERR:no se pudo escribir en /media/logo (permisos).';
+}
+
+/**
+ * Icono del sitio: PNG/WebP cuadrado de 192 px o mas. Genera en /media/logo las variantes 64 (favicon), 180 (iOS),
+ * 192 y 512 (PWA) y 512m (maskable: el icono al 80 %% sobre fondo blanco, para que Android lo recorte sin comerselo).
+ * Devuelve la base del nombre (icon-<hex>) o "ERR:mensaje".
+ */
+function icono_desde_subida(array $file): string {
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return 'ERR:no se recibió el fichero.';
+    if ($file['size'] > 4000000) return 'ERR:máximo 4 MB.';
+    $bytes = file_get_contents($file['tmp_name']);
+    $src = $bytes ? @imagecreatefromstring($bytes) : false;
+    if (!$src) return 'ERR:no se pudo leer la imagen (PNG o WebP).';
+    $sw = imagesx($src); $sh = imagesy($src);
+    if (min($sw, $sh) < 192) { imagedestroy($src); return 'ERR:demasiado pequeño: al menos 192×192 px (mejor 512×512).'; }
+    if (abs($sw - $sh) > max($sw, $sh) * 0.05) { imagedestroy($src); return "ERR:tiene que ser cuadrado (es de {$sw}×{$sh})."; }
+    $side = min($sw, $sh); $cx = intdiv($sw - $side, 2); $cy = intdiv($sh - $side, 2);
+    $dir = DDD_MEDIA_DIR . '/logo'; if (!is_dir($dir)) mkdir($dir, 0775, true);
+    $base = 'icon-' . bin2hex(random_bytes(6));
+    foreach ([64 => '64', 180 => '180', 192 => '192', 512 => '512'] as $px => $suf) {
+        $dst = imagecreatetruecolor($px, $px); imagealphablending($dst, false); imagesavealpha($dst, true);
+        imagefill($dst, 0, 0, imagecolorallocatealpha($dst, 0, 0, 0, 127));
+        imagecopyresampled($dst, $src, 0, 0, $cx, $cy, $px, $px, $side, $side);
+        $ok = imagepng($dst, "$dir/$base-$suf.png", 6); imagedestroy($dst);
+        if (!$ok) { imagedestroy($src); return 'ERR:no se pudo escribir en /media/logo (permisos).'; }
+    }
+    // maskable: fondo blanco y el icono al 80 %% centrado (zona segura de Android)
+    $dst = imagecreatetruecolor(512, 512); imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255));
+    imagealphablending($dst, true);
+    imagecopyresampled($dst, $src, 51, 51, $cx, $cy, 410, 410, $side, $side);
+    imagepng($dst, "$dir/$base-512m.png", 6); imagedestroy($dst); imagedestroy($src);
+    return $base;
 }
 
 /**
@@ -315,7 +356,7 @@ if ($tab === 'usuarios') {
 } elseif ($tab === 'config') {
     echo "<h3>Config</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"config\"><table>";
     foreach ($pdo->query("SELECT * FROM config ORDER BY ckey") as $c) {
-        if (str_starts_with($c['ckey'], 'logo_')) continue;   // se gestiona en la pestaña Logo
+        if (str_starts_with($c['ckey'], 'logo_')) continue;   // se gestiona en la pestaña Logo (logo_light, logo_dark, logo_icon)
         echo "<tr><td><code>" . h($c['ckey']) . "</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><input type=\"text\" name=\"cfg[" . h($c['ckey']) . "]\" value=\"" . h($c['cvalue']) . "\"></td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar config</button></p></form>";
@@ -343,12 +384,18 @@ if ($tab === 'usuarios') {
         if ($propio) echo "<br><label><input type=\"checkbox\" name=\"quitar_$m\" value=\"1\"> volver al de serie</label>";
         echo "</td></tr>";
     }
+    $propio = (string)cfg('logo_icon');
+    echo "<tr><td style=\"width:40%\"><strong>Icono</strong><br><small>" . t('favicon, pantalla de inicio del móvil y app') . " · " . ($propio ? "personalizado: <code>" . h($propio) . "-*.png</code>" : "los de serie (<code>/img/favicon.png</code>, <code>/img/icon-180.png</code>, <code>/app/icon-*.png</code>)") . "</small>";
+    echo "<div style=\"margin-top:8px;display:flex;gap:10px;align-items:flex-end\"><img src=\"" . h(icon_src(180)) . "?" . time() . "\" alt=\"\" style=\"width:60px;height:60px;border-radius:12px;border:1px solid var(--line)\"><img src=\"" . h(icon_src(64)) . "?" . time() . "\" alt=\"\" style=\"width:32px;height:32px\"><img src=\"" . h(icon_src(64)) . "?" . time() . "\" alt=\"\" style=\"width:16px;height:16px\"></div></td>";
+    echo "<td><input type=\"file\" name=\"logo_icon\" accept=\"image/png,image/webp\"><br><small>PNG o WebP <b>cuadrado</b>, mínimo 192 px (mejor 512); se generan solos el favicon y los tamaños de iOS y Android.</small>";
+    if ($propio) echo "<br><label><input type=\"checkbox\" name=\"quitar_icon\" value=\"1\"> volver a los de serie</label>";
+    echo "</td></tr>";
     echo "</table><p><button class=\"btn\">Guardar logo</button></p></form>";
     $ldir = DDD_MEDIA_DIR . '/logo';
     echo "<p><small>Los ficheros van a <code>/media/logo</code>; al subir uno nuevo se borra el anterior. Si el navegador sigue enseñando el viejo, recarga con Ctrl+F5.<br>"
        . "Estado: carpeta <code>" . h($ldir) . "</code> " . (is_dir($ldir) ? (is_writable($ldir) ? "existe y es escribible" : "<b>existe pero no es escribible</b>") : (is_writable(DDD_MEDIA_DIR) ? "no existe aún (se creará al subir)" : "<b>no existe y /media no es escribible</b>"))
        . " · <code>upload_max_filesize</code> " . h(ini_get('upload_max_filesize')) . " · <code>post_max_size</code> " . h(ini_get('post_max_size')) . " · fileinfo " . (class_exists('finfo') ? "sí" : "<b>no (hace falta la extensión fileinfo)</b>")
-       . " · config: logo_light=<code>" . h((string)cfg('logo_light')) . "</code> logo_dark=<code>" . h((string)cfg('logo_dark')) . "</code></small></p>";
+       . " · config: logo_light=<code>" . h((string)cfg('logo_light')) . "</code> logo_dark=<code>" . h((string)cfg('logo_dark')) . "</code> logo_icon=<code>" . h((string)cfg('logo_icon')) . "</code></small></p>";
 
 } elseif ($tab === 'privacidad') {
     echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{mincand}</code> <code>{newttl}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";
