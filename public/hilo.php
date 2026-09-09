@@ -53,7 +53,7 @@ echo "</div></article>";
 echo "<div class=\"stats\" id=\"comentarios\"><span><b>" . count($all) . "</b> " . t('comentarios') . "</span>";
 if ($s['status'] === 'destacadas') echo "<span>" . h(queda($s['published_date'])) . "</span>";
 if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
-echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span></div>";
+echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>" . share_link($s) . "</div>";
 if (is_mod()) {   // moderadores y admin: cambiar el tema del envio
     echo "<form class=\"modbar\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><label>Tema</label><select name=\"topic\">";
     foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) {

@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 50);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 51);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -408,6 +408,7 @@ function icon(string $n): string {
         'down'   => '<path d="M12 5v14"/><path d="m6 13 6 6 6-6"/>',
         'link'   => '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
         'plus'   => '<path d="M12 5v14M5 12h14"/>',
+        'share'  => '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>',
         'user'   => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     ][$n] ?? '';
     return "<svg class=\"i\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">$p</svg>";
@@ -485,6 +486,7 @@ function page_footer(): void {
     echo "<div class=\"dock\">";
     nav_tabs(current_tab(), 'tabs-bottom');
     echo "<footer class=\"docked\"><p>" . footer_links() . "</p></footer></div>";
+    echo "<script src=\"/app/share.js?v=" . DDD_CSS_VER . "\" defer></script>";   // «compartir»: copia el enlace (o abre el menu nativo); sin JS el enlace lleva al hilo
     echo "</body></html>";
 }
 function current_tab(): string { global $DDD_TAB; return $DDD_TAB ?? ''; }

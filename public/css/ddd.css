@@ -116,6 +116,11 @@ form.vote button { font: inherit; font-size: 13px; background: none; border: 0; 
 form.vote button:first-child:hover { color: var(--fg); }
 form.vote button:last-child:hover { color: var(--line2); }
 span.vote { display: inline-flex; gap: 22px; }
+.actions .share { margin-left: auto; font-size: 13px; }
+.actions .share.copied { color: var(--accent); }
+.hilo .stats .share { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+.hilo .stats .share .i { width: 18px; height: 18px; }
+.hilo .stats .share.copied { color: var(--accent); }
 
 /* ---- hilo ---- */
 .hilo .post.main { border-bottom: 0; }
@@ -811,6 +816,8 @@ details.editbox form.plain { padding-top: 0; }
 /* barra de acciones abajo: los comentarios, en pastilla palida */
 [data-skin="orange"] .post .actions > a { grid-area: actions; justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 5px 12px; background: var(--or2); color: var(--or); font-weight: 700; font-size: 13px; border-radius: 6px; }
 [data-skin="orange"] .post .actions > a .i { width: 17px; height: 17px; }
+[data-skin="orange"] .post .actions > a.share { justify-self: end; background: transparent; color: var(--muted); font-weight: 600; padding-right: 0; }
+[data-skin="orange"] .post .actions > a.share:hover { background: transparent; color: var(--or); }
 [data-skin="orange"] .post .actions > a:hover { background: var(--or); color: #fff; }
 @media (max-width: 420px) {
   [data-skin="orange"] .post.full, [data-skin="orange"] .post.compact { grid-template-columns: 54px 22px minmax(0, 1fr) 80px; column-gap: 8px; padding: 8px 8px 6px; margin: 8px 8px 0; }
