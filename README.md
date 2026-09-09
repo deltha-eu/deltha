@@ -18,6 +18,9 @@ La zona horaria la fija `lib/app.php` (`[app] timezone` en config.ini, por defec
 ## Acceso privado (clave temporal)
 `config.access_key` (admin → Config; `sql/migra-006-clave.sql`). Mientras no esté vacía, quien no tenga la clave es redirigido a la presentación `/delta/`; el «Sí» final lleva a `/delta/clave.php`, que deja una cookie técnica `ddd_k` (HMAC de la clave, 30 días). Los usuarios logueados pasan sin clave (`/login.php` queda exento). Cambiar la clave invalida todas las cookies; vaciarla abre la web.
 
+## Plantillas visuales
+Cuatro, elegibles en `/perfil.php` (`users.skin`, `sql/migra-015-plantillas.sql`); por defecto la de `config.skin_default` (admin → Config). Se emite `<html data-skin="…">` y todo es CSS (`ddd.css`, bloque «Plantillas visuales»): **editorial** (la clásica, con más aire lateral), **comunidad** (tarjetas sobre fondo gris, avatar grande, nombre y meta en dos líneas), **delta** (identidad gráfica: espiga vertical, δ en vivo en cada post, cantos rectos, meta en monoespaciada, fotos en gris que cobran color al pasar), **flujo** (foto cuadrada a la derecha, más noticias por pantalla; `display: contents` en `.pc` para que avatar y contenido compartan la rejilla). `?skin=nombre` en cualquier URL la aplica solo a esa página, para probar sin guardar (los anónimos no tienen cookie, así que solo pueden probar).
+
 ## Tema claro/oscuro
 Por defecto sigue al sistema (`prefers-color-scheme`). Un registrado puede fijarlo en `/perfil.php` (`users.theme`, `sql/migra-007-tema.sql`): se emite `<html data-theme="light|dark">` y el CSS lo respeta vía variables (`--logo-l/--logo-d/--ink-invert`). Sin cookie, sin JS.
 

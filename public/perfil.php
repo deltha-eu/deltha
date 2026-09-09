@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $theme = in_array(post('theme'), ['auto', 'light', 'dark'], true) ? post('theme') : 'auto';
+    $skin  = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
     $avatar = $u['avatar'];
     if (!empty($_FILES['photo']['name'])) {
         $new = avatar_desde_subida($_FILES['photo']);
@@ -25,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (post('quitar') === '1' && $avatar) { @unlink(DDD_MEDIA_DIR . '/avatars/' . $avatar); $avatar = null; }
     if (!$err) {
-        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $u['user_id']]);
+        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $u['user_id']]);
         redirect('/perfil.php?ok=1');
     }
 }
@@ -48,5 +49,9 @@ foreach (['auto' => 'Automático (como el sistema)', 'light' => 'Claro', 'dark' 
     echo "<option value=\"$k\"" . (($u['theme'] ?? 'auto') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
 }
 echo "</select>";
+$desc = ['' => 'La del sitio (' . DDD_SKINS[cfg('skin_default', 'editorial')] . ')', 'editorial' => 'Editorial — limpia, aire de revista', 'comunidad' => 'Comunidad — tarjetas, más presencia de la gente', 'delta' => 'Delta — la identidad gráfica de Deltha, δ a la vista', 'flujo' => 'Flujo — fotos al lado, más noticias en pantalla'];
+echo "<label>Plantilla</label><select name=\"skin\">";
+foreach ($desc as $k => $v) echo "<option value=\"$k\"" . (($u['skin'] ?? '') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
+echo "</select><small class=\"hint\">Para verlas antes de elegir: <a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> (solo esa página; se guarda aquí).</small>";
 echo "<button>Guardar</button></form>";
 page_footer();
