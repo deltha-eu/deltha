@@ -348,7 +348,7 @@ if ($tab === 'usuarios') {
        . " · config: logo_light=<code>" . h((string)cfg('logo_light')) . "</code> logo_dark=<code>" . h((string)cfg('logo_dark')) . "</code></small></p>";
 
 } elseif ($tab === 'privacidad') {
-    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";
+    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";
     foreach (['privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso', 'algoritmo' => 'Cómo funciona el δ'] as $slug => $lbl) {
         $pg = page_get($pdo, $slug);
         echo "<h3>$lbl</h3><p><small>Se muestra en <a href=\"/$slug.php\">/$slug.php</a>" . ($pg['updated'] ? " · última edición " . h($pg['updated']) : "") . ".</small></p>";

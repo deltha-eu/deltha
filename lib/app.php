@@ -237,6 +237,7 @@ function page_body(array $pg): string {
         '{aurastart}'=> num_es(cfg('aura_start', 5)),
         '{auramax}'  => num_es(cfg('aura_max', 50)),
         '{commaura}' => num_es(cfg('comm_min_aura', 10)),
+        '{commmax}'  => (string)(int)cfg('comm_max_per_user', 3),
         '{editaura}' => num_es(cfg('comment_edit_min_aura', 10)),
         '{editmin}'  => (string)(int)cfg('comment_edit_minutes', 10),
     ]);
