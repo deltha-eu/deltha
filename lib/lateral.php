@@ -14,10 +14,22 @@ function rail(string $tab): void {
     echo "<a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
     nav_tabs($tab, 'rail-top');
     nav_tabs($tab, 'rail-bottom');
+    rail_skins();
     echo "<a class=\"pub\" href=\"/enviar.php\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>";
     if ($u) echo "<a class=\"me\" href=\"/perfil.php\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>";
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>";
     echo "</aside>";
+}
+
+/** Tercer grupo del rail: cambio rapido de plantilla (tambien sin cuenta). Un <details> para no alargar el menu. */
+function rail_skins(): void {
+    $cur = skin();
+    $u = user();
+    $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');
+    echo "<details class=\"rail-skins\"><summary>" . icon('skin') . "<span>" . t('Plantilla') . "<small>" . h(DDD_SKINS[$cur] ?? $cur) . "</small></span></summary><div class=\"list\">";
+    foreach (DDD_SKINS as $k => $v) echo "<a href=\"/cambiar-skin.php?s=$k\"" . ($k === $cur ? ' class="on"' : '') . "><i class=\"sw sw-$k\"></i>" . h($v) . "</a>";
+    if ($saved !== '') echo "<a class=\"reset\" href=\"/cambiar-skin.php?s=\">" . t('la del sitio') . "</a>";
+    echo "</div></details>";
 }
 
 /** Columna derecha. */

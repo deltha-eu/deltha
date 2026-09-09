@@ -176,7 +176,7 @@ function page_offset(int $page): int { return ($page - 1) * (int)cfg('per_page',
 function skin_select(string $cur): string {
     $h = "<label>" . t('Plantilla visual de la comunidad') . "</label><select name=\"skin\"><option value=\"\">" . t('Ninguna: cada cual ve la suya') . "</option>";
     foreach (DDD_SKINS as $k => $v) $h .= "<option value=\"$k\"" . ($cur === $k ? ' selected' : '') . ">" . h($v) . "</option>";
-    return $h . "</select><small class=\"hint\">" . t('Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ') . "<a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> · <a href=\"/?skin=retro\">Retrocomputer</a> · <a href=\"/?skin=manga\">Manga</a> · <a href=\"/?skin=punk\">Punk</a> · <a href=\"/?skin=popart\">Pop Art</a> · <a href=\"/?skin=zen\">Zen</a> · <a href=\"/?skin=orange\">Orange</a></small>";
+    return $h . "</select><small class=\"hint\">" . t('Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ') . "<a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> · <a href=\"/?skin=retro\">Retrocomputer</a> · <a href=\"/?skin=manga\">Manga</a> · <a href=\"/?skin=punk\">Punk</a> · <a href=\"/?skin=popart\">Pop Art</a> · <a href=\"/?skin=zen\">Zen</a> · <a href=\"/?skin=orange\">Orange</a> · <a href=\"/?skin=foro\">Foro</a></small>";
 }
 
 

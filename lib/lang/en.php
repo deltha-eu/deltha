@@ -394,4 +394,8 @@ return [
 'Temas' => 'Topics',
 'esta semana' => 'this week',
 'coeficiente %s' => 'coefficient %s',
+'Foro — tarjetas sobre gris y pastillas de votos, comentarios y compartir' => 'Foro — cards on grey with pill-shaped votes, comments and share',
+'Plantilla' => 'Template',
+'la del sitio' => 'the site default',
+'Sin cookies para quien no inicia sesión (salvo la de la plantilla, si eliges una) · sin rastreo · sin algoritmo oculto' => 'No cookies unless you sign in (except the template one, if you pick one) · no tracking · no hidden algorithm',
 ];

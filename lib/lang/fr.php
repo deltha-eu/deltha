@@ -394,4 +394,8 @@ return [
 'Temas' => 'Thèmes',
 'esta semana' => 'cette semaine',
 'coeficiente %s' => 'coefficient %s',
+'Foro — tarjetas sobre gris y pastillas de votos, comentarios y compartir' => 'Foro — cartes sur gris avec votes, commentaires et partage en pastilles',
+'Plantilla' => 'Habillage',
+'la del sitio' => 'celui du site',
+'Sin cookies para quien no inicia sesión (salvo la de la plantilla, si eliges una) · sin rastreo · sin algoritmo oculto' => 'Pas de cookies sans connexion (sauf celui de l’habillage, si vous en choisissez un) · pas de pistage · pas d’algorithme caché',
 ];
