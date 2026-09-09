@@ -86,7 +86,7 @@ a.hint { text-decoration: none; }
 
 <a class="slide" id="s1" href="#s2">
   <?= $dots(1) ?>
-  <img class="logo l" src="/img/logo.png" alt=""><img class="logo d" src="/img/logo-dark.png" alt="">
+  <img class="logo l" src="<?= h(logo_src('light')) ?>" alt=""><img class="logo d" src="<?= h(logo_src('dark')) ?>" alt="">
   <h1><?= t('Hola.<br>Parece que has sido seleccionado para conocer Deltha.') ?></h1>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
@@ -194,7 +194,7 @@ a.hint { text-decoration: none; }
 
 <a class="slide" id="s10" href="<?= $entrar ?>">
   <?= $dots(10) ?>
-  <img class="logo l" src="/img/logo.png" alt=""><img class="logo d" src="/img/logo-dark.png" alt="">
+  <img class="logo l" src="<?= h(logo_src('light')) ?>" alt=""><img class="logo d" src="<?= h(logo_src('dark')) ?>" alt="">
   <h1><?= t('¿Quieres probar Deltha?') ?></h1>
   <p class="hint"><?= t('Pulsa para entrar') ?></p>
 </a>
