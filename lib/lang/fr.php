@@ -380,4 +380,7 @@ return [
 'Orange — guiño a Menéame: densa, naranja, votos grandes' => 'Orange — clin d’œil à Menéame : dense, orange, gros votes',
 '%d en cola · próximo ciclo en %d min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.' => '%d dans la file · prochain cycle dans %d min · à chaque cycle <b>une</b> monte en candidates : le plus grand δ parmi celles de plus de %d min avec δ ≥ %s. L’estimation suppose que les votes ne changent pas ; elle se recalcule chaque minute.',
 'necesita δ ≥ %s para ascender' => 'il faut δ ≥ %s pour monter',
+'compartir' => 'partager',
+'enlace copiado' => 'lien copié',
+'copiar el enlace' => 'copier le lien',
 ];

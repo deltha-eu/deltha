@@ -101,6 +101,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<div class=\"actions\">";
     echo "<a href=\"$hrefC\">" . icon('reply') . "<span>{$s['comments']}</span></a>";
     vote_widget($s);
+    echo share_link($s);
     echo "</div>";
     echo "</div></article>";
 }
@@ -176,4 +177,11 @@ function skin_select(string $cur): string {
     $h = "<label>" . t('Plantilla visual de la comunidad') . "</label><select name=\"skin\"><option value=\"\">" . t('Ninguna: cada cual ve la suya') . "</option>";
     foreach (DDD_SKINS as $k => $v) $h .= "<option value=\"$k\"" . ($cur === $k ? ' selected' : '') . ">" . h($v) . "</option>";
     return $h . "</select><small class=\"hint\">" . t('Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ') . "<a href=\"/?skin=editorial\">Editorial</a> · <a href=\"/?skin=comunidad\">Comunidad</a> · <a href=\"/?skin=delta\">Delta</a> · <a href=\"/?skin=flujo\">Flujo</a> · <a href=\"/?skin=retro\">Retrocomputer</a> · <a href=\"/?skin=manga\">Manga</a> · <a href=\"/?skin=punk\">Punk</a> · <a href=\"/?skin=popart\">Pop Art</a> · <a href=\"/?skin=zen\">Zen</a> · <a href=\"/?skin=orange\">Orange</a></small>";
+}
+
+
+/** «Compartir»: enlace absoluto al hilo. Con JS (/app/share.js) copia el enlace al portapapeles o abre el menu nativo de compartir; sin JS, lleva al hilo. */
+function share_link(array $s): string {
+    $url = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/hilo.php?id=' . (int)$s['story_id'];
+    return "<a class=\"share\" href=\"" . h($url) . "\" data-share data-title=\"" . h($s['title']) . "\" data-copied=\"" . h(t('enlace copiado')) . "\" title=\"" . h(t('copiar el enlace')) . "\">" . icon('share') . "<span>" . t('compartir') . "</span></a>";
 }
