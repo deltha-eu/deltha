@@ -11,14 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $st->execute([$who, $who]);
     $u = $st->fetch();
     // respuesta identica exista o no la cuenta, para no revelar correos
-    $msg = 'Si esa cuenta existe y está pendiente de activar, acabamos de enviarle un nuevo enlace.';
+    $msg = t('Si esa cuenta existe y está pendiente de activar, acabamos de enviarle un nuevo enlace.');
     if ($u && (int)$u['verified'] === 0 && (!$u['token_sent'] || strtotime($u['token_sent']) < time() - 600)) {
         send_activation($pdo, (int)$u['user_id'], $u['email']);
     }
 }
-page_header('Reenviar activación');
-echo "<h1>Reenviar activación</h1>";
+page_header(t('Reenviar activación'));
+echo "" . t('<h1>Reenviar activación</h1>') . "";
 if ($msg) echo "<p class=\"notice\">" . h($msg) . "</p>";
-echo "<form class=\"plain\" method=\"post\"><label>Usuario o correo</label><input type=\"text\" name=\"who\" required><button>Enviar de nuevo</button></form>";
-echo "<p class=\"end\">Se puede pedir un nuevo enlace cada 10 minutos.</p>";
+echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario o correo</label>') . "<input type=\"text\" name=\"who\" required>" . t('<button>Enviar de nuevo</button>') . "</form>";
+echo "<p class=\"end\">" . t('Se puede pedir un nuevo enlace cada 10 minutos.') . "</p>";
 page_footer();

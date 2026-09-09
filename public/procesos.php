@@ -17,7 +17,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
-$VIEWS = ['cola' => 'En cola', 'todo' => 'Todo', 'envios' => 'Envíos', 'comentarios' => 'Comentarios', 'votos' => 'Votos', 'portadas' => 'Portadas'];
+$VIEWS = ['cola' => t('En cola'), 'todo' => t('Todo'), 'envios' => t('Envíos'), 'comentarios' => t('Comentarios'), 'votos' => t('Votos'), 'portadas' => t('Portadas')];
 $v = (string)($_GET['v'] ?? 'cola');
 if (!isset($VIEWS[$v])) $v = 'cola';
 $page = page_num();
@@ -64,12 +64,12 @@ function cola_eta(array $rows): array {
 }
 function eta_txt(int $ts): string {
     $m = max(1, (int)ceil(($ts - time()) / 60));
-    if ($m <= max(1, (int)cfg('cycle_minutes', 5))) return "candidata en el próximo ciclo (~$m min)";
-    if ($m < 120) return "candidata en ~$m min";
-    return "candidata en ~" . (int)round($m / 60) . " h";
+    if ($m <= max(1, (int)cfg('cycle_minutes', 5))) return t('candidata en el próximo ciclo (~%d min)', $m);
+    if ($m < 120) return t('candidata en ~%d min', $m);
+    return t('candidata en ~%d h', (int)round($m / 60));
 }
 
-page_header('Procesos', 'procesos', '<meta http-equiv="refresh" content="60">');
+page_header(t('Procesos'), 'procesos', '<meta http-equiv="refresh" content="60">');
 echo "<nav class=\"sub\">";
 foreach ($VIEWS as $k => $label) echo "<a href=\"/procesos.php" . ($k === 'cola' ? '' : "?v=$k") . "\"" . ($k === $v ? ' class="on"' : '') . ">" . h($label) . "</a>";
 echo "</nav>";
@@ -80,7 +80,7 @@ if ($v === 'cola') {
     $rows = $st->fetchAll();
     $total = count($rows);
     $eta = cola_eta($rows);
-    echo "<p class=\"notice\">$total en cola · próximo ciclo en $next min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de " . (int)cfg('delta_min_age_min') . " min. La estimación supone que no cambian los votos; se recalcula sola cada minuto.</p>";
+    echo "<p class=\"notice\">" . t('%d en cola · próximo ciclo en %d min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de %d min. La estimación supone que no cambian los votos; se recalcula sola cada minuto.', $total, $next, (int)cfg('delta_min_age_min')) . "</p>";
     $n = 0;
     // una linea por noticia: puesto, titular, quien/tema/cuando, delta y estimacion; sin avatar ni foto
     foreach (array_slice($rows, page_offset($page), $per) as $i => $s) {
@@ -88,7 +88,7 @@ if ($v === 'cola') {
         $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
         $who = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
         $sid = (int)$s['story_id'];
-        $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid]) : 'sin estimación';
+        $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid]) : t('sin estimación');
         echo "<div class=\"fz cola\" id=\"s$sid\"><span class=\"n\">$pos</span><div class=\"fzt\">";
         echo "<a class=\"t\" href=\"/hilo.php?id=$sid\">" . h($s['title']) . "</a>";
         echo "<span class=\"meta\">" . h($who) . " · " . topic_link($s) . " · " . h(hace($s['sent_date'])) . "</span>";
@@ -96,7 +96,7 @@ if ($v === 'cola') {
         echo "<span class=\"vt\">" . icon('up') . (int)$s['votes_pos'] . " " . icon('down') . (int)$s['votes_neg'] . " " . icon('reply') . (int)$s['comments'] . "</span></div>";
         $n++;
     }
-    if ($n === 0) echo "<p class=\"end\">No hay nada en cola. <a href=\"/enviar.php\">Envía algo</a>.</p>";
+    if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en cola. <a href="/enviar.php">Envía algo</a>.') . "</p>";
     paginate('/procesos.php', $page, $total);
     page_footer();
     exit;
@@ -140,8 +140,8 @@ if ($ids) {
     foreach ($pdo->query("SELECT user_id, login, avatar, aura FROM users WHERE user_id IN (" . implode(',', $ids) . ")") as $r) $U[(int)$r['user_id']] = $r;
 }
 
-echo "<p class=\"notice\">Lo que pasa en el sitio, en orden (últimos $DIAS días). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta " . (int)cfg('ghost_minutes', 30) . " min después; luego con su nombre.</p>";
-if (!$ev) echo "<p class=\"end\">Todavía no hay actividad de este tipo.</p>";
+echo "<p class=\"notice\">" . t('Lo que pasa en el sitio, en orden (últimos %d días). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.', $DIAS, (int)cfg('ghost_minutes', 30)) . "</p>";
+if (!$ev) echo "<p class=\"end\">" . t('Todavía no hay actividad de este tipo.') . "</p>";
 foreach ($ev as $e) {
     $sid = (int)$e['story_id'];
     $href = "/hilo.php?id=$sid";
@@ -155,13 +155,13 @@ foreach ($ev as $e) {
             $rev = (int)$e['revealed'] === 1 || ghost_over($e['sent_date']);
             $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
             $lead = who_avatar($row, $rev, $aura, $name);
-            $txt = "<b>" . h($name) . "</b> envía $title";
+            $txt = "<b>" . h($name) . "</b> " . t('envía') . " $title";
             $ic = 'new'; break;
         case 'comentario':
             $rev = ghost_over($e['ts']);
             $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
             $lead = who_avatar($row, $rev, $aura, $name);
-            $txt = "<b>" . h($name) . "</b> comenta en <a class=\"t\" href=\"$href#c{$e['ref']}\">" . h($e['title']) . "</a>";
+            $txt = "<b>" . h($name) . "</b> " . t('comenta en') . " <a class=\"t\" href=\"$href#c{$e['ref']}\">" . h($e['title']) . "</a>";
             $ic = 'reply'; break;
         case 'voto':
             $rev = ghost_over($e['ts']);
@@ -169,11 +169,11 @@ foreach ($ev as $e) {
             $name = display_name(['login' => $row['login'], 'alias' => $alias], $rev);
             $lead = who_avatar($row, $rev, $aura, $name);
             $pos = (int)$e['value'] > 0;
-            $txt = "<b>" . h($name) . "</b> vota <span class=\"" . ($pos ? 'pos' : 'neg') . "\">" . ($pos ? '+1' : '−1') . "</span> a $title";
+            $txt = "<b>" . h($name) . "</b> " . t('vota') . " <span class=\"" . ($pos ? 'pos' : 'neg') . "\">" . ($pos ? '+1' : '−1') . "</span> " . t('a') . " $title";
             $ic = $pos ? 'up' : 'down'; break;
         default: // portada
             $lead = "<span class=\"av sys\">" . icon('home') . "</span>";
-            $txt = "$title llega a <b>portada</b> <span class=\"delta\">δ " . number_format((float)$e['delta'], 1, ',', '') . "</span>";
+            $txt = "$title " . t('llega a <b>portada</b>') . " <span class=\"delta\">δ " . number_format((float)$e['delta'], 1, ',', '') . "</span>";
             $ic = 'home';
     }
     echo "<div class=\"fz k-{$e['kind']}\">$lead<div class=\"fzt\">$txt<span class=\"meta\"> · " . h(hace($e['ts'])) . "</span></div>" . icon($ic) . "</div>";

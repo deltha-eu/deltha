@@ -65,6 +65,7 @@ CREATE TABLE users (
     theme       ENUM('auto','light','dark') NOT NULL DEFAULT 'auto',
     skin        VARCHAR(16) NOT NULL DEFAULT '',   -- plantilla visual ('' = la del sitio, config.skin_default)
     landing     VARCHAR(24) NOT NULL DEFAULT '',   -- aterrizaje: '' portada | t:ID tema | c:ID comunidad
+    lang        VARCHAR(5) NOT NULL DEFAULT '',    -- idioma de la interfaz: '' navegador | es | en | fr
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_login (login),

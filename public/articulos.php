@@ -10,10 +10,10 @@ $st->bindValue(1, (int)cfg('per_page', 20), PDO::PARAM_INT);
 $st->bindValue(2, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 
-page_header('Artículos', 'articulos');
-echo "<p class=\"notice\">Textos propios de la comunidad, hasta " . (int)cfg('article_max_words', 500) . " palabras. <a href=\"/articulo.php\">Escribe el tuyo</a>.</p>";
+page_header(t('Artículos'), 'articulos');
+echo "<p class=\"notice\">" . t('Textos propios de la comunidad, hasta %d palabras. <a href="/articulo.php">Escribe el tuyo</a>.', (int)cfg('article_max_words', 500)) . "</p>";
 $n = 0;
 foreach ($st as $s) { story_post($pdo, $s, 'full'); $n++; }
-if ($n === 0) echo "<p class=\"end\">Todavía no hay artículos. <a href=\"/articulo.php\">Escribe el primero</a>.</p>";
+if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay artículos. <a href="/articulo.php">Escribe el primero</a>.') . "</p>";
 paginate('/articulos.php', $page, $total);
 page_footer();

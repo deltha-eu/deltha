@@ -8,7 +8,7 @@ $id = (int)($_GET['id'] ?? post('id'));
 $st = $pdo->prepare("SELECT c.comment_id, c.story_id, c.content, c.deleted, c.alias, c.created, u.login FROM comments c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.comment_id = ? AND c.status = 'ok'");
 $st->execute([$id]);
 $c = $st->fetch();
-if (!$c) { http_response_code(404); page_header('Reportar'); echo "<p class=\"end\">Ese comentario no existe.</p>"; page_footer(); exit; }
+if (!$c) { http_response_code(404); page_header(t('Reportar')); echo "<p class=\"end\">" . t('Ese comentario no existe.') . "</p>"; page_footer(); exit; }
 $back = "/hilo.php?id={$c['story_id']}#c$id";
 if ((int)$c['deleted']) redirect($back);
 
@@ -24,13 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect($back . '&reportado=1');
 }
 
-page_header('Reportar comentario');
+page_header(t('Reportar comentario'));
 $n = display_name($c, ghost_over($c['created']));
-echo "<h1>Reportar un comentario</h1>";
-echo "<p class=\"notice\">Lo revisará una persona. Si incumple las <a href=\"/normas.php\">normas de uso</a>, se retirará. <a href=\"$back\">Volver al hilo</a>.</p>";
+echo "" . t('<h1>Reportar un comentario</h1>') . "";
+echo "<p class=\"notice\">" . t('Lo revisará una persona. Si incumple las <a href="/normas.php">normas de uso</a>, se retirará. ') . "<a href=\"$back\"" . t('>Volver al hilo</a>') . ".</p>";
 echo "<blockquote class=\"quote\"><b>" . h($n) . "</b> " . h(mb_strimwidth($c['content'], 0, 400, '…')) . "</blockquote>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-echo "<label>¿Qué pasa con este comentario?</label>";
+echo "" . t('<label>¿Qué pasa con este comentario?</label>') . "";
 foreach ($REASONS as $k => $v) echo "<label class=\"radio\"><input type=\"radio\" name=\"reason\" value=\"$k\"" . ($k === 'insulto' ? ' checked' : '') . "> " . h($v) . "</label>";
-echo "<button>Enviar el reporte</button></form>";
+echo "" . t('<button>Enviar el reporte</button>') . "</form>";
 page_footer();

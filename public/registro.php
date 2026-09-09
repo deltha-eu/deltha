@@ -11,12 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pdo->exec("DELETE FROM reg_attempts WHERE created < NOW() - INTERVAL 1 DAY");
     $n = $pdo->prepare("SELECT COUNT(*) FROM reg_attempts WHERE fp = ? AND created >= NOW() - INTERVAL 1 HOUR"); $n->execute([$fp]);
 
-    if ((int)$n->fetchColumn() >= (int)cfg('reg_per_ip_hour', 3)) $err = 'Demasiados registros desde esta conexión. Prueba más tarde.';
-    elseif (!preg_match('/^[a-z0-9_\-]{3,32}$/i', $login)) $err = 'Usuario: 3–32 caracteres, letras, números, guion o guion bajo.';
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $err = 'Correo no válido.';
+    if ((int)$n->fetchColumn() >= (int)cfg('reg_per_ip_hour', 3)) $err = t('Demasiados registros desde esta conexión. Prueba más tarde.');
+    elseif (!preg_match('/^[a-z0-9_\-]{3,32}$/i', $login)) $err = t('Usuario: 3–32 caracteres, letras, números, guion o guion bajo.');
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $err = t('Correo no válido.');
     elseif ($r = email_rejected($pdo, $email)) $err = $r;
-    elseif (strlen($pass) < 8) $err = 'Contraseña de al menos 8 caracteres.';
-    elseif ($pass !== (string)($_POST['pass2'] ?? '')) $err = 'Las dos contraseñas no coinciden.';
+    elseif (strlen($pass) < 8) $err = t('Contraseña de al menos 8 caracteres.');
+    elseif ($pass !== (string)($_POST['pass2'] ?? '')) $err = t('Las dos contraseñas no coinciden.');
     else {
         try {
             $pdo->prepare("INSERT INTO users (login, email, pass, verified, aura) VALUES (?,?,?,0,?)")
@@ -24,23 +24,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $uid = (int)$pdo->lastInsertId();
             $pdo->prepare("INSERT INTO reg_attempts (fp) VALUES (?)")->execute([$fp]);
             if (send_activation($pdo, $uid, $email)) $done = $email;
-            else $err = 'No se ha podido enviar el correo de activación. Inténtalo de nuevo en unos minutos o escríbenos.';
-        } catch (PDOException $e) { $err = 'Ese usuario o correo ya existe.'; }
+            else $err = t('No se ha podido enviar el correo de activación. Inténtalo de nuevo en unos minutos o escríbenos.');
+        } catch (PDOException $e) { $err = t('Ese usuario o correo ya existe.'); }
     }
 }
 
-page_header('Crear cuenta');
+page_header(t('Crear cuenta'));
 if ($done) {
-    echo "<h1>Revisa tu correo</h1>";
-    echo "<p class=\"notice\">Hemos enviado un enlace de activación a <b>" . h($done) . "</b>. Ábrelo para terminar: la cuenta no funciona hasta entonces. Si no lo ves, mira en la carpeta de spam.</p>";
-    echo "<p class=\"end\">¿No llega? <a href=\"/reenviar.php\">Pedir otro enlace</a>.</p>";
+    echo "" . t('<h1>Revisa tu correo</h1>') . "";
+    echo "<p class=\"notice\">" . t('Hemos enviado un enlace de activación a <b>') . "" . h($done) . "" . t('</b>. Ábrelo para terminar: la cuenta no funciona hasta entonces. Si no lo ves, mira en la carpeta de spam.') . "</p>";
+    echo "<p class=\"end\">" . t('¿No llega? <a href="/reenviar.php">Pedir otro enlace</a>.') . "</p>";
     page_footer(); exit;
 }
-echo "<h1>Crear cuenta</h1><p class=\"notice\">Con cuenta publicas en modo Ghost: cada envío o comentario sale con un alias y tu nombre aparece a los " . (int)cfg('ghost_minutes', 30) . " minutos. Puedes votar y tu aura crece con lo que aportas. Te enviaremos un correo para activar la cuenta.</p>";
+echo "<h1>" . t('Crear cuenta') . "</h1><p class=\"notice\">" . t('Con cuenta publicas en modo Ghost: cada envío o comentario sale con un alias y tu nombre aparece a los %d minutos. Puedes votar y tu aura crece con lo que aportas. Te enviaremos un correo para activar la cuenta.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
-echo "<form class=\"plain\" method=\"post\"><label>Usuario</label><input type=\"text\" name=\"login\" required value=\"" . h(post('login')) . "\">";
-echo "<label>Correo</label><input type=\"email\" name=\"email\" required value=\"" . h(post('email')) . "\">";
-echo "<label>Contraseña (mínimo 8 caracteres)</label><input type=\"password\" name=\"pass\" data-pw required minlength=\"8\" autocomplete=\"new-password\">";
-echo "<label>Repite la contraseña</label><input type=\"password\" name=\"pass2\" data-pw required minlength=\"8\" autocomplete=\"new-password\">";
-echo pw_toggle() . "<button>Crear</button></form>";
+echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario</label>') . "<input type=\"text\" name=\"login\" required value=\"" . h(post('login')) . "\">";
+echo "" . t('<label>Correo</label>') . "<input type=\"email\" name=\"email\" required value=\"" . h(post('email')) . "\">";
+echo "" . t('<label>Contraseña (mínimo 8 caracteres)</label>') . "<input type=\"password\" name=\"pass\" data-pw required minlength=\"8\" autocomplete=\"new-password\">";
+echo "" . t('<label>Repite la contraseña</label>') . "<input type=\"password\" name=\"pass2\" data-pw required minlength=\"8\" autocomplete=\"new-password\">";
+echo pw_toggle() . "" . t('<button>Crear</button>') . "</form>";
 page_footer();

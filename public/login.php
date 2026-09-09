@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $st->execute([post('login')]);
     $row = $st->fetch();
     if ($row && password_verify(post('pass'), $row['pass']) && (int)$row['verified'] === 0) {
-        $err = 'Esa cuenta aún no está activada: abre el enlace del correo que te enviamos o <a href="/reenviar.php">pide otro</a>.';
+        $err = t('Esa cuenta aún no está activada: abre el enlace del correo que te enviamos o <a href="/reenviar.php">pide otro</a>.');
     } elseif ($row && password_verify(post('pass'), $row['pass'])) {
         session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
         session_regenerate_id(true);
@@ -16,12 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $lu = $pdo->prepare("SELECT landing FROM users WHERE user_id = ?"); $lu->execute([(int)$row['user_id']]);
         redirect(landing_url($pdo, ['landing' => (string)$lu->fetchColumn()]));
     }
-    if (!$err) $err = 'Usuario o contraseña incorrectos.';
+    if (!$err) $err = t('Usuario o contraseña incorrectos.');
 }
-page_header('Entrar');
-echo "<h1>Entrar</h1><p class=\"notice\">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>";
+page_header(t('Entrar'));
+echo "" . t('<h1>Entrar</h1><p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>') . "";
 if ($err) echo "<p class=\"error\">$err</p>";
-echo "<form class=\"plain\" method=\"post\"><label>Usuario</label><input type=\"text\" name=\"login\" required autocomplete=\"username\">";
-echo "<label>Contraseña</label><input type=\"password\" name=\"pass\" required autocomplete=\"current-password\"><button>Entrar</button></form>";
-echo "<p><a href=\"/registro.php\">Crear cuenta</a></p>";
+echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario</label>') . "<input type=\"text\" name=\"login\" required autocomplete=\"username\">";
+echo "" . t('<label>Contraseña</label>') . "<input type=\"password\" name=\"pass\" required autocomplete=\"current-password\">" . t('<button>Entrar</button>') . "</form>";
+echo "<p><a href=\"/registro.php\">" . t('Crear cuenta') . "</a></p>";
 page_footer();

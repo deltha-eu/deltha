@@ -6,18 +6,18 @@ $login = trim((string)($_GET['u'] ?? ''));
 $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, created FROM users WHERE login = ?");
 $st->execute([$login]);
 $p = $st->fetch();
-if (!$p) { http_response_code(404); page_header('No existe'); echo "<p class=\"end\">No existe ese usuario.</p>"; page_footer(); exit; }
+if (!$p) { http_response_code(404); page_header(t('No existe')); echo "<p class=\"end\">" . t('No existe ese usuario.') . "</p>"; page_footer(); exit; }
 $own = user() && (int)user()['user_id'] === (int)$p['user_id'];
 
 page_header($p['login']);
 echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . h($p['login']) . "</h1>";
 if ($p['bio']) echo "<p class=\"bio\">" . h($p['bio']) . "</p>";
 $nPub = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE user_id = {$p['user_id']} AND status NOT IN ('rejected','discard') AND (revealed = 1 OR sent_date <= NOW() - INTERVAL " . (int)cfg('ghost_minutes', 30) . " MINUTE)")->fetchColumn();
-echo "<p class=\"meta\">aura " . number_format((float)$p['aura'], 1, ',', '') . " · desde " . date('M Y', strtotime($p['created'])) . " · $nPub envíos revelados";
-if ($own) echo " · <a href=\"/perfil.php\">editar</a>";
-if (!$own && user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes.php?u=" . rawurlencode($p['login']) . "\">enviar mensaje</a>";
+echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$p['aura'], 1, ',', '') . " · " . t('desde') . " " . date('M Y', strtotime($p['created'])) . " · " . t('%d envíos revelados', $nPub);
+if ($own) echo " · " . t('<a href="/perfil.php">editar</a>') . "";
+if (!$own && user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes.php?u=" . rawurlencode($p['login']) . "\">" . t('enviar mensaje') . "</a>";
 $canMod = !$own && is_mod() && (is_admin() || $p['level'] === 'normal');
-if ($canMod) echo " · <a href=\"#modedit\">editar perfil</a>";
+if ($canMod) echo " · <a href=\"#modedit\">" . t('editar perfil') . "</a>";
 echo "</p></div></div>";
 // moderadores y admin: edicion del perfil aqui mismo, sin pasar por moderacion ni admin
 if ($canMod) {
@@ -48,8 +48,8 @@ $q = $pdo->prepare(story_query_base() . " WHERE $where ORDER BY s.sent_date DESC
 $q->execute([$p['user_id']]);
 $n = 0;
 foreach ($q as $s) {
-    if ($own && !(int)$s['revealed'] && !ghost_over($s['sent_date'])) echo "<p class=\"notice\" style=\"margin-bottom:0\">Vivo, solo lo ves tú (alias " . h($s['author_alias']) . "):</p>";
+    if ($own && !(int)$s['revealed'] && !ghost_over($s['sent_date'])) echo "<p class=\"notice\" style=\"margin-bottom:0\">" . t('Vivo, solo lo ves tú (alias ') . "" . h($s['author_alias']) . "):</p>";
     story_post($pdo, $s, 'compact'); $n++;
 }
-if ($n === 0) echo "<p class=\"end\">" . ($own ? "Aún no has enviado nada." : "Nada revelado todavía: sus hilos siguen vivos o no ha enviado.") . "</p>";
+if ($n === 0) echo "<p class=\"end\">" . ($own ? t('Aún no has enviado nada.') : t('Nada revelado todavía: sus hilos siguen vivos o no ha enviado.')) . "</p>";
 page_footer();
