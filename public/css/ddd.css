@@ -222,9 +222,9 @@ form.plain button.danger:hover { background: var(--hover); }
 .reply .actions .modlink { font-size: 12px; color: var(--muted); margin-left: 12px; }
 
 /* ---- procesos (fisgona) ---- */
-nav.sub { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
-nav.sub::-webkit-scrollbar { display: none; }
-nav.sub a { padding: 8px 10px; font-size: 14px; color: var(--muted); white-space: nowrap; position: relative; }
+nav.sub { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--line); }
+nav.sub a { padding: 8px 9px; font-size: 14px; color: var(--muted); white-space: nowrap; position: relative; }
+@media (max-width: 420px) { nav.sub { gap: 0; padding: 6px 8px 0; justify-content: space-between; } nav.sub a { padding: 8px 4px; font-size: 13px; } }
 nav.sub a.on { color: var(--fg); font-weight: 700; }
 nav.sub a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 2px; background: var(--accent); }
 .fz { display: flex; gap: 10px; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--line); font-size: 14px; }
@@ -248,3 +248,12 @@ nav.sub a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bo
 .fz.cola .vt { flex: none; font-size: 12px; color: var(--muted); white-space: nowrap; padding-top: 2px; }
 .fz.cola .vt .i { width: 14px; height: 14px; vertical-align: -2px; margin-left: 6px; }
 .fz.cola .vt .i:first-child { margin-left: 0; }
+
+/* ---- feed sin sangria: el avatar (pequeño) va en la linea del autor y el
+   contenido (titular, entradilla, foto) ocupa todo el ancho ---- */
+.post.full, .post.compact, .post.main { display: block; }
+.post.full > .av, .post.compact > .av, .post.main > .av,
+.post.full > .avl, .post.compact > .avl, .post.main > .avl { float: left; margin-right: 8px; }
+.post.full > .av, .post.compact > .av, .post.main > .av,
+.post.full > .avl .av, .post.compact > .avl .av, .post.main > .avl .av { width: 28px; height: 28px; font-size: 13px; }
+.post.full .l1, .post.compact .l1, .post.main .l1 { line-height: 28px; min-height: 28px; }

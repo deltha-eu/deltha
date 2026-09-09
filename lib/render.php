@@ -46,6 +46,10 @@ function topic_tag(array $s): string {
 function topic_link(array $s): string {
     return "<a href=\"/tema.php?t=" . (int)$s['topic_id'] . "\">" . h($s['topic']) . "</a>";
 }
+/** El medio (dominio de la fuente), enlazado a todo lo enviado de ese medio */
+function source_link(array $s): string {
+    return "<a href=\"/medio.php?m=" . rawurlencode((string)$s['source']) . "\">" . h($s['source']) . "</a>";
+}
 
 /** Post de timeline. $mode: full (portada) | compact (candidatas/nuevas) */
 function story_post(PDO $pdo, array $s, string $mode = "full"): void {
@@ -59,7 +63,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<article class=\"post $mode\" id=\"s{$s['story_id']}\">";
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
-    $srcLbl = $s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? " · " . h($s['source']) : '');
+    $srcLbl = $s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? " · " . source_link($s) : '');
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"> · " . topic_link($s) . $srcLbl . " · " . h($when) . "</span></div>";
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
     if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content'], 0, 240, '…')) . "</p>";
