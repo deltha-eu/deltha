@@ -109,7 +109,7 @@ function config_set(PDO $pdo, string $k, string $v): void {
  */
 function logo_desde_subida(array $file, string $mode): string {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return 'ERR:no se recibió el fichero.';
-    if ($file['size'] > 1000000) return 'ERR:máximo 1 MB.';
+    if ($file['size'] > 4000000) return 'ERR:máximo 4 MB.';
     $bytes = file_get_contents($file['tmp_name']);
     if ($bytes === false || strlen($bytes) < 50) return 'ERR:fichero vacío.';
     if (class_exists('finfo')) $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
@@ -124,7 +124,22 @@ function logo_desde_subida(array $file, string $mode): string {
         $info = @getimagesizefromstring($bytes);
         if (!$info) return 'ERR:no se pudo leer la imagen.';
         if ($info[1] < 30) return 'ERR:demasiado pequeño: al menos 30 px de alto (se muestra a 30 px; mejor 60–120 px).';
-        if ($info[0] > 2400 || $info[1] > 800) return 'ERR:demasiado grande: como mucho 2400×800 px.';
+        // Se muestra a 30 px de alto: si viene grande, se reduce a 240 px de alto (8x) conservando la transparencia, y se guarda como PNG
+        if ($info[1] > 240 || $info[0] > 2400) {
+            $src = @imagecreatefromstring($bytes);
+            if (!$src) return 'ERR:no se pudo abrir la imagen para reducirla.';
+            $sw = imagesx($src); $sh = imagesy($src);
+            $k = min(240 / $sh, 2400 / $sw);
+            $nw = max(1, (int)round($sw * $k)); $nh = max(1, (int)round($sh * $k));
+            $dst = imagecreatetruecolor($nw, $nh);
+            imagealphablending($dst, false); imagesavealpha($dst, true);
+            imagefill($dst, 0, 0, imagecolorallocatealpha($dst, 0, 0, 0, 127));
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $sw, $sh);
+            imagedestroy($src);
+            ob_start(); imagepng($dst, null, 6); $bytes = ob_get_clean(); imagedestroy($dst);
+            if (!$bytes) return 'ERR:no se pudo reducir la imagen.';
+            $ext = 'png';
+        }
     }
     $dir = DDD_MEDIA_DIR . '/logo';
     if (!is_dir($dir)) mkdir($dir, 0775, true);
@@ -315,7 +330,7 @@ if ($tab === 'usuarios') {
 
 } elseif ($tab === 'logo') {
     echo "<h3>Logo de " . h(cfg('site_name')) . "</h3>";
-    echo "<p><small>Se muestra a 30 px de alto en la cabecera. PNG, SVG o WebP con fondo transparente, hasta 1 MB; se guarda tal cual, sin recortar. El claro se usa sobre fondos claros y el oscuro sobre fondos oscuros (tema oscuro y plantillas Punk o Delta). Si solo subes el claro, se usará también en oscuro. La plantilla Retrocomputer tiñe el logo de verde a partir de un dibujo negro.</small></p>";
+    echo "<p><small>Se muestra a 30 px de alto en la cabecera. PNG, SVG o WebP con fondo transparente, hasta 4 MB; no se recorta, y si el PNG/WebP es grande se reduce a 240 px de alto (de sobra para los 30 px de la cabecera). El claro se usa sobre fondos claros y el oscuro sobre fondos oscuros (tema oscuro y plantillas Punk o Delta). Si solo subes el claro, se usará también en oscuro. La plantilla Retrocomputer tiñe el logo de verde a partir de un dibujo negro.</small></p>";
     echo "<form method=\"post\" enctype=\"multipart/form-data\">$T<input type=\"hidden\" name=\"act\" value=\"logo\"><table>";
     foreach (['light' => ['Claro', '#f6f5f0'], 'dark' => ['Oscuro', '#141414']] as $m => [$lbl, $bg]) {
         $propio = cfg("logo_$m");
