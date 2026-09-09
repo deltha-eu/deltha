@@ -39,6 +39,7 @@ function side(): void {
     try { side_ciclo($pdo); } catch (Throwable $e) {}
     try { side_temas($pdo); } catch (Throwable $e) {}
     try { side_comunidades($pdo); } catch (Throwable $e) {}
+    try { side_votadas($pdo); } catch (Throwable $e) {}
     echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
 }
@@ -75,6 +76,24 @@ function side_temas(PDO $pdo): void {
         echo "<a class=\"chip\" href=\"/tema.php?t=" . (int)$r['topic_id'] . "\" style=\"--cc:" . h($r['color']) . "\" title=\"" . ($coef != 1.0 ? h(t('coeficiente %s', number_format($coef, 2, ',', ''))) : '') . "\">" . h($r['name']) . "<b>" . (int)$r['n'] . "</b>" . ($coef != 1.0 ? "<small>×" . number_format($coef, 2, ',', '') . "</small>" : '') . "</a>";
     }
     echo "</div></section>";
+}
+
+/** Las mas votadas de las ultimas horas (votos publicos; los clics no se cuentan porque no hay rastreo). */
+function side_votadas(PDO $pdo): void {
+    $h = (int)cfg('thread_ttl_hours', 48);
+    $st = $pdo->prepare("SELECT s.story_id, s.title, s.votes_pos, s.votes_neg, s.comments, s.status
+                           FROM stories s WHERE s.status IN ('nuevas','candidatas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL ? HOUR AND s.votes_pos > 0
+                          ORDER BY s.votes_pos DESC, s.comments DESC, s.sent_date DESC LIMIT 6");
+    $st->execute([$h]);
+    $rows = $st->fetchAll();
+    if (!$rows) return;
+    echo "<section class=\"mod votadas\"><h3>" . t('Las más votadas') . "<span>" . t('%d h', $h) . "</span></h3>";
+    $i = 0;
+    foreach ($rows as $r) {
+        $i++;
+        echo "<a class=\"row\" href=\"/hilo.php?id=" . (int)$r['story_id'] . "\"><b><i>$i</i>" . icon('up') . (int)$r['votes_pos'] . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
+    }
+    echo "</section>";
 }
 
 /** Comunidades con actividad: la ultima noticia de cada una, mas reciente primero. */

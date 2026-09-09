@@ -1230,6 +1230,12 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="orange"] .side .mod.temas .chip::before { display: none; }
   [data-skin="orange"] .side .mod.temas .chip b { color: var(--or); }
   [data-skin="zen"] .side .mod.temas .chip { border: 0; padding-left: 0; font-variant: all-small-caps; letter-spacing: .06em; }
+  .side .mod.votadas .row b { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; padding-top: 1px; }
+  .side .mod.votadas .row b i { font-style: normal; color: var(--muted); font-weight: 600; width: 14px; text-align: right; margin-right: 2px; }
+  .side .mod.votadas .row b .i { width: 14px; height: 14px; stroke-width: 2.4; }
+  [data-skin="orange"] .side .mod.votadas .row b { color: var(--or); }
+  [data-skin="foro"] .side .mod.votadas .row b { color: var(--up); }
+  [data-skin="delta"] .side .mod.votadas .row b, [data-skin="zen"] .side .mod.votadas .row b { color: var(--life); }
   .side .mod .more { margin: 6px 0 0; font-size: 12px; }
   .side .mod .more a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
   footer.sidefoot { display: flex; gap: 12px; align-items: flex-start; padding: 4px 6px; font-size: 11px; line-height: 1.5; color: var(--muted); }

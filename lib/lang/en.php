@@ -398,4 +398,6 @@ return [
 'Plantilla' => 'Template',
 'la del sitio' => 'the site default',
 'Sin cookies para quien no inicia sesión (salvo la de la plantilla, si eliges una) · sin rastreo · sin algoritmo oculto' => 'No cookies unless you sign in (except the template one, if you pick one) · no tracking · no hidden algorithm',
+'Las más votadas' => 'Most voted',
+'%d h' => '%d h',
 ];

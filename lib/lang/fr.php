@@ -398,4 +398,6 @@ return [
 'Plantilla' => 'Habillage',
 'la del sitio' => 'celui du site',
 'Sin cookies para quien no inicia sesión (salvo la de la plantilla, si eliges una) · sin rastreo · sin algoritmo oculto' => 'Pas de cookies sans connexion (sauf celui de l’habillage, si vous en choisissez un) · pas de pistage · pas d’algorithme caché',
+'Las más votadas' => 'Les plus votées',
+'%d h' => '%d h',
 ];
