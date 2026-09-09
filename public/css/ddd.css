@@ -607,3 +607,4 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="punk"] .fz { border-bottom: 1px dashed var(--line2); }
 [data-skin="punk"] .av, [data-skin="punk"] .fz .av, [data-skin="punk"] .reply .av, [data-skin="punk"] .profile .av { border-radius: 0; transform: rotate(-3deg); }
 [data-skin="punk"] .av.photo { color: transparent; }
+.legal p[style] { font-size: 14px; overflow-wrap: anywhere; }

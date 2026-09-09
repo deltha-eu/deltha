@@ -38,6 +38,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('skin_default',        'editorial', 'Plantilla visual por defecto (anonimos y quien no elija): editorial | comunidad | delta | flujo'),
 ('comm_min_aura',       '10',   'Aura minima (estricta: mayor que) para poder crear comunidades'),
 ('comm_max_per_user',   '3',    'Comunidades que puede crear cada usuario'),
+('comment_edit_minutes','10',   'Minutos tras publicar en los que el autor puede editar su comentario'),
+('comment_edit_min_aura','10',  'Aura minima (estricta: mayor que) para poder editar los comentarios propios'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),
 ('anon_alias_mode',     'ip_hash', 'ip_hash = alias estable por hilo sin cookie | random = alias nuevo por comentario'),
 ('anon_can_comment',    '1',    '1 = los anonimos pueden comentar'),
@@ -143,6 +145,7 @@ CREATE TABLE comments (
     status      ENUM('pending_mod','rejected','ok') NOT NULL DEFAULT 'ok',
     deleted     TINYINT(1) NOT NULL DEFAULT 0,        -- borrado por moderacion: content sustituido por el aviso
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at   DATETIME DEFAULT NULL,               -- ultima edicion (autor en plazo o moderacion)
     KEY idx_story (story_id, created),
     KEY idx_root (story_id, root_id, created),
     KEY idx_created (created),

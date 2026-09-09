@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 41);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 42);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -152,7 +152,7 @@ function community_by_slug(PDO $pdo, string $slug): ?array {
 function community_quota(PDO $pdo, ?array $u): int {
     if (!$u) return 0;
     $max = max(0, (int)cfg('comm_max_per_user', 3));
-    if (!is_admin() && (float)$u['aura'] <= (float)cfg('comm_min_aura', 10)) return 0;
+    if (!is_mod() && (float)$u['aura'] <= (float)cfg('comm_min_aura', 10)) return 0;   // mods y admin: sin requisito de aura
     $st = $pdo->prepare("SELECT COUNT(*) FROM communities WHERE owner_id = ?"); $st->execute([$u['user_id']]);
     return is_admin() ? 99 : max(0, $max - (int)$st->fetchColumn());
 }
@@ -186,6 +186,13 @@ function comment_delete(PDO $pdo, int $id): bool {
     try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted' WHERE comment_id = ? AND status = 'open'")->execute([$id]); } catch (Throwable $e) {}
     return $st->rowCount() > 0;
 }
+/** El usuario actual puede editar este comentario suyo? Aura > comment_edit_min_aura y menos de comment_edit_minutes desde que lo publico. */
+function can_edit_own_comment(array $c): bool {
+    $u = user();
+    if (!$u || empty($c['user_id']) || (int)$c['user_id'] !== (int)$u['user_id'] || !empty($c['deleted'])) return false;
+    if ((float)$u['aura'] <= (float)cfg('comment_edit_min_aura', 10)) return false;
+    return time() - strtotime($c['created']) < (int)cfg('comment_edit_minutes', 10) * 60;
+}
 /** Reportes de comentarios pendientes (para el enlace de moderacion) */
 function open_reports(): int {
     static $n = null; global $pdo;
@@ -201,11 +208,28 @@ function page_get(PDO $pdo, string $slug): array {
     return $st->fetch() ?: ['slug' => $slug, 'title' => ucfirst($slug), 'body' => '<p>Sin contenido todavía.</p>', 'updated' => null];
 }
 /** Cuerpo HTML con {site}, {ttl} y {gm} sustituidos por la config actual */
+/** Numero en formato español, sin ceros sobrantes (0.05 -> 0,05; 1.00 -> 1; 2.50 -> 2,5) */
+function num_es($v): string { $s = rtrim(rtrim(number_format((float)$v, 3, ',', '.'), '0'), ','); return $s === '' ? '0' : $s; }
 function page_body(array $pg): string {
     return strtr($pg['body'], [
         '{site}' => h(cfg('site_name', 'Deltha')),
         '{ttl}'  => (string)(int)cfg('thread_ttl_hours', 48),
         '{gm}'   => (string)(int)cfg('ghost_minutes', 30),
+        // parametros del algoritmo (pagina «Como funciona el δ»)
+        '{cycle}'    => (string)(int)cfg('cycle_minutes', 5),
+        '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
+        '{minpub}'   => num_es(cfg('delta_min_publish', 1)),
+        '{decay}'    => num_es(cfg('decay_per_halfhour', 0.05)),
+        '{auraport}' => num_es(cfg('aura_portada', 0.5)),
+        '{auraenv}'  => num_es(cfg('aura_envio', 0.1)),
+        '{auracom}'  => num_es(cfg('aura_comentario', 0.02)),
+        '{auracap}'  => num_es(cfg('aura_daily_cap', 2)),
+        '{auradec}'  => num_es(cfg('aura_daily_decay', 0.5)),
+        '{aurastart}'=> num_es(cfg('aura_start', 5)),
+        '{auramax}'  => num_es(cfg('aura_max', 50)),
+        '{commaura}' => num_es(cfg('comm_min_aura', 10)),
+        '{editaura}' => num_es(cfg('comment_edit_min_aura', 10)),
+        '{editmin}'  => (string)(int)cfg('comment_edit_minutes', 10),
     ]);
 }
 
@@ -428,7 +452,7 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/normas.php\">Normas de uso</a> · <a href=\"/comunidades.php\">Comunidades</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
+    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/normas.php\">Normas de uso</a> · <a href=\"/algoritmo.php\">Cómo funciona el δ</a> · <a href=\"/comunidades.php\">Comunidades</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">moderación" . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;

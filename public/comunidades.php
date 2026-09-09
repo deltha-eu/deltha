@@ -30,7 +30,7 @@ $rows = $pdo->query("SELECT c.*, u.login AS owner, (SELECT COUNT(*) FROM stories
 
 page_header('Comunidades');
 echo "<h1>Comunidades</h1>";
-echo "<p class=\"notice\">Los <b>temas</b> los pone " . h(cfg('site_name')) . "; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad. Puede crear comunidades quien tenga aura mayor que " . h(cfg('comm_min_aura', 10)) . ", hasta " . (int)cfg('comm_max_per_user', 3) . " cada uno. Puedes elegir una como página de entrada en <a href=\"/perfil.php\">tu perfil</a>.</p>";
+echo "<p class=\"notice\">Los <b>temas</b> los pone " . h(cfg('site_name')) . "; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad. Puede crear comunidades quien tenga aura mayor que " . h(num_es(cfg('comm_min_aura', 10))) . " (los moderadores, sin requisito de aura), hasta " . (int)cfg('comm_max_per_user', 3) . " cada uno. Puedes elegir una como página de entrada en <a href=\"/perfil.php\">tu perfil</a>.</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if (!$rows) echo "<p class=\"end\">Todavía no hay comunidades.</p>";
 foreach ($rows as $c) {

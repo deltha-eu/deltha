@@ -122,7 +122,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     $cls = 'post reply' . ($has_next ? ' has-next' : '') . (empty($c['root_id']) ? ' root' : ' child') . ($del ? ' deleted' : '');
     echo "<article class=\"$cls\" id=\"c{$c['comment_id']}\">" . who_avatar($c, $revealed, (float)$c['aura'], $n) . "<div class=\"pc\">";
     $nameHtml = ($revealed && !empty($c['login'])) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
-    echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . "</span></div>";
+    echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · editado" : "") . "</span></div>";
     if ($parent && !empty($c['root_id']) && (int)$c['parent_id'] !== (int)$c['root_id']) {
         $pn = display_name($parent, ghost_over($parent['created']));
         echo "<div class=\"meta reto\">en respuesta a " . h($pn) . "</div>";
@@ -131,6 +131,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     else      echo "<p>" . nl2br(h($c['content'])) . "</p>";
     $acts = [];
     if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>Responder</span></a>";
+    if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"puedes corregirlo durante " . (int)cfg('comment_edit_minutes', 10) . " min\">editar</a>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?id={$c['comment_id']}\" title=\"avisar a los moderadores\">reportar</a>";
     if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\">editar · eliminar</a>";
     if ($acts) echo "<div class=\"actions\">" . implode('', $acts) . "</div>";
