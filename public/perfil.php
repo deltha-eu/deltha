@@ -20,9 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $skin  = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
     $landing = preg_match('/^(t|c):\d{1,9}$/', post('landing')) ? post('landing') : '';
     $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
-    $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
-    $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
-    $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
     $avatar = $u['avatar'];
     if (!empty($_FILES['photo']['name'])) {
         $new = avatar_desde_subida($_FILES['photo']);
@@ -49,12 +46,6 @@ echo "" . t('<label>Nombre de usuario</label>') . "<input type=\"text\" name=\"l
 echo "" . t('<label>Frase (hasta 160 caracteres)</label>') . "<input type=\"text\" name=\"bio\" maxlength=\"160\" value=\"" . h($u['bio'] ?? '') . "\">";
 echo "" . t('<label>Foto</label>') . "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
 if ($u['avatar']) echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"1\"" . t('> quitar la foto actual</label>') . "";
-echo "<label>" . t('Idioma') . "</label><select name=\"ulang\"><option value=\"\">" . t('El del navegador') . "</option>";
-foreach (DDD_LANGS as $k => $v) echo "<option value=\"$k\"" . (($u['lang'] ?? '') === $k ? ' selected' : '') . ">$v</option>";
-echo "</select>";
-echo "<label>" . t('Idioma') . "</label><select name=\"ulang\"><option value=\"\">" . t('El del navegador') . "</option>";
-foreach (DDD_LANGS as $k => $v) echo "<option value=\"$k\"" . (($u['lang'] ?? '') === $k ? ' selected' : '') . ">$v</option>";
-echo "</select>";
 echo "<label>" . t('Idioma') . "</label><select name=\"ulang\"><option value=\"\">" . t('El del navegador') . "</option>";
 foreach (DDD_LANGS as $k => $v) echo "<option value=\"$k\"" . (($u['lang'] ?? '') === $k ? ' selected' : '') . ">$v</option>";
 echo "</select>";
