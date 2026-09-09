@@ -285,26 +285,40 @@ main > .composer:last-of-type { border-bottom: 0; border-top: 1px solid var(--li
 
 /* =====================================================================
    PLANTILLAS VISUALES  (html[data-skin=...])  — elegibles en /perfil.php
-   La base (todo lo de arriba) es «editorial»; las demas la sobrescriben.
+   La base (todo lo de arriba) es la version original; las cuatro la modulan
+   en densidad, jerarquia y forma de separar una noticia de otra.
    ===================================================================== */
-.dval { display: none; }                       /* δ en vivo: solo lo muestra Delta */
+.dval { display: none; }
 form.plain .hint { font-size: 12px; color: var(--muted); margin-top: -4px; }
 form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 
-/* ---- Editorial: la clasica con mas aire a los lados ---- */
-[data-skin="editorial"] .post.full, [data-skin="editorial"] .post.compact { padding: 14px 24px 12px; }
-[data-skin="editorial"] .post.full h2 { font-size: 21px; }
-[data-skin="editorial"] .fz, [data-skin="editorial"] .notice, [data-skin="editorial"] .end, [data-skin="editorial"] .hilo .post.main { padding-left: 24px; padding-right: 24px; }
-[data-skin="editorial"] .notice { margin-left: 24px; margin-right: 24px; padding-left: 14px; padding-right: 14px; }
+/* ---- EDITORIAL: revista. Sin rayas ni fichas tecnicas; espacio, titular serif
+        grande, una sola linea secundaria, foto limpia ---- */
+[data-skin="editorial"] .post.full, [data-skin="editorial"] .post.compact { padding: 22px 24px 18px; border-bottom: 0; }
+[data-skin="editorial"] .post.full:hover, [data-skin="editorial"] .post.compact:hover { background: transparent; }
+[data-skin="editorial"] .post.full + .post, [data-skin="editorial"] .post.compact + .post { border-top: 1px solid var(--line); }
+[data-skin="editorial"] .post .l1 { font-size: 13px; color: var(--muted); line-height: 28px; }
+[data-skin="editorial"] .post .l1 b { font-weight: 600; color: var(--fg); }
+[data-skin="editorial"] .post h2 { font-size: 23px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; margin: 10px 0 8px; clear: left; }
+[data-skin="editorial"] .post.compact h2 { font-size: 19px; }
+[data-skin="editorial"] .lead { font-size: 15px; line-height: 1.45; color: color-mix(in srgb, var(--fg) 80%, var(--bg)); margin-bottom: 12px; }
+[data-skin="editorial"] .media { border-radius: 10px; border: 0; margin: 12px 0 14px; }
+[data-skin="editorial"] .post.full .life, [data-skin="editorial"] .post.compact .life { display: none; }   /* la barra de vida, fuera: queda el «muere en» del hilo */
+[data-skin="editorial"] .actions { gap: 32px; margin-top: 4px; font-size: 13px; }
+[data-skin="editorial"] .peek { border-left: 0; padding-left: 0; margin: 12px 0 4px; color: var(--muted); }
+[data-skin="editorial"] .delta { margin-top: 6px; }
+[data-skin="editorial"] .fz, [data-skin="editorial"] .end { padding-left: 24px; padding-right: 24px; }
+[data-skin="editorial"] .notice { margin-left: 24px; margin-right: 24px; }
+[data-skin="editorial"] .hilo .post.main { padding-left: 24px; padding-right: 24px; }
 
-/* ---- Comunidad: tarjetas sobre fondo gris, la gente por delante ---- */
+/* ---- COMUNIDAD (social): tarjetas blancas sobre gris, la gente por delante ---- */
 [data-skin="comunidad"] { --card: var(--bg); }
 [data-skin="comunidad"] body { background: color-mix(in srgb, var(--fg) 5%, var(--bg)); }
 [data-skin="comunidad"] .shell { background: transparent; border-color: transparent; }
 [data-skin="comunidad"] header.top, [data-skin="comunidad"] nav.tabs-top { background: var(--card); }
 [data-skin="comunidad"] .post.full, [data-skin="comunidad"] .post.compact {
   background: var(--card); border: 0; border-radius: 18px; margin: 12px 12px 0; padding: 16px 16px 12px;
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 8%, transparent), 0 6px 20px color-mix(in srgb, var(--fg) 5%, transparent); }
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 6%, transparent), 0 6px 18px color-mix(in srgb, var(--fg) 4%, transparent); }
 [data-skin="comunidad"] .post.full:hover, [data-skin="comunidad"] .post.compact:hover { background: var(--card); }
 [data-skin="comunidad"] .post.full > .av, [data-skin="comunidad"] .post.compact > .av,
 [data-skin="comunidad"] .post.full > .avl .av, [data-skin="comunidad"] .post.compact > .avl .av { width: 46px; height: 46px; font-size: 20px; margin-right: 12px; }
@@ -314,6 +328,7 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 [data-skin="comunidad"] .post h2 { font-family: var(--sans); font-weight: 700; letter-spacing: -.01em; font-size: 20px; margin-top: 10px; clear: left; }
 [data-skin="comunidad"] .post.compact h2 { font-size: 18px; }
 [data-skin="comunidad"] .media { border-radius: 14px; }
+[data-skin="comunidad"] .post .life { display: none; }
 [data-skin="comunidad"] .actions { gap: 26px; font-size: 14px; margin-top: 8px; }
 [data-skin="comunidad"] .actions .i { width: 21px; height: 21px; }
 [data-skin="comunidad"] .peek { border: 0; margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--fg) 5%, var(--bg)); }
@@ -324,60 +339,67 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 [data-skin="comunidad"] .fz:first-of-type { border-top-left-radius: 18px; border-top-right-radius: 18px; margin-top: 12px; }
 [data-skin="comunidad"] .dock, [data-skin="comunidad"] footer.inflow { background: var(--card); }
 
-/* ---- Delta: la identidad grafica. Espiga de Dirac como regla, δ a la vista,
-        cantos rectos, fotos en gris que cobran color al pasar ---- */
-[data-skin="delta"] { --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-[data-skin="delta"] .post.full, [data-skin="delta"] .post.compact { position: relative; padding: 18px 16px 14px 22px; border-bottom: 1px solid var(--fg); }
-[data-skin="delta"] .post.full::before, [data-skin="delta"] .post.compact::before {   /* la espiga */
-  content: ""; position: absolute; left: 10px; top: 18px; bottom: 14px; width: 2px;
-  background: linear-gradient(to bottom, var(--fg) 0, var(--fg) 34%, transparent 100%); }
-[data-skin="delta"] .post .l1 { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
-[data-skin="delta"] .post .l1 b { font-weight: 700; }
-[data-skin="delta"] .post.full > .av, [data-skin="delta"] .post.compact > .av, [data-skin="delta"] .post.full > .avl .av, [data-skin="delta"] .post.compact > .avl .av { border-radius: 0; width: 26px; height: 26px; font-size: 13px; }
-[data-skin="delta"] .post .dval { display: block; position: absolute; right: 16px; top: 14px; font-family: var(--mono); font-size: 19px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
-[data-skin="delta"] .post.full .l1, [data-skin="delta"] .post.compact .l1 { padding-right: 72px; }
-[data-skin="delta"] .post h2 { font-size: 24px; line-height: 1.12; letter-spacing: -.015em; margin: 10px 0 6px; }
+/* ---- DELTA: publicacion impresa. Fondo crema, casi monocromo (gris y crema;
+        el negro solo para logo, autores y titulares), sin cajas ni sombras,
+        separacion por espacio y una linea finisima, un unico acento verde
+        (voto positivo, subrayado de la pestaña activa, «+») ---- */
+[data-skin="delta"] { --bg: #f5efe3; --fg: #171614; --muted: #7d766a; --line: #e4dccb; --line2: #cdc4ae; --hover: #f0e9da; --accent: #2f6b3f; --life: #2f6b3f; --halo: #4a453c; --neg: #8a8378; color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  [data-skin="delta"]:not([data-theme="light"]) { --bg: #171512; --fg: #ece5d6; --muted: #948b7b; --line: #2a2723; --line2: #3b3730; --hover: #1d1a16; --accent: #7fb88d; --life: #7fb88d; --halo: #c9c0ad; --neg: #948b7b; color-scheme: dark; --logo-l: none; --logo-d: block; --ink-invert: 1; }
+}
+[data-skin="delta"][data-theme="dark"] { --bg: #171512; --fg: #ece5d6; --muted: #948b7b; --line: #2a2723; --line2: #3b3730; --hover: #1d1a16; --accent: #7fb88d; --life: #7fb88d; --halo: #c9c0ad; --neg: #948b7b; color-scheme: dark; --logo-l: none; --logo-d: block; --ink-invert: 1; }
+[data-skin="delta"] .shell { border-color: transparent; }
+[data-skin="delta"] header.top { border-bottom: 0; background: color-mix(in srgb, var(--bg) 88%, transparent); }
+[data-skin="delta"] nav.tabs-top { border-bottom: 1px solid var(--line); }
+[data-skin="delta"] nav.tabs-top a { font-family: var(--serif); font-size: 16px; }
+[data-skin="delta"] nav.tabs-top a.on { font-weight: 600; }
+[data-skin="delta"] nav.tabs-top a.on::after { background: var(--accent); height: 3px; }
+[data-skin="delta"] .post.full, [data-skin="delta"] .post.compact { padding: 22px 20px 16px; border-bottom: 1px solid var(--line); }
+[data-skin="delta"] .post.full:hover, [data-skin="delta"] .post.compact:hover { background: transparent; }
+[data-skin="delta"] .post .l1 { font-size: 13px; color: var(--muted); }
+[data-skin="delta"] .post .l1 b { color: var(--fg); font-weight: 600; }
+[data-skin="delta"] .post.full > .av, [data-skin="delta"] .post.compact > .av, [data-skin="delta"] .post.full > .avl .av, [data-skin="delta"] .post.compact > .avl .av { background: transparent; border-color: var(--line2); color: var(--muted); box-shadow: none; }
+[data-skin="delta"] .post h2 { font-size: 25px; font-weight: 500; line-height: 1.15; letter-spacing: -.012em; margin: 10px 0 8px; clear: left; }
 [data-skin="delta"] .post.compact h2 { font-size: 20px; }
-[data-skin="delta"] .lead { font-size: 14px; color: var(--muted); }
-[data-skin="delta"] .media { border-radius: 0; border: 0; margin: 10px 0 12px; }
-[data-skin="delta"] .media .pic { filter: grayscale(1) contrast(1.08); transition: filter .35s ease; }
-[data-skin="delta"] .post:hover .media .pic { filter: none; }
-[data-skin="delta"] .tag, [data-skin="delta"] .media .tag { border-radius: 0; background: var(--fg); color: var(--bg); font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; left: 0; bottom: 0; padding: 5px 10px; backdrop-filter: none; }
-[data-skin="delta"] .life { border-radius: 0; background: color-mix(in srgb, var(--fg) 12%, var(--bg)); }
-[data-skin="delta"] .life span { border-radius: 0; background: var(--fg); }
-[data-skin="delta"] .actions { font-family: var(--mono); font-size: 12px; gap: 26px; }
-[data-skin="delta"] .peek { border-left: 2px solid var(--fg); }
-[data-skin="delta"] .pk .av { border-radius: 0; }
-[data-skin="delta"] .delta { color: var(--fg); }
-[data-skin="delta"] nav.tabs-top a { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-[data-skin="delta"] nav.tabs-top a.on::after { height: 2px; border-radius: 0; width: 100%; }
-[data-skin="delta"] nav.tabs-bottom a { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
-[data-skin="delta"] .notice, [data-skin="delta"] .error { border-radius: 0; border-left: 2px solid var(--fg); background: transparent; margin-left: 22px; padding-left: 10px; }
-[data-skin="delta"] .fab { border-radius: 0; }
-[data-skin="delta"] .fz { padding-left: 22px; }
-[data-skin="delta"] .fz .av, [data-skin="delta"] .av.mini, [data-skin="delta"] .composer .av, [data-skin="delta"] .post.reply .av, [data-skin="delta"] .profile .av { border-radius: 0; }
-[data-skin="delta"] .msg .bubble, [data-skin="delta"] .newmsg input, [data-skin="delta"] .newmsg button, [data-skin="delta"] .composer button, [data-skin="delta"] form.plain input, [data-skin="delta"] form.plain select, [data-skin="delta"] form.plain button { border-radius: 0; }
+[data-skin="delta"] .lead { color: var(--muted); font-size: 15px; line-height: 1.45; margin-bottom: 12px; }
+[data-skin="delta"] .media { border: 0; border-radius: 8px; margin: 12px 0 12px; }
+[data-skin="delta"] .tag, [data-skin="delta"] .media .tag { font-size: 10px; padding: 2px 8px; font-weight: 600; letter-spacing: .04em; background: rgba(23,22,20,.62); }
+[data-skin="delta"] .post .life { display: none; }
+[data-skin="delta"] .actions { gap: 30px; color: var(--muted); }
+[data-skin="delta"] .actions .vote button[value="1"], [data-skin="delta"] .actions .vote > span:first-child, [data-skin="delta"] .stats .vote button[value="1"], [data-skin="delta"] .stats .vote > span:first-child { color: var(--accent); font-weight: 600; }
+[data-skin="delta"] .actions .vote button[value="-1"], [data-skin="delta"] .actions .vote > span:last-child { color: var(--neg); }
+[data-skin="delta"] .peek { border-left: 1px solid var(--line2); color: var(--muted); }
+[data-skin="delta"] .pk b { color: var(--fg); }
+[data-skin="delta"] .fab { background: var(--accent); color: #fff; }
+[data-skin="delta"] .notice { background: color-mix(in srgb, var(--fg) 5%, var(--bg)); }
+[data-skin="delta"] .composer button, [data-skin="delta"] form.plain button { background: var(--accent); color: #fff; }
+[data-skin="delta"] .dock { background: color-mix(in srgb, var(--bg) 94%, transparent); border-color: var(--line); }
+[data-skin="delta"] nav.tabs-bottom a.on { color: var(--accent); }
+[data-skin="delta"] .delta { color: var(--muted); }
+[data-skin="delta"] .msg.me .bubble { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* ---- Flujo: foto al lado, mas noticias por pantalla ---- */
+/* ---- FLUJO (compacta): miniatura a la derecha, cuatro o cinco noticias por
+        pantalla, sin comentario destacado ni controles secundarios ---- */
 [data-skin="flujo"] .post.full, [data-skin="flujo"] .post.compact {
-  display: grid; grid-template-columns: 26px minmax(0, 1fr) 112px; column-gap: 10px; row-gap: 0; align-items: start;
-  grid-template-areas: "av l1 l1" "h2 h2 media" "lead lead media" "delta delta media" "life life life" "peek peek peek" "actions actions actions";
-  padding: 10px 16px 8px; }
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) 120px; column-gap: 10px; row-gap: 0; align-items: start;
+  grid-template-areas: "av l1 l1" "h2 h2 media" "lead lead media" "delta delta media" "actions actions actions";
+  padding: 10px 16px 8px; border-bottom: 1px solid var(--line); }
+[data-skin="flujo"] .post.full:hover, [data-skin="flujo"] .post.compact:hover { background: transparent; }
 [data-skin="flujo"] .post.full .pc, [data-skin="flujo"] .post.compact .pc { display: contents; }
 [data-skin="flujo"] .post.full > .av, [data-skin="flujo"] .post.compact > .av, [data-skin="flujo"] .post.full > .avl, [data-skin="flujo"] .post.compact > .avl { grid-area: av; float: none; margin: 0; }
-[data-skin="flujo"] .post.full > .av, [data-skin="flujo"] .post.compact > .av, [data-skin="flujo"] .post.full > .avl .av, [data-skin="flujo"] .post.compact > .avl .av { width: 26px; height: 26px; font-size: 12px; }
-[data-skin="flujo"] .post.full .l1, [data-skin="flujo"] .post.compact .l1 { grid-area: l1; line-height: 26px; min-height: 26px; font-size: 14px; }
-[data-skin="flujo"] .post.full h2, [data-skin="flujo"] .post.compact h2 { grid-area: h2; font-size: 18px; margin: 6px 0 2px; }
+[data-skin="flujo"] .post.full > .av, [data-skin="flujo"] .post.compact > .av, [data-skin="flujo"] .post.full > .avl .av, [data-skin="flujo"] .post.compact > .avl .av { width: 22px; height: 22px; font-size: 11px; border-width: 1px; box-shadow: none; }
+[data-skin="flujo"] .post.full .l1, [data-skin="flujo"] .post.compact .l1 { grid-area: l1; line-height: 22px; min-height: 22px; font-size: 13px; color: var(--muted); }
+[data-skin="flujo"] .post .l1 b { font-weight: 600; color: var(--fg); }
+[data-skin="flujo"] .post.full h2, [data-skin="flujo"] .post.compact h2 { grid-area: h2; font-size: 18px; line-height: 1.22; margin: 6px 0 3px; }
 [data-skin="flujo"] .post.compact h2 { font-size: 17px; }
-[data-skin="flujo"] .post .lead { grid-area: lead; font-size: 14px; margin: 0 0 4px; }
-[data-skin="flujo"] .post .media, [data-skin="flujo"] .post .media.sm { grid-area: media; width: 112px; aspect-ratio: 1; margin: 6px 0 0; border-radius: 12px; align-self: start; }
+[data-skin="flujo"] .post .lead { grid-area: lead; font-size: 14px; line-height: 1.38; color: var(--muted); margin: 0 0 4px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+[data-skin="flujo"] .post .media, [data-skin="flujo"] .post .media.sm { grid-area: media; width: 120px; aspect-ratio: 4 / 3; margin: 6px 0 0; border-radius: 10px; align-self: start; }
 [data-skin="flujo"] .post .media .tag { left: 6px; bottom: 6px; font-size: 10px; padding: 2px 7px; max-width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-skin="flujo"] .post .delta { grid-area: delta; }
-[data-skin="flujo"] .post .life { grid-area: life; margin: 6px 0 4px; }
-[data-skin="flujo"] .post .peek { grid-area: peek; margin: 4px 0 2px; }
-[data-skin="flujo"] .post .actions { grid-area: actions; margin-top: 4px; }
-[data-skin="flujo"] .post .dval { display: none; }
+[data-skin="flujo"] .post .life, [data-skin="flujo"] .post .peek, [data-skin="flujo"] .post .dval { display: none; }
+[data-skin="flujo"] .post .actions { grid-area: actions; margin-top: 4px; font-size: 13px; gap: 20px; }
 @media (max-width: 400px) {
-  [data-skin="flujo"] .post.full, [data-skin="flujo"] .post.compact { grid-template-columns: 26px minmax(0, 1fr) 96px; }
-  [data-skin="flujo"] .post .media, [data-skin="flujo"] .post .media.sm { width: 96px; }
+  [data-skin="flujo"] .post.full, [data-skin="flujo"] .post.compact { grid-template-columns: 22px minmax(0, 1fr) 104px; }
+  [data-skin="flujo"] .post .media, [data-skin="flujo"] .post .media.sm { width: 104px; }
 }
