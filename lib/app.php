@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 33);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 34);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -301,7 +301,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
     echo "<div class=\"shell\">";
     echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"/img/logo.png\" alt=\"\" class=\"l\"><img src=\"/img/logo-dark.png\" alt=\"\" class=\"d\"></a>";
-    echo "<span class=\"ttl\">" . h($title) . ($tab === 'portada' ? " <a class=\"que\" href=\"/delta/\">¿Qué es Deltha?</a>" : "") . "</span>";
+    echo "<span class=\"ttl\">" . h($title) . "</span>";
     if ($u) echo "<a class=\"me\" href=\"/perfil.php\" title=\"perfil\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>entrar</span></a>";
     echo "</header>";

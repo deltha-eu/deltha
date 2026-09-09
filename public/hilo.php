@@ -34,7 +34,7 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 page_header('Hilo', $tab);
 echo "<div class=\"hilo\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
-echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"> · " . topic_link($s) . ($s['content_type'] === 'article' ? ' · artículo' : '') . " · " . h(hace($s['sent_date'])) . "</span></div>";
+echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"> · " . topic_link($s) . ($s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span></div>";
 $dest = $s['url'] ?: null;
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
