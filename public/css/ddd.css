@@ -1824,7 +1824,7 @@ details.editbox form.plain { padding-top: 0; }
   /* --- rail: tercer grupo — plantilla, aspecto e idioma en desplegables (details, sin JS) --- */
   .rail details.rail-dd { border-top: 1px solid var(--line); }
   .rail details.rail-dd.skins { margin-top: 10px; padding-top: 6px; }
-  .rail details.rail-dd:not(.skins) { padding-top: 4px; }   /* cada uno con su raya arriba: Plantilla · Aspecto · Idioma */
+  .rail details.rail-dd:not(.skins) { border-top: 0 !important; }   /* solo el grupo lleva raya (la de .skins), como entre los otros dos grupos */
   .rail details.rail-dd summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-radius: 999px; font-size: 15px; color: var(--fg); cursor: pointer; }
   .rail details.rail-dd summary::-webkit-details-marker { display: none; }
   .rail details.rail-dd summary:hover { background: var(--hover); }
@@ -1902,6 +1902,20 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="www1998"] .rail details.rail-dd summary::after { content: "[+]"; font-family: var(--cour); }
   [data-skin="www1998"] .rail details.rail-dd[open] summary::after { content: "[-]"; }
   [data-skin="solarpunk"] .rail details.rail-dd { border-top: 1px solid var(--gl); }
+  /* la raya entre los dos bloques de navegacion, con el mismo grosor que las de Plantilla · Aspecto · Idioma */
+  [data-skin="retro"] .rail nav.rail-bottom { border-top: 2px solid var(--line); }
+  [data-skin="manga"] .rail nav.rail-bottom { border-top: 3px solid var(--line); }
+  [data-skin="punk"] .rail nav.rail-bottom { border-top: 2px dashed var(--line2); }
+  [data-skin="popart"] .rail nav.rail-bottom { border-top: 3px solid var(--line); }
+  [data-skin="hyperpop"] .rail nav.rail-bottom { border-top: 2px solid var(--line2); }
+  [data-skin="neobrutal"] .rail nav.rail-bottom { border-top: 3px solid var(--line); }
+  [data-skin="riso"] .rail nav.rail-bottom { border-top: 1px solid var(--i1); }
+  [data-skin="aero"] .rail nav.rail-bottom { border-top: 1px solid var(--edge); }
+  [data-skin="hud"] .rail nav.rail-bottom { border-top: 1px solid var(--line2); }
+  [data-skin="acid"] .rail nav.rail-bottom { border-top: 3px solid var(--ink); }
+  [data-skin="pixel"] .rail nav.rail-bottom { border-top: 2px solid var(--line); }
+  [data-skin="www1998"] .rail nav.rail-bottom { border-top: 2px groove var(--btn); }
+  [data-skin="solarpunk"] .rail nav.rail-bottom { border-top: 1px solid var(--gl); }
   .rail .sw-editorial { --s1: #ffffff; --s2: #111111; }
   .rail .sw-comunidad { --s1: #f2f2f2; --s2: #ffffff; border-color: #bbb; }
   .rail .sw-delta { --s1: #f5efe3; --s2: #2f6b3f; }
