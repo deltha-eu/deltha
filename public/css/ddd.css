@@ -74,7 +74,7 @@ footer.inflow { display: none; }
   border: 2px solid color-mix(in srgb, var(--halo) calc(var(--ring, .2) * 100%), var(--line2));
   box-shadow: 0 0 var(--glow, 0) color-mix(in srgb, var(--halo) 55%, transparent); }
 .reply .av, .pk .av { width: 32px; height: 32px; font-size: 14px; }
-.av.photo { background-size: cover; background-position: center; color: transparent; }
+.av.photo { background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent; }
 .av.mini { width: 24px; height: 24px; box-shadow: none; }
 .avl { flex: none; }
 .profile { padding: 16px; border-bottom: 1px solid var(--line); display: flex; gap: 14px; align-items: flex-start; }
@@ -376,7 +376,7 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 [data-skin="delta"] .post.full:hover, [data-skin="delta"] .post.compact:hover { background: transparent; }
 [data-skin="delta"] .post .l1 { font-size: 13px; color: var(--muted); }
 [data-skin="delta"] .post .l1 b { color: var(--fg); font-weight: 600; }
-[data-skin="delta"] .post.full > .av, [data-skin="delta"] .post.compact > .av, [data-skin="delta"] .post.full > .avl .av, [data-skin="delta"] .post.compact > .avl .av { background: transparent; border-color: var(--line2); color: var(--muted); box-shadow: none; }
+[data-skin="delta"] .post.full > .av, [data-skin="delta"] .post.compact > .av, [data-skin="delta"] .post.full > .avl .av, [data-skin="delta"] .post.compact > .avl .av { background-color: transparent; border-color: var(--line2); color: var(--muted); box-shadow: none; }
 [data-skin="delta"] .post h2 { font-size: 25px; font-weight: 500; line-height: 1.15; letter-spacing: -.012em; margin: 10px 0 8px; clear: left; }
 [data-skin="delta"] .post.compact h2 { font-size: 20px; }
 [data-skin="delta"] .lead { color: var(--muted); font-size: 15px; line-height: 1.45; margin-bottom: 12px; }
@@ -487,7 +487,7 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="retro"] .post .l1, [data-skin="retro"] .post .l1 .meta { font-family: var(--mono); font-size: 12px; }
 [data-skin="retro"] .post h2, [data-skin="retro"] .hilo .main h2 { font-family: var(--serif); font-weight: 600; font-size: 21px; }
 [data-skin="retro"] .lead { font-family: var(--mono); font-size: 13px; line-height: 1.5; }
-[data-skin="retro"] .av, [data-skin="retro"] .av.mini, [data-skin="retro"] .fz .av, [data-skin="retro"] .pk .av, [data-skin="retro"] .reply .av, [data-skin="retro"] .profile .av, [data-skin="retro"] .composer .av { border-radius: 0; border: 2px solid var(--line); box-shadow: none; background: var(--bg); color: var(--fg); font-family: var(--mono); }
+[data-skin="retro"] .av, [data-skin="retro"] .av.mini, [data-skin="retro"] .fz .av, [data-skin="retro"] .pk .av, [data-skin="retro"] .reply .av, [data-skin="retro"] .profile .av, [data-skin="retro"] .composer .av { border-radius: 0; border: 2px solid var(--line); box-shadow: none; background-color: var(--bg); color: var(--fg); font-family: var(--mono); }
 [data-skin="retro"] .av.photo { color: transparent; }
 [data-skin="retro"] .media { border-radius: 0; border: 2px solid var(--line); }
 [data-skin="retro"] .media .pic { filter: saturate(.8) contrast(1.05); }
@@ -534,7 +534,7 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="manga"] .post.compact h2 { font-size: 20px; }
 [data-skin="manga"] .lead { font-size: 15px; }
 [data-skin="manga"] .post .l1 b { font-weight: 800; }
-[data-skin="manga"] .av, [data-skin="manga"] .av.mini, [data-skin="manga"] .fz .av, [data-skin="manga"] .pk .av, [data-skin="manga"] .reply .av, [data-skin="manga"] .profile .av, [data-skin="manga"] .composer .av { border: 2px solid var(--line); box-shadow: none; background: var(--panel); color: var(--fg); font-weight: 700; }
+[data-skin="manga"] .av, [data-skin="manga"] .av.mini, [data-skin="manga"] .fz .av, [data-skin="manga"] .pk .av, [data-skin="manga"] .reply .av, [data-skin="manga"] .profile .av, [data-skin="manga"] .composer .av { border: 2px solid var(--line); box-shadow: none; background-color: var(--panel); color: var(--fg); font-weight: 700; }
 [data-skin="manga"] .av.photo, [data-skin="manga"] .media .pic { filter: grayscale(1) contrast(1.25); }
 [data-skin="manga"] .av.photo { color: transparent; }
 [data-skin="manga"] .media { border-radius: 2px; border: 2px solid var(--line); }
@@ -590,7 +590,7 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="punk"] .life span { border-radius: 0; background: var(--acid); }
 [data-skin="punk"] .peek { border: 0; margin: 10px 0 4px; padding: 8px 12px; background: var(--paper); color: var(--bg); transform: rotate(.6deg); clip-path: polygon(1% 0, 100% 2%, 99% 100%, 0 97%); }   /* recorte pegado */
 [data-skin="punk"] .peek .pk, [data-skin="punk"] .peek .pk b { color: var(--bg); }
-[data-skin="punk"] .peek .av { border-color: var(--bg); color: var(--bg); background: transparent; }
+[data-skin="punk"] .peek .av { border-color: var(--bg); color: var(--bg); background-color: transparent; }
 [data-skin="punk"] .actions { gap: 26px; font-family: ui-monospace, Menlo, monospace; }
 [data-skin="punk"] .actions .vote button[value="1"], [data-skin="punk"] .actions .vote > span:first-child, [data-skin="punk"] .stats .vote button[value="1"], [data-skin="punk"] .stats .vote > span:first-child { color: var(--elec); font-weight: 700; }
 [data-skin="punk"] .fab { background: var(--bg); color: var(--elec); border: 3px solid var(--elec); box-shadow: 0 0 0 3px var(--bg), 0 0 14px var(--elec); border-radius: 50%; }
@@ -608,3 +608,5 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="punk"] .av, [data-skin="punk"] .fz .av, [data-skin="punk"] .reply .av, [data-skin="punk"] .profile .av { border-radius: 0; transform: rotate(-3deg); }
 [data-skin="punk"] .av.photo { color: transparent; }
 .legal p[style] { font-size: 14px; overflow-wrap: anywhere; }
+/* Fotos de usuario: las skins solo cambian color de fondo, nunca el encuadre de la foto */
+[data-skin] .av.photo { background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent; }
