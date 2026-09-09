@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 38);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 39);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -131,6 +131,28 @@ function source_of(?string $url): ?string {
 /** El velo Ghost de una aportacion ha caducado? (fecha de la aportacion + ghost_minutes) */
 function ghost_over(string $dt): bool {
     return time() - strtotime($dt) >= (int)cfg('ghost_minutes', 30) * 60;
+}
+
+/* ---- reportes y borrado de comentarios ------------------------------ */
+const DDD_DELETED_TXT = 'Comentario eliminado por incumplir las normas de uso';
+function report_reasons(): array {
+    return ['insulto' => 'Insulta o veja a alguien', 'odio' => 'Incita al odio o la discriminación', 'acoso' => 'Amenaza o acosa',
+            'datos' => 'Publica datos personales de otra persona (doxxing)', 'ilegal' => 'Contenido ilegal', 'spam' => 'Spam o publicidad encubierta', 'otro' => 'Otra cosa'];
+}
+/** Borrado de moderacion: el comentario sigue en el hilo (y en el contador) pero con el texto sustituido;
+ *  el original queda en content_orig por si hace falta ante un requerimiento. Cierra sus reportes. */
+function comment_delete(PDO $pdo, int $id): bool {
+    $st = $pdo->prepare("UPDATE comments SET content_orig = IF(deleted = 1, content_orig, content), deleted = 1, content = ? WHERE comment_id = ? AND status = 'ok'");
+    $st->execute([DDD_DELETED_TXT, $id]);
+    try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted' WHERE comment_id = ? AND status = 'open'")->execute([$id]); } catch (Throwable $e) {}
+    return $st->rowCount() > 0;
+}
+/** Reportes de comentarios pendientes (para el enlace de moderacion) */
+function open_reports(): int {
+    static $n = null; global $pdo;
+    if ($n !== null) return $n;
+    try { $n = (int)$pdo->query("SELECT COUNT(DISTINCT comment_id) FROM comment_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) { $n = 0; }
+    return $n;
 }
 
 /* ---- paginas editables (tabla pages, admin) ------------------------- */
@@ -367,8 +389,8 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
-    if (is_mod())   $h .= " · <a href=\"/moderacion.php\">moderación</a>";
+    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/normas.php\">Normas de uso</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
+    if (is_mod())   $h .= " · <a href=\"/moderacion.php\">moderación" . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;
 }

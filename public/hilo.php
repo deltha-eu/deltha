@@ -61,6 +61,7 @@ if (is_mod()) {   // moderadores y admin: cambiar el tema del envio
     echo "</select><button class=\"btn\">Cambiar</button> <a href=\"/editar.php?id=$id\">editar · eliminar</a> · <a href=\"/moderacion.php#temas\">añadir tema</a></form>";
 }
 
+if (isset($_GET['reportado'])) echo "<p class=\"notice\">Gracias: el comentario queda avisado a los moderadores.</p>";
 if ($can_comment && !$replyTo) composer($id);
 elseif (!$open) echo "<p class=\"end\">Hilo cerrado.</p>";
 elseif (!$can_comment) echo "<p class=\"end\"><a href=\"/login.php\">Entra</a> para comentar.</p>";

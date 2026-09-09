@@ -134,7 +134,9 @@ CREATE TABLE comments (
     anon_key    CHAR(16) DEFAULT NULL,               -- hash truncado (ip+hilo+secreto) para agrupar anonimos; no reversible
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,  -- aura del autor en el momento de comentar (para el halo)
     content     TEXT NOT NULL,
+    content_orig TEXT DEFAULT NULL,                  -- texto original si fue borrado por moderacion
     status      ENUM('pending_mod','rejected','ok') NOT NULL DEFAULT 'ok',
+    deleted     TINYINT(1) NOT NULL DEFAULT 0,        -- borrado por moderacion: content sustituido por el aviso
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_story (story_id, created),
     KEY idx_root (story_id, root_id, created),
@@ -202,4 +204,19 @@ CREATE TABLE messages (
     KEY idx_pair (from_id, to_id, msg_id),
     CONSTRAINT fk_m_from FOREIGN KEY (from_id) REFERENCES users(user_id),
     CONSTRAINT fk_m_to   FOREIGN KEY (to_id)   REFERENCES users(user_id)
+) ENGINE=InnoDB;
+
+-- Reportes de comentarios (cualquiera puede reportar; los revisan los moderadores)
+CREATE TABLE comment_reports (
+    report_id   INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    comment_id  INT UNSIGNED NOT NULL,
+    user_id     INT UNSIGNED DEFAULT NULL,
+    fp          CHAR(16) DEFAULT NULL,
+    reason      ENUM('insulto','odio','acoso','datos','ilegal','spam','otro') NOT NULL DEFAULT 'otro',
+    status      ENUM('open','deleted','dismissed') NOT NULL DEFAULT 'open',
+    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user (comment_id, user_id),
+    UNIQUE KEY uq_fp   (comment_id, fp),
+    KEY idx_status (status, created),
+    CONSTRAINT fk_cr_comment FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
 ) ENGINE=InnoDB;

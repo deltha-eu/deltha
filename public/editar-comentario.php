@@ -16,11 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('act') === 'eliminar') {
         if (post('seguro') !== '1') $err = 'Marca la casilla de confirmación para eliminar.';
         else {
-            $pdo->beginTransaction();
-            $pdo->prepare("UPDATE comments SET status = 'rejected' WHERE comment_id = ? AND status = 'ok'")->execute([$id]);
-            $pdo->prepare("UPDATE stories SET comments = GREATEST(0, comments - 1) WHERE story_id = ?")->execute([$c['story_id']]);
-            $pdo->commit();
-            redirect("/hilo.php?id={$c['story_id']}#comentarios");
+            comment_delete($pdo, $id);   // el comentario se queda, con el texto sustituido por el aviso
+            redirect($back);
         }
     } else {
         $txt = mb_substr(trim(post('content')), 0, 4000);
@@ -39,6 +36,6 @@ echo "<label>Texto</label><textarea name=\"content\" rows=\"8\" maxlength=\"4000
 echo "<button>Guardar</button></form>";
 echo "<h3 style=\"padding:16px 16px 0\">Eliminar</h3>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"eliminar\">";
-echo "<label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> sí, eliminar este comentario (las respuestas que cuelguen de él se mantienen)</label>";
+echo "<label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> sí, eliminar este comentario: su texto se sustituye por «" . h(DDD_DELETED_TXT) . "» (las respuestas se mantienen)</label>";
 echo "<button class=\"danger\">Eliminar</button></form>";
 page_footer();
