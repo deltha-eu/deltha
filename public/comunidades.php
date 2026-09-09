@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $u) {
     $name = trim(preg_replace('/\s+/', ' ', post('name')));
     $descr = mb_substr(trim(post('descr')), 0, 200);
     $color = post('color') ?: '#534AB7';
+    $skin = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
     $slug = community_slug($name);
     if ($quota <= 0) $err = t('No puedes crear más comunidades.');
     elseif (mb_strlen($name) < 3 || mb_strlen($name) > 48) $err = t('El nombre debe tener entre 3 y 48 caracteres.');
@@ -18,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $u) {
     elseif (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $err = t('Color no válido.');
     else {
         try {
-            $pdo->prepare("INSERT INTO communities (slug, name, descr, color, owner_id) VALUES (?,?,?,?,?)")->execute([$slug, $name, $descr ?: null, $color, $u['user_id']]);
+            $pdo->prepare("INSERT INTO communities (slug, name, descr, color, skin, owner_id) VALUES (?,?,?,?,?,?)")->execute([$slug, $name, $descr ?: null, $color, $skin, $u['user_id']]);
             redirect('/comunidad.php?c=' . rawurlencode($slug) . '&nueva=1');
         } catch (PDOException $e) { $err = t('Ya existe una comunidad con ese nombre.'); }
     }
@@ -37,6 +38,7 @@ if ($u && $quota > 0) {
     echo "<form class=\"plain\" method=\"post\">" . t('<label>Nombre</label>') . "<input type=\"text\" name=\"name\" maxlength=\"48\" required placeholder=\"" . t('p. ej. Cine clásico') . "\" value=\"" . h(post('name')) . "\">";
     echo "" . t('<label>De qué va (hasta 200 caracteres)</label>') . "<input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h(post('descr')) . "\">";
     echo "" . t('<label>Color</label>') . "<input type=\"color\" name=\"color\" value=\"" . h(post('color') ?: '#534AB7') . "\">";
+    echo skin_select(post('skin'));
     echo "" . t('<button>Crear</button>') . "</form>";
 } elseif ($u) {
     echo "<p class=\"end\">" . ((float)$u['aura'] <= (float)cfg('comm_min_aura', 10) ? t('Para crear comunidades hace falta aura mayor que %s (tienes %s).', h(num_es(cfg('comm_min_aura', 10))), number_format((float)$u['aura'], 1, ',', '')) : t('Ya has creado tus %d comunidades.', (int)cfg('comm_max_per_user', 3))) . "</p>";
