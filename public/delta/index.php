@@ -25,6 +25,7 @@ $SK = [
     'popart'    => ['Pop Art',       '#ffffff', '#111111', '#FFD91A', '#F23838', '3px'],
     'zen'       => ['Zen',           '#eef3f2', '#2b3a55', '#d98ba0', '#eef3f2', '3px'],
     'orange'    => ['Orange',        '#F5F5F3', '#1a1a1a', '#FF6400', '#F5F5F3', '6px'],
+    'foro'      => ['Foro',          '#DAE0E6', '#1c1c1c', '#FF4500', '#ffffff', '16px'],
 ];
 ?>
 <!doctype html><html lang="<?= lang() ?>"><head><meta charset="utf-8">
