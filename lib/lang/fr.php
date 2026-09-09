@@ -371,7 +371,6 @@ return [
 '%d plantillas visuales.' => '%d habillages.',
 'Misma portada, mismos números, distinta piel: de revista, de tarjetas, de terminal, de manga, de fanzine… Se elige en el perfil, y cada una tiene versión clara y oscura.' => 'Même une, mêmes chiffres, autre peau : magazine, cartes, terminal, manga, fanzine… Se choisit dans le profil, chacun avec une version claire et une sombre.',
 'En tu idioma y en tu bolsillo.' => 'Dans votre langue et dans votre poche.',
-'Español, inglés y francés. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Espagnol, anglais et français. S’installe comme une appli sur le mobile, avec des messages privés entre inscrits. Rien de tout cela ne change ce que vous voyez : seulement comment vous le voyez.',
 'Plantilla visual de la comunidad' => 'Habillage de la communauté',
 'Ninguna: cada cual ve la suya' => 'Aucun : chacun voit le sien',
 'Se aplica a la página de la comunidad y a sus hilos, por encima de la plantilla de cada usuario. Para verlas: ' => 'S’applique à la page de la communauté et à ses fils, par-dessus l’habillage de chaque utilisateur. Pour les voir : ',
@@ -406,4 +405,5 @@ return [
 'Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto' => 'Pas de cookies sans connexion (sauf habillage, thème et langue, si vous les choisissez) · pas de pistage · pas d’algorithme caché',
 'Aspecto' => 'Apparence',
 'Como el sistema' => 'Comme le système',
+'Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Huit langues : espagnol, catalan, basque, galicien, anglais, français, allemand et italien. S’installe comme une appli sur le mobile, avec des messages privés entre inscrits. Rien de tout cela ne change ce que vous voyez : seulement comment vous le voyez.',
 ];

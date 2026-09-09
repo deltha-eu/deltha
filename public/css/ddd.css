@@ -807,6 +807,10 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="orange"] .post .vote button[value="1"] span, [data-skin="orange"] .post span.vote > span:first-child span { order: 1; font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
 [data-skin="orange"] .post .vote button[value="1"]::after, [data-skin="orange"] .post span.vote > span:first-child::after { content: "votos"; order: 2; font-size: 10px; font-weight: 600; letter-spacing: .02em; color: var(--or); margin-bottom: 5px; }
 [data-skin="orange"]:lang(en) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(en) .post span.vote > span:first-child::after, [data-skin="orange"]:lang(fr) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(fr) .post span.vote > span:first-child::after { content: "votes"; }
+[data-skin="orange"]:lang(ca) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(ca) .post span.vote > span:first-child::after { content: "vots"; }
+[data-skin="orange"]:lang(eu) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(eu) .post span.vote > span:first-child::after { content: "boto"; }
+[data-skin="orange"]:lang(de) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(de) .post span.vote > span:first-child::after { content: "Stimmen"; }
+[data-skin="orange"]:lang(it) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(it) .post span.vote > span:first-child::after { content: "voti"; }
 [data-skin="orange"] .post .vote button[value="1"] .i, [data-skin="orange"] .post span.vote > span:first-child .i { order: 3; box-sizing: content-box; width: 18px; height: 18px; border: solid var(--or); border-width: 2px 16px; background: var(--or); color: #fff; border-radius: 4px; stroke-width: 2.6; }   /* el «botón»: el icono con un borde ancho del mismo naranja (box-sizing content-box: el global es border-box y se comia el icono) */
 [data-skin="orange"] .post .vote button[value="1"]:hover .i { background: #e05600; border-color: #e05600; }
 [data-skin="orange"] .post span.vote > span:first-child .i { opacity: .55; }   /* sin poder votar: el boton se apaga */
