@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 35);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 36);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -49,7 +49,7 @@ session_name(DDD_SESSION);
 if (isset($_COOKIE[DDD_SESSION])) {
     session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
     if (!empty($_SESSION['uid'])) {
-        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme FROM users WHERE user_id = ? AND verified = 1");
+        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
         if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas.php)
@@ -146,6 +146,30 @@ function page_body(array $pg): string {
         '{ttl}'  => (string)(int)cfg('thread_ttl_hours', 48),
         '{gm}'   => (string)(int)cfg('ghost_minutes', 30),
     ]);
+}
+
+/* ---- plantillas visuales ----------------------------------------------
+ * editorial (la clasica, con mas aire) | comunidad (tarjetas, usuarios)
+ * | delta (identidad grafica: espiga, δ visible, fotos en gris) | flujo (fotos laterales, denso).
+ * Orden de preferencia: ?skin= en la URL (probar sin guardar) > users.skin > config.skin_default. */
+const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo'];
+function skin(): string {
+    static $s = null;
+    if ($s !== null) return $s;
+    $q = (string)($_GET['skin'] ?? '');
+    $u = user();
+    foreach ([$q, (string)($u['skin'] ?? ''), (string)cfg('skin_default', 'editorial')] as $c) {
+        if (isset(DDD_SKINS[$c])) return $s = $c;
+    }
+    return $s = 'editorial';
+}
+/** Valor del delta en vivo de una noticia (misma formula que delta_sql) */
+function delta_live(array $s): float {
+    $net = (int)$s['votes_pos'] - (int)$s['votes_neg'];
+    $hh  = intdiv(max(0, time() - strtotime($s['sent_date'])), 1800);
+    $decay = (float)cfg('decay_per_halfhour', 0.05);
+    $coef = (float)($s['coef'] ?? 1);
+    return cfg('decay_mode') === 'multiplicative' ? $net * $coef * pow(1 - $decay, $hh) : $net * $coef - $decay * $hh;
 }
 
 /* ---- delta (misma formula que el cron, para mostrarla) ------------- */
@@ -293,7 +317,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $u = user();
     $theme = $u && in_array($u['theme'] ?? 'auto', ['light', 'dark'], true) ? $u['theme'] : null;   // null = sigue al sistema
-    echo "<!doctype html><html lang=\"es\"" . ($theme ? " data-theme=\"$theme\"" : "") . "><head><meta charset=\"utf-8\">";
+    echo "<!doctype html><html lang=\"es\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
     echo "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">";
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
     echo "<link rel=\"icon\" href=\"/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"/img/icon-180.png\">";

@@ -64,7 +64,8 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
     $srcLbl = $s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? " · " . source_link($s) : '');
-    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"> · " . topic_link($s) . $srcLbl . " · " . h($when) . "</span></div>";
+    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . $srcLbl . " · " . h($when) . "</span></div>";
+    echo "<span class=\"dval\" title=\"delta en vivo\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
     if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content'], 0, 240, '…')) . "</p>";
     media_block($s, $mode === 'full' ? 'media' : 'media sm');

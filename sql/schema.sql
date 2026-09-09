@@ -35,6 +35,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
 ('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
 ('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
+('skin_default',        'editorial', 'Plantilla visual por defecto (anonimos y quien no elija): editorial | comunidad | delta | flujo'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),
 ('anon_alias_mode',     'ip_hash', 'ip_hash = alias estable por hilo sin cookie | random = alias nuevo por comentario'),
 ('anon_can_comment',    '1',    '1 = los anonimos pueden comentar'),
@@ -58,6 +59,7 @@ CREATE TABLE users (
     avatar      VARCHAR(64) DEFAULT NULL,           -- fichero en /media/avatars
     bio         VARCHAR(160) DEFAULT NULL,
     theme       ENUM('auto','light','dark') NOT NULL DEFAULT 'auto',
+    skin        VARCHAR(16) NOT NULL DEFAULT '',   -- plantilla visual ('' = la del sitio, config.skin_default)
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_login (login),
