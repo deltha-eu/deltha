@@ -7,16 +7,19 @@ function run_cycle(PDO $pdo): array {
     $log = [];
     $minAge   = (int)cfg('delta_min_age_min');
     $minPub   = (float)cfg('delta_min_publish');
+    $minCand  = (float)cfg('delta_min_candidate', 0.5);
     $ttlHours = (int)cfg('thread_ttl_hours');
+    $newTtl   = (int)cfg('nuevas_ttl_hours', 48);
 
     // 1. nuevas -> candidatas: cada ciclo sube UNA, la de mayor delta
-    //    entre las que ya cumplen la antiguedad minima.
+    //    entre las que ya cumplen la antiguedad minima, y solo si su delta llega
+    //    a delta_min_candidate: sin votos no se asciende.
     //    En dos pasos (SELECT + UPDATE por id): MySQL 8 no admite ORDER BY/LIMIT
     //    en un UPDATE con JOIN (error 1221); MariaDB si, y por eso funcionaba antes.
     $sel = $pdo->prepare("SELECT s.story_id FROM stories s JOIN topics t ON t.topic_id = s.topic_id
-                           WHERE s.status = 'nuevas' AND s.sent_date <= NOW() - INTERVAL ? MINUTE
+                           WHERE s.status = 'nuevas' AND s.sent_date <= NOW() - INTERVAL ? MINUTE AND " . delta_sql() . " >= ?
                            ORDER BY " . delta_sql() . " DESC, s.sent_date ASC LIMIT 1");
-    $sel->execute([$minAge]);
+    $sel->execute([$minAge, $minCand]);
     $sube = (int)$sel->fetchColumn();
     if ($sube) {
         $pdo->prepare("UPDATE stories s JOIN topics t ON t.topic_id = s.topic_id
@@ -24,7 +27,13 @@ function run_cycle(PDO $pdo): array {
                         WHERE s.story_id = ? AND s.status = 'nuevas'")->execute([$sube]);
         $log[] = "candidata nueva: #$sube";
     } else {
-        $log[] = "sin nuevas que asciendan (ninguna con >= $minAge min)";
+        $log[] = "sin nuevas que asciendan (ninguna con >= $minAge min y delta >= $minCand)";
+    }
+    // 1b. lo que lleva nuevas_ttl_hours sin llegar a portada caduca: nuevas y candidatas se archivan
+    if ($newTtl > 0) {
+        $c = $pdo->prepare("UPDATE stories SET status='archived' WHERE status IN ('nuevas','candidatas') AND sent_date <= NOW() - INTERVAL ? HOUR");
+        $c->execute([$newTtl]);
+        if ($c->rowCount()) $log[] = "caducadas sin llegar a portada: {$c->rowCount()}";
     }
 
     // 2. delta de candidatas

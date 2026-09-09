@@ -57,7 +57,7 @@ Por defecto sigue al sistema (`prefers-color-scheme`). Un registrado puede fijar
 - `scripts/promocionar.php` cron · `scripts/moderar.php` portero (apagado: `mod_enabled=0`)
 
 ## Ciclo
-envío → `nuevas` → (≥30 min) cada ciclo asciende UNA a `candidatas`, la de mayor delta → cada ciclo se publica la candidata de mayor delta si ≥ `delta_min_publish` → `destacadas` (+0,10 aura al autor, tope 50) → (48 h) `archived` + revelado sigiloso de nicks.
+envío → `nuevas` → (≥30 min y delta ≥ `delta_min_candidate`, 0,5: sin votos no se sube) cada ciclo asciende UNA a `candidatas`, la de mayor delta → cada ciclo se publica la candidata de mayor delta si ≥ `delta_min_publish` → `destacadas` (+0,10 aura al autor, tope 50) → (48 h) `archived` + revelado sigiloso de nicks. Lo que lleva `nuevas_ttl_hours` (48) sin llegar a portada (nuevas o candidatas) se archiva (`sql/migra-024-delta-minimo-candidata.sql`).
 
 delta = (pos − neg) × coef_tema − 0,05 × medias_horas   (o multiplicativo, `decay_mode`)
 

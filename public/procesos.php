@@ -34,8 +34,9 @@ header('Vary: Cookie');
 
 /* ---- estimacion: en que ciclo asciende cada nueva -------------------
  * Reproduce la regla del cron (lib/ciclo.php): en cada ciclo sube UNA, la de
- * mayor delta entre las que llevan >= delta_min_age_min. Se asume que los
- * deltas no cambian (no llegan votos): es una estimacion, y asi se dice. */
+ * mayor delta entre las que llevan >= delta_min_age_min y tienen delta >=
+ * delta_min_candidate. Se asume que los deltas no cambian (no llegan votos):
+ * es una estimacion, y asi se dice. Las que no llegan al minimo no tienen ETA. */
 /** Instante del proximo ciclo: el cron llama cada minuto y promocionar.php actua
  *  cuando el minuto de la hora es multiplo de cycle_minutes (mismo criterio). */
 function proximo_ciclo(): int {
@@ -47,8 +48,9 @@ function proximo_ciclo(): int {
 function cola_eta(array $rows): array {
     $cycle  = max(1, (int)cfg('cycle_minutes', 5)) * 60;
     $minAge = (int)cfg('delta_min_age_min', 30) * 60;
+    $minCand = (float)cfg('delta_min_candidate', 0.5);
     $t = proximo_ciclo();
-    $pend = array_values($rows);                      // ya vienen por delta DESC, sent_date ASC
+    $pend = array_values(array_filter($rows, fn($r) => (float)$r['delta_live'] >= $minCand));   // ya vienen por delta DESC, sent_date ASC
     $eta = []; $guard = 0;
     while ($pend && $guard++ < 5000) {
         foreach ($pend as $i => $r) {
@@ -80,7 +82,7 @@ if ($v === 'cola') {
     $rows = $st->fetchAll();
     $total = count($rows);
     $eta = cola_eta($rows);
-    echo "<p class=\"notice\">" . t('%d en cola · próximo ciclo en %d min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de %d min. La estimación supone que no cambian los votos; se recalcula sola cada minuto.', $total, $next, (int)cfg('delta_min_age_min')) . "</p>";
+    echo "<p class=\"notice\">" . t('%d en cola · próximo ciclo en %d min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.', $total, $next, (int)cfg('delta_min_age_min'), num_es(cfg('delta_min_candidate', 0.5))) . "</p>";
     $n = 0;
     // una linea por noticia: puesto, titular, quien/tema/cuando, delta y estimacion; sin avatar ni foto
     foreach (array_slice($rows, page_offset($page), $per) as $i => $s) {
@@ -88,7 +90,7 @@ if ($v === 'cola') {
         $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
         $who = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
         $sid = (int)$s['story_id'];
-        $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid]) : t('sin estimación');
+        $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid]) : ((float)$s['delta_live'] < (float)cfg('delta_min_candidate', 0.5) ? t('necesita δ ≥ %s para ascender', num_es(cfg('delta_min_candidate', 0.5))) : t('sin estimación'));
         echo "<div class=\"fz cola\" id=\"s$sid\"><span class=\"n\">$pos</span><div class=\"fzt\">";
         echo "<a class=\"t\" href=\"/hilo.php?id=$sid\">" . h($s['title']) . "</a>";
         echo "<span class=\"meta\">" . h($who) . " · " . topic_link($s) . " · " . h(hace($s['sent_date'])) . "</span>";

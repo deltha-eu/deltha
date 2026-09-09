@@ -378,4 +378,6 @@ return [
 'Pop Art — revista gráfica de los sesenta: amarillo, rojo, bordes negros' => 'Pop Art — sixties graphic magazine: yellow, red, black borders',
 'Zen — agua, flor y silencio; casi un lector' => 'Zen — water, blossom and silence; almost a reader',
 'Orange — guiño a Menéame: densa, naranja, votos grandes' => 'Orange — a nod to Menéame: dense, orange, big votes',
+'%d en cola · próximo ciclo en %d min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.' => '%d in the queue · next cycle in %d min · each cycle promotes <b>one</b> to Candidates: the highest δ among those older than %d min with δ ≥ %s. The estimate assumes votes do not change; it refreshes every minute.',
+'necesita δ ≥ %s para ascender' => 'needs δ ≥ %s to be promoted',
 ];

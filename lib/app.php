@@ -228,6 +228,8 @@ function page_body(array $pg): string {
         '{cycle}'    => (string)(int)cfg('cycle_minutes', 5),
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
         '{minpub}'   => num_es(cfg('delta_min_publish', 1)),
+        '{mincand}'  => num_es(cfg('delta_min_candidate', 0.5)),
+        '{newttl}'   => (string)(int)cfg('nuevas_ttl_hours', 48),
         '{decay}'    => num_es(cfg('decay_per_halfhour', 0.05)),
         '{auraport}' => num_es(cfg('aura_portada', 0.5)),
         '{auraenv}'  => num_es(cfg('aura_envio', 0.1)),

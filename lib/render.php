@@ -92,7 +92,9 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
         if ($s['status'] === 'candidatas') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . "</div>";
         elseif ($s['status'] === 'nuevas') {
             $age = (int)cfg('delta_min_age_min') - intdiv(time() - strtotime($s['sent_date']), 60);
-            $st = $age > 0 ? t('elegible en %d min', $age) : t('elegible: sube la de mayor delta cada ciclo');
+            $minCand = (float)cfg('delta_min_candidate', 0.5);
+            if (delta_live($s) < $minCand) $st = t('necesita δ ≥ %s para ascender', num_es($minCand)) . ($age > 0 ? " · " . t('elegible en %d min', $age) : '');
+            else $st = $age > 0 ? t('elegible en %d min', $age) : t('elegible: sube la de mayor delta cada ciclo');
             echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · $st</div>";
         }
     }
