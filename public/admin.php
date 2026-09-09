@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $out[] = 'Config guardada.';
     } elseif ($act === 'pagina') {
         $pdo->prepare("INSERT INTO pages (slug, title, body) VALUES (?,?,?) ON DUPLICATE KEY UPDATE title = VALUES(title), body = VALUES(body)")
-            ->execute([post('slug', 'privacidad'), post('title', 'Privacidad y contacto'), (string)($_POST['body'] ?? '')]);
+            ->execute([in_array(post('slug'), ['privacidad', 'normas'], true) ? post('slug') : 'privacidad', post('title', 'Página'), (string)($_POST['body'] ?? '')]);
         $out[] = 'Página guardada.';
     } elseif ($act === 'topics') {
         $st = $pdo->prepare("UPDATE topics SET coef = ?, color = ? WHERE topic_id = ?");
@@ -109,6 +109,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
             $ncom_ajenos += (int)$c->fetchColumn();
             $pdo->prepare("DELETE FROM mod_queue WHERE item_type = 'comment' AND ref_id IN (SELECT comment_id FROM comments WHERE story_id = ?)")->execute([$sid]);
             $pdo->prepare("DELETE FROM mod_queue WHERE item_type = 'story' AND ref_id = ?")->execute([$sid]);
+            try { $pdo->prepare("DELETE FROM comment_reports WHERE comment_id IN (SELECT comment_id FROM comments WHERE story_id = ?)")->execute([$sid]); } catch (Throwable $e) {}
             $pdo->prepare("DELETE FROM comments WHERE story_id = ?")->execute([$sid]);
             $pdo->prepare("DELETE FROM votes WHERE story_id = ?")->execute([$sid]);
             $pdo->prepare("DELETE FROM thread_aliases WHERE story_id = ?")->execute([$sid]);
@@ -133,6 +134,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
             foreach ($pdo->query("SELECT story_id, COUNT(*) n FROM comments WHERE comment_id IN ($in) AND status = 'ok' GROUP BY story_id") as $r)
                 $pdo->prepare("UPDATE stories SET comments = GREATEST(0, comments - ?) WHERE story_id = ?")->execute([(int)$r['n'], (int)$r['story_id']]);
             $pdo->exec("DELETE FROM mod_queue WHERE item_type = 'comment' AND ref_id IN ($in)");
+            try { $pdo->exec("DELETE FROM comment_reports WHERE comment_id IN ($in)"); } catch (Throwable $e) {}
             $pdo->exec("DELETE FROM comments WHERE comment_id IN ($in)");
         }
         $log[] = count($ids) . " comentarios suyos borrados (+" . (count($todos) - count($ids)) . " respuestas de otros que colgaban de ellos)";
@@ -152,6 +154,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
         $pdo->prepare("DELETE FROM thread_aliases WHERE user_id = ?")->execute([$uid]);
         $pdo->prepare("DELETE FROM aura_log WHERE user_id = ?")->execute([$uid]);
         try { $pdo->prepare("DELETE FROM messages WHERE from_id = ? OR to_id = ?")->execute([$uid, $uid]); } catch (Throwable $e) {}
+        try { $pdo->prepare("DELETE FROM comment_reports WHERE user_id = ?")->execute([$uid]); } catch (Throwable $e) {}
         $pdo->prepare("UPDATE banned_domains SET added_by = NULL WHERE added_by = ?")->execute([$uid]);
         $pdo->prepare("DELETE FROM users WHERE user_id = ?")->execute([$uid]);
         $pdo->commit();
@@ -165,7 +168,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'privacidad' => 'Privacidad'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'privacidad' => 'Páginas'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -235,7 +238,7 @@ if ($tab === 'usuarios') {
     echo "<button class=\"btn\">Guardar</button></p>";
     echo "<p><small>El cron llama al script cada minuto y el ciclo se ejecuta en los minutos múltiplos del intervalo; en cada ciclo sube una nueva a candidatas y se publica la mejor candidata. El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
     $nq = (int)$pdo->query("SELECT COUNT(*) FROM mod_queue WHERE status IN ('needs_human','queued','processing')")->fetchColumn();
-    echo "<h3>Cola de moderación</h3><p>$nq pendientes · <a href=\"/moderacion.php\">ir a moderación</a> (la ven también los moderadores)</p>";
+    echo "<h3>Cola de moderación</h3><p>$nq pendientes de la IA · " . open_reports() . " comentarios reportados · <a href=\"/moderacion.php\">ir a moderación</a> (la ven también los moderadores)</p>";
     echo "<h3>Últimas promociones</h3><table>";
     foreach ($pdo->query("SELECT p.*, s.title FROM promo_log p JOIN stories s ON s.story_id = p.story_id ORDER BY p.id DESC LIMIT 15") as $p) {
         echo "<tr><td>" . h($p['created']) . "</td><td>" . h(mb_strimwidth($p['title'], 0, 60, '…')) . "</td><td>δ " . h($p['delta']) . "</td><td>{$p['candidates']} cand · {$p['commenters']} hablando</td></tr>";
@@ -261,12 +264,15 @@ if ($tab === 'usuarios') {
     echo "<p><small>El coeficiente multiplica los votos en el δ (1,10 da un 10 % de ventaja al tema). El color es el velo de la foto y la etiqueta. Los temas no se borran: si uno sobra, se le cambia el nombre.</small></p>";
 
 } elseif ($tab === 'privacidad') {
-    $pg = page_get($pdo, 'privacidad');
-    echo "<h3>Página de privacidad</h3><p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Los marcadores <code>{site}</code>, <code>{ttl}</code> y <code>{gm}</code> se sustituyen por el nombre del sitio, las horas de vida de un hilo y los minutos del velo. Se muestra en <a href=\"/privacidad.php\">/privacidad.php</a>" . ($pg['updated'] ? " · última edición " . h($pg['updated']) : "") . ".</small></p>";
-    echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"pagina\"><input type=\"hidden\" name=\"slug\" value=\"privacidad\">";
-    echo "<p><input type=\"text\" name=\"title\" value=\"" . h($pg['title']) . "\" placeholder=\"Título\"></p>";
-    echo "<textarea name=\"body\" rows=\"24\">" . h($pg['body']) . "</textarea>";
-    echo "<p><button class=\"btn\">Guardar página</button></p></form>";
+    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Los marcadores <code>{site}</code>, <code>{ttl}</code> y <code>{gm}</code> se sustituyen por el nombre del sitio, las horas de vida de un hilo y los minutos del velo.</small></p>";
+    foreach (['privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso'] as $slug => $lbl) {
+        $pg = page_get($pdo, $slug);
+        echo "<h3>$lbl</h3><p><small>Se muestra en <a href=\"/$slug.php\">/$slug.php</a>" . ($pg['updated'] ? " · última edición " . h($pg['updated']) : "") . ".</small></p>";
+        echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"pagina\"><input type=\"hidden\" name=\"slug\" value=\"$slug\">";
+        echo "<p><input type=\"text\" name=\"title\" value=\"" . h($pg['title']) . "\" placeholder=\"Título\"></p>";
+        echo "<textarea name=\"body\" rows=\"20\">" . h($pg['body']) . "</textarea>";
+        echo "<p><button class=\"btn\">Guardar página</button></p></form>";
+    }
 }
 echo "</div>";
 page_footer();

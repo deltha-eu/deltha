@@ -421,3 +421,19 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
   [data-skin="flujo"] .post.full, [data-skin="flujo"] .post.compact { grid-template-columns: 22px minmax(0, 1fr) 104px; }
   [data-skin="flujo"] .post .media, [data-skin="flujo"] .post .media.sm { width: 104px; }
 }
+
+/* ---- reportes y comentarios borrados ---- */
+.post.reply.deleted .delmsg { color: var(--muted); }
+.post.reply.deleted .delmsg a { text-decoration: underline; text-underline-offset: 2px; }
+.actions .replink { font-size: 12px; color: var(--muted); opacity: .75; }
+.actions .replink:hover { opacity: 1; text-decoration: underline; }
+.quote { margin: 8px 16px 12px; padding: 10px 14px; border-left: 3px solid var(--line2); color: var(--muted); font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.quote b { color: var(--fg); }
+form.plain label.radio { display: flex; gap: 8px; align-items: center; font-size: 15px; color: var(--fg); }
+.admin .repitem { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.admin .rephead { font-size: 14px; }
+.admin .rephead .meta { color: var(--muted); }
+.admin .repitem .quote { margin: 8px 0; }
+.admin .repacts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.admin .repacts form { display: inline; }
+.admin .btn.danger, form.plain button.danger { border-color: var(--neg); color: var(--neg); }

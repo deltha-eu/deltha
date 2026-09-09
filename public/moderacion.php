@@ -28,6 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio_quitar') {
     $pdo->prepare("DELETE FROM banned_domains WHERE domain = ?")->execute([post('domain')]);
     $out[] = 'Dominio retirado de la lista.';
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['rep_borrar', 'rep_descartar'], true)) {
+    $cid = (int)post('cid');
+    if (post('act') === 'rep_borrar') { comment_delete($pdo, $cid); $out[] = "Comentario #$cid eliminado (texto sustituido por el aviso)."; }
+    else { $pdo->prepare("UPDATE comment_reports SET status = 'dismissed' WHERE comment_id = ? AND status = 'open'")->execute([$cid]); $out[] = "Reportes del comentario #$cid descartados."; }
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'humano') {
     $item = (int)post('item'); $dec = post('dec') === 'ok' ? 'ok' : 'reject';
     $q = $pdo->prepare("SELECT item_type, ref_id FROM mod_queue WHERE item_id = ? AND status IN ('needs_human','queued','processing')"); $q->execute([$item]);
@@ -54,6 +59,27 @@ echo "<div class=\"admin\"><h1>Moderación</h1>";
 if ((int)cfg('mod_enabled', 0) === 0) echo "<p class=\"notice\">La IA moderadora aún no está activa: de momento todo se publica directamente. Cuando esté en marcha, aquí aparecerá lo que no sepa decidir.</p>";
 else echo "<p class=\"notice\">Aquí llega lo que la IA no ha sabido decidir. El criterio es la ley: insultos, delitos de odio, amenazas y cualquier conducta delictiva se rechazan; el resto se aprueba.</p>";
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
+
+/* ---- comentarios reportados ---- */
+$reps = $pdo->query("SELECT c.comment_id, c.story_id, c.content, c.alias, c.created, c.user_id, u.login, s.title,
+                            COUNT(*) n, MIN(r.created) first_rep, GROUP_CONCAT(DISTINCT r.reason ORDER BY r.reason) reasons
+                       FROM comment_reports r JOIN comments c ON c.comment_id = r.comment_id JOIN stories s ON s.story_id = c.story_id
+                       LEFT JOIN users u ON u.user_id = c.user_id
+                      WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0
+                      GROUP BY c.comment_id ORDER BY n DESC, first_rep ASC LIMIT 100")->fetchAll();
+$RZ = report_reasons();
+echo "<h3 id=\"reportes\">Comentarios reportados (" . count($reps) . ")</h3>";
+if (!$reps) echo "<p>No hay reportes pendientes.</p>";
+foreach ($reps as $r) {
+    $who = ($r['login'] && ghost_over($r['created'])) ? $r['login'] : $r['alias'];
+    $motivos = implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', $r['reasons'])));
+    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($who) . "</b> en <a href=\"/hilo.php?id={$r['story_id']}#c{$r['comment_id']}\">" . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</a>";
+    echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
+    echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
+    echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_borrar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar comentario</button></form>";
+    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_descartar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn\" title=\"el comentario se queda; los reportes se cierran\">Descartar reporte</button></form>";
+    echo "<a class=\"btn\" href=\"/editar-comentario.php?id={$r['comment_id']}\">editar</a></div></div>";
+}
 echo "<h3 id=\"temas\">Temas</h3><p>";
 foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) echo "<a class=\"tag\" href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a> ";
 echo "</p><form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap\"><input type=\"hidden\" name=\"act\" value=\"tema\">";
