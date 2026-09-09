@@ -66,6 +66,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int)post('uid');
         $pdo->prepare("UPDATE users SET verified = 1, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([$id]);
         $out[] = "Usuario $id: correo validado a mano.";
+    } elseif ($act === 'logo') {
+        foreach (['light' => 'claro', 'dark' => 'oscuro'] as $m => $lbl) {
+            $key = "logo_$m"; $actual = cfg($key);
+            if (post("quitar_$m") === '1') {
+                if ($actual) @unlink(DDD_MEDIA_DIR . '/logo/' . $actual);
+                config_set($pdo, $key, '');
+                $out[] = "Logo $lbl: restaurado el de serie.";
+            } elseif (!empty($_FILES["logo_$m"]['name'])) {
+                $r = logo_desde_subida($_FILES["logo_$m"], $m);
+                if (is_string($r) && str_starts_with($r, 'ERR:')) $out[] = "Logo $lbl: " . substr($r, 4);
+                else { if ($actual) @unlink(DDD_MEDIA_DIR . '/logo/' . $actual); config_set($pdo, $key, $r); $out[] = "Logo $lbl guardado."; }
+            }
+        }
     } elseif ($act === 'borrar') {
         $id = (int)post('uid');
         $q = $pdo->prepare("SELECT user_id, login, level FROM users WHERE user_id = ?"); $q->execute([$id]);
@@ -81,6 +94,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // recargar config tras cambios
     $CFG = [];
     foreach ($pdo->query("SELECT ckey, cvalue FROM config") as $r) $CFG[$r['ckey']] = $r['cvalue'];
+}
+
+function config_set(PDO $pdo, string $k, string $v): void {
+    $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES (?,?,?) ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)")->execute([$k, $v, "Logo (Admin > Logo)"]);
+}
+
+/**
+ * Logo subido desde admin: PNG, SVG o WebP de hasta 1 MB, se guarda tal cual (sin recortar: el logo no se toca)
+ * en /media/logo con nombre unico. Devuelve el nombre de fichero o "ERR:mensaje".
+ */
+function logo_desde_subida(array $file, string $mode): string {
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return 'ERR:no se recibió el fichero.';
+    if ($file['size'] > 1000000) return 'ERR:máximo 1 MB.';
+    $bytes = file_get_contents($file['tmp_name']);
+    if ($bytes === false || strlen($bytes) < 50) return 'ERR:fichero vacío.';
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
+    $ext = ['image/png' => 'png', 'image/svg+xml' => 'svg', 'image/webp' => 'webp'][$mime] ?? null;
+    if (!$ext && $mime === 'text/plain' && preg_match('/<svg[\s>]/i', $bytes)) $ext = 'svg';   // SVG sin cabecera XML
+    if (!$ext) return "ERR:formato no admitido ($mime); vale PNG, SVG o WebP, mejor con fondo transparente.";
+    if ($ext === 'svg') {
+        if (preg_match('/<script|on[a-z]+\s*=|javascript:|<foreignObject/i', $bytes)) return 'ERR:el SVG lleva scripts o eventos; expórtalo limpio.';
+    } else {
+        $info = @getimagesizefromstring($bytes);
+        if (!$info) return 'ERR:no se pudo leer la imagen.';
+        if ($info[1] < 30) return 'ERR:demasiado pequeño: al menos 30 px de alto (se muestra a 30 px; mejor 60–120 px).';
+        if ($info[0] > 2400 || $info[1] > 800) return 'ERR:demasiado grande: como mucho 2400×800 px.';
+    }
+    $dir = DDD_MEDIA_DIR . '/logo';
+    if (!is_dir($dir)) mkdir($dir, 0775, true);
+    $name = "logo-$mode-" . bin2hex(random_bytes(6)) . ".$ext";
+    return file_put_contents("$dir/$name", $bytes) ? $name : 'ERR:no se pudo escribir en /media/logo (permisos).';
 }
 
 /**
@@ -168,7 +212,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'privacidad' => 'Páginas'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'logo' => 'Logo', 'privacidad' => 'Páginas'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -248,6 +292,7 @@ if ($tab === 'usuarios') {
 } elseif ($tab === 'config') {
     echo "<h3>Config</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"config\"><table>";
     foreach ($pdo->query("SELECT * FROM config ORDER BY ckey") as $c) {
+        if (str_starts_with($c['ckey'], 'logo_')) continue;   // se gestiona en la pestaña Logo
         echo "<tr><td><code>" . h($c['ckey']) . "</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><input type=\"text\" name=\"cfg[" . h($c['ckey']) . "]\" value=\"" . h($c['cvalue']) . "\"></td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar config</button></p></form>";
@@ -262,6 +307,21 @@ if ($tab === 'usuarios') {
     echo "<h3>Nuevo tema</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"tema_nuevo\">";
     echo "<input type=\"text\" name=\"name\" placeholder=\"nombre (minúsculas)\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> coef <input type=\"text\" name=\"coef\" value=\"1.00\" style=\"width:60px\"> <input type=\"color\" name=\"color\" value=\"#534AB7\"> <button class=\"btn\">Crear tema</button></form>";
     echo "<p><small>El coeficiente multiplica los votos en el δ (1,10 da un 10 % de ventaja al tema). El color es el velo de la foto y la etiqueta. Los temas no se borran: si uno sobra, se le cambia el nombre.</small></p>";
+
+} elseif ($tab === 'logo') {
+    echo "<h3>Logo de " . h(cfg('site_name')) . "</h3>";
+    echo "<p><small>Se muestra a 30 px de alto en la cabecera. PNG, SVG o WebP con fondo transparente, hasta 1 MB; se guarda tal cual, sin recortar. El claro se usa sobre fondos claros y el oscuro sobre fondos oscuros (tema oscuro y plantillas Punk o Delta). Si solo subes el claro, se usará también en oscuro. La plantilla Retrocomputer tiñe el logo de verde a partir de un dibujo negro.</small></p>";
+    echo "<form method=\"post\" enctype=\"multipart/form-data\">$T<input type=\"hidden\" name=\"act\" value=\"logo\"><table>";
+    foreach (['light' => ['Claro', '#f6f5f0'], 'dark' => ['Oscuro', '#141414']] as $m => [$lbl, $bg]) {
+        $propio = cfg("logo_$m");
+        echo "<tr><td style=\"width:40%\"><strong>$lbl</strong><br><small>" . ($propio ? "personalizado: <code>" . h($propio) . "</code>" : "el de serie (<code>/img/logo" . ($m === 'dark' ? '-dark' : '') . ".png</code>)" . ($m === 'dark' && cfg('logo_light') ? ", pero se está usando el claro personalizado" : "")) . "</small>";
+        echo "<div style=\"margin-top:8px;padding:12px;background:$bg;border:1px solid var(--line);border-radius:6px;display:inline-block\"><img src=\"" . h(logo_src($m)) . "?" . time() . "\" alt=\"\" style=\"height:30px;display:block\"></div></td>";
+        echo "<td><input type=\"file\" name=\"logo_$m\" accept=\"image/png,image/svg+xml,image/webp\">";
+        if ($propio) echo "<br><label><input type=\"checkbox\" name=\"quitar_$m\" value=\"1\"> volver al de serie</label>";
+        echo "</td></tr>";
+    }
+    echo "</table><p><button class=\"btn\">Guardar logo</button></p></form>";
+    echo "<p><small>Los ficheros van a <code>/media/logo</code>; al subir uno nuevo se borra el anterior. Si el navegador sigue enseñando el viejo, recarga con Ctrl+F5.</small></p>";
 
 } elseif ($tab === 'privacidad') {
     echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";

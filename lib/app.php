@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 44);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 45);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -42,6 +42,12 @@ foreach ($pdo->query("SELECT ckey, cvalue FROM config") as $r) {
     $CFG[$r['ckey']] = $r['cvalue'];
 }
 function cfg(string $k, $default = null) { global $CFG; return $CFG[$k] ?? $default; }
+/** Logo del sitio: el subido en Admin > Logo (/media/logo) o el de serie. El oscuro cae al claro personalizado si no hay uno propio. */
+function logo_src(string $mode): string {
+    $f = cfg($mode === 'dark' ? 'logo_dark' : 'logo_light');
+    if (!$f && $mode === 'dark') $f = cfg('logo_light');
+    return $f ? '/media/logo/' . rawurlencode($f) : ($mode === 'dark' ? '/img/logo-dark.png' : '/img/logo.png');
+}
 
 /* ---- sesion solo si ya hay cookie (nunca para anonimos) ------------ */
 $USER = null;
@@ -412,7 +418,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     echo "<title>" . h($title) . " · " . h(cfg('site_name')) . "</title>";
     echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
     echo "<div class=\"shell\">";
-    echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"/img/logo.png\" alt=\"\" class=\"l\"><img src=\"/img/logo-dark.png\" alt=\"\" class=\"d\"></a>";
+    echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
     echo "<span class=\"ttl\">" . h($title) . "</span>";
     if ($u) echo "<a class=\"me\" href=\"/perfil.php\" title=\"" . t('perfil') . "\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
