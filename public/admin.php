@@ -4,6 +4,9 @@ require __DIR__ . '/../lib/ciclo.php';
 if (!is_admin()) { http_response_code(403); exit('Solo admin'); }
 
 $out = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+    $out[] = 'El envío superaba post_max_size de PHP (' . ini_get('post_max_size') . ') y se ha descartado entero.';
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = post('act');
     if ($act === 'config') {
@@ -109,12 +112,14 @@ function logo_desde_subida(array $file, string $mode): string {
     if ($file['size'] > 1000000) return 'ERR:máximo 1 MB.';
     $bytes = file_get_contents($file['tmp_name']);
     if ($bytes === false || strlen($bytes) < 50) return 'ERR:fichero vacío.';
-    $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
+    if (class_exists('finfo')) $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
+    else { $gi = @getimagesizefromstring($bytes); $mime = $gi ? $gi['mime'] : 'text/plain'; }   // sin fileinfo: GD para PNG/WebP, y el SVG por su etiqueta
     $ext = ['image/png' => 'png', 'image/svg+xml' => 'svg', 'image/webp' => 'webp'][$mime] ?? null;
-    if (!$ext && $mime === 'text/plain' && preg_match('/<svg[\s>]/i', $bytes)) $ext = 'svg';   // SVG sin cabecera XML
+    // finfo no siempre reconoce el SVG (sin cabecera XML lo da como text/plain, text/html o text/xml): vale si el fichero es un <svg>
+    if (!$ext && preg_match('#^(text/|application/xml)#', $mime) && preg_match('/<svg[\s>]/i', substr($bytes, 0, 4000))) $ext = 'svg';
     if (!$ext) return "ERR:formato no admitido ($mime); vale PNG, SVG o WebP, mejor con fondo transparente.";
     if ($ext === 'svg') {
-        if (preg_match('/<script|on[a-z]+\s*=|javascript:|<foreignObject/i', $bytes)) return 'ERR:el SVG lleva scripts o eventos; expórtalo limpio.';
+        if (preg_match('/<script|\bon[a-z]+\s*=|javascript:|<foreignObject/i', $bytes)) return 'ERR:el SVG lleva scripts o eventos; expórtalo limpio.';
     } else {
         $info = @getimagesizefromstring($bytes);
         if (!$info) return 'ERR:no se pudo leer la imagen.';
@@ -321,7 +326,11 @@ if ($tab === 'usuarios') {
         echo "</td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar logo</button></p></form>";
-    echo "<p><small>Los ficheros van a <code>/media/logo</code>; al subir uno nuevo se borra el anterior. Si el navegador sigue enseñando el viejo, recarga con Ctrl+F5.</small></p>";
+    $ldir = DDD_MEDIA_DIR . '/logo';
+    echo "<p><small>Los ficheros van a <code>/media/logo</code>; al subir uno nuevo se borra el anterior. Si el navegador sigue enseñando el viejo, recarga con Ctrl+F5.<br>"
+       . "Estado: carpeta <code>" . h($ldir) . "</code> " . (is_dir($ldir) ? (is_writable($ldir) ? "existe y es escribible" : "<b>existe pero no es escribible</b>") : (is_writable(DDD_MEDIA_DIR) ? "no existe aún (se creará al subir)" : "<b>no existe y /media no es escribible</b>"))
+       . " · <code>upload_max_filesize</code> " . h(ini_get('upload_max_filesize')) . " · <code>post_max_size</code> " . h(ini_get('post_max_size')) . " · fileinfo " . (class_exists('finfo') ? "sí" : "<b>no (hace falta la extensión fileinfo)</b>")
+       . " · config: logo_light=<code>" . h((string)cfg('logo_light')) . "</code> logo_dark=<code>" . h((string)cfg('logo_dark')) . "</code></small></p>";
 
 } elseif ($tab === 'privacidad') {
     echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";
