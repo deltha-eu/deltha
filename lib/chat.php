@@ -1,0 +1,83 @@
+<?php
+/** lib/chat.php — el Chat: un solo flujo de mensajes cortos (tipo Nótame), sin anidar.
+ *  Se responde citando #ID: cada #N del texto se convierte en enlace al mensaje N, y el mensaje N
+ *  enseña «respuestas: #a #b». @nick enlaza al perfil si el usuario existe. Sin avatares: solo el nombre.
+ *  Registrados con su nick; anonimos (si chat_anon = 1) con alias estable por IP (Apellido-Lugar).
+ *  Borrado propio durante chat_delete_minutes (status gone); borrado de moderacion como en los comentarios
+ *  (texto sustituido, original en content_orig). Tablas chat y chat_reports (sql/migra-027-chat.sql). */
+declare(strict_types=1);
+
+const DDD_CHAT_DELETED_TXT = 'Mensaje eliminado por incumplir las normas de uso';
+
+/** Alias estable + huella del anonimo en el Chat (mismo esquema que en los hilos, con id de hilo 0). */
+function chat_anon(): array {
+    global $DDD_SECRET;
+    $key = substr(hash_hmac('sha256', client_ip() . '|chat', $DDD_SECRET), 0, 16);
+    $n = hexdec(substr($key, 0, 8));
+    return [DDD_NOMBRES[$n % count(DDD_NOMBRES)] . '-' . DDD_LUGARES[intdiv($n, 997) % count(DDD_LUGARES)], $key];
+}
+/** Quien firma un mensaje: nick del registrado o alias del anonimo. */
+function chat_who(array $m): string { return !empty($m['login']) ? (string)$m['login'] : (string)$m['alias']; }
+
+/** Mensajes por hora de esta persona (registrado por user_id; anonimo por huella). */
+function chat_recent_count(PDO $pdo, ?array $u, ?string $key): int {
+    if ($u) { $st = $pdo->prepare("SELECT COUNT(*) FROM chat WHERE user_id = ? AND created >= NOW() - INTERVAL 1 HOUR"); $st->execute([$u['user_id']]); }
+    elseif ($key) { $st = $pdo->prepare("SELECT COUNT(*) FROM chat WHERE anon_key = ? AND created >= NOW() - INTERVAL 1 HOUR"); $st->execute([$key]); }
+    else return 0;
+    return (int)$st->fetchColumn();
+}
+
+/** El autor puede borrar su mensaje? (registrado por user_id, anonimo por huella) durante chat_delete_minutes. */
+function chat_can_delete_own(array $m, ?array $u, ?string $key): bool {
+    if (!empty($m['deleted']) || $m['status'] !== 'ok') return false;
+    if (time() - strtotime($m['created']) >= (int)cfg('chat_delete_minutes', 5) * 60) return false;
+    if ($u) return !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'];
+    return $key !== null && empty($m['user_id']) && (string)$m['anon_key'] === $key;
+}
+/** Borrado de moderacion: el mensaje sigue en el flujo con el texto sustituido; cierra sus reportes. */
+function chat_delete_mod(PDO $pdo, int $id): bool {
+    $st = $pdo->prepare("UPDATE chat SET content_orig = IF(deleted = 1, content_orig, content), deleted = 1, content = ? WHERE msg_id = ? AND status = 'ok'");
+    $st->execute([DDD_CHAT_DELETED_TXT, $id]);
+    try { $pdo->prepare("UPDATE chat_reports SET status = 'deleted' WHERE msg_id = ? AND status = 'open'")->execute([$id]); } catch (Throwable $e) {}
+    return $st->rowCount() > 0;
+}
+/** Reportes de Chat pendientes (para el enlace de moderacion). */
+function chat_open_reports(PDO $pdo): int {
+    try { return (int)$pdo->query("SELECT COUNT(DISTINCT msg_id) FROM chat_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) { return 0; }
+}
+
+/** Primer #N citado en un texto (para reply_to), o null. */
+function chat_first_ref(string $text): ?int {
+    return preg_match('/(?<![\w\/])#(\d{1,9})\b/', $text, $m) ? (int)$m[1] : null;
+}
+/** Nicks mencionados con @ en un texto. */
+function chat_mentions(string $text): array {
+    preg_match_all('/(?<![\w@])@([A-Za-z0-9_\-]{3,32})\b/', $text, $m);
+    return array_values(array_unique(array_map('strtolower', $m[1])));
+}
+/** Texto del mensaje a HTML: escapado, #N → enlace al mensaje, @nick → perfil (solo si existe: $logins = nicks existentes en minusculas → nick real),
+ *  URLs → enlace (nofollow). $ids = ids de mensajes que estan en la pagina actual (enlace con ancla local); el resto va por ?m=N. */
+function chat_format(string $text, array $logins, array $ids): string {
+    $h = h($text);
+    $h = preg_replace_callback('~(?<![\w\/])#(\d{1,9})\b~', function ($m) use ($ids) {
+        $n = (int)$m[1];
+        $href = isset($ids[$n]) ? "#m$n" : "/chat.php?m=$n#m$n";
+        return "<a class=\"ref\" href=\"$href\">#$n</a>";
+    }, $h);
+    $h = preg_replace_callback('~(?<![\w@])@([A-Za-z0-9_\-]{3,32})\b~', function ($m) use ($logins) {
+        $k = strtolower($m[1]);
+        return isset($logins[$k]) ? "<a class=\"at\" href=\"/u.php?u=" . rawurlencode($logins[$k]) . "\">@" . h($logins[$k]) . "</a>" : $m[0];
+    }, $h);
+    $h = preg_replace_callback('~(?<![">])\bhttps?://[^\s<]+~', function ($m) {
+        $url = rtrim($m[0], '.,;:)');
+        $tail = substr($m[0], strlen($url));
+        return "<a href=\"$url\" rel=\"noopener nofollow\">" . h(mb_strimwidth(html_entity_decode($url, ENT_QUOTES), 0, 60, '…')) . "</a>$tail";
+    }, $h);
+    return nl2br($h);
+}
+/** Pagina (1..n) en la que esta el mensaje N, con los mensajes ordenados del mas nuevo al mas viejo. */
+function chat_page_of(PDO $pdo, int $id): int {
+    $per = max(10, (int)cfg('chat_per_page', 50));
+    $st = $pdo->prepare("SELECT COUNT(*) FROM chat WHERE status = 'ok' AND msg_id > ?"); $st->execute([$id]);
+    return intdiv((int)$st->fetchColumn(), $per) + 1;
+}

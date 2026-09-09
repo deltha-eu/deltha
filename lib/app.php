@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 67);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 68);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -214,6 +214,7 @@ function open_reports(): int {
     static $n = null; global $pdo;
     if ($n !== null) return $n;
     try { $n = (int)$pdo->query("SELECT COUNT(DISTINCT comment_id) FROM comment_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) { $n = 0; }
+    try { $n += (int)$pdo->query("SELECT COUNT(DISTINCT msg_id) FROM chat_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) {}
     return $n;
 }
 
@@ -440,6 +441,7 @@ function icon(string $n): string {
         'proc'   => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
         'users'  => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15.5 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M17 13.6a6.5 6.5 0 0 1 4.5 6.4"/>',
         'msg'    => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+        'chat'   => '<path d="M4 5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-4-3h-3"/>',
         'reply'  => '<path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1.1-3.9A8 8 0 1 1 20 12z"/>',
         'up'     => '<path d="M12 19V5"/><path d="m6 11 6-6 6 6"/>',
         'down'   => '<path d="M12 5v14"/><path d="m6 13 6 6 6-6"/>',
@@ -490,6 +492,7 @@ function nav_tabs(string $tab, string $cls): void {
         'candidatas'   => ['/candidatas.php', t('Candidatas'), 'cand'],
         'nuevas'       => ['/nuevas.php', t('Nuevas'), 'new'],
         'articulos'    => ['/articulos.php', t('Artículos'), 'art'],
+        'chat'         => ['/chat.php', t('Chat'), 'chat'],
     ] : [
         'usuarios'     => ['/usuarios.php', t('Usuarios'), 'users'],
         'plantilla'    => ['/plantilla.php', t('Plantilla'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
@@ -498,6 +501,7 @@ function nav_tabs(string $tab, string $cls): void {
         'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
     ];
     if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
+    if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';

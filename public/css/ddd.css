@@ -288,6 +288,38 @@ nav.tabs-bottom .badge { position: absolute; top: 6px; left: calc(50% + 4px); }
 .msg .meta { font-size: 11px; color: var(--muted); margin: 2px 6px 0; }
 main > .composer:last-of-type { border-bottom: 0; border-top: 1px solid var(--line); margin-top: 8px; }
 
+/* ---- chat (tipo Notame): un flujo, sin avatares, sin anidar; #N cita ---- */
+.chatbox { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.chatbox textarea { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line2); border-radius: 12px; background: var(--bg); color: var(--fg); resize: vertical; min-height: 56px; outline: none; }
+.chatbox textarea:focus { border-color: var(--accent); }
+.chatbox .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.chatbox .row .meta { color: var(--muted); font-size: 12px; }
+.chatbox .row .meta a { color: var(--accent); text-decoration: underline; }
+.chatbox button { font: inherit; font-weight: 700; font-size: 14px; background: var(--accent); color: var(--bg); border: 0; border-radius: 999px; padding: 7px 16px; cursor: pointer; }
+.chat .cm { padding: 10px 16px 8px; border-bottom: 1px solid var(--line); scroll-margin-top: calc(var(--top-h) + 52px); }
+.chat .cm:hover { background: var(--hover); }
+.chat .cm.hl { background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+.chat .cm:target { background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+.chat .ch { font-size: 14px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.chat .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
+.chat .num:hover { color: var(--accent); text-decoration: underline; }
+.chat .who { font-weight: 700; color: var(--fg); }
+.chat .who.anon { font-weight: 600; color: var(--muted); }
+.chat .ch .meta { color: var(--muted); font-size: 13px; }
+.chat .cm p { margin: 3px 0 0; font-size: 15px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat .cm p a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.chat .cm p a.ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; text-decoration: none; background: color-mix(in srgb, var(--accent) 10%, var(--bg)); padding: 0 5px; border-radius: 4px; }
+.chat .cm p a.ref:hover { background: color-mix(in srgb, var(--accent) 20%, var(--bg)); }
+.chat .cm p a.at { text-decoration: none; font-weight: 600; }
+.chat .cm.deleted .delmsg { color: var(--muted); }
+.chat .cm .actions { margin-top: 4px; gap: 14px; font-size: 12px; flex-wrap: wrap; }
+.chat .cm .actions .i { width: 15px; height: 15px; }
+.chat .cm .actions .reps { color: var(--muted); display: inline-flex; gap: 4px; align-items: center; }
+.chat .cm .actions .reps .ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); }
+.chat .cm .actions form.inline { display: inline; margin: 0; }
+.chat .cm .actions button.link { font: inherit; font-size: 12px; background: none; border: 0; padding: 0; color: var(--muted); cursor: pointer; }
+.chat .cm .actions button.link:hover, .chat .cm .actions a:hover { text-decoration: underline; }
+
 /* =====================================================================
    PLANTILLAS VISUALES  (html[data-skin=...])  — elegibles en /perfil.php
    La base (todo lo de arriba) es la version original; las plantillas la modulan
