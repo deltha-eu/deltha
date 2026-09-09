@@ -30,6 +30,16 @@ function rail_skins(): void {
     foreach (DDD_SKINS as $k => $v) echo "<a href=\"/cambiar-skin.php?s=$k\"" . ($k === $cur ? ' class="on"' : '') . "><i class=\"sw sw-$k\"></i>" . h($v) . "</a>";
     if ($saved !== '') echo "<a class=\"reset\" href=\"/cambiar-skin.php?s=\">" . t('la del sitio') . "</a>";
     echo "</div></details>";
+    // tema claro/oscuro: tres opciones en una fila
+    $th = theme() ?? 'auto';
+    echo "<div class=\"rail-opts\">" . icon('theme') . "<span>" . t('Aspecto') . "</span><span class=\"opts\">";
+    foreach (['auto' => t('auto'), 'light' => t('claro'), 'dark' => t('oscuro')] as $k => $v) echo "<a href=\"/cambiar-skin.php?t=$k\"" . ($k === $th ? ' class="on"' : '') . ">" . h($v) . "</a>";
+    echo "</span></div>";
+    // idioma
+    $cl = lang();
+    echo "<div class=\"rail-opts\">" . icon('lang') . "<span>" . t('Idioma') . "</span><span class=\"opts\">";
+    foreach (DDD_LANGS as $k => $v) echo "<a href=\"/cambiar-skin.php?l=$k\"" . ($k === $cl ? ' class="on"' : '') . " title=\"" . h($v) . "\">" . strtoupper($k) . "</a>";
+    echo "</span></div>";
 }
 
 /** Columna derecha. */

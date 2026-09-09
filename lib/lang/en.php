@@ -400,4 +400,9 @@ return [
 'Sin cookies para quien no inicia sesión (salvo la de la plantilla, si eliges una) · sin rastreo · sin algoritmo oculto' => 'No cookies unless you sign in (except the template one, if you pick one) · no tracking · no hidden algorithm',
 'Las más votadas' => 'Most voted',
 '%d h' => '%d h',
+'auto' => 'auto',
+'claro' => 'light',
+'oscuro' => 'dark',
+'Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto' => 'No cookies unless you sign in (except template, theme and language, if you pick them) · no tracking · no hidden algorithm',
+'Aspecto' => 'Appearance',
 ];
