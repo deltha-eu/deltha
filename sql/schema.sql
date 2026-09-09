@@ -81,7 +81,8 @@ INSERT INTO topics (name, coef, color) VALUES
 ('ciencia',    1.10, '#185FA5'),
 ('deportes',   1.00, '#3B6D11'),
 ('tecnologia', 1.00, '#5F5E5A'),
-('ocio',       1.00, '#993556');
+('ocio',       1.00, '#993556'),
+('relatos',    1.10, '#6B3FA0');
 
 -- content_type: link = enlace externo | article = articulo propio (pestaña Articulos, futuro)
 CREATE TABLE stories (

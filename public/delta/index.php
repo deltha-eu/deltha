@@ -1,5 +1,5 @@
 <?php
-define('DDD_PUBLIC', true);   // la presentacion se ve sin clave
+define('DDD_PUBLIC', true);   // la presentacion se ve sin clave; se llega desde «¿Que es Deltha?» (la puerta lleva directa a la clave)
 require __DIR__ . '/../../lib/app.php';
 $entrar = gate_open() ? '/' : '/delta/clave.php';
 $gm = (int)cfg('ghost_minutes', 30);
@@ -35,16 +35,11 @@ body:has(.slide:target) #s1:not(:target) { display: none; }
 .slide li { padding-left: 28px; position: relative; }
 .slide li::before { content: "δ"; position: absolute; left: 4px; top: 0; font-family: var(--serif); color: var(--accent); font-size: 20px; }
 .slide li b { display: block; font-weight: 700; }
-.slide li a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 a.hint { text-decoration: none; }
 .hint { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; font-size: 14px; color: var(--muted); }
 .dots { position: absolute; top: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
 .dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--line2); }
 .dots span.on { background: var(--accent); }
-.choice { display: flex; gap: 14px; margin-top: 12px; }
-.choice a { font: inherit; font-weight: 700; font-size: 17px; padding: 12px 28px; border-radius: 999px; text-decoration: none; }
-.choice .yes { background: var(--accent); color: var(--bg); }
-.choice .no { border: 1px solid var(--line2); color: var(--fg); }
 .aura-row { display: flex; gap: 18px; align-items: flex-end; margin: 8px 0 18px; }
 .aura-row .av { width: 44px; height: 44px; font-size: 18px; }
 .aura-row small { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; }
@@ -69,18 +64,18 @@ a.hint { text-decoration: none; }
   <p class="hint">Pulsa para continuar</p>
 </a>
 
-<div class="slide" id="s3">
+<a class="slide" id="s3" href="#s4">
   <div class="dots"><span></span><span></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span></div>
   <h1>De dónde viene</h1>
   <ul>
-    <li><b><a href="https://contralgoritmia.com/" target="_blank" rel="noopener">El manifiesto contralgorítmico</a></b> La idea de fondo: recuperar el criterio humano frente a la hegemonía del algoritmo.</li>
-    <li><b><a href="https://www.meneame.net" target="_blank" rel="noopener">Menéame</a></b> El agregador de noticias: la comunidad decide qué llega a portada.</li>
-    <li><b><a href="https://x.com" target="_blank" rel="noopener">X</a></b> El diseño y la usabilidad: una línea de tiempo limpia y rápida.</li>
-    <li><b><a href="https://www.4chan.org" target="_blank" rel="noopener">4chan</a></b> La efimeridad: los hilos nacen, se discuten y desaparecen.</li>
+    <li><b>El manifiesto contralgorítmico</b> La idea de fondo: recuperar el criterio humano frente a la hegemonía del algoritmo.</li>
+    <li><b>Menéame</b> El agregador de noticias: la comunidad decide qué llega a portada.</li>
+    <li><b>X</b> El diseño y la usabilidad: una línea de tiempo limpia y rápida.</li>
+    <li><b>4chan</b> La efimeridad: los hilos nacen, se discuten y desaparecen.</li>
     <li><b>El modelo de negocio de Jot Down</b> Sin publicidad programática ni rastreo: una comunidad que sostiene lo que lee.</li>
   </ul>
-  <a class="hint" href="#s4">Pulsa para continuar</a>
-</div>
+  <p class="hint">Pulsa para continuar</p>
+</a>
 
 <a class="slide" id="s4" href="#s5">
   <div class="dots"><span></span><span></span><span></span><span class="on"></span><span></span><span></span><span></span><span></span></div>
@@ -109,16 +104,16 @@ a.hint { text-decoration: none; }
   <p class="hint">Pulsa para continuar</p>
 </a>
 
-<div class="slide" id="s6">
+<a class="slide" id="s6" href="#s7">
   <div class="dots"><span></span><span></span><span></span><span></span><span></span><span class="on"></span><span></span><span></span></div>
   <h1>¿Qué se puede publicar?</h1>
   <ul>
     <li><b>Todo lo que permite la ley.</b> El límite no lo pone una línea editorial ni un gusto: lo pone la ley. Fuera quedan los insultos, los delitos de odio, las amenazas y todo lo que sea delito.</li>
     <li><b>Modera una IA que vive en nuestros servidores.</b> Ningún envío ni comentario sale de ellos para ser revisado: no hay terceros mirando lo que escribes. Cuando duda, decide una persona.</li>
-    <li><b>Y hay un correo para todo lo demás.</b> Quejas, felicitaciones y propuestas: <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</li>
+    <li><b>Y hay un correo para todo lo demás.</b> Quejas, felicitaciones y propuestas: <b>info@deltha.eu</b>.</li>
   </ul>
-  <a class="hint" href="#s7">Pulsa para continuar</a>
-</div>
+  <p class="hint">Pulsa para continuar</p>
+</a>
 
 <a class="slide" id="s7" href="#s8">
   <div class="dots"><span></span><span></span><span></span><span></span><span></span><span></span><span class="on"></span><span></span></div>
@@ -132,12 +127,20 @@ a.hint { text-decoration: none; }
   <p class="hint">Pulsa para continuar</p>
 </a>
 
-<div class="slide" id="s8">
+<a class="slide" id="s8" href="<?= $entrar ?>">
   <div class="dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="on"></span></div>
   <img class="logo l" src="/img/logo.png" alt=""><img class="logo d" src="/img/logo-dark.png" alt="">
   <h1>¿Quieres probar Deltha?</h1>
-  <div class="choice"><a class="yes" href="<?= $entrar ?>">Sí</a><a class="no" href="#s1">No</a></div>
-</div>
+  <p class="hint">Pulsa para entrar</p>
+</a>
 
 </div>
+<script>
+// Opcional (sin JS todo funciona pulsando): Enter, espacio o → avanzan; ← retrocede.
+document.addEventListener('keydown', function (e) {
+  var cur = document.querySelector('.slide:target') || document.getElementById('s1');
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); if (cur.getAttribute('href')) location.href = cur.getAttribute('href'); }
+  else if (e.key === 'ArrowLeft') { var n = parseInt(cur.id.slice(1), 10); if (n > 1) location.hash = '#s' + (n - 1); }
+});
+</script>
 </body></html>
