@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 51);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 52);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -426,6 +426,9 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     echo "<link rel=\"icon\" href=\"/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"/img/icon-180.png\">";
     echo "<title>" . h($title) . " · " . h(cfg('site_name')) . "</title>";
     echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
+    require_once __DIR__ . '/lateral.php';
+    echo "<div class=\"cols\">";   // escritorio: rail | shell | side (las columnas laterales van ocultas en movil)
+    rail($tab);
     echo "<div class=\"shell\">";
     echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
     echo "<span class=\"ttl\">" . h($title) . "</span>";
@@ -438,7 +441,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
 /* Dos menus: arriba el contenido (las fases del ciclo), abajo la comunidad y las
  * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
 function nav_tabs(string $tab, string $cls): void {
-    $tabs = $cls === 'tabs-top' ? [
+    $tabs = in_array($cls, ['tabs-top', 'rail-top'], true) ? [
         'portada'      => ['/', t('Portada'), 'home'],
         'candidatas'   => ['/candidatas.php', t('Candidatas'), 'cand'],
         'nuevas'       => ['/nuevas.php', t('Nuevas'), 'new'],
@@ -482,6 +485,8 @@ function page_footer(): void {
     echo "<footer class=\"inflow\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a>";
     echo "<p>" . footer_links() . "</p></footer>";
     echo "</div>";
+    side();
+    echo "</div>";   // .cols
     // muelle fijo (PC: enlaces + iconos; movil: solo iconos)
     echo "<div class=\"dock\">";
     nav_tabs(current_tab(), 'tabs-bottom');

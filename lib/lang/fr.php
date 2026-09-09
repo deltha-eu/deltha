@@ -383,4 +383,12 @@ return [
 'compartir' => 'partager',
 'enlace copiado' => 'lien copié',
 'copiar el enlace' => 'copier le lien',
+'Publicar' => 'Publier',
+'o crear una cuenta' => 'ou créer un compte',
+'Próximo ciclo' => 'Prochain cycle',
+'en %d min' => 'dans %d min',
+'%d en cola · sube la de mayor δ' => '%d dans la file · le plus grand δ monte',
+'Nada llega aún al δ mínimo.' => 'Rien n’atteint encore le δ minimum.',
+'ver la cola entera' => 'voir toute la file',
+'En comunidades' => 'Dans les communautés',
 ];
