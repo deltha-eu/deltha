@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 function display_name(array $row, bool $revealed): string {
     if ($revealed && !empty($row['login'])) return $row['login'];
-    return $row['alias'] ?: 'anónimo';
+    return $row['alias'] ?: t('anónimo');
 }
 
 function story_query_base(): string {
@@ -64,9 +64,9 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<article class=\"post $mode\" id=\"s{$s['story_id']}\">";
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
-    $srcLbl = $s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? " · " . source_link($s) : '');
+    $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? " · " . source_link($s) : '');
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . (!empty($s['comm_slug']) ? " · " . community_link($s) : '') . $srcLbl . " · " . h($when) . "</span></div>";
-    echo "<span class=\"dval\" title=\"delta en vivo\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
+    echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
     if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content'], 0, 240, '…')) . "</p>";
     media_block($s, $mode === 'full' ? 'media' : 'media sm');
@@ -74,7 +74,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
         echo "<div class=\"life\" title=\"" . h(queda($s['published_date'])) . "\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
     }
     if ($mode === 'full') {
-        $st = $pdo->prepare("SELECT c.alias, c.aura, c.content, c.created, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
+        $st = $pdo->prepare("SELECT c.alias, c.aura, c.content, c.created, c.deleted, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
                              WHERE c.story_id = ? AND c.status='ok' ORDER BY c.created DESC LIMIT 2");
         $st->execute([$s['story_id']]);
         $last = array_reverse($st->fetchAll());
@@ -83,7 +83,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
             foreach ($last as $c) {
                 $rc = ghost_over($c['created']);
                 $n = display_name($c, $rc);
-                echo "<div class=\"pk\">" . who_avatar($c, $rc, (float)$c['aura'], $n) . "<div><b>" . h($n) . "</b> " . h(mb_strimwidth($c['content'], 0, 150, '…')) . "</div></div>";
+                echo "<div class=\"pk\">" . who_avatar($c, $rc, (float)$c['aura'], $n) . "<div><b>" . h($n) . "</b> " . (!empty($c['deleted']) ? "<i>" . h(t(DDD_DELETED_TXT)) . "</i>" : h(mb_strimwidth($c['content'], 0, 150, '…'))) . "</div></div>";
             }
             echo "</div>";
         }
@@ -92,7 +92,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
         if ($s['status'] === 'candidatas') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . "</div>";
         elseif ($s['status'] === 'nuevas') {
             $age = (int)cfg('delta_min_age_min') - intdiv(time() - strtotime($s['sent_date']), 60);
-            $st = $age > 0 ? "elegible en $age min" : "elegible: sube la de mayor delta cada ciclo";
+            $st = $age > 0 ? t('elegible en %d min', $age) : t('elegible: sube la de mayor delta cada ciclo');
             echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · $st</div>";
         }
     }
@@ -108,8 +108,8 @@ function vote_widget(array $s): void {
     $can = user() && in_array($s['status'], ['nuevas','candidatas','destacadas'], true) && (int)$s['user_id'] !== (int)user()['user_id'];
     if ($can) {
         echo "<form class=\"vote\" method=\"post\" action=\"/votar.php\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-        echo "<button name=\"v\" value=\"1\" title=\"positivo\">" . icon('up') . "<span>{$s['votes_pos']}</span></button>";
-        echo "<button name=\"v\" value=\"-1\" title=\"negativo\">" . icon('down') . "<span>{$s['votes_neg']}</span></button></form>";
+        echo "<button name=\"v\" value=\"1\" title=\"" . t('positivo') . "\">" . icon('up') . "<span>{$s['votes_pos']}</span></button>";
+        echo "<button name=\"v\" value=\"-1\" title=\"" . t('negativo') . "\">" . icon('down') . "<span>{$s['votes_neg']}</span></button></form>";
     } else {
         echo "<span class=\"vote\"><span>" . icon('up') . "<span>{$s['votes_pos']}</span></span><span>" . icon('down') . "<span>{$s['votes_neg']}</span></span></span>";
     }
@@ -122,18 +122,18 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     $cls = 'post reply' . ($has_next ? ' has-next' : '') . (empty($c['root_id']) ? ' root' : ' child') . ($del ? ' deleted' : '');
     echo "<article class=\"$cls\" id=\"c{$c['comment_id']}\">" . who_avatar($c, $revealed, (float)$c['aura'], $n) . "<div class=\"pc\">";
     $nameHtml = ($revealed && !empty($c['login'])) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
-    echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · editado" : "") . "</span></div>";
+    echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
     if ($parent && !empty($c['root_id']) && (int)$c['parent_id'] !== (int)$c['root_id']) {
         $pn = display_name($parent, ghost_over($parent['created']));
-        echo "<div class=\"meta reto\">en respuesta a " . h($pn) . "</div>";
+        echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";
     }
-    if ($del) echo "<p class=\"delmsg\"><i>" . h(DDD_DELETED_TXT) . "</i> · <a href=\"/normas.php\">normas</a></p>";
+    if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
     else      echo "<p>" . nl2br(h($c['content'])) . "</p>";
     $acts = [];
-    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>Responder</span></a>";
-    if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"puedes corregirlo durante " . (int)cfg('comment_edit_minutes', 10) . " min\">editar</a>";
-    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?id={$c['comment_id']}\" title=\"avisar a los moderadores\">reportar</a>";
-    if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\">editar · eliminar</a>";
+    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
+    if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
+    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
+    if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\">" . t('editar · eliminar') . "</a>";
     if ($acts) echo "<div class=\"actions\">" . implode('', $acts) . "</div>";
     echo "</div></article>";
 }
@@ -148,22 +148,22 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     echo "<div class=\"cbox\">";
     if ($parent) {
         $pn = display_name($parent, ghost_over($parent['created']));
-        echo "<div class=\"meta\">Respondiendo a <b>" . h($pn) . "</b> · <a href=\"/hilo.php?id=$story_id\">cancelar</a></div>";
+        echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo.php?id=$story_id\">" . t('cancelar') . "</a></div>";
     }
-    $ph = $u ? "Escribe con alias; tu nombre aparecerá en " . (int)cfg('ghost_minutes', 30) . " min" : "Escribe como anónimo";
+    $ph = $u ? t('Escribe con alias; tu nombre aparecerá en %d min', (int)cfg('ghost_minutes', 30)) : t('Escribe como anónimo');
     echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h($ph) . "\" required" . ($parent ? " autofocus" : "") . "></textarea>";
-    echo "<button>" . ($parent ? "Responder" : "Comentar") . "</button></div></form>";
+    echo "<button>" . ($parent ? t('Responder') : t('Comentar')) . "</button></div></form>";
 }
 
 function paginate(string $base, int $page, int $total): void {
     $per = (int)cfg('per_page', 20);
     $pages = max(1, (int)ceil($total / $per));
-    if ($pages <= 1) { echo "<p class=\"end\">Esto es todo lo que hay ahora.</p>"; return; }
+    if ($pages <= 1) { echo "<p class=\"end\">" . t('Esto es todo lo que hay ahora.') . "</p>"; return; }
     $sep = str_contains($base, '?') ? '&amp;' : '?';   // /procesos.php?v=votos&p=2
     echo "<nav class=\"pages\">";
-    if ($page > 1)      echo "<a href=\"$base{$sep}p=" . ($page - 1) . "\">← anterior</a>";
+    if ($page > 1)      echo "<a href=\"$base{$sep}p=" . ($page - 1) . "\">← " . t('anterior') . "</a>";
     echo "<span>$page / $pages</span>";
-    if ($page < $pages) echo "<a href=\"$base{$sep}p=" . ($page + 1) . "\">siguiente →</a>";
+    if ($page < $pages) echo "<a href=\"$base{$sep}p=" . ($page + 1) . "\">" . t('siguiente') . " →</a>";
     echo "</nav>";
 }
 function page_num(): int { return max(1, (int)($_GET['p'] ?? 1)); }

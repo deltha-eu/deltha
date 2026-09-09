@@ -7,12 +7,13 @@ if (!user()) redirect('/login.php');
 $rows = $pdo->query("SELECT login, aura, avatar, bio, created FROM users WHERE verified = 1 ORDER BY created DESC, user_id DESC LIMIT 20")->fetchAll();
 $total = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE verified = 1")->fetchColumn();
 
-page_header('Usuarios', 'usuarios');
-echo "<h1>Últimos registros</h1><p class=\"notice\">Los 20 más recientes de $total. Pulsa en un nombre para ver su perfil público.</p>";
+page_header(t('Usuarios'), 'usuarios');
+echo "<p class=\"notice\">" . t('La gente de %s y sus <a href="/comunidades.php"><b>comunidades</b></a>', h(cfg('site_name'))) . (community_quota($pdo, user()) > 0 ? " · <a href=\"/comunidades.php#crear\">" . t('crear una comunidad') . "</a>" : "") . ".</p>";
+echo "<h1>" . t('Últimos registros') . "</h1><p class=\"notice\">" . t('Los 20 más recientes de %d. Pulsa en un nombre para ver su perfil público.', $total) . "</p>";
 foreach ($rows as $r) {
     echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u.php?u=' . rawurlencode($r['login']));
     echo "<div><b><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></b>";
-    echo "<span class=\"meta\"> · aura " . number_format((float)$r['aura'], 1, ',', '') . " · " . h(hace($r['created'])) . "</span>";
+    echo "<span class=\"meta\"> · " . t('aura') . " " . number_format((float)$r['aura'], 1, ',', '') . " · " . h(hace($r['created'])) . "</span>";
     if ($r['bio']) echo "<p class=\"bio\">" . h($r['bio']) . "</p>";
     echo "</div></div>";
 }

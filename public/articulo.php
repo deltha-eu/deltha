@@ -21,10 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['topic']   = (int)post('topic');
     $words = contar_palabras($f['content']);
 
-    if (mb_strlen($f['title']) < 8) $err = 'El titular es demasiado corto.';
-    elseif ($words < 20) $err = 'El artículo es demasiado corto (mínimo 20 palabras).';
-    elseif ($words > $maxWords) $err = "El artículo tiene $words palabras; el máximo es $maxWords.";
-    elseif (!in_array($f['topic'], array_column($topics, 'topic_id'), false)) $err = 'Elige un tema.';
+    if (mb_strlen($f['title']) < 8) $err = t('El titular es demasiado corto.');
+    elseif ($words < 20) $err = t('El artículo es demasiado corto (mínimo 20 palabras).');
+    elseif ($words > $maxWords) $err = t('El artículo tiene %d palabras; el máximo es %d.', $words, $maxWords);
+    elseif (!in_array($f['topic'], array_column($topics, 'topic_id'), false)) $err = t('Elige un tema.');
 
     if (!$err) {
         $image = imagen_desde_subida($_FILES['photo'] ?? []);
@@ -45,19 +45,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 page_header('Escribir artículo', 'articulos');
-echo "<h1>Escribir un artículo</h1>";
-echo "<p class=\"notice\">Texto propio de hasta $maxWords palabras, con foto si quieres. Entra en Nuevas como cualquier envío y puede llegar a portada igual.</p>";
-if (!user()) echo "<p class=\"notice\">Escribes como anónimo. Si <a href=\"/login.php\">entras</a>, firmarás con un alias y tu nombre aparecerá a los " . (int)cfg('ghost_minutes', 30) . " minutos.</p>";
+echo "" . t('<h1>Escribir un artículo</h1>') . "";
+echo "<p class=\"notice\">" . t('Texto propio de hasta %d palabras, con foto si quieres. Entra en Nuevas como cualquier envío y puede llegar a portada igual.', $maxWords) . "</p>";
+if (!user()) echo "<p class=\"notice\">" . t('Escribes como anónimo. Si <a href="/login.php">entras</a>, firmarás con un alias y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">";
-echo "<label>Titular</label><input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
-echo "<label>Texto (máximo $maxWords palabras)</label><textarea name=\"content\" rows=\"14\" required>" . h($f['content']) . "</textarea>";
-echo "<label>Tema</label><select name=\"topic\">";
+echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
+echo "<label>" . t('Texto (máximo %d palabras)', $maxWords) . "</label><textarea name=\"content\" rows=\"14\" required>" . h($f['content']) . "</textarea>";
+echo "" . t('<label>Tema</label>') . "<select name=\"topic\">";
 foreach ($topics as $t) {
     $sel = ((int)$f['topic'] === (int)$t['topic_id']) ? ' selected' : '';
     echo "<option value=\"{$t['topic_id']}\"$sel>" . h($t['name']) . "</option>";
 }
 echo "</select>";
-echo "<label>Foto</label><input type=\"file\" name=\"photo\" accept=\"image/*\">";
-echo "<button>Publicar artículo</button></form>";
+echo "" . t('<label>Foto</label>') . "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
+echo "" . t('<button>Publicar artículo</button>') . "</form>";
 page_footer();

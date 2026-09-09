@@ -19,16 +19,16 @@ if ($clave !== '') {
         ]);
         redirect('/');
     }
-    $err = 'Esa clave no es correcta.';
+    $err = t('Esa clave no es correcta.');
     usleep(300000);   // freno suave a la fuerza bruta
 }
 ?>
-<!doctype html><html lang="es"><head><meta charset="utf-8">
+<!doctype html><html lang="<?= lang() ?>"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.png">
-<title>Clave de acceso · <?= h(cfg('site_name')) ?></title>
+<title><?= t('Clave de acceso') ?> · <?= h(cfg('site_name')) ?></title>
 <link rel="stylesheet" href="/css/ddd.css?v=<?= DDD_CSS_VER ?>">
 <style>
 html, body { height: 100%; }
@@ -47,13 +47,13 @@ html, body { height: 100%; }
 </style></head><body>
 <div class="gate">
   <img class="logo l" src="/img/logo.png" alt=""><img class="logo d" src="/img/logo-dark.png" alt="">
-  <h1>Deltha aún es privada</h1>
-  <p>Si te han dado una clave de acceso, escríbela aquí. Se guarda en una única cookie técnica mientras dure el acceso privado; cuando abramos Deltha dejará de existir.</p>
+  <h1><?= t('Deltha aún es privada') ?></h1>
+  <p><?= t('Si te han dado una clave de acceso, escríbela aquí. Se guarda en una única cookie técnica mientras dure el acceso privado; cuando abramos Deltha dejará de existir.') ?></p>
   <?php if ($err) echo "<p class=\"error\">" . h($err) . "</p>"; ?>
   <form class="plain" method="post">
-    <input type="password" name="clave" required autocomplete="off" autofocus placeholder="clave">
-    <button>Entrar</button>
+    <input type="password" name="clave" required autocomplete="off" autofocus placeholder="<?= t('clave') ?>">
+    <button><?= t('Entrar') ?></button>
   </form>
-  <p class="back"><a href="/delta/">¿Qué es Deltha?</a> · <a href="/login.php">Ya tengo cuenta</a> · <a href="/privacidad.php">Privacidad</a></p>
+  <p class="back"><a href="/delta/"><?= t('¿Qué es Deltha?') ?></a> · <a href="/login.php"><?= t('Ya tengo cuenta') ?></a> · <a href="/privacidad.php"><?= t('Privacidad') ?></a></p>
 </div>
 </body></html>

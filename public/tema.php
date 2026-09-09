@@ -7,7 +7,7 @@ $tid = (int)($_GET['t'] ?? 0);
 $tq = $pdo->prepare("SELECT topic_id, name, color FROM topics WHERE topic_id = ?");
 $tq->execute([$tid]);
 $topic = $tq->fetch();
-if (!$topic) { http_response_code(404); page_header('Tema'); echo "<p class=\"end\">Ese tema no existe.</p>"; page_footer(); exit; }
+if (!$topic) { http_response_code(404); page_header(t('Tema')); echo "<p class=\"end\">" . t('Ese tema no existe.') . "</p>"; page_footer(); exit; }
 
 $page = page_num();
 $cnt = $pdo->prepare("SELECT COUNT(*) FROM stories WHERE topic_id = ? AND status IN ('nuevas','candidatas','destacadas','archived')");
@@ -21,9 +21,9 @@ $st->bindValue(3, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 
 page_header(ucfirst($topic['name']));
-echo "<p class=\"notice\">Todo lo enviado en este tema, noticias y artículos, estén donde estén: en portada, candidatas, nuevas o ya archivado. $total en total.</p>";
+echo "<p class=\"notice\">" . t('Todo lo enviado en este tema, noticias y artículos, estén donde estén: en portada, candidatas, nuevas o ya archivado. %d en total.', $total) . "</p>";
 $n = 0;
 foreach ($st as $s) { story_post($pdo, $s, "compact"); $n++; }
-if ($n === 0) echo "<p class=\"end\">Todavía no hay nada en este tema.</p>";
+if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay nada en este tema.') . "</p>";
 paginate('/tema.php?t=' . $tid, $page, $total);
 page_footer();

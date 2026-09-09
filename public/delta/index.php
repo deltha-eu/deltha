@@ -8,13 +8,14 @@ $n = fn($k, $d) => rtrim(rtrim(number_format((float)cfg($k, $d), 3, ',', ''), '0
 $aPort = $n('aura_portada', 0.5); $aEnv = $n('aura_envio', 0.1); $aCom = $n('aura_comentario', 0.02);
 $aCap = $n('aura_daily_cap', 2); $aDec = $n('aura_daily_decay', 0.5);
 $dl = strtotime(cfg('aura_deadline', '2026-12-31'));
-$dlTxt = date('j', $dl) . ' de ' . ['','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][(int)date('n', $dl)] . ' de ' . date('Y', $dl);
+$meses = explode(',', t('enero,febrero,marzo,abril,mayo,junio,julio,agosto,septiembre,octubre,noviembre,diciembre'));
+$dlTxt = t('%d de %s', (int)date('j', $dl), $meses[(int)date('n', $dl) - 1]) . t(' de %d', (int)date('Y', $dl));
 ?>
-<!doctype html><html lang="es"><head><meta charset="utf-8">
+<!doctype html><html lang="<?= lang() ?>"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="/img/favicon.png">
-<title>Deltha · presentación</title>
+<title>Deltha · <?= t('presentación') ?></title>
 <link rel="stylesheet" href="/css/ddd.css?v=<?= DDD_CSS_VER ?>">
 <style>
 html, body { height: 100%; }
@@ -49,89 +50,89 @@ a.hint { text-decoration: none; }
 <a class="slide" id="s1" href="#s2">
   <div class="dots"><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
   <img class="logo l" src="/img/logo.png" alt=""><img class="logo d" src="/img/logo-dark.png" alt="">
-  <h1>Hola.<br>Parece que has sido seleccionado para conocer Deltha.</h1>
-  <p class="hint">Pulsa para continuar</p>
+  <h1><?= t('Hola.<br>Parece que has sido seleccionado para conocer Deltha.') ?></h1>
+  <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
 
 <a class="slide" id="s2" href="#s3">
   <div class="dots"><span></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-  <h1>Deltha es</h1>
+  <h1><?= t('Deltha es') ?></h1>
   <ul>
-    <li>Un agregador de noticias.</li>
-    <li>Una red social contralgorítmica.</li>
-    <li>Un espacio para el debate.</li>
+    <li><?= t('Un agregador de noticias.') ?></li>
+    <li><?= t('Una red social contralgorítmica.') ?></li>
+    <li><?= t('Un espacio para el debate.') ?></li>
   </ul>
-  <p class="hint">Pulsa para continuar</p>
+  <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
 
 <a class="slide" id="s3" href="#s4">
   <div class="dots"><span></span><span></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span></div>
-  <h1>De dónde viene</h1>
+  <h1><?= t('De dónde viene') ?></h1>
   <ul>
-    <li><b>El manifiesto contralgorítmico</b> La idea de fondo: recuperar el criterio humano frente a la hegemonía del algoritmo.</li>
-    <li><b>Menéame</b> El agregador de noticias: la comunidad decide qué llega a portada.</li>
-    <li><b>X</b> El diseño y la usabilidad: una línea de tiempo limpia y rápida.</li>
-    <li><b>4chan</b> La efimeridad: los hilos nacen, se discuten y desaparecen.</li>
-    <li><b>El modelo de negocio de Jot Down</b> Sin publicidad programática ni rastreo: una comunidad que sostiene lo que lee.</li>
+    <li><b><?= t('El manifiesto contralgorítmico') ?></b> <?= t('La idea de fondo: recuperar el criterio humano frente a la hegemonía del algoritmo.') ?></li>
+    <li><b>Menéame</b> <?= t('El agregador de noticias: la comunidad decide qué llega a portada.') ?></li>
+    <li><b>X</b> <?= t('El diseño y la usabilidad: una línea de tiempo limpia y rápida.') ?></li>
+    <li><b>4chan</b> <?= t('La efimeridad: los hilos nacen, se discuten y desaparecen.') ?></li>
+    <li><b><?= t('El modelo de negocio de Jot Down') ?></b> <?= t('Sin publicidad programática ni rastreo: una comunidad que sostiene lo que lee.') ?></li>
   </ul>
-  <p class="hint">Pulsa para continuar</p>
+  <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
 
 <a class="slide" id="s4" href="#s5">
   <div class="dots"><span></span><span></span><span></span><span class="on"></span><span></span><span></span><span></span><span></span></div>
-  <h1>Cómo funciona</h1>
+  <h1><?= t('Cómo funciona') ?></h1>
   <ul>
-    <li><b>Es efímera.</b> Los envíos y los comentarios desaparecen a las 48 horas. Lo que importa es lo que pasa ahora, no lo que se acumula.</li>
-    <li><b>No deja huella.</b> Sin cookies, sin rastreo, sin publicidad programática. Puedes comprobarlo abriendo las herramientas de tu navegador.</li>
-    <li><b>Es horizontal.</b> Todo se publica bajo un alias y el nombre del autor solo aparece a la media hora, para que se juzguen las palabras antes que a quien las dice.</li>
+    <li><b><?= t('Es efímera.') ?></b> <?= t('Los envíos y los comentarios desaparecen a las %d horas. Lo que importa es lo que pasa ahora, no lo que se acumula.', (int)cfg('thread_ttl_hours', 48)) ?></li>
+    <li><b><?= t('No deja huella.') ?></b> <?= t('Sin cookies, sin rastreo, sin publicidad programática. Puedes comprobarlo abriendo las herramientas de tu navegador.') ?></li>
+    <li><b><?= t('Es horizontal.') ?></b> <?= t('Todo se publica bajo un alias y el nombre del autor solo aparece a los %d minutos, para que se juzguen las palabras antes que a quien las dice.', $gm) ?></li>
   </ul>
-  <p class="hint">Pulsa para continuar</p>
+  <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
 
 <a class="slide" id="s5" href="#s6">
   <div class="dots"><span></span><span></span><span></span><span></span><span class="on"></span><span></span><span></span><span></span></div>
-  <h1>El aura</h1>
+  <h1><?= t('El aura') ?></h1>
   <div class="aura-row">
-    <div><span class="av" style="--ring:.2;--glow:0px">a</span><small>anónimo · 5</small></div>
+    <div><span class="av" style="--ring:.2;--glow:0px">a</span><small><?= t('anónimo') ?> · 5</small></div>
     <div><span class="av" style="--ring:.6;--glow:4px">g</span><small>ghost · 25</small></div>
-    <div><span class="av" style="--ring:1;--glow:8px">d</span><small>comprometido · <?= $max ?></small></div>
+    <div><span class="av" style="--ring:1;--glow:8px">d</span><small><?= t('comprometido') ?> · <?= $max ?></small></div>
   </div>
   <ul>
-    <li><b>No hay karma.</b> Hay aura, y mide una sola cosa: tu compromiso con la comunidad. Se gana estando y aportando, no gustando.</li>
-    <li><b>Nunca da altavoz.</b> El aura no sube noticias ni ordena comentarios. Todo el mundo ve lo mismo, en el mismo orden. Se ve como luz alrededor de tu alias, nada más.</li>
-    <li><b>Sin algoritmo oculto.</b> Lo que llega a portada lo decide una fórmula pública que se muestra bajo cada envío. Y solo se filtra lo ilegal, con una moderación propia que corre en nuestros servidores.</li>
+    <li><b><?= t('No hay karma.') ?></b> <?= t('Hay aura, y mide una sola cosa: tu compromiso con la comunidad. Se gana estando y aportando, no gustando.') ?></li>
+    <li><b><?= t('Nunca da altavoz.') ?></b> <?= t('El aura no sube noticias ni ordena comentarios. Todo el mundo ve lo mismo, en el mismo orden. Se ve como luz alrededor de tu alias, nada más.') ?></li>
+    <li><b><?= t('Sin algoritmo oculto.') ?></b> <?= t('Lo que llega a portada lo decide una fórmula pública que se muestra bajo cada envío. Y solo se filtra lo ilegal, con una moderación propia que corre en nuestros servidores.') ?></li>
   </ul>
-  <p class="hint">Pulsa para continuar</p>
+  <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
 
 <a class="slide" id="s6" href="#s7">
   <div class="dots"><span></span><span></span><span></span><span></span><span></span><span class="on"></span><span></span><span></span></div>
-  <h1>¿Qué se puede publicar?</h1>
+  <h1><?= t('¿Qué se puede publicar?') ?></h1>
   <ul>
-    <li><b>Todo lo que permite la ley.</b> El límite no lo pone una línea editorial ni un gusto: lo pone la ley. Fuera quedan los insultos, los delitos de odio, las amenazas y todo lo que sea delito.</li>
-    <li><b>Modera una IA que vive en nuestros servidores.</b> Ningún envío ni comentario sale de ellos para ser revisado: no hay terceros mirando lo que escribes. Cuando duda, decide una persona.</li>
-    <li><b>Y hay un correo para todo lo demás.</b> Quejas, felicitaciones y propuestas: <b>info@deltha.eu</b>.</li>
+    <li><b><?= t('Todo lo que permite la ley.') ?></b> <?= t('El límite no lo pone una línea editorial ni un gusto: lo pone la ley. Fuera quedan los insultos, los delitos de odio, las amenazas y todo lo que sea delito.') ?></li>
+    <li><b><?= t('Modera una IA que vive en nuestros servidores.') ?></b> <?= t('Ningún envío ni comentario sale de ellos para ser revisado: no hay terceros mirando lo que escribes. Cuando duda, decide una persona.') ?></li>
+    <li><b><?= t('Y hay un correo para todo lo demás.') ?></b> <?= t('Quejas, felicitaciones y propuestas:') ?> <b>info@deltha.eu</b>.</li>
   </ul>
-  <p class="hint">Pulsa para continuar</p>
+  <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
 
 <a class="slide" id="s7" href="#s8">
   <div class="dots"><span></span><span></span><span></span><span></span><span></span><span></span><span class="on"></span><span></span></div>
-  <h1>¿Quieres ser propietario de Deltha?</h1>
-  <p>Deltha es un proyecto abierto a todo el mundo. Para ser copropietario no te pedimos dinero: solo que uses la plataforma.</p>
-  <p><b>El 50 % de la propiedad de Deltha se repartirá entre todos los usuarios registrados que tengan aura <?= $max ?> el <?= $dlTxt ?>.</b></p>
+  <h1><?= t('¿Quieres ser propietario de Deltha?') ?></h1>
+  <p><?= t('Deltha es un proyecto abierto a todo el mundo. Para ser copropietario no te pedimos dinero: solo que uses la plataforma.') ?></p>
+  <p><b><?= t('El 50 %% de la propiedad de Deltha se repartirá entre todos los usuarios registrados que tengan aura %s el %s.', $max, $dlTxt) ?></b></p>
   <ul>
-    <li><b>Así sube el aura.</b> +<?= $aPort ?> por cada envío tuyo que llega a portada, +<?= $aEnv ?> por cada envío o artículo, +<?= $aCom ?> por cada comentario. Como mucho +<?= $aCap ?> al día.</li>
-    <li><b>Así baja.</b> Cada día pierdes <?= $aDec ?>, hasta el mínimo de 5. El aura no se acumula: se sostiene. Mide quién está, no quién estuvo.</li>
+    <li><b><?= t('Así sube el aura.') ?></b> <?= t('+%s por cada envío tuyo que llega a portada, +%s por cada envío o artículo, +%s por cada comentario. Como mucho +%s al día.', $aPort, $aEnv, $aCom, $aCap) ?></li>
+    <li><b><?= t('Así baja.') ?></b> <?= t('Cada día pierdes %s, hasta el mínimo de 5. El aura no se acumula: se sostiene. Mide quién está, no quién estuvo.', $aDec) ?></li>
   </ul>
-  <p class="hint">Pulsa para continuar</p>
+  <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
 
 <a class="slide" id="s8" href="<?= $entrar ?>">
   <div class="dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="on"></span></div>
   <img class="logo l" src="/img/logo.png" alt=""><img class="logo d" src="/img/logo-dark.png" alt="">
-  <h1>¿Quieres probar Deltha?</h1>
-  <p class="hint">Pulsa para entrar</p>
+  <h1><?= t('¿Quieres probar Deltha?') ?></h1>
+  <p class="hint"><?= t('Pulsa para entrar') ?></p>
 </a>
 
 </div>

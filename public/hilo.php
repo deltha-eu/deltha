@@ -8,8 +8,8 @@ $st->execute([$id]);
 $s = $st->fetch();
 if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true) && !is_admin())) {
     http_response_code(404);
-    page_header('No existe');
-    echo "<p class=\"end\">Ese hilo no existe.</p>";
+    page_header(t('No existe'));
+    echo "<p class=\"end\">" . t('Ese hilo no existe.') . "</p>";
     page_footer();
     exit;
 }
@@ -31,10 +31,10 @@ foreach ($all as $c) { $k = $c['root_id'] ?: $c['comment_id']; $threads[$k][] = 
 $replyTo = (int)($_GET['r'] ?? 0);
 $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo] : null;
 
-page_header('Hilo', $tab);
+page_header(t('Hilo'), $tab);
 echo "<div class=\"hilo\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
-echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . (!empty($s['comm_slug']) ? " · " . community_link($s) : '') . ($s['content_type'] === 'article' ? ' · artículo' : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span></div>";
+echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . (!empty($s['comm_slug']) ? " · " . community_link($s) : '') . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span></div>";
 $dest = $s['url'] ?: null;
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
@@ -49,9 +49,9 @@ if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width
 if ($s['status'] === 'candidatas') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . "</div>";
 echo "</div></article>";
 
-echo "<div class=\"stats\" id=\"comentarios\"><span><b>" . count($all) . "</b> comentarios</span>";
+echo "<div class=\"stats\" id=\"comentarios\"><span><b>" . count($all) . "</b> " . t('comentarios') . "</span>";
 if ($s['status'] === 'destacadas') echo "<span>" . h(queda($s['published_date'])) . "</span>";
-if ($s['status'] === 'archived')   echo "<span>archivado</span>";
+if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
 echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span></div>";
 if (is_mod()) {   // moderadores y admin: cambiar el tema del envio
     echo "<form class=\"modbar\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><label>Tema</label><select name=\"topic\">";
@@ -65,10 +65,10 @@ if (is_mod()) {   // moderadores y admin: cambiar el tema del envio
     echo "</select><button class=\"btn\">Cambiar</button> <a href=\"/editar.php?id=$id\">editar · eliminar</a></form>";
 }
 
-if (isset($_GET['reportado'])) echo "<p class=\"notice\">Gracias: el comentario queda avisado a los moderadores.</p>";
+if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
 if ($can_comment && !$replyTo) composer($id);
-elseif (!$open) echo "<p class=\"end\">Hilo cerrado.</p>";
-elseif (!$can_comment) echo "<p class=\"end\"><a href=\"/login.php\">Entra</a> para comentar.</p>";
+elseif (!$open) echo "<p class=\"end\">" . t('Hilo cerrado.') . "</p>";
+elseif (!$can_comment) echo "<p class=\"end\">" . t('<a href="/login.php">Entra</a> para comentar.') . "</p>";
 
 foreach ($threads as $list) {
     echo "<div class=\"thread\">";

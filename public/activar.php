@@ -8,14 +8,14 @@ $st->execute([$uid]);
 $u = $st->fetch();
 $hours = (int)cfg('token_hours', 48);
 
-page_header('Activar cuenta');
-if (!$u) { echo "<h1>Enlace no válido</h1><p class=\"end\">Esa cuenta no existe.</p>"; page_footer(); exit; }
-if ((int)$u['verified'] === 1) { echo "<h1>Cuenta ya activa</h1><p class=\"end\">Ya puedes <a href=\"/login.php\">entrar</a>.</p>"; page_footer(); exit; }
+page_header(t('Activar cuenta'));
+if (!$u) { echo "" . t('<h1>Enlace no válido</h1><p class="end">Esa cuenta no existe.</p>') . ""; page_footer(); exit; }
+if ((int)$u['verified'] === 1) { echo "" . t('<h1>Cuenta ya activa</h1><p class="end">Ya puedes <a href="/login.php">entrar</a>.</p>') . ""; page_footer(); exit; }
 if (!$u['token'] || !preg_match('/^[a-f0-9]{32}$/', $t) || !hash_equals($u['token'], $t)) {
-    echo "<h1>Enlace no válido</h1><p class=\"end\">El enlace está incompleto o ya se ha usado. <a href=\"/reenviar.php\">Pide otro</a>.</p>"; page_footer(); exit;
+    echo "" . t('<h1>Enlace no válido</h1><p class="end">El enlace está incompleto o ya se ha usado. <a href="/reenviar.php">Pide otro</a>.</p>') . ""; page_footer(); exit;
 }
 if (strtotime($u['token_sent']) < time() - $hours * 3600) {
-    echo "<h1>Enlace caducado</h1><p class=\"end\">Tenía $hours horas de validez. <a href=\"/reenviar.php\">Pide otro</a>.</p>"; page_footer(); exit;
+    echo "<h1>" . t('Enlace caducado') . "</h1><p class=\"end\">" . t('Tenía %d horas de validez. <a href="/reenviar.php">Pide otro</a>.', $hours) . "</p>"; page_footer(); exit;
 }
 $pdo->prepare("UPDATE users SET verified = 1, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([$uid]);
 if (session_status() !== PHP_SESSION_ACTIVE) session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);

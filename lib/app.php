@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 42);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 43);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -49,7 +49,7 @@ session_name(DDD_SESSION);
 if (isset($_COOKIE[DDD_SESSION])) {
     session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
     if (!empty($_SESSION['uid'])) {
-        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing FROM users WHERE user_id = ? AND verified = 1");
+        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
         if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas.php)
@@ -58,6 +58,9 @@ if (isset($_COOKIE[DDD_SESSION])) {
         }
     }
 }
+require_once __DIR__ . '/i18n.php';
+i18n_load();
+
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
  * guardada unos minutos, solo para contar visitantes en /estadisticas.php.
  * No se guarda la IP; el dia dentro de la huella impide seguir a nadie de un dia a otro. */
@@ -105,16 +108,16 @@ function client_ip(): string { return $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SER
 
 function hace(string $dt): string {
     $s = time() - strtotime($dt);
-    if ($s < 60)    return 'ahora';
-    if ($s < 3600)  return 'hace ' . intdiv($s, 60) . ' min';
-    if ($s < 86400) return 'hace ' . intdiv($s, 3600) . ' h';
-    return 'hace ' . intdiv($s, 86400) . ' d';
+    if ($s < 60)    return t('ahora');
+    if ($s < 3600)  return t('hace %d min', intdiv($s, 60));
+    if ($s < 86400) return t('hace %d h', intdiv($s, 3600));
+    return t('hace %d d', intdiv($s, 86400));
 }
 function queda(string $published): string {
     $ttl = (int)cfg('thread_ttl_hours', 48) * 3600;
     $s = strtotime($published) + $ttl - time();
-    if ($s <= 0) return 'archivado';
-    return $s < 3600 ? 'muere en ' . intdiv($s, 60) . ' min' : 'muere en ' . intdiv($s, 3600) . ' h';
+    if ($s <= 0) return t('archivado');
+    return $s < 3600 ? t('muere en %d min', intdiv($s, 60)) : t('muere en %d h', intdiv($s, 3600));
 }
 function vida_pct(string $published): int {
     $ttl = (int)cfg('thread_ttl_hours', 48) * 3600;
@@ -175,8 +178,8 @@ function landing_url(PDO $pdo, ?array $u): string {
 /* ---- reportes y borrado de comentarios ------------------------------ */
 const DDD_DELETED_TXT = 'Comentario eliminado por incumplir las normas de uso';
 function report_reasons(): array {
-    return ['insulto' => 'Insulta o veja a alguien', 'odio' => 'Incita al odio o la discriminación', 'acoso' => 'Amenaza o acosa',
-            'datos' => 'Publica datos personales de otra persona (doxxing)', 'ilegal' => 'Contenido ilegal', 'spam' => 'Spam o publicidad encubierta', 'otro' => 'Otra cosa'];
+    return ['insulto' => t('Insulta o veja a alguien'), 'odio' => t('Incita al odio o la discriminación'), 'acoso' => t('Amenaza o acosa'),
+            'datos' => t('Publica datos personales de otra persona (doxxing)'), 'ilegal' => t('Contenido ilegal'), 'spam' => t('Spam o publicidad encubierta'), 'otro' => t('Otra cosa')];
 }
 /** Borrado de moderacion: el comentario sigue en el hilo (y en el contador) pero con el texto sustituido;
  *  el original queda en content_orig por si hace falta ante un requerimiento. Cierra sus reportes. */
@@ -275,10 +278,10 @@ function delta_explica(array $s): string {
     $coefTxt = $coef != 1.0 ? " × {$s['topic']} " . number_format($coef, 2, ',', '') : '';
     if (cfg('decay_mode') === 'multiplicative') {
         $val = $net * $coef * pow(1 - $decay, $hh);
-        return "{$net} votos{$coefTxt} × (1−{$decay})^{$hh} = " . number_format($val, 1, ',', '');
+        return "{$net} " . t('votos') . "{$coefTxt} × (1−{$decay})^{$hh} = " . number_format($val, 1, ',', '');
     }
     $val = $net * $coef - $decay * $hh;
-    return "{$net} votos{$coefTxt} − " . number_format($decay * $hh, 2, ',', '') . " por antigüedad = " . number_format($val, 1, ',', '');
+    return "{$net} " . t('votos') . "{$coefTxt} − " . number_format($decay * $hh, 2, ',', '') . " " . t('por antigüedad') . " = " . number_format($val, 1, ',', '');
 }
 
 /* ---- alias Ghost ----------------------------------------------------
@@ -402,7 +405,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $u = user();
     $theme = $u && in_array($u['theme'] ?? 'auto', ['light', 'dark'], true) ? $u['theme'] : null;   // null = sigue al sistema
-    echo "<!doctype html><html lang=\"es\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
+    echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
     echo "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">";
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
     echo "<link rel=\"icon\" href=\"/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"/img/icon-180.png\">";
@@ -411,8 +414,8 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     echo "<div class=\"shell\">";
     echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"/img/logo.png\" alt=\"\" class=\"l\"><img src=\"/img/logo-dark.png\" alt=\"\" class=\"d\"></a>";
     echo "<span class=\"ttl\">" . h($title) . "</span>";
-    if ($u) echo "<a class=\"me\" href=\"/perfil.php\" title=\"perfil\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
-    else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>entrar</span></a>";
+    if ($u) echo "<a class=\"me\" href=\"/perfil.php\" title=\"" . t('perfil') . "\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
+    else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
     echo "</header>";
     nav_tabs($tab, 'tabs-top');
     echo "<main>";
@@ -421,20 +424,20 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
  * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
 function nav_tabs(string $tab, string $cls): void {
     $tabs = $cls === 'tabs-top' ? [
-        'portada'      => ['/', 'Portada', 'home'],
-        'candidatas'   => ['/candidatas.php', 'Candidatas', 'cand'],
-        'nuevas'       => ['/nuevas.php', 'Nuevas', 'new'],
-        'articulos'    => ['/articulos.php', 'Artículos', 'art'],
+        'portada'      => ['/', t('Portada'), 'home'],
+        'candidatas'   => ['/candidatas.php', t('Candidatas'), 'cand'],
+        'nuevas'       => ['/nuevas.php', t('Nuevas'), 'new'],
+        'articulos'    => ['/articulos.php', t('Artículos'), 'art'],
     ] : [
-        'usuarios'     => ['/usuarios.php', 'Usuarios', 'users'],
-        'procesos'     => ['/procesos.php', 'Procesos', 'proc'],
-        'estadisticas' => ['/estadisticas.php', 'Estadísticas', 'stats'],
-        'mensajes'     => ['/mensajes.php', 'Mensajes', 'msg'],
+        'usuarios'     => ['/usuarios.php', t('Usuarios'), 'users'],
+        'procesos'     => ['/procesos.php', t('Procesos'), 'proc'],
+        'estadisticas' => ['/estadisticas.php', t('Estadísticas'), 'stats'],
+        'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
     ];
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';
-        if ($href === null) { echo "<span class=\"soon\" title=\"pronto\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
+        if ($href === null) { echo "<span class=\"soon\" title=\"" . t('pronto') . "\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
         $badge = ($k === 'mensajes' && ($n = unread_msgs()) > 0) ? "<i class=\"badge\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
         echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . $badge . "<span>" . h($label) . "</span></a>";
     }
@@ -452,16 +455,16 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">¿Qué es Deltha?</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">Manifiesto contralgorítmico</a> · <a href=\"/privacidad.php\">Privacidad y contacto</a> · <a href=\"/normas.php\">Normas de uso</a> · <a href=\"/algoritmo.php\">Cómo funciona el δ</a> · <a href=\"/comunidades.php\">Comunidades</a> · Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto";
-    if (is_mod())   $h .= " · <a href=\"/moderacion.php\">moderación" . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
+    $h  = "<a href=\"/delta/\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a> · " . t('Sin cookies para quien no inicia sesión · sin rastreo · sin algoritmo oculto');
+    if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;
 }
 function page_footer(): void {
     echo "</main>";
-    echo "<a class=\"fab\" href=\"/enviar.php\" aria-label=\"Enviar\">" . icon('plus') . "</a>";
+    echo "<a class=\"fab\" href=\"/enviar.php\" aria-label=\"" . t('Enviar') . "\">" . icon('plus') . "</a>";
     // pie en flujo (movil): al final de cada pagina
-    echo "<footer class=\"inflow\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"Manifiesto contralgorítmico\"><img src=\"/img/contralgoritmia.png\" alt=\"Sello contralgorítmico\"></a>";
+    echo "<footer class=\"inflow\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a>";
     echo "<p>" . footer_links() . "</p></footer>";
     echo "</div>";
     // muelle fijo (PC: enlaces + iconos; movil: solo iconos)

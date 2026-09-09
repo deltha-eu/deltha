@@ -13,12 +13,12 @@ $f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['url'] = post('url');
-    if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = 'La URL no es válida.'; $step = '1'; }
+    if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }
 
     if (!$err && $f['url'] !== '') {
         $d = $pdo->prepare("SELECT story_id FROM stories WHERE url = ? AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");
         $d->execute([$f['url']]);
-        if ($dup = $d->fetchColumn()) { $err = "Ese enlace ya está enviado: <a href=\"/hilo.php?id=$dup\">verlo</a>."; $step = '1'; }
+        if ($dup = $d->fetchColumn()) { $err = t('Ese enlace ya está enviado: <a href="/hilo.php?id=%d">verlo</a>.', $dup); $step = '1'; }
     }
 
     if (!$err && $step === '1') {
@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (post('quitar') === '1') $f['image'] = null;
         if ($up = imagen_desde_subida($_FILES['photo'] ?? [])) $f['image'] = $up;
 
-        if (mb_strlen($f['title']) < 8) $err = 'El titular es demasiado corto.';
-        elseif (!in_array($f['topic'], array_column($topics, 'topic_id'), false)) $err = 'Elige un tema.';
+        if (mb_strlen($f['title']) < 8) $err = t('El titular es demasiado corto.');
+        elseif (!in_array($f['topic'], array_column($topics, 'topic_id'), false)) $err = t('Elige un tema.');
 
         if (!$err) {
             $u = user();
@@ -62,43 +62,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-page_header('Enviar');
-echo "<h1>Enviar</h1>";
-if (!user()) echo "<p class=\"notice\">Envías como anónimo. Si <a href=\"/login.php\">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los " . (int)cfg('ghost_minutes', 30) . " minutos.</p>";
+page_header(t('Enviar'));
+echo "" . t('<h1>Enviar</h1>') . "";
+if (!user()) echo "<p class=\"notice\">" . t('Envías como anónimo. Si <a href="/login.php">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">$err</p>";
 
 if ($step === '1') {
     echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"step\" value=\"1\">";
-    echo "<label>Enlace a una noticia</label><input type=\"url\" name=\"url\" value=\"" . h($f['url']) . "\" placeholder=\"https://…\" autofocus>";
-    echo "<button>Continuar</button></form>";
-    echo "<p class=\"or\">— o —</p>";
-    echo "<a class=\"choice\" href=\"/articulo.php\">" . icon('art') . "<div><b>Escribe un artículo</b><span>Texto propio de hasta " . (int)cfg('article_max_words', 500) . " palabras, con foto si quieres. Entra en Nuevas como cualquier envío y puede llegar a portada igual.</span></div></a>";
+    echo "" . t('<label>Enlace a una noticia</label>') . "<input type=\"url\" name=\"url\" value=\"" . h($f['url']) . "\" placeholder=\"https://…\" autofocus>";
+    echo "" . t('<button>Continuar</button>') . "</form>";
+    echo "<p class=\"or\">" . t('— o —') . "</p>";
+    echo "<a class=\"choice\" href=\"/articulo.php\">" . icon('art') . "<div>" . t('<b>Escribe un artículo</b>') . "<span>" . t('Texto propio de hasta %d palabras, con foto si quieres. Entra en Nuevas como cualquier envío y puede llegar a portada igual.', (int)cfg('article_max_words', 500)) . "</span></div></a>";
 } else {
     echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"step\" value=\"2\">";
     echo "<input type=\"hidden\" name=\"url\" value=\"" . h($f['url']) . "\">";
-    if ($f['url']) echo "<p class=\"meta\">" . h(source_of($f['url'])) . " · <a href=\"/enviar.php\">cambiar enlace</a></p>";
-    echo "<label>Titular</label><input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
-    echo "<label>Entradilla</label><textarea name=\"content\" maxlength=\"2000\">" . h($f['content']) . "</textarea>";
-    echo "<label>Tema</label><select name=\"topic\">";
+    if ($f['url']) echo "<p class=\"meta\">" . h(source_of($f['url'])) . "" . t(' · <a href="/enviar.php">cambiar enlace</a>') . "</p>";
+    echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
+    echo "" . t('<label>Entradilla</label>') . "<textarea name=\"content\" maxlength=\"2000\">" . h($f['content']) . "</textarea>";
+    echo "" . t('<label>Tema</label>') . "<select name=\"topic\">";
     foreach ($topics as $t) {
         $sel = ((int)$f['topic'] === (int)$t['topic_id']) ? ' selected' : '';
         echo "<option value=\"{$t['topic_id']}\"$sel>" . h($t['name']) . "</option>";
     }
     echo "</select>";
+    if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades.php#crear">crea la primera</a>.') . "</p>";
     if ($comms) {
-        echo "<label>Comunidad (opcional)</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
+        echo "" . t('<label>Comunidad (opcional)</label>') . "<select name=\"community\"><option value=\"0\"" . t('>— ninguna —</option>') . "";
         foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$f['community'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
         echo "</select>";
     }
     if ($f['image']) {
         echo "<input type=\"hidden\" name=\"image\" value=\"" . h($f['image']) . "\">";
-        echo "<label>Foto encontrada en la página</label><div class=\"media sm\" style=\"background-image:url('/media/" . h($f['image']) . "')\"></div>";
-        echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"1\"> no usar esta foto</label>";
-        echo "<label>O sube otra</label>";
+        echo "" . t('<label>Foto encontrada en la página</label>') . "<div class=\"media sm\" style=\"background-image:url('/media/" . h($f['image']) . "')\"></div>";
+        echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"1\"" . t('> no usar esta foto</label>') . "";
+        echo "" . t('<label>O sube otra</label>') . "";
     } else {
-        echo "<label>Foto" . ($f['url'] ? " (la página no ofrece ninguna usable)" : "") . "</label>";
+        echo "<label>" . t('Foto') . ($f['url'] ? " " . t('(la página no ofrece ninguna usable)') : "") . "</label>";
     }
     echo "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
-    echo "<button>Enviar</button></form>";
+    echo "" . t('<button>Enviar</button>') . "</form>";
 }
 page_footer();
