@@ -1193,6 +1193,17 @@ details.editbox form.plain { padding-top: 0; }
   .rail details.rail-skins .list a:hover { background: var(--hover); }
   .rail details.rail-skins .list a.on { font-weight: 700; background: var(--hover); }
   .rail details.rail-skins .list a.reset { grid-column: 1 / -1; color: var(--muted); font-size: 12px; justify-content: center; }
+  .rail .rail-opts { display: flex; align-items: center; gap: 10px; padding: 7px 14px; font-size: 14px; color: var(--fg); }
+  .rail .rail-opts > .i { width: 22px; height: 22px; flex: none; color: var(--muted); }
+  .rail .rail-opts > span:first-of-type { flex: 1; }
+  .rail .rail-opts .opts { display: inline-flex; border: 1px solid var(--line2); border-radius: 999px; overflow: hidden; }
+  .rail .rail-opts .opts a { padding: 3px 9px; font-size: 12px; color: var(--muted); border-left: 1px solid var(--line2); }
+  .rail .rail-opts .opts a:first-child { border-left: 0; }
+  .rail .rail-opts .opts a:hover { background: var(--hover); }
+  .rail .rail-opts .opts a.on { background: var(--accent); color: var(--bg); font-weight: 700; }
+  [data-skin="retro"] .rail .rail-opts .opts, [data-skin="manga"] .rail .rail-opts .opts, [data-skin="punk"] .rail .rail-opts .opts, [data-skin="popart"] .rail .rail-opts .opts { border-radius: 0; }
+  [data-skin="orange"] .rail .rail-opts .opts a.on { background: var(--or); color: #fff; }
+  [data-skin="foro"] .rail .rail-opts .opts a.on { background: var(--blue); color: #fff; }
   .rail .sw { width: 14px; height: 14px; border-radius: 4px; flex: none; border: 1px solid rgba(0,0,0,.15); background: linear-gradient(135deg, var(--s1) 0 50%, var(--s2) 50% 100%); }
   .rail .sw-editorial { --s1: #ffffff; --s2: #111111; }
   .rail .sw-comunidad { --s1: #f2f2f2; --s2: #ffffff; border-color: #bbb; }

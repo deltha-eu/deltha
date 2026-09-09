@@ -400,4 +400,9 @@ return [
 'Sin cookies para quien no inicia sesión (salvo la de la plantilla, si eliges una) · sin rastreo · sin algoritmo oculto' => 'Pas de cookies sans connexion (sauf celui de l’habillage, si vous en choisissez un) · pas de pistage · pas d’algorithme caché',
 'Las más votadas' => 'Les plus votées',
 '%d h' => '%d h',
+'auto' => 'auto',
+'claro' => 'clair',
+'oscuro' => 'sombre',
+'Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto' => 'Pas de cookies sans connexion (sauf habillage, thème et langue, si vous les choisissez) · pas de pistage · pas d’algorithme caché',
+'Aspecto' => 'Apparence',
 ];

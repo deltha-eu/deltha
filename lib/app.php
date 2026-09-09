@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 56);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 57);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -259,6 +259,12 @@ function page_body(array $pg): string {
 const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk', 'popart' => 'Pop Art', 'zen' => 'Zen', 'orange' => 'Orange', 'foro' => 'Foro'];
 /** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin.php). */
 const DDD_SKIN_COOKIE = 'ddd_skin';
+/** Tema claro/oscuro: users.theme o, sin cuenta, la cookie ddd_theme (solo si se eligio en el menu). null = sigue al sistema. */
+function theme(): ?string {
+    $u = user();
+    $t = $u ? (string)($u['theme'] ?? 'auto') : (string)($_COOKIE['ddd_theme'] ?? 'auto');
+    return in_array($t, ['light', 'dark'], true) ? $t : null;
+}
 /** Plantilla propia de la comunidad que se esta viendo (su pagina y sus hilos): la fija la pagina antes de page_header().
  *  Manda sobre la del usuario, pero no sobre ?skin= (probar). '' = la comunidad no tiene plantilla propia. */
 $DDD_COMM_SKIN = '';
@@ -419,6 +425,8 @@ function icon(string $n): string {
         'link'   => '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
         'plus'   => '<path d="M12 5v14M5 12h14"/>',
         'skin'   => '<path d="M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2-1.5h1.5A4.5 4.5 0 0 0 21 10.5C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15.5" cy="7.5" r="1"/>',
+        'theme'  => '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/>',
+        'lang'   => '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c3 3 3 14 0 17"/><path d="M12 3.5c-3 3-3 14 0 17"/>',
         'share'  => '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>',
         'user'   => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     ][$n] ?? '';
@@ -430,7 +438,7 @@ function icon(string $n): string {
 function page_header(string $title, string $tab = '', string $head = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $u = user();
-    $theme = $u && in_array($u['theme'] ?? 'auto', ['light', 'dark'], true) ? $u['theme'] : null;   // null = sigue al sistema
+    $theme = theme();   // null = sigue al sistema
     echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
     echo "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">";
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
@@ -488,7 +496,7 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a> · " . t('Sin cookies para quien no inicia sesión (salvo la de la plantilla, si eliges una) · sin rastreo · sin algoritmo oculto');
+    $h  = "<a href=\"/delta/\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a> · " . t('Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;

@@ -7,7 +7,7 @@
  * vsprintf: t('hace %d min', $n). Los diccionarios estan en lib/lang/<idioma>.php.
  *
  * Orden de preferencia del idioma: ?lang= en la URL (probar sin guardar) >
- * users.lang > cabecera Accept-Language del navegador (sin cookie) > es.
+ * users.lang > cookie ddd_lang (solo anonimos que eligieron idioma en el menu) > cabecera Accept-Language del navegador > es.
  * Solo se traduce la interfaz publica; admin, moderacion y las paginas editables
  * (privacidad, normas, algoritmo) siguen en español.
  */
@@ -19,7 +19,7 @@ $I18N = [];
 function lang(): string {
     static $l = null;
     if ($l !== null) return $l;
-    $c = [(string)($_GET['lang'] ?? ''), (string)(user()['lang'] ?? '')];
+    $c = [(string)($_GET['lang'] ?? ''), (string)(user()['lang'] ?? ''), user() ? '' : (string)($_COOKIE['ddd_lang'] ?? '')];
     foreach (explode(',', (string)($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '')) as $part) $c[] = strtolower(substr(trim(explode(';', $part)[0]), 0, 2));
     foreach ($c as $x) if (isset(DDD_LANGS[$x])) return $l = $x;
     return $l = 'es';
