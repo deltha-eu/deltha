@@ -25,6 +25,7 @@ function side(): void {
     global $pdo;
     echo "<aside class=\"side\">";
     try { side_ciclo($pdo); } catch (Throwable $e) {}
+    try { side_temas($pdo); } catch (Throwable $e) {}
     try { side_comunidades($pdo); } catch (Throwable $e) {}
     echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
@@ -48,6 +49,20 @@ function side_ciclo(PDO $pdo): void {
     }
     if ($n === 0) echo "<p class=\"meta\">" . t('Nada llega aún al δ mínimo.') . "</p>";
     echo "<p class=\"more\"><a href=\"/procesos.php\">" . t('ver la cola entera') . "</a></p></section>";
+}
+
+/** Temas (las categorias que pone Deltha): pastillas con el color del tema y los envios de la ultima semana; el coeficiente, si no es 1. */
+function side_temas(PDO $pdo): void {
+    $rows = $pdo->query("SELECT t.topic_id, t.name, t.color, t.coef,
+                                (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','candidatas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL 7 DAY) n
+                           FROM topics t ORDER BY n DESC, t.name")->fetchAll();
+    if (!$rows) return;
+    echo "<section class=\"mod temas\"><h3>" . t('Temas') . "<span>" . t('esta semana') . "</span></h3><div class=\"chips\">";
+    foreach ($rows as $r) {
+        $coef = (float)$r['coef'];
+        echo "<a class=\"chip\" href=\"/tema.php?t=" . (int)$r['topic_id'] . "\" style=\"--cc:" . h($r['color']) . "\" title=\"" . ($coef != 1.0 ? h(t('coeficiente %s', number_format($coef, 2, ',', ''))) : '') . "\">" . h($r['name']) . "<b>" . (int)$r['n'] . "</b>" . ($coef != 1.0 ? "<small>×" . number_format($coef, 2, ',', '') . "</small>" : '') . "</a>";
+    }
+    echo "</div></section>";
 }
 
 /** Comunidades con actividad: la ultima noticia de cada una, mas reciente primero. */
