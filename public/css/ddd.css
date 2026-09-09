@@ -335,8 +335,26 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 [data-skin="comunidad"] .pk .av { width: 36px; height: 36px; }
 [data-skin="comunidad"] .end, [data-skin="comunidad"] nav.pages { padding-top: 22px; }
 [data-skin="comunidad"] .notice { margin: 12px 12px 0; border-radius: 18px; }
-[data-skin="comunidad"] .fz { background: var(--card); margin: 0 12px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
-[data-skin="comunidad"] .fz:first-of-type { border-top-left-radius: 18px; border-top-right-radius: 18px; margin-top: 12px; }
+/* Paginas que no son un feed de tarjetas (hilo, perfil, mensajes, procesos, admin…):
+   todo el <main> es UNA tarjeta blanca, con los mismos radios que las noticias.
+   Asi no conviven dos fondos ni esquinas rectas con redondeadas. */
+[data-skin="comunidad"] main:not(:has(> .post)) { background: var(--card); border-radius: 18px; margin: 12px 12px 0; overflow: hidden; padding-bottom: 12px;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 6%, transparent), 0 6px 18px color-mix(in srgb, var(--fg) 4%, transparent); }
+@media (min-width: 641px) { [data-skin="comunidad"] main:not(:has(> .post)) { margin-bottom: calc(var(--bottom-h) + 56px); padding-bottom: 12px; } }
+[data-skin="comunidad"] main:not(:has(> .post)) .notice { margin: 12px 16px 0; }
+[data-skin="comunidad"] main:not(:has(> .post)) > .notice:first-child, [data-skin="comunidad"] main:not(:has(> .post)) > nav.sub + .notice { margin-top: 12px; }
+[data-skin="comunidad"] .hilo .post.main { padding: 16px 16px 8px; }
+[data-skin="comunidad"] .hilo .post.main > .av, [data-skin="comunidad"] .hilo .post.main > .avl .av { width: 46px; height: 46px; font-size: 20px; margin-right: 12px; }
+[data-skin="comunidad"] .hilo .post.main .l1 { white-space: normal; line-height: 1.3; min-height: 46px; display: flex; flex-direction: column; justify-content: center; font-size: 16px; }
+[data-skin="comunidad"] .hilo .post.main .l1 .meta { display: block; font-size: 13px; }
+[data-skin="comunidad"] .hilo .post.main .l1 .meta .sep { display: none; }
+[data-skin="comunidad"] .hilo .main h2 { font-family: var(--sans); font-weight: 700; letter-spacing: -.01em; font-size: 22px; clear: left; margin-top: 10px; }
+[data-skin="comunidad"] .hilo .main .life { display: none; }
+[data-skin="comunidad"] .thread:last-child { border-bottom: 0; }
+/* en el perfil publico (cabecera + tarjetas de envios) la cabecera tambien es tarjeta */
+[data-skin="comunidad"] main:has(> .post) > .profile { background: var(--card); border: 0; border-radius: 18px; margin: 12px 12px 0;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 6%, transparent), 0 6px 18px color-mix(in srgb, var(--fg) 4%, transparent); }
+[data-skin="comunidad"] main:has(> .post) > .end, [data-skin="comunidad"] main:has(> .post) > nav.pages { background: transparent; }
 [data-skin="comunidad"] .dock, [data-skin="comunidad"] footer.inflow { background: var(--card); }
 
 /* ---- DELTA: publicacion impresa. Fondo crema, casi monocromo (gris y crema;
