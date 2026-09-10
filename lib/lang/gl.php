@@ -406,4 +406,17 @@ return [
 'Aspecto' => 'Aspecto',
 'Como el sistema' => 'Como o sistema',
 'Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Oito idiomas: castelán, catalán, éuscaro, galego, inglés, francés, alemán e italiano. Instálase como app no móbil, con mensaxes privadas entre rexistrados. Nada disto cambia o que ves: só como o ves.',
+// fuentes externas (/fuente.php)
+'Fuentes' => 'Fontes',
+'Esa fuente no existe.' => 'Esa fonte non existe.',
+'Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.' => 'Só lectura: o que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí non se vota nin se comenta: o titular leva ao artigo e os comentarios, ao fío orixinal.',
+'Candidatas: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.' => 'Candidatas: as novas das últimas %d h con polo menos %d votos, ordenadas por votos.',
+'Se lee cada %d min · última lectura: %s.' => 'Lese cada %d min · última lectura: %s.',
+'todavía no' => 'aínda non',
+'No hay nada en esta vista ahora mismo.' => 'Non hai nada nesta vista agora mesmo.',
+'El lector aún no ha pasado por esta fuente.' => 'O lector aínda non pasou por esta fonte.',
+'comentarios en %s' => 'comentarios en %s',
+'ver en %s' => 'ver en %s',
+'%s visto desde Deltha' => '%s visto desde Deltha',
+'portada' => 'portada',
 ];

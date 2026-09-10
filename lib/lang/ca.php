@@ -406,4 +406,17 @@ return [
 'Aspecto' => 'Aspecte',
 'Como el sistema' => 'Com el sistema',
 'Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Vuit idiomes: castellà, català, èuscar, gallec, anglès, francès, alemany i italià. S\'instal·la com a app al mòbil, amb missatges privats entre registrats. Res d\'això no canvia el que veus: només com ho veus.',
+// fuentes externas (/fuente.php)
+'Fuentes' => 'Fonts',
+'Esa fuente no existe.' => 'Aquesta font no existeix.',
+'Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.' => 'Només lectura: el que passa a <a href="%s" rel="noopener">%s</a>, vist des de Deltha. Aquí no es vota ni es comenta: el titular porta a l’article i els comentaris, al fil original.',
+'Candidatas: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.' => 'Candidates: les noves de les últimes %d h amb almenys %d vots, ordenades per vots.',
+'Se lee cada %d min · última lectura: %s.' => 'Es llegeix cada %d min · última lectura: %s.',
+'todavía no' => 'encara no',
+'No hay nada en esta vista ahora mismo.' => 'Ara mateix no hi ha res en aquesta vista.',
+'El lector aún no ha pasado por esta fuente.' => 'El lector encara no ha passat per aquesta font.',
+'comentarios en %s' => 'comentaris a %s',
+'ver en %s' => 'veure a %s',
+'%s visto desde Deltha' => '%s vist des de Deltha',
+'portada' => 'portada',
 ];

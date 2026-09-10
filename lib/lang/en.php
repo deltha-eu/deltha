@@ -445,4 +445,17 @@ return [
 'Volver al chat' => 'Back to the chat',
 'Reportar mensaje' => 'Report message',
 'Reportar un mensaje del chat' => 'Report a chat message',
+// fuentes externas (/fuente.php)
+'Fuentes' => 'Sources',
+'Esa fuente no existe.' => 'That source does not exist.',
+'Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.' => 'Read only: what is happening on <a href="%s" rel="noopener">%s</a>, seen from Deltha. No voting or commenting here: the headline goes to the article and the comments to the original thread.',
+'Candidatas: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.' => 'Candidates: the new ones from the last %d h with at least %d votes, sorted by votes.',
+'Se lee cada %d min · última lectura: %s.' => 'Read every %d min · last read: %s.',
+'todavía no' => 'not yet',
+'No hay nada en esta vista ahora mismo.' => 'There is nothing in this view right now.',
+'El lector aún no ha pasado por esta fuente.' => 'The reader has not visited this source yet.',
+'comentarios en %s' => 'comments on %s',
+'ver en %s' => 'see on %s',
+'%s visto desde Deltha' => '%s seen from Deltha',
+'portada' => 'front page',
 ];
