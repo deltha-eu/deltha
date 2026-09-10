@@ -302,8 +302,8 @@ CREATE TABLE source_items (
 
 INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min) VALUES
 ('meneame',  'agregador', 'Menéame',          'https://www.meneame.net/',        NULL, 'orange', NULL, 'https://www.meneame.net/rss', 'https://www.meneame.net/rss?status=queued', 5),
-('jotdown',  'medio',     'Jot Down',         'https://www.jotdown.es/',         'Contemporary Culture Mag', '', 3, 'https://www.jotdown.es/feed/', '', 15),
-('mercurio', 'medio',     'Revista Mercurio', 'https://www.revistamercurio.es/', 'Revista de libros y cultura', '', 3, 'https://revistamercurio.es/feed/', '', 15);
+('jotdown',  'medio',     'Jot Down',         'https://www.jotdown.es/',         'Contemporary Culture Mag', '', 3, 'https://www.jotdown.es/feed/', '', 60),
+('mercurio', 'medio',     'Revista Mercurio', 'https://www.revistamercurio.es/', 'Revista de libros y cultura', '', 3, 'https://revistamercurio.es/feed/', '', 60);
 UPDATE sources SET featured = 1 WHERE slug IN ('jotdown', 'mercurio');
 INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min, featured) VALUES
 ('anfibia',        'medio', 'Revista Anfibia',      'https://www.revistaanfibia.com/',      'Crónicas y ensayos desde Buenos Aires', '', 3, 'https://www.revistaanfibia.com/feed/',       '', 30, 1),

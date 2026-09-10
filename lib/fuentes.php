@@ -97,6 +97,7 @@ function fuente_actualizar(PDO $pdo, array $src): array {
     $log = []; $err = [];
     $timeout = max(3, (int)cfg('sources_timeout_sec', 8));
     $feeds = ['portada' => $src['feed_portada'], 'nuevas' => $src['feed_nuevas']];
+    fuente_imagen($src, [], true);   // contadores de imagenes a cero para esta fuente
     // primero la cola y luego la portada: si un item esta en las dos, gana 'portada'
     foreach (['nuevas', 'portada'] as $phase) {
         $url = trim((string)$feeds[$phase]);
@@ -156,8 +157,9 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
 /** Imagen de un item, como ruta relativa a /media, o null.
  *  Agregador: la miniatura del feed tal cual, en /media/fuentes. Medio: la imagen del feed o la og:image de la noticia,
  *  procesadas como un envio (recorte 4:3, JPEG limpio) en /media; con tope sources_og_per_run por pasada. */
-function fuente_imagen(array $src, array $it): ?string {
-    static $fails = 0, $og = 0;   // si el CDN no responde, no insistir item a item; y no descargar mas de N paginas por pasada
+function fuente_imagen(array $src, array $it, bool $reset = false): ?string {
+    static $fails = 0, $og = 0;   // contadores POR FUENTE (se reinician al empezar cada una): si su CDN no responde, no insistir item a item;
+    if ($reset) { $fails = 0; $og = 0; return null; }   // y no descargar mas de sources_og_per_run paginas de esa fuente por pasada
     if ($fails >= 3) return null;
     if (!fuente_es_medio($src)) {
         if (empty($it['thumb'])) return null;

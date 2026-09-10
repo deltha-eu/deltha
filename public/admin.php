@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $home = trim(post('home')); $fp = trim(post('feed_portada')); $fn = trim(post('feed_nuevas'));
         $skin = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
         $topic = (int)post('topic_id') ?: null;
-        $iv = max(1, min(1440, (int)(post('interval_min') ?: 15)));
+        $iv = max(1, min(1440, (int)(post('interval_min') ?: 60)));
         $status = post('status') === 'off' ? 'off' : 'ok';
         $descr = mb_substr(trim(post('descr')), 0, 200) ?: null;
         $featured = post('featured') === '1' ? 1 : 0;
@@ -66,6 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } catch (PDOException $e) { $out[] = 'Ese slug ya existe.'; }
         }
+    } elseif ($act === 'fuente_leer_todas') {
+        foreach (fuentes_activas($pdo) as $src) { try { $out = array_merge($out, fuente_actualizar($pdo, $src)); } catch (Throwable $e) { $out[] = "fuente {$src['slug']}: ERROR " . $e->getMessage(); } }
+        if (!$out) $out[] = 'No hay fuentes activas.';
     } elseif ($act === 'fuente_leer') {
         $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
         if ($src = $q->fetch()) { try { $out = array_merge($out, fuente_actualizar($pdo, $src)); } catch (Throwable $e) { $out[] = 'ERROR: ' . $e->getMessage(); } }
@@ -416,29 +419,35 @@ if ($tab === 'usuarios') {
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
-        $h .= "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name'] ?? '') . "\"></td><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\"></td></tr>";
-        $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td>";
-        $h .= "<td>estado</td><td><select name=\"status\"><option value=\"ok\">activa</option><option value=\"off\"" . (($f['status'] ?? 'ok') === 'off' ? ' selected' : '') . ">apagada</option></select></td></tr>";
-        $h .= "<tr><td>web</td><td colspan=\"3\"><input type=\"url\" name=\"home\" required value=\"" . h($f['home'] ?? '') . "\" placeholder=\"https://…\"></td></tr>";
-        $h .= "<tr><td>RSS</td><td colspan=\"3\"><input type=\"url\" name=\"feed_portada\" required value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/\"></td></tr>";
-        $h .= "<tr><td>RSS de la cola</td><td colspan=\"3\"><input type=\"url\" name=\"feed_nuevas\" value=\"" . h($f['feed_nuevas'] ?? '') . "\" placeholder=\"solo agregadores\"></td></tr>";
-        $h .= "<tr><td>descripción</td><td colspan=\"3\"><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h($f['descr'] ?? '') . "\"></td></tr>";
+        $h .= "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name'] ?? '') . "\"></td></tr>";
+        $h .= "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\" placeholder=\"minúsculas, números o guion: sale en /fuente.php?f=slug\"></td></tr>";
+        $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td></tr>";
+        $h .= "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($f['home'] ?? '') . "\" placeholder=\"https://…\"></td></tr>";
+        $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" required value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/\"></td></tr>";
+        $h .= "<tr><td>RSS de la cola</td><td><input type=\"url\" name=\"feed_nuevas\" value=\"" . h($f['feed_nuevas'] ?? '') . "\" placeholder=\"solo agregadores (vacío en un medio)\"></td></tr>";
+        $h .= "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h($f['descr'] ?? '') . "\"></td></tr>";
         $h .= "<tr><td>tema al enviar</td><td><select name=\"topic_id\"><option value=\"0\">— el que elija quien envía —</option>";
         foreach ($topics as $t) $h .= "<option value=\"{$t['topic_id']}\"" . ((int)($f['topic_id'] ?? 0) === (int)$t['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
-        $h .= "</select></td><td>plantilla</td><td><select name=\"skin\"><option value=\"\">la de cada cual</option>";
+        $h .= "</select></td></tr>";
+        $h .= "<tr><td>plantilla</td><td><select name=\"skin\"><option value=\"\">la de cada cual</option>";
         foreach (DDD_SKINS as $k => $v) $h .= "<option value=\"$k\"" . (($f['skin'] ?? '') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
         $h .= "</select></td></tr>";
-        $h .= "<tr><td>cada (min)</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . (int)($f['interval_min'] ?? 15) . "\" style=\"width:80px\"></td><td><label><input type=\"checkbox\" name=\"featured\" value=\"1\"" . (!empty($f['featured']) ? ' checked' : '') . "> destacado</label></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
+        $h .= "<tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . (int)($f['interval_min'] ?? 60) . "\"> minutos</td></tr>";
+        $h .= "<tr><td>estado</td><td><select name=\"status\" class=\"auto\"><option value=\"ok\">activa</option><option value=\"off\"" . (($f['status'] ?? 'ok') === 'off' ? ' selected' : '') . ">apagada</option></select></td></tr>";
+        $h .= "<tr><td>destacado</td><td><label><input type=\"checkbox\" name=\"featured\" value=\"1\"" . (!empty($f['featured']) ? ' checked' : '') . "> la ven en el menú y el pie los anónimos y quien no ha elegido medios</label></td></tr>";
+        $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
         return $h . "</table></form>";
     };
     echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios.php\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, elegible por los usuarios en «Mis medios» (hasta <code>media_max_per_user</code>), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
-    foreach ($pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s ORDER BY s.kind, s.name") as $f) {
-        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a></summary>";
+    echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><button class=\"btn\">Leer todas las fuentes ahora</button><small>sin esperar al intervalo; tarda unos segundos por fuente (feeds e imágenes)</small></form>";
+    $rows = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s ORDER BY s.kind, s.name")->fetchAll();
+    foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
+    foreach ($rows as $f) {
+        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button></summary>";
         echo $fuente_form($f, 'fuente');
-        echo "<p style=\"display:flex;gap:8px\"><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">leer ahora</button></form>";
-        echo "<form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
+        echo "<p><form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
     }
-    echo "<h3>Nueva fuente</h3>" . $fuente_form(['interval_min' => 15], 'fuente_nueva');
+    echo "<h3>Nueva fuente</h3>" . $fuente_form(['interval_min' => 60], 'fuente_nueva');
 
 } elseif ($tab === 'logo') {
     echo "<h3>Logo de " . h(cfg('site_name')) . "</h3>";
