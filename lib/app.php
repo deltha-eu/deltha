@@ -525,11 +525,10 @@ function unread_msgs(): int {
 }
 function footer_links(): string {
     $h  = "<a href=\"/delta/\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a>";
-    // fuentes externas pintadas con Deltha: los agregadores (Meneame), los medios del usuario (o el catalogo) y el enlace a todos
+    // fuentes externas pintadas con Deltha: los agregadores (Meneame) y el enlace al catalogo de medios
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
         foreach (fuentes_activas($pdo, 'agregador') as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\" title=\"" . h(t('%s visto desde Deltha', $src['name'])) . "\">" . h($src['name']) . "</a>";
-        foreach (array_keys(DDD_MEDIA_KINDS) as $kind) foreach (medios_menu($pdo, user(), 0, $kind) as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\">" . h($src['name']) . "</a>";
         if (fuentes_activas($pdo, 'medio') || fuentes_activas($pdo, 'newsletter')) $h .= " · <a href=\"/medios.php\">" . t('Medios') . "</a>";
     }
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
