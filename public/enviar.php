@@ -11,6 +11,16 @@ $err = null;
 $step = post('step') ?: '1';
 $f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null];
 
+// Prerrelleno por GET (boton «enviar a Nuevas» de un medio en /fuente.php, o un marcador): ?url=…&title=…&content=…&topic=ID
+// equivale a haber pasado el paso 1 con esa URL; titular y entradilla del feed mandan sobre los de la pagina si vienen.
+$pre = null;
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
+    $pre = ['title' => mb_substr(trim((string)($_GET['title'] ?? '')), 0, 200), 'content' => mb_substr(trim((string)($_GET['content'] ?? '')), 0, 2000), 'topic' => (int)($_GET['topic'] ?? 0)];
+    $_POST = ['step' => '1', 'url' => trim((string)$_GET['url'])];
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $step = '1';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['url'] = post('url');
     if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }
@@ -27,6 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($f['url'] !== '') {
             $m = extraer_meta($f['url']);
             $f['title'] = $m['title']; $f['content'] = $m['description']; $f['image'] = $m['image'];
+            if ($pre) {
+                if ($pre['title'] !== '') $f['title'] = $pre['title'];
+                if ($pre['content'] !== '') $f['content'] = $pre['content'];
+                if ($pre['topic'] && in_array($pre['topic'], array_column($topics, 'topic_id'), false)) $f['topic'] = $pre['topic'];
+            }
         }
         $step = '2';
     } elseif (!$err) {

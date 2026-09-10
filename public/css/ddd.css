@@ -2044,3 +2044,11 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="flujo"] .post.ext .thumb { float: none; grid-area: media; width: 120px; height: 90px; margin: 0; }
 [data-skin="manga"] .post.ext .thumb, [data-skin="retro"] .post.ext .thumb { filter: grayscale(1) contrast(1.15); border-radius: 0; }
 .side .mod.fuente .row b .i { width: 13px; height: 13px; }
+/* medios («Mis medios»): boton «enviar a Nuevas» y marca «en Deltha» en cada noticia; catalogo /medios.php */
+.post.ext.medio .actions .send { color: var(--accent); font-weight: 600; }
+.post.ext.medio .actions .send .i { width: 17px; height: 17px; }
+.post.ext.medio .actions .sent { color: var(--muted); }
+.fz.medio .mine { color: var(--accent); font-weight: 600; font-size: 12px; margin-left: 4px; }
+h3.sec { margin: 18px 16px 4px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+form.plain select.media { margin-bottom: 6px; }
+.rail-dd.media .list a.reset { color: var(--accent); }

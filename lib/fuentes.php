@@ -2,32 +2,37 @@
 /**
  * lib/fuentes.php — fuentes externas «pintadas» con Deltha (solo lectura).
  *
- * Una fuente (tabla sources) es otro sitio con RSS: Menéame, para empezar. El cron lee sus
- * feeds (portada y cola) cada interval_min minutos y guarda los items en source_items,
- * uno por id externo, actualizando fase, votos y comentarios en cada pasada. Nada de esto
- * entra en stories, en el δ, en Procesos ni en las estadisticas: se ve en /fuente.php?f=slug
- * con el aspecto de Deltha, y cada titular lleva al articulo; los comentarios, al hilo original.
+ * Una fuente (tabla sources) es otro sitio con RSS. Dos tipos (sources.kind):
+ *  - agregador (Menéame): feed de portada y feed de cola, fases nuevas -> portada, votos y comentarios de la
+ *    fuente; se ve en /fuente.php?f=slug con Portada / Candidatas / Nuevas.
+ *  - medio (Jot Down, Revista Mercurio...): un solo feed, sin fases ni votos; cada noticia lleva un boton
+ *    «enviar a Nuevas» que abre /enviar.php prerrellenado. Cada usuario elige hasta media_max_per_user medios
+ *    en su perfil («Mis medios», tabla user_media) y los tiene en el rail bajo Idioma y en el pie.
  *
- * Fases: 'portada' (feed_portada) y 'nuevas' (feed_nuevas). Las «candidatas» no se guardan:
- * son las nuevas de las ultimas sources_popular_hours horas con >= sources_popular_min_votes
- * votos, por votos (lo que Meneame llama Populares; su RSS no las sirve aparte).
+ * El cron (promocionar.php, cada minuto) llama a fuentes_tick(): lee los feeds de cada fuente cuando vence su
+ * interval_min y guarda los items en source_items, uno por id externo (meneame:link_id o guid), actualizando
+ * fase, votos y comentarios. Nada de esto entra en stories, en el δ, en Procesos ni en las estadisticas.
  *
- * Miniaturas: se descargan a /media/fuentes (politica del sitio: sin recursos de terceros).
+ * Imagenes (politica del sitio: sin recursos de terceros): la miniatura del agregador se descarga tal cual a
+ * /media/fuentes (image = 'fuentes/x.webp'); en los medios se usa la imagen del feed o, si no hay, la og:image
+ * de la noticia, procesada como en un envio (imagen_desde_bytes -> /media/x.jpg, image = 'x.jpg').
  */
 declare(strict_types=1);
-require_once __DIR__ . '/imagen.php';   // http_get()
+require_once __DIR__ . '/imagen.php';   // http_get(), imagen_desde_bytes(), imagen_desde_og()
 
 const DDD_FUENTES_DIR = DDD_MEDIA_DIR . '/fuentes';
 
 function fuentes_on(): bool { return (string)cfg('sources_enabled', '1') === '1'; }
 
-/** Fuentes activas (cacheado por peticion). */
-function fuentes_activas(PDO $pdo): array {
+/** Fuentes activas (cacheado por peticion). $kind: '' todas | agregador | medio */
+function fuentes_activas(PDO $pdo, string $kind = ''): array {
     static $rows = null;
-    if ($rows !== null) return $rows;
-    try { $rows = $pdo->query("SELECT * FROM sources WHERE status = 'ok' ORDER BY source_id")->fetchAll(); }
-    catch (Throwable $e) { $rows = []; }   // tabla aun sin crear
-    return $rows;
+    if ($rows === null) {
+        try { $rows = $pdo->query("SELECT * FROM sources WHERE status = 'ok' ORDER BY kind, name")->fetchAll(); }
+        catch (Throwable $e) { $rows = []; }   // tabla aun sin crear
+    }
+    if ($kind === '') return $rows;
+    return array_values(array_filter($rows, fn($s) => ($s['kind'] ?? 'agregador') === $kind));
 }
 function fuente_by_slug(PDO $pdo, string $slug): ?array {
     foreach (fuentes_activas($pdo) as $s) if ($s['slug'] === $slug) return $s;
@@ -35,6 +40,34 @@ function fuente_by_slug(PDO $pdo, string $slug): ?array {
 }
 function fuente_url(array $src, string $view = ''): string {
     return '/fuente.php?f=' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
+}
+function fuente_es_medio(array $src): bool { return ($src['kind'] ?? 'agregador') === 'medio'; }
+
+/** Medios elegidos por un usuario (en su orden). Vacio si no ha elegido. */
+function mis_medios(PDO $pdo, ?array $u): array {
+    static $cache = [];
+    if (!$u) return [];
+    $uid = (int)$u['user_id'];
+    if (isset($cache[$uid])) return $cache[$uid];
+    try {
+        $st = $pdo->prepare("SELECT s.* FROM user_media um JOIN sources s ON s.source_id = um.source_id WHERE um.user_id = ? AND s.status = 'ok' AND s.kind = 'medio' ORDER BY um.pos");
+        $st->execute([$uid]);
+        return $cache[$uid] = $st->fetchAll();
+    } catch (Throwable $e) { return $cache[$uid] = []; }
+}
+/** Guarda la eleccion (lista de source_id, en orden; se recorta a media_max_per_user y a medios activos). */
+function guardar_mis_medios(PDO $pdo, int $uid, array $ids): void {
+    $ok = array_column(fuentes_activas($pdo, 'medio'), 'source_id');
+    $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn($i) => in_array($i, $ok, false))));
+    $ids = array_slice($ids, 0, max(1, (int)cfg('media_max_per_user', 3)));
+    $pdo->prepare("DELETE FROM user_media WHERE user_id = ?")->execute([$uid]);
+    $ins = $pdo->prepare("INSERT INTO user_media (user_id, source_id, pos) VALUES (?,?,?)");
+    foreach ($ids as $i => $sid) $ins->execute([$uid, $sid, $i + 1]);
+}
+/** Medios que se ofrecen en el menu y el pie: los elegidos por el usuario o, si no hay eleccion (o sin cuenta), el catalogo (hasta $max). */
+function medios_menu(PDO $pdo, ?array $u, int $max = 6): array {
+    $mine = mis_medios($pdo, $u);
+    return $mine ?: array_slice(fuentes_activas($pdo, 'medio'), 0, $max);
 }
 
 /* ---- lectura de feeds (cron) ---------------------------------------- */
@@ -77,7 +110,7 @@ function fuente_actualizar(PDO $pdo, array $src): array {
     $st->execute([$src['source_id'], $keep]);
     $old = $st->fetchAll();
     if ($old) {
-        foreach ($old as $o) if ($o['image'] && is_file(DDD_FUENTES_DIR . '/' . $o['image'])) @unlink(DDD_FUENTES_DIR . '/' . $o['image']);
+        foreach ($old as $o) if ($o['image'] && is_file(DDD_MEDIA_DIR . '/' . $o['image'])) @unlink(DDD_MEDIA_DIR . '/' . $o['image']);
         $pdo->prepare("DELETE FROM source_items WHERE source_id = ? AND last_seen < NOW() - INTERVAL ? DAY")->execute([$src['source_id'], $keep]);
         $log[] = "fuente {$src['slug']}: " . count($old) . " caducados";
     }
@@ -92,7 +125,6 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
     $sel = $pdo->prepare("SELECT item_id, phase, image FROM source_items WHERE source_id = ? AND ext_id = ?");
     $ins = $pdo->prepare("INSERT INTO source_items (source_id, ext_id, phase, title, url, thread_url, source, topic, author, content, image, votes, negatives, comments, pub_date)
                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    // al pasar a portada se toma la fecha de publicacion del feed; en la misma fase la fecha no cambia
     // (la fecha nueva se decide en PHP: MySQL evalua los SET de izquierda a derecha y phase ya tendria el valor nuevo)
     $upd = $pdo->prepare("UPDATE source_items SET phase = ?, title = ?, source = COALESCE(?, source), topic = COALESCE(?, topic), content = IF(? = '', content, ?),
                           image = COALESCE(image, ?), votes = ?, negatives = ?, comments = ?, pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");
@@ -104,7 +136,7 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
             $pdo->prepare("UPDATE source_items SET last_seen = NOW() WHERE item_id = ?")->execute([$row['item_id']]);
             continue;
         }
-        $img = ($row && $row['image']) ? null : fuente_miniatura($src, $it);
+        $img = ($row && $row['image']) ? null : fuente_imagen($src, $it);
         if ($row) {
             $newDate = $row['phase'] === $phase ? null : $it['pub_date'];   // cambio de fase (nuevas -> portada): fecha de publicacion
             $upd->execute([$phase, $it['title'], $it['source'], $it['topic'], $it['content'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $newDate, $row['item_id']]);
@@ -117,22 +149,36 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
     return [$new, $updated];
 }
 
-/** Descarga la miniatura del item a /media/fuentes/<slug>-<ext_id>.<ext>. null si no hay o falla. */
-function fuente_miniatura(array $src, array $it): ?string {
-    static $fails = 0;   // si el CDN de la fuente no responde, no insistir item a item (cada intento agota su timeout)
-    if (empty($it['thumb']) || $fails >= 3) return null;
-    $bytes = http_get($it['thumb'], 3, 600000);
-    if ($bytes === null || strlen($bytes) < 100) { $fails++; return null; }
-    $info = @getimagesizefromstring($bytes);
-    if (!$info) return null;
-    $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'][$info['mime'] ?? ''] ?? null;
-    if (!$ext) return null;
-    if (!is_dir(DDD_FUENTES_DIR)) @mkdir(DDD_FUENTES_DIR, 0775, true);
-    $name = preg_replace('/[^a-z0-9]/', '', $src['slug']) . '-' . preg_replace('/[^A-Za-z0-9_-]/', '', $it['ext_id']) . '.' . $ext;
-    return @file_put_contents(DDD_FUENTES_DIR . '/' . $name, $bytes) ? $name : null;
+/** Imagen de un item, como ruta relativa a /media, o null.
+ *  Agregador: la miniatura del feed tal cual, en /media/fuentes. Medio: la imagen del feed o la og:image de la noticia,
+ *  procesadas como un envio (recorte 4:3, JPEG limpio) en /media; con tope sources_og_per_run por pasada. */
+function fuente_imagen(array $src, array $it): ?string {
+    static $fails = 0, $og = 0;   // si el CDN no responde, no insistir item a item; y no descargar mas de N paginas por pasada
+    if ($fails >= 3) return null;
+    if (!fuente_es_medio($src)) {
+        if (empty($it['thumb'])) return null;
+        $bytes = http_get($it['thumb'], 3, 600000);
+        if ($bytes === null || strlen($bytes) < 100) { $fails++; return null; }
+        $info = @getimagesizefromstring($bytes);
+        $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'][$info['mime'] ?? ''] ?? null;
+        if (!$ext) return null;
+        if (!is_dir(DDD_FUENTES_DIR)) @mkdir(DDD_FUENTES_DIR, 0775, true);
+        $name = preg_replace('/[^a-z0-9]/', '', $src['slug']) . '-' . preg_replace('/[^A-Za-z0-9_-]/', '', $it['ext_id']) . '.' . $ext;
+        return @file_put_contents(DDD_FUENTES_DIR . '/' . $name, $bytes) ? 'fuentes/' . $name : null;
+    }
+    if (!empty($it['thumb'])) {
+        $bytes = http_get($it['thumb'], 3, (int)cfg('img_max_bytes', 6000000));
+        if ($bytes === null) $fails++;
+        elseif ($n = imagen_desde_bytes($bytes)) return $n;
+    }
+    if ((string)cfg('sources_og_image', '1') === '1' && $og < max(0, (int)cfg('sources_og_per_run', 10))) {
+        $og++;
+        return imagen_desde_og($it['url']);
+    }
+    return null;
 }
 
-/** Parser del RSS 2.0 de Meneame (rss2.php) y, en general, de cualquier RSS con guid/link.
+/** Parser de RSS 2.0: el de Meneame (rss2.php, espacio de nombres meneame:) y el generico (WordPress y similares).
  *  Devuelve items normalizados: ext_id, title, url, thread_url, source, topic, author, content, thumb, votes, negatives, comments, pub_date. */
 function fuentes_parse_rss(string $xml): array {
     $prev = libxml_use_internal_errors(true);
@@ -144,31 +190,46 @@ function fuentes_parse_rss(string $xml): array {
         $mn = $i->children('http://meneame.net/faq-es.php');
         $md = $i->children('http://search.yahoo.com/mrss/');
         $dc = $i->children('http://purl.org/dc/elements/1.1/');
-        $thread = trim((string)$i->link);
-        $extId = trim((string)($mn->link_id ?? ''));
-        if ($extId === '') $extId = substr(sha1(trim((string)$i->guid) ?: $thread), 0, 32);
-        if ($extId === '' || $thread === '') continue;
+        $ce = $i->children('http://purl.org/rss/1.0/modules/content/');
+        $link = trim((string)$i->link);
+        if ($link === '') continue;
         $desc = (string)$i->description;
-        // «noticia original» (dominio) al final de la descripcion de Meneame
-        $source = null;
-        if (preg_match('/noticia original<\/a>\s*\(([^)]+)\)/u', $desc, $m)) $source = strtolower(preg_replace('/^www\./', '', trim($m[1])));
-        // articulo: en Meneame /go?id=N redirige al original; si no hay link_id, el propio link
-        $url = $mn->link_id ? 'https://www.meneame.net/go?id=' . (int)$mn->link_id : $thread;
-        // entradilla: solo el texto, sin la miniatura ni las etiquetas ni el enlace final
-        $txt = preg_replace('/<p><strong>etiquetas<\/strong>.*$/su', '', $desc);
-        $txt = preg_replace('/<p>[^<]*<a href="[^"]*go\?id=\d+"[^>]*>noticia original<\/a>.*$/su', '', $txt);
+        $full = isset($ce->encoded) ? (string)$ce->encoded : '';
+        $meneame = isset($mn->link_id) && trim((string)$mn->link_id) !== '';
+        $extId = $meneame ? trim((string)$mn->link_id) : substr(sha1(trim((string)$i->guid) ?: $link), 0, 32);
+
+        // imagen: media:content / media:thumbnail / enclosure / primer <img> del contenido
+        $thumb = '';
+        if (isset($md->content)) foreach ($md->content as $mc) { $u = trim((string)$mc->attributes()->url); if ($u !== '' && (!isset($mc->attributes()->medium) || (string)$mc->attributes()->medium === 'image')) { $thumb = $u; break; } }
+        if ($thumb === '' && isset($md->thumbnail)) $thumb = trim((string)$md->thumbnail->attributes()->url);
+        if ($thumb === '' && isset($i->enclosure) && str_starts_with((string)$i->enclosure->attributes()->type, 'image/')) $thumb = trim((string)$i->enclosure->attributes()->url);
+        if ($thumb === '' && preg_match("/<img[^>]+src=['\"]([^'\"]+)['\"]/i", $full . $desc, $m)) $thumb = html_entity_decode($m[1]);
+
+        if ($meneame) {
+            $source = null;
+            if (preg_match('/noticia original<\/a>\s*\(([^)]+)\)/u', $desc, $m)) $source = strtolower(preg_replace('/^www\./', '', trim($m[1])));
+            $url = 'https://www.meneame.net/go?id=' . (int)$mn->link_id;   // redirige al articulo original
+            $thread = $link;
+            $txt = preg_replace('/<p><strong>etiquetas<\/strong>.*$/su', '', $desc);
+            $txt = preg_replace('/<p>[^<]*<a href="[^"]*go\?id=\d+"[^>]*>noticia original<\/a>.*$/su', '', $txt);
+            $topic = trim((string)($mn->sub ?? '')) ?: null;
+        } else {
+            $url = $link;                                                  // el articulo es el propio enlace
+            $thread = trim((string)$i->comments) ?: $link;
+            $source = source_of($link);
+            $txt = $desc !== '' ? $desc : $full;
+            $topic = isset($i->category) ? trim((string)$i->category[0]) : null;
+        }
         $txt = trim(html_entity_decode(strip_tags(preg_replace('/<img[^>]*>/i', '', $txt)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-        $txt = preg_replace('/\s+/u', ' ', $txt);
-        $thumb = isset($md->thumbnail) ? trim((string)$md->thumbnail->attributes()->url) : '';
-        if ($thumb === '' && preg_match("/<img[^>]+src=['\"]([^'\"]+)['\"]/i", $desc, $m)) $thumb = $m[1];
-        $ts = strtotime((string)$i->pubDate) ?: time();
+        $txt = trim(preg_replace(['/\s+/u', '/\s*\[…\]\s*$/u', '/\s*\[\.\.\.\]\s*$/u'], [' ', '…', '…'], $txt));
+        $ts = strtotime((string)$i->pubDate) ?: (strtotime((string)($dc->date ?? '')) ?: time());
         $out[] = [
             'ext_id'     => $extId,
             'title'      => mb_substr(trim(html_entity_decode((string)$i->title, ENT_QUOTES | ENT_HTML5, 'UTF-8')), 0, 200),
             'url'        => mb_substr($url, 0, 600),
             'thread_url' => mb_substr($thread, 0, 600),
             'source'     => $source ? mb_substr($source, 0, 100) : null,
-            'topic'      => isset($mn->sub) && trim((string)$mn->sub) !== '' ? mb_substr(trim((string)$mn->sub), 0, 48) : (isset($i->category) ? mb_substr(trim((string)$i->category[0]), 0, 48) : null),
+            'topic'      => $topic ? mb_substr($topic, 0, 48) : null,
             'author'     => mb_substr(trim((string)($mn->user ?? $dc->creator ?? '')), 0, 64) ?: null,
             'content'    => mb_substr($txt, 0, 2000),
             'thumb'      => preg_match('#^https?://#i', $thumb) ? $thumb : '',
@@ -192,23 +253,50 @@ function fuente_vista_sql(string $view): array {
     return [$view === 'nuevas' ? "i.phase = 'nuevas' ORDER BY i.pub_date DESC" : "i.phase = 'portada' ORDER BY i.pub_date DESC", []];
 }
 
-/** Post de un item externo: mismo aspecto que story_post(), sin votar, sin comentar, sin δ. */
-function fuente_post(array $src, array $i, string $mode = 'full'): void {
+/** URL del formulario de envio prerrellenado con una noticia de un medio. */
+function fuente_enviar_url(array $src, array $i): string {
+    $q = ['url' => $i['url'], 'title' => $i['title'], 'content' => mb_substr((string)$i['content'], 0, 600)];
+    if (!empty($src['topic_id'])) $q['topic'] = (int)$src['topic_id'];
+    return '/enviar.php?' . http_build_query($q);
+}
+/** story_id de los envios ya hechos con estas URLs (para marcar «ya enviada» y enlazar al hilo). */
+function fuente_ya_enviadas(PDO $pdo, array $urls): array {
+    $urls = array_values(array_unique(array_filter($urls)));
+    if (!$urls) return [];
+    $st = $pdo->prepare("SELECT url, story_id FROM stories WHERE url IN (" . implode(',', array_fill(0, count($urls), '?')) . ") AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");
+    $st->execute($urls);
+    return $st->fetchAll(PDO::FETCH_KEY_PAIR);
+}
+
+/** Post de un item externo: mismo aspecto que story_post(), sin votar, sin comentar, sin δ.
+ *  $sent: [url => story_id] de los ya enviados a Deltha (medios). */
+function fuente_post(array $src, array $i, string $mode = 'full', array $sent = []): void {
+    $medio = fuente_es_medio($src);
     $author = $i['author'] ?: $src['name'];
-    echo "<article class=\"post $mode ext\" id=\"x{$i['item_id']}\">";
+    $rel = 'rel="noopener nofollow"';
+    echo "<article class=\"post $mode ext" . ($medio ? ' medio' : '') . "\" id=\"x{$i['item_id']}\">";
     echo avatar((float)cfg('aura_anon', 5), $author);
     echo "<div class=\"pc\">";
     $meta = [];
+    if ($medio) $meta[] = "<a href=\"" . h(fuente_url($src)) . "\">" . h($src['name']) . "</a>";
     if ($i['topic'])  $meta[] = h($i['topic']);
-    if ($i['source']) $meta[] = h($i['source']);
+    if (!$medio && $i['source']) $meta[] = h($i['source']);
     $meta[] = h(hace($i['pub_date']));
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . implode(' · ', $meta) . "</span></div>";
-    if ($i['image']) echo "<a class=\"thumb\" href=\"" . h($i['url']) . "\" rel=\"noopener nofollow\" style=\"background-image:url('/media/fuentes/" . h($i['image']) . "')\"></a>";
-    echo "<h2><a href=\"" . h($i['url']) . "\" rel=\"noopener nofollow\">" . h($i['title']) . "</a></h2>";
+    $isThumb = $i['image'] && str_starts_with($i['image'], 'fuentes/');
+    if ($isThumb) echo "<a class=\"thumb\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a>";
+    echo "<h2><a href=\"" . h($i['url']) . "\" $rel>" . h($i['title']) . "</a></h2>";
     if ($i['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($i['content'], 0, $mode === 'full' ? 240 : 160, '…')) . "</p>";
+    if ($i['image'] && !$isThumb) echo "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . "\"><a class=\"pic\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>";
     echo "<div class=\"actions\">";
-    echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
-    echo "<span class=\"vote\"><span>" . icon('up') . "<span>" . (int)$i['votes'] . "</span></span><span>" . icon('down') . "<span>" . (int)$i['negatives'] . "</span></span></span>";
-    echo "<a class=\"share ext\" href=\"" . h($i['thread_url']) . "\" rel=\"noopener\">" . icon('link') . "<span>" . h(t('ver en %s', $src['name'])) . "</span></a>";
+    if ($medio) {
+        if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo.php?id=" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
+        elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia a Nuevas')) . "\">" . icon('plus') . "<span>" . t('enviar a Nuevas') . "</span></a>";
+        echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h(t('leer en %s', $src['name'])) . "</span></a>";
+    } else {
+        echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
+        echo "<span class=\"vote\"><span>" . icon('up') . "<span>" . (int)$i['votes'] . "</span></span><span>" . icon('down') . "<span>" . (int)$i['negatives'] . "</span></span></span>";
+        echo "<a class=\"share ext\" href=\"" . h($i['thread_url']) . "\" rel=\"noopener\">" . icon('link') . "<span>" . h(t('ver en %s', $src['name'])) . "</span></a>";
+    }
     echo "</div></div></article>";
 }

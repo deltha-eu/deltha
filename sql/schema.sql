@@ -54,6 +54,9 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('sources_popular_min_votes','5','Fuentes: votos minimos de una nueva para salir en «candidatas»'),
 ('sources_keep_days',    '7',    'Fuentes: dias que se guardan los items que ya no aparecen en los feeds'),
 ('sources_timeout_sec',  '8',    'Fuentes: timeout al leer cada feed'),
+('media_max_per_user',   '3',    'Medios que puede elegir cada usuario en su perfil («Mis medios»)'),
+('sources_og_image',     '1',    '1 = para los medios sin imagen en el RSS se busca la og:image de la noticia'),
+('sources_og_per_run',   '10',   'Fuentes: og:image maximas que se descargan en cada pasada del cron'),
 ('mod_model',           'qwen2.5:7b-instruct', 'Modelo Ollama (cuando mod_enabled=1)'),
 ('mod_ollama_url',      'http://127.0.0.1:11434/api/chat', 'Endpoint Ollama'),
 ('mod_timeout_sec',     '30',   'Timeout modelo'),
@@ -255,9 +258,12 @@ CREATE TABLE communities (
 CREATE TABLE sources (
     source_id    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     slug         VARCHAR(24) NOT NULL,                      -- /fuente.php?f=slug
+    kind         ENUM('agregador','medio') NOT NULL DEFAULT 'medio',   -- agregador: fases y votos (Meneame) | medio: solo ultimas noticias, elegible en «Mis medios»
     name         VARCHAR(48) NOT NULL,
     home         VARCHAR(200) NOT NULL,                     -- web de la fuente
+    descr        VARCHAR(200) DEFAULT NULL,
     skin         VARCHAR(16) NOT NULL DEFAULT '',           -- plantilla forzada al verla ('' = la de cada cual)
+    topic_id     SMALLINT UNSIGNED DEFAULT NULL,            -- tema propuesto al enviar una noticia de este medio
     feed_portada VARCHAR(300) NOT NULL,                     -- RSS de lo publicado
     feed_nuevas  VARCHAR(300) NOT NULL DEFAULT '',          -- RSS de la cola (vacio = la fuente no tiene cola)
     interval_min SMALLINT UNSIGNED NOT NULL DEFAULT 5,      -- cada cuantos minutos se leen los feeds
@@ -279,7 +285,7 @@ CREATE TABLE source_items (
     topic       VARCHAR(48) DEFAULT NULL,                   -- sub / categoria en la fuente
     author      VARCHAR(64) DEFAULT NULL,
     content     TEXT,                                       -- entradilla en texto plano
-    image       VARCHAR(80) DEFAULT NULL,                   -- miniatura descargada a /media/fuentes (sin hotlink)
+    image       VARCHAR(100) DEFAULT NULL,                  -- ruta relativa a /media: fuentes/x.webp (miniatura del agregador) o x.jpg (og:image procesada)
     votes       INT NOT NULL DEFAULT 0,
     negatives   INT NOT NULL DEFAULT 0,
     comments    INT NOT NULL DEFAULT 0,
@@ -293,5 +299,17 @@ CREATE TABLE source_items (
     CONSTRAINT fk_si_source FOREIGN KEY (source_id) REFERENCES sources(source_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-INSERT INTO sources (slug, name, home, skin, feed_portada, feed_nuevas, interval_min) VALUES
-('meneame', 'Menéame', 'https://www.meneame.net/', 'orange', 'https://www.meneame.net/rss', 'https://www.meneame.net/rss?status=queued', 5);
+INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min) VALUES
+('meneame',  'agregador', 'Menéame',          'https://www.meneame.net/',        NULL, 'orange', NULL, 'https://www.meneame.net/rss', 'https://www.meneame.net/rss?status=queued', 5),
+('jotdown',  'medio',     'Jot Down',         'https://www.jotdown.es/',         'Contemporary Culture Mag', '', 3, 'https://www.jotdown.es/feed/', '', 15),
+('mercurio', 'medio',     'Revista Mercurio', 'https://www.revistamercurio.es/', 'Revista de libros y cultura', '', 3, 'https://revistamercurio.es/feed/', '', 15);
+
+-- Medios elegidos por cada usuario («Mis medios», hasta config.media_max_per_user)
+CREATE TABLE user_media (
+    user_id   INT UNSIGNED NOT NULL,
+    source_id SMALLINT UNSIGNED NOT NULL,
+    pos       TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    PRIMARY KEY (user_id, source_id),
+    CONSTRAINT fk_um_user   FOREIGN KEY (user_id)   REFERENCES users(user_id)     ON DELETE CASCADE,
+    CONSTRAINT fk_um_source FOREIGN KEY (source_id) REFERENCES sources(source_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
