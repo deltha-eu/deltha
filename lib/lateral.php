@@ -146,21 +146,27 @@ function side_comunidades(PDO $pdo): void {
     echo "<p class=\"more\"><a href=\"/comunidades.php\">" . t('todas las comunidades') . "</a></p></section>";
 }
 
-/** Fuentes externas: los agregadores (Meneame, con votos) y los medios del usuario (o los primeros del catalogo), tres ultimas de cada uno
- *  enlazadas al articulo; «visto desde Deltha» lleva a /fuente.php. */
+/** Fuentes externas en la columna derecha: los agregadores (Meneame, tres ultimas de portada con votos) y, para medios y newsletters,
+ *  un modulo por grupo («Ultimo en medios», «Ultimo en substacks») con las cinco ultimas noticias de TODO el catalogo (no solo las
+ *  elegidas por el usuario), cada una con su medio; el enlace lleva al articulo. */
 function side_fuentes(PDO $pdo): void {
     require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
-    foreach (array_merge(fuentes_activas($pdo, 'agregador'), medios_menu($pdo, user(), 3), medios_menu($pdo, user(), 3, 'newsletter')) as $src) {
-        $medio = fuente_es_medio($src);
+    foreach (fuentes_activas($pdo, 'agregador') as $src) {
         $st = $pdo->prepare("SELECT title, url, votes FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
         $st->execute([$src['source_id']]);
-        $rows = $st->fetchAll();
-        if (!$rows) continue;
-        echo "<section class=\"mod fuente" . ($medio ? ' medio' : '') . "\"><h3>" . h($src['name']) . "<span>" . ($medio ? t('últimas') : t('portada')) . "</span></h3>";
-        foreach ($rows as $r) {
-            echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\">" . ($medio ? "<i class=\"n\">›</i>" : "<b>" . icon('up') . (int)$r['votes'] . "</b>") . "<span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
-        }
+        if (!($rows = $st->fetchAll())) continue;
+        echo "<section class=\"mod fuente\"><h3>" . h($src['name']) . "<span>" . t('portada') . "</span></h3>";
+        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . icon('up') . (int)$r['votes'] . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
         echo "<p class=\"more\"><a href=\"" . h(fuente_url($src)) . "\">" . t('%s visto desde Deltha', $src['name']) . "</a></p></section>";
+    }
+    foreach (['medio' => t('Último en medios'), 'newsletter' => t('Último en substacks')] as $kind => $title) {
+        $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug FROM source_items i JOIN sources s ON s.source_id = i.source_id
+                              WHERE s.kind = ? AND s.status = 'ok' ORDER BY i.pub_date DESC LIMIT 5");
+        $st->execute([$kind]);
+        if (!($rows = $st->fetchAll())) continue;
+        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php\">" . t('todos') . "</a></span></h3>";
+        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
+        echo "</section>";
     }
 }
