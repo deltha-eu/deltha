@@ -2073,3 +2073,5 @@ form.plain select.medsel { margin-bottom: 6px; }
    (con overflow: hidden, como en Orange, el flex los recortaba y solo se veia la primera linea de cada uno) */
 .side .mod, .side footer { flex: none; }
 .rail > * { flex: none; }
+/* Orange y Foro colocan el post en rejilla (.pc es display: contents): la miniatura de fuente ocupa la celda de la foto, no flota */
+[data-skin="orange"] .post.ext .thumb { float: none; grid-area: media; width: 96px; height: 72px; margin: 0; border-radius: 5px; align-self: start; }
