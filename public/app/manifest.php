@@ -3,7 +3,7 @@
 define('DDD_PUBLIC', true);
 require __DIR__ . '/../../lib/app.php';
 header('Content-Type: application/manifest+json; charset=utf-8');
-header('Cache-Control: public, max-age=3600');
+header('Cache-Control: no-cache');   // el vhost lo fija igual; sin esto el bloque de /app lo cachea 7 dias
 $name = (string)cfg('site_name', 'Deltha');
 $i192 = icon_src(192);
 echo json_encode([
