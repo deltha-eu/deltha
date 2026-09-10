@@ -48,6 +48,15 @@ function rail_skins(): void {
     $items = [];
     foreach (DDD_LANGS as $k => $v) $items[] = ["/cambiar-skin.php?l=$k", $v, $k === $cl, null];
     rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
+    // mis medios: los elegidos en el perfil o, sin eleccion / sin cuenta, el catalogo
+    global $pdo; require_once __DIR__ . '/fuentes.php';
+    if (fuentes_on() && ($medios = medios_menu($pdo, $u))) {
+        $mine = (bool)mis_medios($pdo, $u);
+        $items = [];
+        foreach ($medios as $m) $items[] = [fuente_url($m), $m['name'], false, null];
+        $items[] = $u ? ['/perfil.php#medios', $mine ? t('cambiar mis medios') : t('elegir mis medios'), false, null, 'reset'] : ['/login.php', t('entra para elegir los tuyos'), false, null, 'reset'];
+        rail_dd('news', t('Mis medios'), $mine ? t('%d elegidos', count($medios)) : t('catálogo'), $items, 'media');
+    }
 }
 
 /** Columna derecha. */
@@ -129,18 +138,20 @@ function side_comunidades(PDO $pdo): void {
     echo "<p class=\"more\"><a href=\"/comunidades.php\">" . t('todas las comunidades') . "</a></p></section>";
 }
 
-/** Fuentes externas (Meneame...): las tres ultimas de la portada de cada una, enlazadas al articulo; «ver todo» lleva a /fuente.php. */
+/** Fuentes externas: los agregadores (Meneame, con votos) y los medios del usuario (o los primeros del catalogo), tres ultimas de cada uno
+ *  enlazadas al articulo; «visto desde Deltha» lleva a /fuente.php. */
 function side_fuentes(PDO $pdo): void {
     require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
-    foreach (fuentes_activas($pdo) as $src) {
-        $st = $pdo->prepare("SELECT title, url, thread_url, votes, comments FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
+    foreach (array_merge(fuentes_activas($pdo, 'agregador'), medios_menu($pdo, user(), 3)) as $src) {
+        $medio = fuente_es_medio($src);
+        $st = $pdo->prepare("SELECT title, url, votes FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
         $st->execute([$src['source_id']]);
         $rows = $st->fetchAll();
         if (!$rows) continue;
-        echo "<section class=\"mod fuente\"><h3>" . h($src['name']) . "<span>" . t('portada') . "</span></h3>";
+        echo "<section class=\"mod fuente" . ($medio ? ' medio' : '') . "\"><h3>" . h($src['name']) . "<span>" . ($medio ? t('últimas') : t('portada')) . "</span></h3>";
         foreach ($rows as $r) {
-            echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . icon('up') . (int)$r['votes'] . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
+            echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\">" . ($medio ? "<i class=\"n\">›</i>" : "<b>" . icon('up') . (int)$r['votes'] . "</b>") . "<span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
         }
         echo "<p class=\"more\"><a href=\"" . h(fuente_url($src)) . "\">" . t('%s visto desde Deltha', $src['name']) . "</a></p></section>";
     }

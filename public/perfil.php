@@ -2,6 +2,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/imagen.php';
+require __DIR__ . '/../lib/fuentes.php';
 $u = user();
 if (!$u) redirect('/login.php');
 $err = null; $ok = null;
@@ -29,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('quitar') === '1' && $avatar) { @unlink(DDD_MEDIA_DIR . '/avatars/' . $avatar); $avatar = null; }
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $u['user_id']]);
+        if (fuentes_on()) try { guardar_mis_medios($pdo, (int)$u['user_id'], (array)($_POST['media'] ?? [])); } catch (Throwable $e) {}
         redirect('/perfil.php?ok=1');
     }
 }
@@ -61,5 +63,15 @@ foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) e
 echo "</optgroup><optgroup label=\"" . t('Una comunidad') . "\">";
 foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) echo "<option value=\"c:{$co['community_id']}\"" . (($u['landing'] ?? '') === "c:{$co['community_id']}" ? ' selected' : '') . ">" . h($co['name']) . "</option>";
 echo "</optgroup></select><small class=\"hint\">" . t('Se aplica al entrar con tu cuenta y al abrir Deltha desde fuera (un marcador, la app); la pestaña Portada sigue llevando a la portada.') . "</small>";
+if (fuentes_on() && ($catalogo = fuentes_activas($pdo, 'medio'))) {
+    $max = max(1, (int)cfg('media_max_per_user', 3));
+    $mine = array_column(mis_medios($pdo, $u), 'source_id');
+    echo "<label id=\"medios\">" . t('Mis medios') . "</label><small class=\"hint\">" . t('Hasta %d medios con RSS que verás con el aspecto de Deltha, en el menú lateral y en el pie; desde cada noticia puedes proponerla en Nuevas. El catálogo lo mantiene el sitio: <a href="/medios.php">ver todos</a>.', $max) . "</small>";
+    for ($k = 0; $k < $max; $k++) {
+        echo "<select name=\"media[]\" class=\"media\"><option value=\"\">" . t('— ninguno —') . "</option>";
+        foreach ($catalogo as $m) echo "<option value=\"{$m['source_id']}\"" . ((int)($mine[$k] ?? 0) === (int)$m['source_id'] ? ' selected' : '') . ">" . h($m['name']) . "</option>";
+        echo "</select>";
+    }
+}
 echo "" . t('<button>Guardar</button>') . "</form>";
 page_footer();
