@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // alta / edicion de una fuente externa (Meneame, medios con RSS)
         $id = (int)post('source_id');
         $slug = strtolower(trim(post('slug')));
-        $kind = post('kind') === 'agregador' ? 'agregador' : 'medio';
+        $kind = in_array(post('kind'), ['agregador', 'newsletter'], true) ? post('kind') : 'medio';
         $name = mb_substr(trim(post('name')), 0, 48);
         $home = trim(post('home')); $fp = trim(post('feed_portada')); $fn = trim(post('feed_nuevas'));
         $skin = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
@@ -69,6 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($act === 'fuente_leer_todas') {
         foreach (fuentes_activas($pdo) as $src) { try { $out = array_merge($out, fuente_actualizar($pdo, $src)); } catch (Throwable $e) { $out[] = "fuente {$src['slug']}: ERROR " . $e->getMessage(); } }
         if (!$out) $out[] = 'No hay fuentes activas.';
+    } elseif ($act === 'fuente_foto') {
+        // diagnostico: por que no hay foto en la ultima noticia sin foto de esta fuente
+        $q = $pdo->prepare("SELECT i.title, i.url FROM source_items i WHERE i.source_id = ? AND i.image IS NULL ORDER BY i.pub_date DESC LIMIT 1"); $q->execute([(int)post('source_id')]);
+        if ($it = $q->fetch()) { $out[] = "Probando la foto de «" . $it['title'] . "»"; $out = array_merge($out, fuente_diag_imagen($it['url'])); }
+        else $out[] = 'Todas las noticias de esa fuente tienen foto (o no hay noticias).';
     } elseif ($act === 'fuente_leer') {
         $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
         if ($src = $q->fetch()) { try { $out = array_merge($out, fuente_actualizar($pdo, $src)); } catch (Throwable $e) { $out[] = 'ERROR: ' . $e->getMessage(); } }
@@ -421,7 +426,7 @@ if ($tab === 'usuarios') {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
         $h .= "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name'] ?? '') . "\"></td></tr>";
         $h .= "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\" placeholder=\"minúsculas, números o guion: sale en /fuente.php?f=slug\"></td></tr>";
-        $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td></tr>";
+        $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"newsletter\"" . (($f['kind'] ?? '') === 'newsletter' ? ' selected' : '') . ">newsletter / Substack (igual que un medio, en «Mis substacks»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td></tr>";
         $h .= "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($f['home'] ?? '') . "\" placeholder=\"https://…\"></td></tr>";
         $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" required value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/\"></td></tr>";
         $h .= "<tr><td>RSS de la cola</td><td><input type=\"url\" name=\"feed_nuevas\" value=\"" . h($f['feed_nuevas'] ?? '') . "\" placeholder=\"solo agregadores (vacío en un medio)\"></td></tr>";
@@ -438,12 +443,12 @@ if ($tab === 'usuarios') {
         $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
         return $h . "</table></form>";
     };
-    echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios.php\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, elegible por los usuarios en «Mis medios» (hasta <code>media_max_per_user</code>), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
+    echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios.php\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, elegible por los usuarios en «Mis medios» (hasta <code>media_max_per_user</code>), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
     echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><button class=\"btn\">Leer todas las fuentes ahora</button><small>sin esperar al intervalo; tarda unos segundos por fuente (feeds e imágenes)</small></form>";
     $rows = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s ORDER BY s.kind, s.name")->fetchAll();
-    foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
+    foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
-        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button></summary>";
+        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
         echo $fuente_form($f, 'fuente');
         echo "<p><form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
     }

@@ -486,4 +486,8 @@ return [
 'portada, candidatas y nuevas, solo lectura' => 'front page, candidates and new, read only',
 'últimas' => 'latest',
 'destacados' => 'featured',
+'Mis substacks' => 'My Substacks',
+'Substacks' => 'Substacks',
+'Hasta %d newsletters (Substack) que verás igual que los medios, en su propio grupo del menú.' => 'Up to %d newsletters (Substack) shown like the media, in their own menu group.',
+'Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.' => 'Newsletters (Substack) have their own group, “My Substacks”, up to %d.',
 ];

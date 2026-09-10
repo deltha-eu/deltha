@@ -447,4 +447,8 @@ return [
 'portada, candidatas y nuevas, solo lectura' => 'azala, hautagaiak eta berriak, irakurtzeko soilik',
 'últimas' => 'azkenak',
 'destacados' => 'nabarmenduak',
+'Mis substacks' => 'Nire Substackak',
+'Substacks' => 'Substackak',
+'Hasta %d newsletters (Substack) que verás igual que los medios, en su propio grupo del menú.' => 'Gehienez %d buletin (Substack), hedabideak bezala ikusiko dituzunak, menuko talde propioan.',
+'Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.' => 'Buletinak (Substack) talde propioan doaz, «Nire Substackak», gehienez %d.',
 ];

@@ -447,4 +447,8 @@ return [
 'portada, candidatas y nuevas, solo lectura' => 'portada, candidates i noves, només lectura',
 'últimas' => 'últimes',
 'destacados' => 'destacats',
+'Mis substacks' => 'Els meus Substacks',
+'Substacks' => 'Substacks',
+'Hasta %d newsletters (Substack) que verás igual que los medios, en su propio grupo del menú.' => 'Fins a %d butlletins (Substack) que veuràs igual que els mitjans, en el seu propi grup del menú.',
+'Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.' => 'Els butlletins (Substack) van en el seu propi grup, «Els meus Substacks», fins a %d.',
 ];

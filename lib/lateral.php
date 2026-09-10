@@ -57,12 +57,15 @@ function rail_skins(): void {
  *  y debajo, siempre visibles, solo los nombres: los elegidos en el perfil o, sin eleccion / sin cuenta, los destacados en admin. */
 function rail_medios(): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
+    if (!fuentes_on()) return;
     $u = user();
-    if (!fuentes_on() || !($medios = medios_menu($pdo, $u))) return;
-    $mine = (bool)mis_medios($pdo, $u);
-    echo "<details class=\"rail-dd medios\" open><summary>" . icon('news') . "<span>" . t('Mis medios') . "<small>" . ($mine ? t('%d elegidos', count($medios)) : t('destacados')) . "</small></span></summary><div class=\"list\">";
-    foreach ($medios as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
-    echo "</div></details>";
+    foreach (DDD_MEDIA_KINDS as $kind => [, $label]) {
+        if (!($list = medios_menu($pdo, $u, 0, $kind))) continue;
+        $mine = (bool)mis_medios($pdo, $u, $kind);
+        echo "<details class=\"rail-dd medios\" open><summary>" . icon('news') . "<span>" . t($label) . "<small>" . ($mine ? t('%d elegidos', count($list)) : t('destacados')) . "</small></span></summary><div class=\"list\">";
+        foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
+        echo "</div></details>";
+    }
 }
 
 /** Columna derecha. */
@@ -148,7 +151,7 @@ function side_comunidades(PDO $pdo): void {
 function side_fuentes(PDO $pdo): void {
     require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
-    foreach (array_merge(fuentes_activas($pdo, 'agregador'), medios_menu($pdo, user(), 3)) as $src) {
+    foreach (array_merge(fuentes_activas($pdo, 'agregador'), medios_menu($pdo, user(), 3), medios_menu($pdo, user(), 3, 'newsletter')) as $src) {
         $medio = fuente_es_medio($src);
         $st = $pdo->prepare("SELECT title, url, votes FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
         $st->execute([$src['source_id']]);

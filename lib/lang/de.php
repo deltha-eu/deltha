@@ -447,4 +447,8 @@ return [
 'portada, candidatas y nuevas, solo lectura' => 'Titelseite, Kandidaten und Neu, nur lesen',
 'últimas' => 'neueste',
 'destacados' => 'empfohlen',
+'Mis substacks' => 'Meine Substacks',
+'Substacks' => 'Substacks',
+'Hasta %d newsletters (Substack) que verás igual que los medios, en su propio grupo del menú.' => 'Bis zu %d Newsletter (Substack), angezeigt wie die Medien, in einer eigenen Menügruppe.',
+'Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.' => 'Newsletter (Substack) haben eine eigene Gruppe, „Meine Substacks“, bis zu %d.',
 ];
