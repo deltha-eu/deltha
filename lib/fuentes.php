@@ -41,36 +41,39 @@ function fuente_by_slug(PDO $pdo, string $slug): ?array {
 function fuente_url(array $src, string $view = ''): string {
     return '/fuente.php?f=' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
 }
-function fuente_es_medio(array $src): bool { return ($src['kind'] ?? 'agregador') === 'medio'; }
+function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar a Nuevas»
+/** Grupos elegibles por el usuario: tipo => [clave de config del maximo, etiqueta del grupo, campo del formulario del perfil] */
+const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios', 'media'], 'newsletter' => ['news_max_per_user', 'Mis substacks', 'news']];
+function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[$kind][0] ?? 'media_max_per_user', 3)); }
 
-/** Medios elegidos por un usuario (en su orden). Vacio si no ha elegido. */
-function mis_medios(PDO $pdo, ?array $u): array {
+/** Fuentes de un tipo elegidas por un usuario (en su orden). Vacio si no ha elegido. */
+function mis_medios(PDO $pdo, ?array $u, string $kind = 'medio'): array {
     static $cache = [];
     if (!$u) return [];
-    $uid = (int)$u['user_id'];
-    if (isset($cache[$uid])) return $cache[$uid];
+    $k = $u['user_id'] . '|' . $kind;
+    if (isset($cache[$k])) return $cache[$k];
     try {
-        $st = $pdo->prepare("SELECT s.* FROM user_media um JOIN sources s ON s.source_id = um.source_id WHERE um.user_id = ? AND s.status = 'ok' AND s.kind = 'medio' ORDER BY um.pos");
-        $st->execute([$uid]);
-        return $cache[$uid] = $st->fetchAll();
-    } catch (Throwable $e) { return $cache[$uid] = []; }
+        $st = $pdo->prepare("SELECT s.* FROM user_media um JOIN sources s ON s.source_id = um.source_id WHERE um.user_id = ? AND s.status = 'ok' AND s.kind = ? ORDER BY um.pos");
+        $st->execute([(int)$u['user_id'], $kind]);
+        return $cache[$k] = $st->fetchAll();
+    } catch (Throwable $e) { return $cache[$k] = []; }
 }
-/** Guarda la eleccion (lista de source_id, en orden; se recorta a media_max_per_user y a medios activos). */
-function guardar_mis_medios(PDO $pdo, int $uid, array $ids): void {
-    $ok = array_column(fuentes_activas($pdo, 'medio'), 'source_id');
+/** Guarda la eleccion de un tipo (lista de source_id, en orden; se recorta al maximo del tipo y a fuentes activas de ese tipo). */
+function guardar_mis_medios(PDO $pdo, int $uid, array $ids, string $kind = 'medio'): void {
+    $ok = array_column(fuentes_activas($pdo, $kind), 'source_id');
     $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn($i) => in_array($i, $ok, false))));
-    $ids = array_slice($ids, 0, max(1, (int)cfg('media_max_per_user', 3)));
-    $pdo->prepare("DELETE FROM user_media WHERE user_id = ?")->execute([$uid]);
+    $ids = array_slice($ids, 0, medios_max($kind));
+    $pdo->prepare("DELETE um FROM user_media um JOIN sources s ON s.source_id = um.source_id WHERE um.user_id = ? AND s.kind = ?")->execute([$uid, $kind]);
     $ins = $pdo->prepare("INSERT INTO user_media (user_id, source_id, pos) VALUES (?,?,?)");
     foreach ($ids as $i => $sid) $ins->execute([$uid, $sid, $i + 1]);
 }
-/** Medios que se ofrecen en el menu, el pie y la columna: los elegidos por el usuario o, si no ha elegido (o no tiene cuenta),
- *  los marcados como destacados en admin (sources.featured); si no hay ninguno, los primeros del catalogo. Nunca mas de media_max_per_user. */
-function medios_menu(PDO $pdo, ?array $u, int $max = 0): array {
-    $max = $max ?: max(1, (int)cfg('media_max_per_user', 3));
-    $list = mis_medios($pdo, $u);
-    if (!$list) $list = array_values(array_filter(fuentes_activas($pdo, 'medio'), fn($m) => !empty($m['featured'])));
-    if (!$list) $list = fuentes_activas($pdo, 'medio');
+/** Fuentes de un tipo que se ofrecen en el menu, el pie y la columna: las elegidas por el usuario o, si no ha elegido (o no tiene cuenta),
+ *  las destacadas en admin (sources.featured); si no hay ninguna, las primeras del catalogo. Nunca mas del maximo del tipo. */
+function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
+    $max = $max ?: medios_max($kind);
+    $list = mis_medios($pdo, $u, $kind);
+    if (!$list) $list = array_values(array_filter(fuentes_activas($pdo, $kind), fn($m) => !empty($m['featured'])));
+    if (!$list) $list = fuentes_activas($pdo, $kind);
     return array_slice($list, 0, $max);
 }
 
@@ -190,7 +193,9 @@ function fuentes_parse_rss(string $xml): array {
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     libxml_clear_errors(); libxml_use_internal_errors($prev);
-    if (!$doc || !isset($doc->channel->item)) return [];
+    if (!$doc) return [];
+    if ($doc->getName() === 'feed') return fuentes_parse_atom($doc);   // Atom (The Conversation, Blogger, GitHub...)
+    if (!isset($doc->channel->item)) return [];
     $out = [];
     foreach ($doc->channel->item as $i) {
         $mn = $i->children('http://meneame.net/faq-es.php');
@@ -247,6 +252,74 @@ function fuentes_parse_rss(string $xml): array {
         ];
     }
     return $out;
+}
+
+/** Atom 1.0: <feed><entry>. Mismos campos normalizados que el RSS; sin votos ni comentarios. */
+function fuentes_parse_atom(SimpleXMLElement $doc): array {
+    $out = [];
+    foreach ($doc->entry as $e) {
+        $link = '';
+        foreach ($e->link as $l) { $rel = (string)($l->attributes()->rel ?? 'alternate'); if ($rel === 'alternate' || $link === '') { $link = trim((string)$l->attributes()->href); if ($rel === 'alternate') break; } }
+        if ($link === '') continue;
+        $id = trim((string)$e->id) ?: $link;
+        $content = (string)$e->content;
+        $summary = (string)$e->summary;
+        $md = $e->children('http://search.yahoo.com/mrss/');
+        $thumb = '';
+        if (isset($md->content)) foreach ($md->content as $mc) { $u = trim((string)$mc->attributes()->url); if ($u !== '') { $thumb = $u; break; } }
+        if ($thumb === '' && isset($md->thumbnail)) $thumb = trim((string)$md->thumbnail->attributes()->url);
+        if ($thumb === '') foreach ($e->link as $l) if ((string)$l->attributes()->rel === 'enclosure' && str_starts_with((string)$l->attributes()->type, 'image/')) { $thumb = trim((string)$l->attributes()->href); break; }
+        if ($thumb === '' && preg_match("/<img[^>]+src=['\"]([^'\"]+)['\"]/i", $content . $summary, $m)) $thumb = html_entity_decode($m[1]);
+        // entradilla: el resumen o, si no, el primer parrafo con texto del contenido (los pies de foto de la figura inicial fuera)
+        $txt = $summary;
+        if (trim(strip_tags($txt)) === '' && $content !== '') {
+            $body = preg_replace('/<figure.*?<\/figure>/is', '', $content);
+            $txt = preg_match('/<p[^>]*>(.*?)<\/p>/is', $body, $m) && trim(strip_tags($m[1])) !== '' ? $m[1] : $body;
+        }
+        $txt = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags(preg_replace('/<img[^>]*>/i', '', $txt)), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $cat = null;
+        if (isset($e->category)) { $a = $e->category[0]->attributes(); $cat = trim((string)($a->label ?? '')) ?: trim((string)($a->term ?? '')); }
+        $ts = strtotime((string)($e->published ?: $e->updated)) ?: time();
+        $out[] = [
+            'ext_id'     => substr(sha1($id), 0, 32),
+            'title'      => mb_substr(trim(html_entity_decode((string)$e->title, ENT_QUOTES | ENT_HTML5, 'UTF-8')), 0, 200),
+            'url'        => mb_substr($link, 0, 600),
+            'thread_url' => mb_substr($link, 0, 600),
+            'source'     => mb_substr((string)source_of($link), 0, 100) ?: null,
+            'topic'      => $cat ? mb_substr($cat, 0, 48) : null,
+            'author'     => mb_substr(trim((string)($e->author->name ?? '')), 0, 64) ?: null,
+            'content'    => mb_substr($txt, 0, 2000),
+            'thumb'      => preg_match('#^https?://#i', $thumb) ? $thumb : '',
+            'votes' => 0, 'negatives' => 0, 'comments' => 0,
+            'pub_date'   => date('Y-m-d H:i:s', $ts),
+        ];
+    }
+    return $out;
+}
+
+/** Diagnostico de la foto de una noticia (admin -> Fuentes -> «probar foto»): que paso falla al buscar la og:image. */
+function fuente_diag_imagen(string $url): array {
+    $log = [];
+    $t = (int)cfg('og_timeout_sec', 3);
+    $html = http_get($url, $t, 400000);
+    if (!$html) return ["pagina: SIN RESPUESTA (bloqueo, timeout de {$t}s o mas de 400 KB) -> $url"];
+    $log[] = "pagina: " . strlen($html) . " bytes";
+    $img = null;
+    if (preg_match('/<meta[^>]+(?:property|name)=["\']og:image(?::secure_url|:url)?["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)
+     || preg_match('/<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\']og:image["\']/i', $html, $m)
+     || preg_match('/<meta[^>]+(?:name|property)=["\']twitter:image(?::src)?["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)) $img = html_entity_decode($m[1]);
+    if (!$img) return array_merge($log, ["og:image: NO ENCONTRADA en el HTML"]);
+    $log[] = "og:image: $img";
+    $bytes = http_get($img, $t);
+    if (!$bytes) return array_merge($log, ["imagen: SIN RESPUESTA al descargarla"]);
+    $info = @getimagesizefromstring($bytes);
+    $log[] = "imagen: " . strlen($bytes) . " bytes, " . ($info ? "{$info[0]}x{$info[1]} {$info['mime']}" : "formato no reconocido por GD");
+    $gd = gd_info();
+    $log[] = "GD: webp " . (!empty($gd['WebP Support']) ? 'si' : 'NO') . " · avif " . (!empty($gd['AVIF Support']) ? 'si' : 'no') . " · jpeg " . (!empty($gd['JPEG Support']) ? 'si' : 'NO');
+    $src = @imagecreatefromstring($bytes);
+    if (!$src) return array_merge($log, ["GD: no puede decodificar esta imagen (falta soporte del formato)"]);
+    $log[] = "GD: decodificada " . imagesx($src) . "x" . imagesy($src) . (imagesx($src) < 240 || imagesy($src) < 180 ? " -> DEMASIADO PEQUEÑA (minimo 240x180)" : " -> valida");
+    return $log;
 }
 
 /* ---- vista ------------------------------------------------------------ */

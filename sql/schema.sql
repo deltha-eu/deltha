@@ -55,6 +55,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('sources_keep_days',    '7',    'Fuentes: dias que se guardan los items que ya no aparecen en los feeds'),
 ('sources_timeout_sec',  '8',    'Fuentes: timeout al leer cada feed'),
 ('media_max_per_user',   '3',    'Medios que puede elegir cada usuario en su perfil («Mis medios»)'),
+('news_max_per_user',    '3',    'Newsletters (Substack) que puede elegir cada usuario en su perfil («Mis substacks»)'),
 ('sources_og_image',     '1',    '1 = para los medios sin imagen en el RSS se busca la og:image de la noticia'),
 ('sources_og_per_run',   '10',   'Fuentes: og:image maximas que se descargan en cada pasada del cron'),
 ('mod_model',           'qwen2.5:7b-instruct', 'Modelo Ollama (cuando mod_enabled=1)'),
@@ -258,7 +259,7 @@ CREATE TABLE communities (
 CREATE TABLE sources (
     source_id    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     slug         VARCHAR(24) NOT NULL,                      -- /fuente.php?f=slug
-    kind         ENUM('agregador','medio') NOT NULL DEFAULT 'medio',   -- agregador: fases y votos (Meneame) | medio: solo ultimas noticias, elegible en «Mis medios»
+    kind         ENUM('agregador','medio','newsletter') NOT NULL DEFAULT 'medio',   -- agregador: fases y votos (Meneame) | medio: ultimas noticias, elegible en «Mis medios» | newsletter: idem, en «Mis substacks»
     name         VARCHAR(48) NOT NULL,
     home         VARCHAR(200) NOT NULL,                     -- web de la fuente
     descr        VARCHAR(200) DEFAULT NULL,
@@ -312,7 +313,14 @@ INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada
 ('cgtn',           'medio', 'CGTN Español',         'https://espanol.cgtn.com/',            'Televisión china en español',           '', 1, 'https://espanol.cgtn.com/rss',               '', 30, 0),
 ('pijamasurf',     'medio', 'Pijama Surf',          'https://pijamasurf.com/',              'Información alternativa',               '', 3, 'https://pijamasurf.com/feed/',               '', 30, 0),
 ('culturainquieta','medio', 'Cultura Inquieta',     'https://culturainquieta.com/',         'Arte, música y cultura',                '', 3, 'https://culturainquieta.com/feed/',          '', 30, 0),
-('hipertextual',   'medio', 'Hipertextual',         'https://hipertextual.com/',            'Tecnología y ciencia',                  '', 6, 'https://hipertextual.com/feed',              '', 15, 0);
+('hipertextual',   'medio', 'Hipertextual',         'https://hipertextual.com/',            'Tecnología y ciencia',                  '', 6, 'https://hipertextual.com/feed',              '', 60, 0);
+INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min, featured) VALUES
+('jorgecarrion',   'newsletter', 'Jorge Carrión',        'https://jorgecarrion21.substack.com/',  'Newsletter (Substack)', '', 3, 'https://jorgecarrion21.substack.com/feed',  '', 1440, 1),
+('periodismo',     'newsletter', 'Periodismo',           'https://periodismo.substack.com/',      'Newsletter (Substack)', '', 1, 'https://periodismo.substack.com/feed',      '', 1440, 0),
+('sergioparra',    'newsletter', 'Sergio Parra',         'https://sergioparra.substack.com/',     'Newsletter (Substack)', '', 4, 'https://sergioparra.substack.com/feed',     '', 1440, 1),
+('error500',       'newsletter', 'Error500',             'https://www.error500.net/',             'Antonio Ortiz · newsletter', '', 6, 'https://www.error500.net/feed',          '', 1440, 1),
+('uriondo',        'newsletter', 'Uriondo',              'https://uriondo.substack.com/',         'Newsletter (Substack)', '', 1, 'https://uriondo.substack.com/feed',         '', 1440, 0),
+('martinsacristan','newsletter', 'Martín Sacristán',     'https://martinsacristan.substack.com/', 'Newsletter (Substack)', '', 3, 'https://martinsacristan.substack.com/feed', '', 1440, 0);
 
 -- Medios elegidos por cada usuario («Mis medios», hasta config.media_max_per_user)
 CREATE TABLE user_media (

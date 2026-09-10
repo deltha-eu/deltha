@@ -529,8 +529,8 @@ function footer_links(): string {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
         foreach (fuentes_activas($pdo, 'agregador') as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\" title=\"" . h(t('%s visto desde Deltha', $src['name'])) . "\">" . h($src['name']) . "</a>";
-        foreach (medios_menu($pdo, user(), 3) as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\">" . h($src['name']) . "</a>";
-        if (fuentes_activas($pdo, 'medio')) $h .= " · <a href=\"/medios.php\">" . t('Medios') . "</a>";
+        foreach (array_keys(DDD_MEDIA_KINDS) as $kind) foreach (medios_menu($pdo, user(), 0, $kind) as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\">" . h($src['name']) . "</a>";
+        if (fuentes_activas($pdo, 'medio') || fuentes_activas($pdo, 'newsletter')) $h .= " · <a href=\"/medios.php\">" . t('Medios') . "</a>";
     }
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
