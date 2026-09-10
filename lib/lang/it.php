@@ -451,4 +451,7 @@ return [
 'Substacks' => 'Substack',
 'Hasta %d newsletters (Substack) que verás igual que los medios, en su propio grupo del menú.' => 'Fino a %d newsletter (Substack) mostrate come i media, nel loro gruppo del menu.',
 'Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.' => 'Le newsletter (Substack) hanno un gruppo a parte, «I miei Substack», fino a %d.',
+'Último en medios' => 'Ultime dai media',
+'Último en substacks' => 'Ultime dai Substack',
+'todos' => 'tutti',
 ];
