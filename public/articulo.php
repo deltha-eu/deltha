@@ -6,9 +6,10 @@ require __DIR__ . '/../lib/aura.php';
 if (!user() && cfg('anon_can_submit') !== '1') redirect('/login.php');
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY topic_id")->fetchAll();
+$comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
 $maxWords = (int)cfg('article_max_words', 500);
 $err = null;
-$f = ['title' => '', 'content' => '', 'topic' => 0];
+$f = ['title' => '', 'content' => '', 'topic' => 0, 'community' => 0];
 
 function contar_palabras(string $t): int {
     $t = trim(preg_replace('/\s+/u', ' ', $t));
@@ -19,6 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['title']   = mb_substr(post('title'), 0, 200);
     $f['content'] = mb_substr(post('content'), 0, 12000);
     $f['topic']   = (int)post('topic');
+    $f['community'] = (int)post('community');
+    if ($f['community'] && !in_array($f['community'], array_column($comms, 'community_id'), false)) $f['community'] = 0;
     $words = contar_palabras($f['content']);
 
     if (mb_strlen($f['title']) < 8) $err = t('El titular es demasiado corto.');
@@ -31,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $u = user();
         $status = cfg('mod_enabled') === '1' ? 'pending_mod' : 'nuevas';
         $pdo->beginTransaction();
-        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, title, url, source, content, image, status)
-                       VALUES ('article', ?, ?, ?, NULL, NULL, ?, ?, ?)")
-            ->execute([$u['user_id'] ?? null, $f['topic'], $f['title'], $f['content'], $image, $status]);
+        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status)
+                       VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?)")
+            ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['content'], $image, $status]);
         $sid = (int)$pdo->lastInsertId();
         $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
         $pdo->prepare("UPDATE stories SET author_alias = ? WHERE story_id = ?")->execute([$alias, $sid]);
@@ -58,6 +61,12 @@ foreach ($topics as $t) {
     echo "<option value=\"{$t['topic_id']}\"$sel>" . h($t['name']) . "</option>";
 }
 echo "</select>";
+if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades.php#crear">crea la primera</a>.') . "</p>";
+if ($comms) {
+    echo "" . t('<label>Comunidad (opcional)</label>') . "<select name=\"community\"><option value=\"0\"" . t('>— ninguna —</option>') . "";
+    foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$f['community'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
+    echo "</select>";
+}
 echo "" . t('<label>Foto</label>') . "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
 echo "" . t('<button>Publicar artículo</button>') . "</form>";
 page_footer();

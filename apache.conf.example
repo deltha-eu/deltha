@@ -9,6 +9,12 @@
 # Activar:
 #   a2ensite deltha && apachectl configtest && systemctl reload apache2
 #   certbot --apache -d deltha.eu -d www.deltha.eu
+#
+# OJO: este fichero solo trae el vhost :80. En el droplet, deltha.conf lleva ademas un
+# <VirtualHost *:443> identico con el certificado de origen de Cloudflare (lo genera
+# install-droplet.sh). NO copiar este fichero encima del deltha.conf del servidor: sin el
+# vhost 443 Cloudflare (Completo estricto) da error 525. Para actualizarlo sin perder el 443:
+#   scp apache.conf.example root@deltha.eu:/root/ && ssh root@deltha.eu bash /var/www/deltha/scripts/vhost-actualizar.sh
 
 <VirtualHost *:80>
     ServerName deltha.eu
