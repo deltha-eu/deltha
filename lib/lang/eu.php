@@ -406,4 +406,17 @@ return [
 'Aspecto' => 'Itxura',
 'Como el sistema' => 'Sistemak bezala',
 'Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Zortzi hizkuntza: gaztelania, katalana, euskara, galiziera, ingelesa, frantsesa, alemana eta italiera. Mugikorrean app gisa instalatzen da, erregistratuen arteko mezu pribatuekin. Horrek ez du aldatzen zer ikusten duzun: nola ikusten duzun baino ez.',
+// fuentes externas (/fuente.php)
+'Fuentes' => 'Iturriak',
+'Esa fuente no existe.' => 'Iturri hori ez da existitzen.',
+'Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.' => 'Irakurtzeko soilik: <a href="%s" rel="noopener">%s</a> gunean gertatzen dena, Deltha-tik ikusita. Hemen ez da bozkatzen ez iruzkintzen: titularrak artikulura darama eta iruzkinek jatorrizko harira.',
+'Candidatas: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.' => 'Hautagaiak: azken %d orduetako berriak, gutxienez %d botorekin, botoen arabera ordenatuta.',
+'Se lee cada %d min · última lectura: %s.' => '%d minuturo irakurtzen da · azken irakurketa: %s.',
+'todavía no' => 'oraindik ez',
+'No hay nada en esta vista ahora mismo.' => 'Ikuspegi honetan ez dago ezer oraintxe.',
+'El lector aún no ha pasado por esta fuente.' => 'Irakurgailua ez da oraindik iturri honetatik pasatu.',
+'comentarios en %s' => 'iruzkinak %s gunean',
+'ver en %s' => 'ikusi %s gunean',
+'%s visto desde Deltha' => '%s Deltha-tik ikusita',
+'portada' => 'azala',
 ];

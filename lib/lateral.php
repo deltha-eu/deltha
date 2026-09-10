@@ -58,6 +58,7 @@ function side(): void {
     try { side_temas($pdo); } catch (Throwable $e) {}
     try { side_comunidades($pdo); } catch (Throwable $e) {}
     try { side_votadas($pdo); } catch (Throwable $e) {}
+    try { side_fuentes($pdo); } catch (Throwable $e) {}
     echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
 }
@@ -126,4 +127,21 @@ function side_comunidades(PDO $pdo): void {
         echo "<a class=\"row\" href=\"/hilo.php?id=" . (int)$r['story_id'] . "\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
     }
     echo "<p class=\"more\"><a href=\"/comunidades.php\">" . t('todas las comunidades') . "</a></p></section>";
+}
+
+/** Fuentes externas (Meneame...): las tres ultimas de la portada de cada una, enlazadas al articulo; «ver todo» lleva a /fuente.php. */
+function side_fuentes(PDO $pdo): void {
+    require_once __DIR__ . '/fuentes.php';
+    if (!fuentes_on()) return;
+    foreach (fuentes_activas($pdo) as $src) {
+        $st = $pdo->prepare("SELECT title, url, thread_url, votes, comments FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
+        $st->execute([$src['source_id']]);
+        $rows = $st->fetchAll();
+        if (!$rows) continue;
+        echo "<section class=\"mod fuente\"><h3>" . h($src['name']) . "<span>" . t('portada') . "</span></h3>";
+        foreach ($rows as $r) {
+            echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . icon('up') . (int)$r['votes'] . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
+        }
+        echo "<p class=\"more\"><a href=\"" . h(fuente_url($src)) . "\">" . t('%s visto desde Deltha', $src['name']) . "</a></p></section>";
+    }
 }

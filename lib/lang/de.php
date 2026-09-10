@@ -406,4 +406,17 @@ return [
 'Aspecto' => 'Erscheinungsbild',
 'Como el sistema' => 'Wie das System',
 'Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.' => 'Acht Sprachen: Spanisch, Katalanisch, Baskisch, Galicisch, Englisch, Französisch, Deutsch und Italienisch. Lässt sich als App aufs Handy installieren, mit privaten Nachrichten zwischen Mitgliedern. Nichts davon ändert, was du siehst: nur wie du es siehst.',
+// fuentes externas (/fuente.php)
+'Fuentes' => 'Quellen',
+'Esa fuente no existe.' => 'Diese Quelle gibt es nicht.',
+'Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.' => 'Nur lesen: was auf <a href="%s" rel="noopener">%s</a> passiert, aus Deltha gesehen. Hier wird weder abgestimmt noch kommentiert: die Schlagzeile führt zum Artikel, die Kommentare zum Original-Thread.',
+'Candidatas: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.' => 'Kandidaten: die neuen Beiträge der letzten %d h mit mindestens %d Stimmen, nach Stimmen sortiert.',
+'Se lee cada %d min · última lectura: %s.' => 'Wird alle %d min gelesen · zuletzt: %s.',
+'todavía no' => 'noch nicht',
+'No hay nada en esta vista ahora mismo.' => 'In dieser Ansicht gibt es gerade nichts.',
+'El lector aún no ha pasado por esta fuente.' => 'Der Leser war noch nicht bei dieser Quelle.',
+'comentarios en %s' => 'Kommentare auf %s',
+'ver en %s' => 'auf %s ansehen',
+'%s visto desde Deltha' => '%s aus Deltha gesehen',
+'portada' => 'Titelseite',
 ];

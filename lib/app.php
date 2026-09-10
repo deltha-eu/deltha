@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 68);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 69);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -523,7 +523,11 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a> · " . t('Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
+    $h  = "<a href=\"/delta/\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a>";
+    // fuentes externas pintadas con Deltha (solo lectura): un enlace por fuente activa
+    global $pdo; require_once __DIR__ . '/fuentes.php';
+    if (fuentes_on()) foreach (fuentes_activas($pdo) as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\" title=\"" . h(t('%s visto desde Deltha', $src['name'])) . "\">" . h($src['name']) . "</a>";
+    $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;

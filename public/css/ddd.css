@@ -2032,3 +2032,15 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="foro"] .rail nav a.on { background: var(--card); }
   [data-skin="foro"] .side .mod.temas .chip { background: var(--pill); border: 0; }
 }
+
+/* ===== FUENTES EXTERNAS (/fuente.php) =====
+   Otro sitio (Meneame) pintado con Deltha, solo lectura: miniatura cuadrada de la fuente flotada a la derecha,
+   contadores de votos y comentarios de la fuente, sin formulario de voto ni δ. */
+.post.ext .thumb { float: right; width: 92px; height: 92px; margin: 2px 0 8px 12px; border-radius: 10px; background: var(--line) center/cover no-repeat; }
+.post.ext.compact .thumb { width: 72px; height: 72px; }
+.post.ext h2 a[rel~="nofollow"]::after { content: "\00a0↗"; font-size: .7em; color: var(--muted); }
+.post.ext .actions { clear: both; }
+.post.ext .actions .share.ext { gap: 4px; }
+[data-skin="flujo"] .post.ext .thumb { float: none; grid-area: media; width: 120px; height: 90px; margin: 0; }
+[data-skin="manga"] .post.ext .thumb, [data-skin="retro"] .post.ext .thumb { filter: grayscale(1) contrast(1.15); border-radius: 0; }
+.side .mod.fuente .row b .i { width: 13px; height: 13px; }

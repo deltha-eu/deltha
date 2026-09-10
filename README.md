@@ -57,6 +57,13 @@ Por defecto sigue al sistema (`prefers-color-scheme`). Un registrado puede fijar
 - `/admin.php` temas: coeficiente y color editables, alta de temas nuevos (nombre, coef, color); usuarios (todos, con buscador por usuario/correo, casilla «moderador» → `users.level`, `sql/migra-008-moderador.sql`; botón «validar» para marcar a mano el correo como activado; botón «borrar» que, tras confirmar tecleando el nick, elimina la cuenta con todo lo suyo en cascada: sus hilos enteros incluidos comentarios y votos ajenos, sus comentarios con las respuestas que cuelgan de ellos, sus votos con ajuste de contadores, alias, aura, fotos y avatar), config editable, editor de la página de privacidad, temas (coef), **ejecutar ciclo**, **adelantar reloj**, cola de revisión humana, log de promociones
 - `scripts/promocionar.php` cron · `scripts/moderar.php` portero (apagado: `mod_enabled=0`)
 
+## Fuentes externas (Menéame «pintado» con Deltha)
+Otro sitio con RSS visto con el aspecto de Deltha, **solo lectura**: `/fuente.php?f=meneame` con tres vistas, Portada (`/rss`), Candidatas (las nuevas de las últimas `sources_popular_hours` h con ≥ `sources_popular_min_votes` votos, por votos: lo que Menéame llama Populares, que su RSS no sirve aparte) y Nuevas (`/rss?status=queued`). Cada titular lleva al artículo (`/go?id=N`), los comentarios al hilo original; no se vota ni se comenta. Nada entra en `stories`, en el δ, en Procesos ni en las estadísticas.
+
+- Tablas `sources` (una fila por fuente: slug, nombre, feeds, plantilla forzada —Menéame usa `orange`—, intervalo) y `source_items` (un item por `meneame:link_id`, con fase, votos, comentarios, entradilla, dominio del medio y miniatura descargada a `/media/fuentes`, sin hotlink). Migración `sql/migra-028-fuentes.sql`.
+- Lectura: `lib/fuentes.php`, llamada cada minuto desde `scripts/promocionar.php` (`fuentes_tick()`, lee cuando vence `sources.interval_min`); a mano, `php scripts/fuentes.php [slug]`. Los items que llevan `sources_keep_days` días sin aparecer en ningún feed se borran (y su miniatura).
+- Enlace en el pie (uno por fuente activa) y módulo en la columna derecha con las tres últimas de portada. `sources_enabled=0` lo apaga todo. Para añadir otra fuente: una fila en `sources` (sin `feed_nuevas` solo tiene Portada).
+
 ## Ciclo
 envío → `nuevas` → (≥30 min y delta ≥ `delta_min_candidate`, 0,5: sin votos no se sube) cada ciclo asciende UNA a `candidatas`, la de mayor delta → cada ciclo se publica la candidata de mayor delta si ≥ `delta_min_publish` → `destacadas` (+0,10 aura al autor, tope 50) → (48 h) `archived` + revelado sigiloso de nicks. Lo que lleva `nuevas_ttl_hours` (48) sin llegar a portada (nuevas o candidatas) se archiva (`sql/migra-024-delta-minimo-candidata.sql`).
 
