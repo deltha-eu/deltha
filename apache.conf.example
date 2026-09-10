@@ -57,6 +57,11 @@
     <Files "manifest.webmanifest">
         ForceType application/manifest+json
     </Files>
+    # el manifiesto es dinamico (iconos de Admin > Logo): sin cache, o el movil tarda 7 dias en ver el icono nuevo
+    <Files "manifest.php">
+        ExpiresActive Off
+        Header set Cache-Control "no-cache"
+    </Files>
     <DirectoryMatch "^/var/www/deltha/public/(css|img|app)">
         ExpiresActive On
         ExpiresDefault "access plus 7 days"
