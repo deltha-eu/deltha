@@ -68,7 +68,7 @@ if (fuentes_on() && ($catalogo = fuentes_activas($pdo, 'medio'))) {
     $mine = array_column(mis_medios($pdo, $u), 'source_id');
     echo "<label id=\"medios\">" . t('Mis medios') . "</label><small class=\"hint\">" . t('Hasta %d medios con RSS que verás con el aspecto de Deltha, en el menú lateral y en el pie; desde cada noticia puedes proponerla en Nuevas. El catálogo lo mantiene el sitio: <a href="/medios.php">ver todos</a>.', $max) . "</small>";
     for ($k = 0; $k < $max; $k++) {
-        echo "<select name=\"media[]\" class=\"media\"><option value=\"\">" . t('— ninguno —') . "</option>";
+        echo "<select name=\"media[]\" class=\"medsel\"><option value=\"\">" . t('— ninguno —') . "</option>";
         foreach ($catalogo as $m) echo "<option value=\"{$m['source_id']}\"" . ((int)($mine[$k] ?? 0) === (int)$m['source_id'] ? ' selected' : '') . ">" . h($m['name']) . "</option>";
         echo "</select>";
     }

@@ -31,7 +31,7 @@ community_skin((string)$src['skin']);
 // anonimos: cacheable un minuto (misma politica que /procesos.php)
 if (user()) header('Cache-Control: private, no-cache'); else { header('Cache-Control: public, max-age=60'); header('Vary: Cookie'); }
 
-page_header($medio ? $src['name'] : $src['name'] . ' · ' . $views[$view]);
+page_header($medio ? $src['name'] : $src['name'] . ' · ' . $views[$view], 'fuente:' . $src['slug']);
 if (count($views) > 1) {
     echo "<nav class=\"sub\">";
     foreach ($views as $k => $lbl) echo "<a href=\"" . h(fuente_url($src, $k)) . "\"" . ($k === $view ? ' class="on"' : '') . ">" . h($lbl) . "</a>";

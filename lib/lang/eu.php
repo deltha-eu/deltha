@@ -446,4 +446,5 @@ return [
 'Agregadores' => 'Agregatzaileak',
 'portada, candidatas y nuevas, solo lectura' => 'azala, hautagaiak eta berriak, irakurtzeko soilik',
 'últimas' => 'azkenak',
+'destacados' => 'nabarmenduak',
 ];

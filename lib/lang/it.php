@@ -446,4 +446,5 @@ return [
 'Agregadores' => 'Aggregatori',
 'portada, candidatas y nuevas, solo lectura' => 'prima pagina, candidate e nuove, sola lettura',
 'últimas' => 'ultime',
+'destacados' => 'in evidenza',
 ];

@@ -2050,5 +2050,8 @@ details.editbox form.plain { padding-top: 0; }
 .post.ext.medio .actions .sent { color: var(--muted); }
 .fz.medio .mine { color: var(--accent); font-weight: 600; font-size: 12px; margin-left: 4px; }
 h3.sec { margin: 18px 16px 4px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-form.plain select.media { margin-bottom: 6px; }
-.rail-dd.media .list a.reset { color: var(--accent); }
+form.plain select.medsel { margin-bottom: 6px; }
+/* rail: «Mis medios» con el mismo aspecto que Plantilla / Aspecto / Idioma (details.rail-dd de cada plantilla), pero siempre abierto: sin flecha ni plegado */
+.rail details.rail-dd.medios { margin-top: 10px; padding-top: 6px; border-top: 1px solid var(--line) !important; }
+.rail details.rail-dd.medios summary { pointer-events: none; }
+.rail details.rail-dd.medios summary::after { content: none; }
