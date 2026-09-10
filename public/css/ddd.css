@@ -2055,3 +2055,12 @@ form.plain select.medsel { margin-bottom: 6px; }
 .rail details.rail-dd.medios { margin-top: 10px; padding-top: 6px; border-top: 1px solid var(--line) !important; }
 .rail details.rail-dd.medios summary { pointer-events: none; }
 .rail details.rail-dd.medios summary::after { content: none; }
+/* admin -> Fuentes: formulario de alta/edicion en rejilla limpia */
+.admin form.fuente table td:first-child { width: 110px; color: var(--muted); white-space: nowrap; padding-top: 10px; }
+.admin form.fuente input[type=url], .admin form.fuente input[type=number], .admin form.fuente select { width: 100%; font: inherit; padding: 4px 6px; border: 1px solid var(--line2); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.admin form.fuente input[type=number] { width: 90px; }
+.admin form.fuente select.auto { width: auto; min-width: 160px; }
+.admin form.fuente td.acc { text-align: right; white-space: nowrap; }
+.admin form.fuente td.acc label { margin-right: 12px; }
+.admin .fuentes-top { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
+.admin details.editbox summary .btn.sm { margin-left: 6px; }
