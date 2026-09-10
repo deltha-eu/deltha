@@ -268,6 +268,7 @@ CREATE TABLE sources (
     feed_nuevas  VARCHAR(300) NOT NULL DEFAULT '',          -- RSS de la cola (vacio = la fuente no tiene cola)
     interval_min SMALLINT UNSIGNED NOT NULL DEFAULT 5,      -- cada cuantos minutos se leen los feeds
     status       ENUM('ok','off') NOT NULL DEFAULT 'ok',
+    featured     TINYINT(1) NOT NULL DEFAULT 0,           -- medio que ven quienes no han elegido (anonimos); se marca en admin
     last_fetch   DATETIME DEFAULT NULL,
     last_error   VARCHAR(255) DEFAULT NULL,
     UNIQUE KEY uq_slug (slug)
@@ -303,6 +304,15 @@ INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada
 ('meneame',  'agregador', 'Menéame',          'https://www.meneame.net/',        NULL, 'orange', NULL, 'https://www.meneame.net/rss', 'https://www.meneame.net/rss?status=queued', 5),
 ('jotdown',  'medio',     'Jot Down',         'https://www.jotdown.es/',         'Contemporary Culture Mag', '', 3, 'https://www.jotdown.es/feed/', '', 15),
 ('mercurio', 'medio',     'Revista Mercurio', 'https://www.revistamercurio.es/', 'Revista de libros y cultura', '', 3, 'https://revistamercurio.es/feed/', '', 15);
+UPDATE sources SET featured = 1 WHERE slug IN ('jotdown', 'mercurio');
+INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min, featured) VALUES
+('anfibia',        'medio', 'Revista Anfibia',      'https://www.revistaanfibia.com/',      'Crónicas y ensayos desde Buenos Aires', '', 3, 'https://www.revistaanfibia.com/feed/',       '', 30, 1),
+('natgeo',         'medio', 'National Geographic',  'https://www.nationalgeographic.com.es/', 'Ciencia, naturaleza e historia',      '', 4, 'https://www.nationalgeographic.com.es/rss',  '', 30, 0),
+('bbc',            'medio', 'BBC Mundo',            'https://www.bbc.com/mundo',            'Noticias internacionales en español',   '', 1, 'https://feeds.bbci.co.uk/mundo/rss.xml',     '', 15, 0),
+('cgtn',           'medio', 'CGTN Español',         'https://espanol.cgtn.com/',            'Televisión china en español',           '', 1, 'https://espanol.cgtn.com/rss',               '', 30, 0),
+('pijamasurf',     'medio', 'Pijama Surf',          'https://pijamasurf.com/',              'Información alternativa',               '', 3, 'https://pijamasurf.com/feed/',               '', 30, 0),
+('culturainquieta','medio', 'Cultura Inquieta',     'https://culturainquieta.com/',         'Arte, música y cultura',                '', 3, 'https://culturainquieta.com/feed/',          '', 30, 0),
+('hipertextual',   'medio', 'Hipertextual',         'https://hipertextual.com/',            'Tecnología y ciencia',                  '', 6, 'https://hipertextual.com/feed',              '', 15, 0);
 
 -- Medios elegidos por cada usuario («Mis medios», hasta config.media_max_per_user)
 CREATE TABLE user_media (

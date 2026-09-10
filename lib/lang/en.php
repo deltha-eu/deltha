@@ -485,4 +485,5 @@ return [
 'Agregadores' => 'Aggregators',
 'portada, candidatas y nuevas, solo lectura' => 'front page, candidates and new, read only',
 'últimas' => 'latest',
+'destacados' => 'featured',
 ];

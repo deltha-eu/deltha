@@ -15,6 +15,7 @@ function rail(string $tab): void {
     nav_tabs($tab, 'rail-top');
     nav_tabs($tab, 'rail-bottom');
     rail_skins();
+    rail_medios();
     echo "<a class=\"pub\" href=\"/enviar.php\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>";
     if ($u) echo "<a class=\"me\" href=\"/perfil.php\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>";
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>";
@@ -48,15 +49,18 @@ function rail_skins(): void {
     $items = [];
     foreach (DDD_LANGS as $k => $v) $items[] = ["/cambiar-skin.php?l=$k", $v, $k === $cl, null];
     rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
-    // mis medios: los elegidos en el perfil o, sin eleccion / sin cuenta, el catalogo
+}
+
+/** Cuarto grupo del rail: «Mis medios» como cabecera (mismo aspecto que Plantilla / Aspecto / Idioma, sin flecha ni plegado)
+ *  y debajo, siempre visibles, solo los nombres: los elegidos en el perfil o, sin eleccion / sin cuenta, los destacados en admin. */
+function rail_medios(): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
-    if (fuentes_on() && ($medios = medios_menu($pdo, $u))) {
-        $mine = (bool)mis_medios($pdo, $u);
-        $items = [];
-        foreach ($medios as $m) $items[] = [fuente_url($m), $m['name'], false, null];
-        $items[] = $u ? ['/perfil.php#medios', $mine ? t('cambiar mis medios') : t('elegir mis medios'), false, null, 'reset'] : ['/login.php', t('entra para elegir los tuyos'), false, null, 'reset'];
-        rail_dd('news', t('Mis medios'), $mine ? t('%d elegidos', count($medios)) : t('catálogo'), $items, 'media');
-    }
+    $u = user();
+    if (!fuentes_on() || !($medios = medios_menu($pdo, $u))) return;
+    $mine = (bool)mis_medios($pdo, $u);
+    echo "<details class=\"rail-dd medios\" open><summary>" . icon('news') . "<span>" . t('Mis medios') . "<small>" . ($mine ? t('%d elegidos', count($medios)) : t('destacados')) . "</small></span></summary><div class=\"list\">";
+    foreach ($medios as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
+    echo "</div></details>";
 }
 
 /** Columna derecha. */

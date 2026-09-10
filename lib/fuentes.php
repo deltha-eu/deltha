@@ -64,10 +64,14 @@ function guardar_mis_medios(PDO $pdo, int $uid, array $ids): void {
     $ins = $pdo->prepare("INSERT INTO user_media (user_id, source_id, pos) VALUES (?,?,?)");
     foreach ($ids as $i => $sid) $ins->execute([$uid, $sid, $i + 1]);
 }
-/** Medios que se ofrecen en el menu y el pie: los elegidos por el usuario o, si no hay eleccion (o sin cuenta), el catalogo (hasta $max). */
-function medios_menu(PDO $pdo, ?array $u, int $max = 6): array {
-    $mine = mis_medios($pdo, $u);
-    return $mine ?: array_slice(fuentes_activas($pdo, 'medio'), 0, $max);
+/** Medios que se ofrecen en el menu, el pie y la columna: los elegidos por el usuario o, si no ha elegido (o no tiene cuenta),
+ *  los marcados como destacados en admin (sources.featured); si no hay ninguno, los primeros del catalogo. Nunca mas de media_max_per_user. */
+function medios_menu(PDO $pdo, ?array $u, int $max = 0): array {
+    $max = $max ?: max(1, (int)cfg('media_max_per_user', 3));
+    $list = mis_medios($pdo, $u);
+    if (!$list) $list = array_values(array_filter(fuentes_activas($pdo, 'medio'), fn($m) => !empty($m['featured'])));
+    if (!$list) $list = fuentes_activas($pdo, 'medio');
+    return array_slice($list, 0, $max);
 }
 
 /* ---- lectura de feeds (cron) ---------------------------------------- */

@@ -485,4 +485,5 @@ return [
 'Agregadores' => 'Agrégateurs',
 'portada, candidatas y nuevas, solo lectura' => 'une, candidates et nouvelles, lecture seule',
 'últimas' => 'dernières',
+'destacados' => 'à la une',
 ];

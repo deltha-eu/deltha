@@ -446,4 +446,5 @@ return [
 'Agregadores' => 'Agregadores',
 'portada, candidatas y nuevas, solo lectura' => 'portada, candidatas e novas, só lectura',
 'últimas' => 'últimas',
+'destacados' => 'destacados',
 ];

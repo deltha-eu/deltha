@@ -446,4 +446,5 @@ return [
 'Agregadores' => 'Agregadors',
 'portada, candidatas y nuevas, solo lectura' => 'portada, candidates i noves, només lectura',
 'últimas' => 'últimes',
+'destacados' => 'destacats',
 ];
