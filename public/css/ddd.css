@@ -2069,3 +2069,7 @@ form.plain select.medsel { margin-bottom: 6px; }
 /* columna derecha: «Ultimo en medios / substacks»: el medio en versalitas delante de cada titular, como en comunidades */
 .side .mod.fuente.medio .row .t b { font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; color: var(--muted); margin-right: 4px; }
 .side .mod.fuente.medio h3 span a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+/* la columna derecha es un flex en columna con max-height 100vh y scroll: los modulos no deben encogerse para caber
+   (con overflow: hidden, como en Orange, el flex los recortaba y solo se veia la primera linea de cada uno) */
+.side .mod, .side footer { flex: none; }
+.rail > * { flex: none; }
