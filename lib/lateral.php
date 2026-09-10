@@ -1,6 +1,6 @@
 <?php
 /** lib/lateral.php — las dos columnas de escritorio (>= 1100 px): a la izquierda la navegacion en vertical
- *  (las dos barras de pestañas, «Publicar» y el perfil); a la derecha, lo que esta pasando, igual para todo el mundo
+ *  (las dos barras de pestañas, «Publicar», el perfil y el pie con los enlaces del sitio); a la derecha, lo que esta pasando, igual para todo el mundo
  *  y sin nada «para ti»: el proximo ciclo con la cola, las comunidades con actividad y el pie.
  *  En movil las dos van ocultas por CSS (display: none) y todo sigue como estaba. Sin JS. */
 declare(strict_types=1);
@@ -19,6 +19,8 @@ function rail(string $tab): void {
     echo "<a class=\"pub\" href=\"/enviar.php\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>";
     if ($u) echo "<a class=\"me\" href=\"/perfil.php\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>";
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>";
+    // pie (¿Que es Deltha?, manifiesto, privacidad, normas...) al final del rail: asi las dos columnas laterales terminan igual
+    echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
 }
 
@@ -72,7 +74,6 @@ function side(): void {
     try { side_comunidades($pdo); } catch (Throwable $e) {}
     try { side_votadas($pdo); } catch (Throwable $e) {}
     try { side_fuentes($pdo); } catch (Throwable $e) {}
-    echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
 }
 

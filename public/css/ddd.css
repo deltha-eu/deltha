@@ -2064,3 +2064,5 @@ form.plain select.medsel { margin-bottom: 6px; }
 .admin form.fuente td.acc label { margin-right: 12px; }
 .admin .fuentes-top { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
 .admin details.editbox summary .btn.sm { margin-left: 6px; }
+/* pie del sitio en el rail (antes en la columna derecha): al final, con un poco de aire y raya arriba */
+.rail footer.sidefoot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
