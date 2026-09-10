@@ -196,6 +196,7 @@ function fuentes_parse_rss(string $xml): array {
         $mn = $i->children('http://meneame.net/faq-es.php');
         $md = $i->children('http://search.yahoo.com/mrss/');
         $dc = $i->children('http://purl.org/dc/elements/1.1/');
+        $dt = $i->children('http://purl.org/dc/terms');   // algunos feeds (RBA: National Geographic) usan dc:terms: creator y abstract
         $ce = $i->children('http://purl.org/rss/1.0/modules/content/');
         $link = trim((string)$i->link);
         if ($link === '') continue;
@@ -223,7 +224,7 @@ function fuentes_parse_rss(string $xml): array {
             $url = $link;                                                  // el articulo es el propio enlace
             $thread = trim((string)$i->comments) ?: $link;
             $source = source_of($link);
-            $txt = $desc !== '' ? $desc : $full;
+            $txt = isset($dt->abstract) && trim((string)$dt->abstract) !== '' ? (string)$dt->abstract : ($desc !== '' ? $desc : $full);   // dc:abstract = entradilla limpia si la hay
             $topic = isset($i->category) ? trim((string)$i->category[0]) : null;
         }
         $txt = trim(html_entity_decode(strip_tags(preg_replace('/<img[^>]*>/i', '', $txt)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
@@ -236,7 +237,7 @@ function fuentes_parse_rss(string $xml): array {
             'thread_url' => mb_substr($thread, 0, 600),
             'source'     => $source ? mb_substr($source, 0, 100) : null,
             'topic'      => $topic ? mb_substr($topic, 0, 48) : null,
-            'author'     => mb_substr(trim((string)($mn->user ?? $dc->creator ?? '')), 0, 64) ?: null,
+            'author'     => mb_substr(trim((string)($mn->user ?? $dc->creator ?? $dt->creator ?? $i->author ?? '')), 0, 64) ?: null,
             'content'    => mb_substr($txt, 0, 2000),
             'thumb'      => preg_match('#^https?://#i', $thumb) ? $thumb : '',
             'votes'      => (int)($mn->votes ?? 0),
