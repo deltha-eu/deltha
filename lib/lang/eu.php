@@ -178,6 +178,7 @@ return [
 'Escribir a… (nick)' => 'Idatzi honi… (erabiltzaile-izena)',
 'Ese comentario no existe.' => 'Iruzkin hori ez da existitzen.',
 'Ese enlace ya está enviado: <a href="/hilo.php?id=%d">verlo</a>.' => 'Esteka hori bidalita dago jada: <a href="/hilo.php?id=%d">ikusi</a>.',
+'Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.' => 'Hedabide hori blokeatuta dago gune honetan (%s): ez dira bere estekak onartzen.',
 'Ese hilo no existe.' => 'Hari hori ez da existitzen.',
 'Ese medio no existe.' => 'Hedabide hori ez da existitzen.',
 'Ese nombre de usuario ya está cogido.' => 'Erabiltzaile-izen hori hartuta dago jada.',

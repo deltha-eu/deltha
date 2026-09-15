@@ -178,6 +178,7 @@ return [
 'Escribir a… (nick)' => 'Écrire à… (pseudo)',
 'Ese comentario no existe.' => 'Ce commentaire n\'existe pas.',
 'Ese enlace ya está enviado: <a href="/hilo.php?id=%d">verlo</a>.' => 'Ce lien a déjà été envoyé : <a href="/hilo.php?id=%d">le voir</a>.',
+'Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.' => 'Ce média est bloqué sur ce site (%s) : ses liens ne sont pas acceptés.',
 'Ese hilo no existe.' => 'Ce fil n\'existe pas.',
 'Ese medio no existe.' => 'Ce média n\'existe pas.',
 'Ese nombre de usuario ya está cogido.' => 'Ce nom d\'utilisateur est déjà pris.',

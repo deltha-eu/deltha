@@ -178,6 +178,7 @@ return [
 'Escribir a… (nick)' => 'Write to… (username)',
 'Ese comentario no existe.' => 'That comment does not exist.',
 'Ese enlace ya está enviado: <a href="/hilo.php?id=%d">verlo</a>.' => 'That link has already been posted: <a href="/hilo.php?id=%d">see it</a>.',
+'Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.' => 'That outlet is blocked on this site (%s): its links are not accepted.',
 'Ese hilo no existe.' => 'That thread does not exist.',
 'Ese medio no existe.' => 'That source does not exist.',
 'Ese nombre de usuario ya está cogido.' => 'That username is already taken.',
