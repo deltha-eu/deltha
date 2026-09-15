@@ -73,6 +73,7 @@ if (isset($_COOKIE[DDD_SESSION])) {
 }
 require_once __DIR__ . '/i18n.php';
 i18n_load();
+require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
  * guardada unos minutos, solo para contar visitantes en /estadisticas.php.

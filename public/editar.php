@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     if (!$err && mb_strlen($title) < 8) $err = 'El titular es demasiado corto.';
     elseif (!$err && !in_array($topic, array_column($topics, 'topic_id'), false)) $err = 'Elige un tema.';
     elseif (!$err && !$isArt && $url !== '' && !preg_match('#^https?://[^\s]+$#i', $url)) $err = 'La URL no es válida.';
+    elseif (!$err && !$isArt && $url !== '' && ($bloq = source_blocked($pdo, $url))) $err = "Ese medio está bloqueado ($bloq): no se admiten sus enlaces. Se gestiona en moderación → Medios bloqueados.";
     elseif (!$err && $isArt && mb_strlen(trim($content)) < 20) $err = 'El texto del artículo es demasiado corto.';
 
     if (!$err) {

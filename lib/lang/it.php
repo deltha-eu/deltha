@@ -178,6 +178,7 @@ return [
 'Escribir a… (nick)' => 'Scrivi a… (nome utente)',
 'Ese comentario no existe.' => 'Quel commento non esiste.',
 'Ese enlace ya está enviado: <a href="/hilo.php?id=%d">verlo</a>.' => 'Quel link è già stato inviato: <a href="/hilo.php?id=%d">vedilo</a>.',
+'Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.' => 'Questa testata è bloccata su questo sito (%s): i suoi link non sono ammessi.',
 'Ese hilo no existe.' => 'Quella discussione non esiste.',
 'Ese medio no existe.' => 'Quella testata non esiste.',
 'Ese nombre de usuario ya está cogido.' => 'Quel nome utente è già preso.',

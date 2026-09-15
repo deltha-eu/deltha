@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['url'] = post('url');
     if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }
+    if (!$err && $f['url'] !== '' && ($bloq = source_blocked($pdo, $f['url']))) { $err = t('Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.', h($bloq)); $step = '1'; }
 
     if (!$err && $f['url'] !== '') {
         $d = $pdo->prepare("SELECT story_id FROM stories WHERE url = ? AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");

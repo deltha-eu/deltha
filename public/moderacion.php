@@ -29,6 +29,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio_quitar') {
     $pdo->prepare("DELETE FROM banned_domains WHERE domain = ?")->execute([post('domain')]);
     $out[] = 'Dominio retirado de la lista.';
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'medio') {
+    $d = source_block_add($pdo, post('domain'), post('reason'), (int)user()['user_id']);   // admite pegar el enlace entero
+    $out[] = $d ? "Medio $d bloqueado (y todos sus subdominios)." : 'Dominio o enlace no válido.';
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'medio_quitar') {
+    source_block_remove($pdo, post('domain'));
+    $out[] = 'Medio retirado de la lista de bloqueados.';
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['rep_borrar', 'rep_descartar'], true)) {
     $cid = (int)post('cid');
     if (post('act') === 'rep_borrar') { comment_delete($pdo, $cid); $out[] = "Comentario #$cid eliminado (texto sustituido por el aviso)."; }
@@ -120,6 +128,19 @@ if ($bd) {
     foreach ($bd as $b) {
         echo "<tr><td><code>" . h($b['domain']) . "</code></td><td>" . h((string)$b['reason']) . "</td><td><small>" . h($b['login'] ?: 'sistema') . " · " . h(hace($b['created'])) . "</small></td>";
         echo "<td><form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"dominio_quitar\"><input type=\"hidden\" name=\"domain\" value=\"" . h($b['domain']) . "\"><button class=\"btn\">quitar</button></form></td></tr>";
+    }
+    echo "</table></details>";
+}
+try { $bs = $pdo->query("SELECT b.*, u.login FROM banned_sources b LEFT JOIN users u ON u.user_id = b.added_by ORDER BY b.domain")->fetchAll(); } catch (Throwable $e) { $bs = []; }
+echo "<h3 id=\"medios\">Medios bloqueados (" . count($bs) . ")</h3>";
+echo "<p><small>No se admiten enlaces a estos medios (por ejemplo, los sancionados por la UE como RT o Sputnik). Se bloquea el dominio y todos sus subdominios; vale pegar el enlace entero. Se comprueba al enviar y al editar un envío.</small></p>";
+echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px\"><input type=\"hidden\" name=\"act\" value=\"medio\">";
+echo "<input type=\"text\" name=\"domain\" placeholder=\"https://medio.com/… o medio.com\" required style=\"flex:2;min-width:200px\"> <input type=\"text\" name=\"reason\" placeholder=\"motivo (opcional)\" maxlength=\"120\" style=\"flex:1;min-width:140px\"> <button class=\"btn\">Bloquear medio</button></form>";
+if ($bs) {
+    echo "<details><summary>Ver lista</summary><table>";
+    foreach ($bs as $b) {
+        echo "<tr><td><code>" . h($b['domain']) . "</code></td><td>" . h((string)$b['reason']) . "</td><td><small>" . h($b['login'] ?: 'sistema') . " · " . h(hace($b['created'])) . "</small></td>";
+        echo "<td><form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"medio_quitar\"><input type=\"hidden\" name=\"domain\" value=\"" . h($b['domain']) . "\"><button class=\"btn\">quitar</button></form></td></tr>";
     }
     echo "</table></details>";
 }
