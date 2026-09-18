@@ -109,6 +109,7 @@ function fuente_actualizar(PDO $pdo, array $src): array {
         if ($xml === null) { $err[] = "$phase: sin respuesta"; continue; }
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
+        if (!empty($items[0]['smf'])) { $k = fuente_smf_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']}: $k mensajes leidos del foro"; }
         [$new, $upd] = fuente_guardar($pdo, $src, $phase, $items);
         $log[] = "fuente {$src['slug']} $phase: " . count($items) . " items, $new nuevos, $upd actualizados";
     }
@@ -128,6 +129,30 @@ function fuente_actualizar(PDO $pdo, array $src): array {
     return $log;
 }
 
+/** Foros SMF (Areopago): el RSS no trae ni el autor ni el numero del mensaje dentro del hilo (#11515). Se leen de la pagina del
+ *  propio mensaje, solo para los items que aun no estan guardados y con tope sources_smf_per_run por pasada (una peticion por mensaje).
+ *  El numero va a «comments» (es lo que se muestra como respuestas) y el autor a «author». */
+function fuente_smf_completar(PDO $pdo, array $src, array &$items, int $timeout): int {
+    $sel = $pdo->prepare("SELECT 1 FROM source_items WHERE source_id = ? AND ext_id = ?");
+    $max = max(0, (int)cfg('sources_smf_per_run', 12)); $n = 0;
+    foreach ($items as &$it) {
+        if (empty($it['smf'])) continue;
+        $sel->execute([$src['source_id'], $it['ext_id']]);
+        if ($sel->fetchColumn() || $n >= $max) continue;
+        $n++;
+        $html = http_get($it['url'], $timeout, 3000000);
+        if ($html === null) continue;
+        $id = (int)$it['smf']['msg'];
+        if (preg_match('/msg=' . $id . '["&][^>]*class="smalltext">#(\d+)</', $html, $m)) $it['comments'] = (int)$m[1];
+        // autor: el bloque del mensaje (id="msgN") y, dentro, el nombre en div.poster > h4
+        if (preg_match('/id="msg' . $id . '".{0,4000}?<div class="poster">.*?<h4>\s*(?:<a[^>]*>)?\s*([^<]{1,64}?)\s*</su', $html, $m)) $it['author'] = trim(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?: null;
+    }
+    unset($it);
+    return $n;
+}
+/** Fuentes sin votos (foros SMF): no se pintan las flechas ni «↑ n» en la columna. */
+function fuente_sin_votos(array $src): bool { return str_contains((string)$src['feed_portada'], 'action=.xml'); }
+
 /** Upsert de los items de un feed. Devuelve [nuevos, actualizados]. */
 function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): array {
     $sel = $pdo->prepare("SELECT item_id, phase, image FROM source_items WHERE source_id = ? AND ext_id = ?");
@@ -135,7 +160,7 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     // (la fecha nueva se decide en PHP: MySQL evalua los SET de izquierda a derecha y phase ya tendria el valor nuevo)
     $upd = $pdo->prepare("UPDATE source_items SET phase = ?, title = ?, source = COALESCE(?, source), topic = COALESCE(?, topic), content = IF(? = '', content, ?),
-                          image = COALESCE(image, ?), votes = ?, negatives = ?, comments = ?, pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");
+                          image = COALESCE(image, ?), votes = ?, negatives = ?, comments = GREATEST(comments, ?), pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");
     $new = $updated = 0;
     foreach ($items as $it) {
         $sel->execute([$src['source_id'], $it['ext_id']]);
@@ -208,7 +233,9 @@ function fuentes_parse_rss(string $xml): array {
         $desc = (string)$i->description;
         $full = isset($ce->encoded) ? (string)$ce->encoded : '';
         $meneame = isset($mn->link_id) && trim((string)$mn->link_id) !== '';
-        $extId = $meneame ? trim((string)$mn->link_id) : substr(sha1(trim((string)$i->guid) ?: $link), 0, 32);
+        // foros SMF (Areopago): guid «tag:…:msg=N» y enlace «topic=T.msgN»; cada item es un mensaje
+        $smf = preg_match('/[?&;]topic=(\d+)\.msg(\d+)/', $link, $sm) && str_starts_with(trim((string)$i->guid), 'tag:') ? ['topic' => (int)$sm[1], 'msg' => (int)$sm[2]] : null;
+        $extId = $meneame ? trim((string)$mn->link_id) : ($smf ? 'smf:' . $smf['msg'] : substr(sha1(trim((string)$i->guid) ?: $link), 0, 32));
 
         // imagen: media:content / media:thumbnail / enclosure / primer <img> del contenido
         $thumb = '';
@@ -225,6 +252,10 @@ function fuentes_parse_rss(string $xml): array {
             $txt = preg_replace('/<p><strong>etiquetas<\/strong>.*$/su', '', $desc);
             $txt = preg_replace('/<p>[^<]*<a href="[^"]*go\?id=\d+"[^>]*>noticia original<\/a>.*$/su', '', $txt);
             $topic = trim((string)($mn->sub ?? '')) ?: null;
+        } elseif ($smf) {
+            $url = $link; $thread = $link;                                 // el mensaje en su hilo (<comments> de SMF es el formulario de respuesta)
+            $source = null; $txt = $desc;
+            $topic = isset($i->category) ? trim((string)$i->category[0]) : null;   // el subforo
         } else {
             $url = $link;                                                  // el articulo es el propio enlace
             $thread = trim((string)$i->comments) ?: $link;
@@ -249,6 +280,7 @@ function fuentes_parse_rss(string $xml): array {
             'negatives'  => (int)($mn->negatives ?? 0),
             'comments'   => (int)($mn->comments ?? 0),
             'pub_date'   => date('Y-m-d H:i:s', $ts),
+            'smf'        => $smf,
         ];
     }
     return $out;
@@ -292,6 +324,7 @@ function fuentes_parse_atom(SimpleXMLElement $doc): array {
             'thumb'      => preg_match('#^https?://#i', $thumb) ? $thumb : '',
             'votes' => 0, 'negatives' => 0, 'comments' => 0,
             'pub_date'   => date('Y-m-d H:i:s', $ts),
+            'smf'        => $smf,
         ];
     }
     return $out;
@@ -375,7 +408,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
         echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h(t('leer en %s', $src['name'])) . "</span></a>";
     } else {
         echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
-        echo "<span class=\"vote\"><span>" . icon('up') . "<span>" . (int)$i['votes'] . "</span></span><span>" . icon('down') . "<span>" . (int)$i['negatives'] . "</span></span></span>";
+        if (!fuente_sin_votos($src)) echo "<span class=\"vote\"><span>" . icon('up') . "<span>" . (int)$i['votes'] . "</span></span><span>" . icon('down') . "<span>" . (int)$i['negatives'] . "</span></span></span>";
         echo "<a class=\"share ext\" href=\"" . h($i['thread_url']) . "\" rel=\"noopener\">" . icon('link') . "<span>" . h(t('ver en %s', $src['name'])) . "</span></a>";
     }
     echo "</div></div></article>";

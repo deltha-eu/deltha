@@ -31,7 +31,7 @@ community_skin((string)$src['skin']);
 // anonimos: cacheable un minuto (misma politica que /procesos.php)
 if (user()) header('Cache-Control: private, no-cache'); else { header('Cache-Control: public, max-age=60'); header('Vary: Cookie'); }
 
-page_header($medio ? $src['name'] : $src['name'] . ' · ' . $views[$view], 'fuente:' . $src['slug']);
+page_header(($medio || count($views) === 1) ? $src['name'] : $src['name'] . ' · ' . $views[$view], 'fuente:' . $src['slug']);
 if (count($views) > 1) {
     echo "<nav class=\"sub\">";
     foreach ($views as $k => $lbl) echo "<a href=\"" . h(fuente_url($src, $k)) . "\"" . ($k === $view ? ' class="on"' : '') . ">" . h($lbl) . "</a>";
@@ -46,7 +46,9 @@ if ($medio) {
     $u = user();
     $intro .= ' ' . ($u ? (mis_medios($pdo, $u) ? t('Es uno de <a href="/perfil.php#medios">tus medios</a>.') : t('Puedes elegir <a href="/perfil.php#medios">tus medios</a> en el perfil.')) : t('<a href="/login.php">Entra</a> para elegir tus medios.'));
 } else {
-    $intro = t('Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.', h($src['home']), h($src['name']));
+    $intro = fuente_sin_votos($src)
+        ? t('Solo lectura: los últimos mensajes de <a href="%s" rel="noopener">%s</a>, vistos desde Deltha. Aquí no se responde: cada mensaje lleva a su sitio en el hilo original; el número es el del mensaje dentro del hilo.', h($src['home']), h($src['name']))
+        : t('Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.', h($src['home']), h($src['name']));
     if ($view === 'candidatas') $intro .= ' ' . t('Candidatas: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.', (int)cfg('sources_popular_hours', 24), (int)cfg('sources_popular_min_votes', 5));
 }
 $intro .= ' ' . t('Se lee cada %d min · última lectura: %s.', (int)$src['interval_min'], h($last));

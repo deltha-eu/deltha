@@ -153,11 +153,12 @@ function side_fuentes(PDO $pdo): void {
     require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
     foreach (fuentes_activas($pdo, 'agregador') as $src) {
-        $st = $pdo->prepare("SELECT title, url, votes FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
+        $st = $pdo->prepare("SELECT title, url, votes, comments FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
         $st->execute([$src['source_id']]);
         if (!($rows = $st->fetchAll())) continue;
-        echo "<section class=\"mod fuente\"><h3>" . h($src['name']) . "<span>" . t('portada') . "</span></h3>";
-        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . icon('up') . (int)$r['votes'] . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
+        $sinVotos = fuente_sin_votos($src);   // foros: en vez de votos, el numero del mensaje en su hilo
+        echo "<section class=\"mod fuente\"><h3>" . h($src['name']) . "<span>" . ($sinVotos ? t('último') : t('portada')) . "</span></h3>";
+        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . ($sinVotos ? icon('reply') : icon('up')) . (int)($sinVotos ? $r['comments'] : $r['votes']) . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
         echo "<p class=\"more\"><a href=\"" . h(fuente_url($src)) . "\">" . t('%s visto desde Deltha', $src['name']) . "</a></p></section>";
     }
     foreach (['medio' => t('Último en medios'), 'newsletter' => t('Último en substacks')] as $kind => $title) {
