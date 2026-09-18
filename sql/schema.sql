@@ -39,6 +39,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('comm_min_aura',       '10',   'Aura minima (estricta: mayor que) para poder crear comunidades'),
 ('comm_max_per_user',   '3',    'Comunidades que puede crear cada usuario'),
 ('comm_max_per_story',  '3',    'Comunidades en las que puede estar un mismo envio (contando la principal)'),
+('side_order',          'ciclo,temas,comunidades,votadas,agregadores,medios,substacks', 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta'),
+('sources_smf_per_run', '12',   'Foros SMF (Areopago): paginas de mensaje que se leen por pasada para sacar autor y numero del mensaje'),
 ('comment_edit_minutes','10',   'Minutos tras publicar en los que el autor puede editar su comentario'),
 ('comment_edit_min_aura','10',  'Aura minima (estricta: mayor que) para poder editar los comentarios propios'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),

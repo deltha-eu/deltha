@@ -29,6 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st->execute([(float)$c, $col, (int)$id]);
         }
         $out[] = 'Temas guardados.';
+    } elseif ($act === 'lateral') {   // orden y visibilidad de los modulos de la columna derecha
+        require_once __DIR__ . '/../lib/lateral.php';
+        $pos = []; foreach (($_POST['pos'] ?? []) as $k => $v) if (isset(side_modules()[$k]) && !empty($_POST['on'][$k])) $pos[$k] = (int)$v;
+        asort($pos);
+        $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES ('side_order', ?, 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta') ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)")->execute([implode(',', array_keys($pos))]);
+        $out[] = 'Lateral guardado: ' . (implode(', ', array_keys($pos)) ?: 'sin módulos');
     } elseif ($act === 'tema_borrar') {
         if (post('seguro') !== '1') $out[] = 'Marca la casilla de confirmación para borrar el tema.';
         else { $e = topic_delete($pdo, (int)post('topic_id'), (int)post('to')); $out[] = $e ?: 'Tema borrado; sus envíos han pasado al tema elegido.'; }
@@ -327,7 +333,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'logo' => 'Logo', 'privacidad' => 'Páginas'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -472,6 +478,22 @@ if ($tab === 'usuarios') {
         echo "<p><form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
     }
     echo "<h3>Nueva fuente</h3>" . $fuente_form(['interval_min' => 60], 'fuente_nueva');
+
+} elseif ($tab === 'lateral') {
+    require_once __DIR__ . '/../lib/lateral.php';
+    $order = side_order(); $mods = side_modules();
+    echo "<h3>Columna derecha (escritorio)</h3><p><small>Cada módulo con su posición (se ordenan de menor a mayor) y si se ve. Un módulo sin datos (p. ej. sin comunidades con actividad) no se pinta aunque esté activo. Los tres agregadores/medios dependen de <code>sources_enabled</code>.</small></p>";
+    echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"lateral\"><table><tr><th style=\"width:60px\">pos.</th><th>módulo</th><th style=\"width:60px\">se ve</th></tr>";
+    $i = 0; $rows = [];
+    foreach ($order as $k) $rows[$k] = ++$i;
+    foreach ($mods as $k => $m) if (!isset($rows[$k])) $rows[$k] = ++$i;
+    asort($rows);
+    foreach ($rows as $k => $n) {
+        echo "<tr><td><input type=\"number\" name=\"pos[$k]\" value=\"$n\" min=\"1\" max=\"99\" style=\"width:56px\"></td><td>" . h($mods[$k][0]) . " <small><code>$k</code></small></td>";
+        echo "<td style=\"text-align:center\"><input type=\"checkbox\" name=\"on[$k]\" value=\"1\"" . (in_array($k, $order, true) ? ' checked' : '') . "></td></tr>";
+    }
+    echo "</table><p><button class=\"btn\">Guardar lateral</button></p></form>";
+    echo "<p><small>Orden actual: <code>" . h(implode(',', $order)) . "</code> (config <code>side_order</code>).</small></p>";
 
 } elseif ($tab === 'logo') {
     echo "<h3>Logo de " . h(cfg('site_name')) . "</h3>";

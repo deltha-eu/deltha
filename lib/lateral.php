@@ -69,14 +69,29 @@ function rail_medios(): void {
 }
 
 /** Columna derecha. */
+/** Modulos de la columna derecha: clave => [nombre para admin, funcion]. El orden y cuales se ven los fija
+ *  config.side_order (claves separadas por comas; lo que no este, no se pinta) desde admin -> Lateral. */
+function side_modules(): array {
+    return ['ciclo'       => [t('Próximo ciclo'), 'side_ciclo'],
+            'temas'       => [t('Temas'), 'side_temas'],
+            'comunidades' => [t('En comunidades'), 'side_comunidades'],
+            'votadas'     => [t('Las más votadas'), 'side_votadas'],
+            'agregadores' => [t('Agregadores (Menéame, Areópago…)'), 'side_agregadores'],
+            'medios'      => [t('Último en medios'), 'side_medios'],
+            'substacks'   => [t('Último en substacks'), 'side_substacks']];
+}
+const DDD_SIDE_DEFAULT = 'ciclo,temas,comunidades,votadas,agregadores,medios,substacks';
+/** Orden en vigor (solo claves existentes). */
+function side_order(): array {
+    $mods = side_modules(); $out = [];
+    foreach (explode(',', (string)cfg('side_order', DDD_SIDE_DEFAULT)) as $k) { $k = trim($k); if (isset($mods[$k]) && !in_array($k, $out, true)) $out[] = $k; }
+    return $out;
+}
 function side(): void {
     global $pdo;
+    $mods = side_modules();
     echo "<aside class=\"side\">";
-    try { side_ciclo($pdo); } catch (Throwable $e) {}
-    try { side_temas($pdo); } catch (Throwable $e) {}
-    try { side_comunidades($pdo); } catch (Throwable $e) {}
-    try { side_votadas($pdo); } catch (Throwable $e) {}
-    try { side_fuentes($pdo); } catch (Throwable $e) {}
+    foreach (side_order() as $k) { try { ($mods[$k][1])($pdo); } catch (Throwable $e) {} }
     echo "</aside>";
 }
 
@@ -149,7 +164,7 @@ function side_comunidades(PDO $pdo): void {
 /** Fuentes externas en la columna derecha: los agregadores (Meneame, tres ultimas de portada con votos) y, para medios y newsletters,
  *  un modulo por grupo («Ultimo en medios», «Ultimo en substacks») con las cinco ultimas noticias de TODO el catalogo (no solo las
  *  elegidas por el usuario), cada una con su medio; el enlace lleva al articulo. */
-function side_fuentes(PDO $pdo): void {
+function side_agregadores(PDO $pdo): void {
     require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
     foreach (fuentes_activas($pdo, 'agregador') as $src) {
@@ -161,7 +176,13 @@ function side_fuentes(PDO $pdo): void {
         foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . ($sinVotos ? icon('reply') : icon('up')) . (int)($sinVotos ? $r['comments'] : $r['votes']) . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
         echo "<p class=\"more\"><a href=\"" . h(fuente_url($src)) . "\">" . t('%s visto desde Deltha', $src['name']) . "</a></p></section>";
     }
-    foreach (['medio' => t('Último en medios'), 'newsletter' => t('Último en substacks')] as $kind => $title) {
+}
+function side_medios(PDO $pdo): void { side_ultimo($pdo, 'medio', t('Último en medios')); }
+function side_substacks(PDO $pdo): void { side_ultimo($pdo, 'newsletter', t('Último en substacks')); }
+function side_ultimo(PDO $pdo, string $kind, string $title): void {
+    require_once __DIR__ . '/fuentes.php';
+    if (!fuentes_on()) return;
+    foreach ([$kind => $title] as $kind => $title) {
         $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug FROM source_items i JOIN sources s ON s.source_id = i.source_id
                               WHERE s.kind = ? AND s.status = 'ok' ORDER BY i.pub_date DESC LIMIT 5");
         $st->execute([$kind]);
