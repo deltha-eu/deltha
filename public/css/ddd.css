@@ -1951,9 +1951,9 @@ details.editbox form.plain { padding-top: 0; }
   .rail details.rail-dd summary::after { content: "▾"; margin-left: auto; color: var(--muted); font-size: 12px; }
   .rail details.rail-dd[open] summary::after { content: "▴"; }
   .rail details.rail-dd .list { display: flex; flex-direction: column; gap: 1px; padding: 2px 8px 8px 46px; }
-  .rail details.rail-dd.skins .list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; padding: 4px 8px 8px 12px; }
+  .rail details.rail-dd.skins .list { display: grid; grid-template-columns: 1fr; gap: 0; padding: 2px 8px 6px 12px; }   /* una columna: con dos, los nombres largos se cortaban */
   .rail details.rail-dd .list a { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 8px; font-size: 13px; color: var(--fg); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rail details.rail-dd.skins .list a { font-size: 12.5px; padding: 5px 6px; }
+  .rail details.rail-dd.skins .list a { font-size: 12.5px; padding: 3px 8px; }
   .rail details.rail-dd .list a:hover { background: var(--hover); }
   .rail details.rail-dd .list a.on { font-weight: 700; background: var(--hover); }
   .rail details.rail-dd .list a.on::before { content: "✓"; font-size: 11px; color: var(--accent); margin-right: 2px; }
