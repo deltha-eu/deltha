@@ -16,6 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema') {
         } catch (PDOException $e) { $out[] = 'Ese tema ya existe.'; }
     }
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema_editar') {   // renombrar y cambiar el color (el coeficiente sigue siendo del admin)
+    $tid = (int)post('topic_id');
+    $e = topic_rename($pdo, $tid, post('name'));
+    if (!$e && preg_match('/^#[0-9a-fA-F]{6}$/', post('color'))) $pdo->prepare("UPDATE topics SET color = ? WHERE topic_id = ?")->execute([post('color'), $tid]);
+    $out[] = $e ?: 'Tema guardado.';
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema_borrar') {
+    if (post('seguro') !== '1') $out[] = 'Marca la casilla de confirmación para borrar el tema.';
+    else { $e = topic_delete($pdo, (int)post('topic_id'), (int)post('to')); $out[] = $e ?: 'Tema borrado; sus envíos han pasado al tema elegido.'; }
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio') {
     $d = mb_strtolower(trim(post('domain')));
     $d = preg_replace('~^.*@~', '', $d);   // admite pegar un correo entero
@@ -113,11 +123,25 @@ foreach ($creps as $r) {
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar mensaje</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_descartar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn\" title=\"el mensaje se queda; los reportes se cierran\">Descartar reporte</button></form></div></div>";
 }
-echo "<h3 id=\"temas\">Temas</h3><p>";
-foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) echo "<a class=\"tag\" href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a> ";
-echo "</p><form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap\"><input type=\"hidden\" name=\"act\" value=\"tema\">";
+$topics = $pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.name")->fetchAll();
+echo "<h3 id=\"temas\">Temas (" . count($topics) . ")</h3>";
+echo "<table><tr><th>tema</th><th>envíos</th><th>color</th><th></th><th>borrar (moviendo sus envíos a…)</th></tr>";
+foreach ($topics as $t) {
+    echo "<tr><td><form method=\"post\" id=\"te{$t['topic_id']}\" style=\"display:flex;gap:6px;align-items:center\"><input type=\"hidden\" name=\"act\" value=\"tema_editar\"><input type=\"hidden\" name=\"topic_id\" value=\"{$t['topic_id']}\">";
+    echo "<input type=\"text\" name=\"name\" value=\"" . h($t['name']) . "\" maxlength=\"32\" required style=\"width:150px\"></form></td>";
+    echo "<td class=\"num\"><a href=\"/tema.php?t={$t['topic_id']}\">{$t['n']}</a></td>";
+    echo "<td><input type=\"color\" name=\"color\" form=\"te{$t['topic_id']}\" value=\"" . h($t['color']) . "\"></td><td><button class=\"btn\" form=\"te{$t['topic_id']}\">Guardar</button></td>";
+    if (count($topics) > 1) {
+        echo "<td><form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap\"><input type=\"hidden\" name=\"act\" value=\"tema_borrar\"><input type=\"hidden\" name=\"topic_id\" value=\"{$t['topic_id']}\"><select name=\"to\">";
+        foreach ($topics as $o) if ((int)$o['topic_id'] !== (int)$t['topic_id']) echo "<option value=\"{$o['topic_id']}\">" . h($o['name']) . "</option>";
+        echo "</select><label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> seguro</label><button class=\"btn danger\">Borrar</button></form></td>";
+    } else echo "<td></td>";
+    echo "</tr>";
+}
+echo "</table>";
+echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px\"><input type=\"hidden\" name=\"act\" value=\"tema\">";
 echo "<input type=\"text\" name=\"name\" placeholder=\"nuevo tema\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\">Añadir tema</button></form>";
-echo "<p><small>El tema de cada envío se cambia desde su hilo (desplegable bajo los votos). El coeficiente lo ajusta el admin.</small></p>";
+echo "<p><small>Renombrar cambia el nombre en todos sus envíos. Borrar un tema mueve sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) al tema elegido; no se pierde nada. El tema de cada envío se cambia desde su hilo (desplegable bajo los votos). El coeficiente lo ajusta el admin.</small></p>";
 $bd = $pdo->query("SELECT b.*, u.login FROM banned_domains b LEFT JOIN users u ON u.user_id = b.added_by ORDER BY b.domain")->fetchAll();
 echo "<h3 id=\"dominios\">Dominios de correo no válidos (" . count($bd) . ")</h3>";
 echo "<p><small>No se aceptan registros con correos de estos dominios (desechables, de spam…). Además se rechazan los dominios sin registros MX.</small></p>";

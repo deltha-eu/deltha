@@ -25,13 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $u) {
     }
 }
 
-$rows = $pdo->query("SELECT c.*, u.login AS owner, (SELECT COUNT(*) FROM stories s WHERE s.community_id = c.community_id AND s.status IN ('nuevas','candidatas','destacadas','archived')) n,
-                            (SELECT MAX(s.sent_date) FROM stories s WHERE s.community_id = c.community_id) last
+$rows = $pdo->query("SELECT c.*, u.login AS owner, (SELECT COUNT(*) FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id WHERE sc.community_id = c.community_id AND s.status IN " . DDD_COMM_PUBLIC . ") n,
+                            (SELECT MAX(sc.created) FROM story_communities sc WHERE sc.community_id = c.community_id) last
                        FROM communities c JOIN users u ON u.user_id = c.owner_id WHERE c.status = 'ok' ORDER BY last DESC, c.created DESC")->fetchAll();
 
 page_header(t('Comunidades'));
 echo "" . t('<h1>Comunidades</h1>') . "";
-echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad. Puede crear comunidades quien tenga aura mayor que %s (los moderadores, sin requisito de aura), hasta %d cada uno. Puedes elegir una como página de entrada en <a href="/perfil.php">tu perfil</a>.', h(cfg('site_name')), h(num_es(cfg('comm_min_aura', 10))), (int)cfg('comm_max_per_user', 3)) . "</p>";
+echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad; además, quien creó una comunidad puede añadir a ella cualquier envío ya publicado desde su hilo (hasta %d comunidades por envío). Puede crear comunidades quien tenga aura mayor que %s (los moderadores, sin requisito de aura), hasta %d cada uno. Puedes elegir una como página de entrada en <a href="/perfil.php">tu perfil</a>.', h(cfg('site_name')), (int)cfg('comm_max_per_story', 3), h(num_es(cfg('comm_min_aura', 10))), (int)cfg('comm_max_per_user', 3)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($u && $quota > 0) {
     echo "<h3 id=\"crear\" style=\"padding:12px 16px 0\"" . t('>Crear una comunidad</h3>') . "<p class=\"meta\" style=\"padding:4px 16px 0\">" . ($quota > 3 ? t('Puedes crear las que quieras.') : t('Puedes crear %d más.', $quota)) . "</p>";
