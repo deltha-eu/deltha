@@ -16,7 +16,7 @@ $dots = function (int $i) use ($N): string { $h = '<div class="dots">'; for ($k 
 // muestras de plantillas: fondo, texto, acento, (fondo de cabecera), radio  — solo color y forma, en miniatura
 $SK = [
     'editorial' => ['Editorial',     '#ffffff', '#111111', '#111111', '#ffffff', '8px'],
-    'comunidad' => ['Comunidad',     '#f2f2f2', '#111111', '#111111', '#ffffff', '10px'],
+    'comunidad' => ['Comunidad',     '#E9EEF2', '#444444', '#3F6787', '#557EA0', '4px'],
     'delta'     => ['Delta',         '#f5efe3', '#171614', '#2f6b3f', '#f5efe3', '4px'],
     'flujo'     => ['Flujo',         '#ffffff', '#111111', '#111111', '#ffffff', '6px'],
     'retro'     => ['Retrocomputer', '#f3efd8', '#1f3d2a', '#1f3d2a', '#f3efd8', '0'],
@@ -160,7 +160,7 @@ a.hint { text-decoration: none; }
   <ul>
     <li><b><?= t('Los temas los pone %s.', h(cfg('site_name', 'Deltha'))) ?></b> <?= t('Pocos y estables: actualidad, ciencia, cultura… Cada envío lleva uno, y el tema puede dar un pequeño empujón al δ (un coeficiente público).') ?></li>
     <li><b><?= t('Las comunidades las crea la gente.') ?></b> <?= t('Con más de %s de aura puedes abrir hasta %d: un nombre, un color y de qué va. Un envío puede sumarse a una, y quien la creó (o un moderador) la cuida.', $commAura, $commMax) ?></li>
-    <li><b><?= t('Cada comunidad tiene su aire.') ?></b> <?= t('Puede elegir una plantilla visual propia, que se aplica a su página y a sus hilos. Y tú puedes elegir una comunidad o un tema como página de entrada.') ?></li>
+    <li><b><?= t('Cada comunidad tiene su aire.') ?></b> <?= t('Puede elegir una skin propia, que se aplica a su página y a sus hilos. Y tú puedes elegir una comunidad o un tema como página de entrada.') ?></li>
   </ul>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
@@ -174,7 +174,7 @@ a.hint { text-decoration: none; }
 <?php endforeach; ?>
   </div>
   <ul>
-    <li><b><?= t('%d plantillas visuales.', count($SK)) ?></b> <?= t('Misma portada, mismos números, distinta piel: de revista, de tarjetas, de terminal, de manga, de fanzine… Se elige en el perfil, y cada una tiene versión clara y oscura.') ?></li>
+    <li><b><?= t('%d skins.', count($SK)) ?></b> <?= t('Misma portada, mismos números, distinta piel: de revista, de tarjetas, de terminal, de manga, de fanzine… Se elige en el perfil, y cada una tiene versión clara y oscura.') ?></li>
     <li><b><?= t('En tu idioma y en tu bolsillo.') ?></b> <?= t('Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.') ?></li>
   </ul>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>

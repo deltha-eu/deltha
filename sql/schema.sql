@@ -35,7 +35,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
 ('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
 ('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
-('skin_default',        'editorial', 'Plantilla visual por defecto (anonimos y quien no elija): editorial | comunidad | delta | flujo'),
+('skin_default',        'editorial', 'Skin por defecto (anonimos y quien no elija): cualquiera de DDD_SKINS'),
 ('comm_min_aura',       '10',   'Aura minima (estricta: mayor que) para poder crear comunidades'),
 ('comm_max_per_user',   '3',    'Comunidades que puede crear cada usuario'),
 ('comm_max_per_story',  '3',    'Comunidades en las que puede estar un mismo envio (contando la principal)'),

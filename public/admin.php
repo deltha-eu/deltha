@@ -12,7 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = post('act');
     if ($act === 'config') {
         $st = $pdo->prepare("UPDATE config SET cvalue = ? WHERE ckey = ?");
-        foreach (($_POST['cfg'] ?? []) as $k => $v) $st->execute([trim((string)$v), (string)$k]);
+        foreach (($_POST['cfg'] ?? []) as $k => $v) {
+            if ($k === 'skin_default' && !isset(DDD_SKINS[(string)$v])) $v = 'editorial';   // solo skins existentes
+            $st->execute([trim((string)$v), (string)$k]);
+        }
         $out[] = 'Config guardada.';
     } elseif ($act === 'pagina') {
         $pdo->prepare("INSERT INTO pages (slug, title, body) VALUES (?,?,?) ON DUPLICATE KEY UPDATE title = VALUES(title), body = VALUES(body)")
@@ -408,6 +411,12 @@ if ($tab === 'usuarios') {
     echo "<h3>Config</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"config\"><table>";
     foreach ($pdo->query("SELECT * FROM config ORDER BY ckey") as $c) {
         if (str_starts_with($c['ckey'], 'logo_')) continue;   // se gestiona en la pestaña Logo (logo_light, logo_dark, logo_icon)
+        if ($c['ckey'] === 'skin_default') {   // la skin por defecto se elige entre todas las que hay (DDD_SKINS)
+            echo "<tr><td><code>skin_default</code><br><small>Skin por defecto (anónimos y quien no elija): cualquiera de las " . count(DDD_SKINS) . "</small></td><td style=\"width:45%\"><select name=\"cfg[skin_default]\">";
+            foreach (DDD_SKINS as $k => $v) echo "<option value=\"$k\"" . ($c['cvalue'] === $k ? ' selected' : '') . ">" . h($v) . " ($k)</option>";
+            echo "</select></td></tr>";
+            continue;
+        }
         echo "<tr><td><code>" . h($c['ckey']) . "</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><input type=\"text\" name=\"cfg[" . h($c['ckey']) . "]\" value=\"" . h($c['cvalue']) . "\"></td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar config</button></p></form>";

@@ -39,7 +39,7 @@ function rail_skins(): void {
     foreach (DDD_SKINS as $k => $v) $items[] = ["/cambiar-skin.php?s=$k", $v, $k === $cur, $k];
     $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');
     if ($saved !== '') $items[] = ["/cambiar-skin.php?s=", t('la del sitio'), false, null, 'reset'];
-    rail_dd('skin', t('Plantilla'), DDD_SKINS[$cur] ?? $cur, $items, 'skins');
+    rail_dd('skin', t('Skin'), DDD_SKINS[$cur] ?? $cur, $items, 'skins');
     // aspecto: claro / oscuro / como el sistema
     $th = theme() ?? 'auto';
     $opts = ['auto' => t('Como el sistema'), 'light' => t('Claro'), 'dark' => t('Oscuro')];
