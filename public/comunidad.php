@@ -44,7 +44,7 @@ echo "<p class=\"meta\">" . t('comunidad creada por') . " <a href=\"/u.php?u=" .
 if ($c['status'] !== 'ok') echo " · <b>" . t('oculta') . "</b>";
 if ($u && $u['landing'] !== 'c:' . $c['community_id']) echo " · <a href=\"/perfil.php#aterrizar\">" . t('entrar aquí al abrir Deltha') . "</a>";
 echo "</p></div></div>";
-if (isset($_GET['nueva'])) echo "<p class=\"notice\">" . t('Comunidad creada. Ya se puede elegir al enviar una noticia; abajo puedes ajustar el nombre, la descripción, el color y la plantilla.') . "</p>";
+if (isset($_GET['nueva'])) echo "<p class=\"notice\">" . t('Comunidad creada. Ya se puede elegir al enviar una noticia; abajo puedes ajustar el nombre, la descripción, el color y la skin.') . "</p>";
 if (isset($_GET['ok'])) echo "<p class=\"notice\">" . t('Guardado.') . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($canEdit) {

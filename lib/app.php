@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 79);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 80);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -598,7 +598,7 @@ function nav_tabs(string $tab, string $cls): void {
         'chat'         => ['/chat.php', t('Chat'), 'chat'],
     ] : [
         'usuarios'     => ['/usuarios.php', t('Usuarios'), 'users'],
-        'plantilla'    => ['/plantilla.php', t('Plantilla'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
+        'plantilla'    => ['/plantilla.php', t('Skin'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
         'procesos'     => ['/procesos.php', t('Procesos'), 'proc'],
         'estadisticas' => ['/estadisticas.php', t('Estadísticas'), 'stats'],
         'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
@@ -633,7 +633,7 @@ function footer_links(): string {
         foreach (fuentes_activas($pdo, 'agregador') as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\" title=\"" . h(t('%s visto desde Deltha', $src['name'])) . "\">" . h($src['name']) . "</a>";
         if (fuentes_activas($pdo, 'medio') || fuentes_activas($pdo, 'newsletter')) $h .= " · <a href=\"/medios.php\">" . t('Medios') . "</a>";
     }
-    $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de plantilla, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
+    $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;

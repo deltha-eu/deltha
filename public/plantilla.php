@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     save_theme_pref(post('theme', 'auto'));
     redirect('/plantilla.php?ok=1');
 }
-if (isset($_GET['ok'])) $ok = t('Plantilla guardada.');
+if (isset($_GET['ok'])) $ok = t('Skin guardada.');
 
 $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');   // la elegida ('' = la del sitio)
 if (!isset(DDD_SKINS[$saved])) $saved = '';
@@ -21,8 +21,8 @@ $th = $u ? (string)($u['theme'] ?? 'auto') : (string)($_COOKIE['ddd_theme'] ?? '
 if (!in_array($th, ['light', 'dark'], true)) $th = 'auto';
 $descs = skin_descs();
 
-page_header(t('Plantilla'), 'plantilla');
-echo "<h1>" . t('Plantilla') . "</h1>";
+page_header(t('Skin'), 'plantilla');
+echo "<h1>" . t('Skin') . "</h1>";
 echo "<p class=\"notice\">" . t('Misma portada, mismos números, distinta piel. Elige una y pulsa «Aplicar»; el enlace «ver» la enseña en la portada antes de decidir.') . ($u ? "" : " " . t('Sin cuenta se recuerda con una cookie en este navegador, solo porque tú la pides.')) . "</p>";
 if ($ok) echo "<p class=\"notice\">" . h($ok) . "</p>";
 echo "<form class=\"plain skinform\" method=\"post\">";
@@ -40,6 +40,6 @@ echo "<label>" . t('Aspecto') . "</label><div class=\"skinlist seg\">";
 foreach (['auto' => t('Como el sistema'), 'light' => t('Claro'), 'dark' => t('Oscuro')] as $k => $v) {
     echo "<div class=\"sk\"><label><input type=\"radio\" name=\"theme\" value=\"$k\"" . ($th === $k ? ' checked' : '') . "><span><b>" . h($v) . "</b></span></label></div>";
 }
-echo "</div><small class=\"hint\">" . t('El aspecto claro u oscuro es independiente de la plantilla: se aplica a todas.') . "</small>";
+echo "</div><small class=\"hint\">" . t('El aspecto claro u oscuro es independiente de la skin: se aplica a todas.') . "</small>";
 echo "<button>" . t('Aplicar') . "</button></form>";
 page_footer();

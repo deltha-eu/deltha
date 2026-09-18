@@ -57,7 +57,7 @@ foreach (['auto' => t('Automático (como el sistema)'), 'light' => t('Claro'), '
 }
 echo "</select>";
 $cur = (string)($u['skin'] ?? '');
-echo "" . t('<label>Plantilla</label>') . "<p class=\"skinnow\"><b>" . h($cur !== '' ? DDD_SKINS[$cur] : skin_descs()['']) . "</b> · <a href=\"/plantilla.php\">" . t('elegir otra') . "</a></p><small class=\"hint\">" . t('Las plantillas se eligen en su propia pestaña, con muestra y descripción de cada una; el tema claro/oscuro de arriba se aplica a todas.') . "</small>";
+echo "" . t('<label>Skin</label>') . "<p class=\"skinnow\"><b>" . h($cur !== '' ? DDD_SKINS[$cur] : skin_descs()['']) . "</b> · <a href=\"/plantilla.php\">" . t('elegir otra') . "</a></p><small class=\"hint\">" . t('Las skins se eligen en su propia pestaña, con muestra y descripción de cada una; el tema claro/oscuro de arriba se aplica a todas.') . "</small>";
 echo "<label id=\"aterrizar\">" . t('Al abrir Deltha, entrar en…') . "</label><select name=\"landing\"><option value=\"\"" . t('>La portada</option>') . "<optgroup label=\"" . t('Un tema') . "\">";
 foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) echo "<option value=\"t:{$t['topic_id']}\"" . (($u['landing'] ?? '') === "t:{$t['topic_id']}" ? ' selected' : '') . ">" . h($t['name']) . "</option>";
 echo "</optgroup><optgroup label=\"" . t('Una comunidad') . "\">";
