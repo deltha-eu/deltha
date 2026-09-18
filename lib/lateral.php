@@ -167,7 +167,8 @@ function side_fuentes(PDO $pdo): void {
         $st->execute([$kind]);
         if (!($rows = $st->fetchAll())) continue;
         echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php\">" . t('todos') . "</a></span></h3>";
-        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
+        // el enlace lleva a la pagina del medio en Deltha (/fuente.php?f=slug), no a la noticia
+        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h(fuente_url(['slug' => $r['slug']])) . "\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
         echo "</section>";
     }
 }
