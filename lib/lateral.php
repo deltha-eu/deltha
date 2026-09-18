@@ -136,7 +136,7 @@ function side_votadas(PDO $pdo): void {
 function side_comunidades(PDO $pdo): void {
     $rows = $pdo->query("SELECT c.name, c.slug, c.color, s.story_id, s.title, s.comments, s.sent_date
                            FROM communities c
-                           JOIN stories s ON s.story_id = (SELECT story_id FROM stories WHERE community_id = c.community_id AND status IN ('nuevas','candidatas','destacadas','archived') ORDER BY sent_date DESC LIMIT 1)
+                           JOIN stories s ON s.story_id = (SELECT sc.story_id FROM story_communities sc JOIN stories x ON x.story_id = sc.story_id WHERE sc.community_id = c.community_id AND x.status IN ('nuevas','candidatas','destacadas','archived') ORDER BY sc.created DESC LIMIT 1)
                           WHERE c.status = 'ok' ORDER BY s.sent_date DESC LIMIT 8")->fetchAll();
     if (!$rows) return;
     echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "</h3>";

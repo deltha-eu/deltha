@@ -38,6 +38,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('skin_default',        'editorial', 'Plantilla visual por defecto (anonimos y quien no elija): editorial | comunidad | delta | flujo'),
 ('comm_min_aura',       '10',   'Aura minima (estricta: mayor que) para poder crear comunidades'),
 ('comm_max_per_user',   '3',    'Comunidades que puede crear cada usuario'),
+('comm_max_per_story',  '3',    'Comunidades en las que puede estar un mismo envio (contando la principal)'),
 ('comment_edit_minutes','10',   'Minutos tras publicar en los que el autor puede editar su comentario'),
 ('comment_edit_min_aura','10',  'Aura minima (estricta: mayor que) para poder editar los comentarios propios'),
 ('article_max_words',   '500',  'Palabras maximas de un articulo'),
@@ -256,6 +257,20 @@ CREATE TABLE communities (
 ) ENGINE=InnoDB;
 
 -- Fuentes externas (solo lectura): otros sitios pintados con Deltha a partir de su RSS (migra-028)
+-- Un envio puede estar en varias comunidades (la principal sigue en stories.community_id; las demas las «adopta» el dueño
+-- de la comunidad desde el hilo, o los mods). Tope config.comm_max_per_story. Migracion 037.
+CREATE TABLE story_communities (
+    story_id     INT UNSIGNED NOT NULL,
+    community_id INT UNSIGNED NOT NULL,
+    added_by     INT UNSIGNED DEFAULT NULL,
+    created      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (story_id, community_id),
+    KEY idx_comm (community_id, created),
+    CONSTRAINT fk_sc_story FOREIGN KEY (story_id)     REFERENCES stories(story_id)         ON DELETE CASCADE,
+    CONSTRAINT fk_sc_comm  FOREIGN KEY (community_id) REFERENCES communities(community_id) ON DELETE CASCADE,
+    CONSTRAINT fk_sc_user  FOREIGN KEY (added_by)     REFERENCES users(user_id)            ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE sources (
     source_id    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     slug         VARCHAR(24) NOT NULL,                      -- /fuente.php?f=slug

@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 78);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 79);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -175,6 +175,107 @@ function community_quota(PDO $pdo, ?array $u): int {
 }
 function community_link(array $s): string {
     return "<a href=\"/comunidad.php?c=" . rawurlencode((string)$s['comm_slug']) . "\">" . h($s['comm_name']) . "</a>";
+}
+/** Todas las comunidades del envio (story_communities), la principal primero: " · Cine clásico, Cortos". '' si no hay.
+ *  Usa comm_list (GROUP_CONCAT de story_query_base) si viene; si no, la principal. */
+function community_links(array $s): string {
+    $out = [];
+    if (!empty($s['comm_list'])) {
+        foreach (explode("\n", (string)$s['comm_list']) as $row) {
+            [$slug, $name] = array_pad(explode('|', $row, 2), 2, '');
+            if ($slug !== '') $out[] = community_link(['comm_slug' => $slug, 'comm_name' => $name]);
+        }
+    } elseif (!empty($s['comm_slug'])) $out[] = community_link($s);
+    return $out ? ' · ' . implode(', ', $out) : '';
+}
+const DDD_COMM_PUBLIC = "('nuevas','candidatas','destacadas','archived')";   // fases en las que un envio se puede adoptar y se ve en la comunidad
+/** Comunidades en las que esta un envio (principal primero), con quien la añadio. */
+function story_communities(PDO $pdo, int $story_id): array {
+    $st = $pdo->prepare("SELECT c.community_id, c.name, c.slug, c.color, c.owner_id, c.status, sc.added_by, sc.created, (c.community_id = s.community_id) AS main
+                           FROM story_communities sc JOIN communities c ON c.community_id = sc.community_id JOIN stories s ON s.story_id = sc.story_id
+                          WHERE sc.story_id = ? ORDER BY main DESC, c.name");
+    $st->execute([$story_id]);
+    return $st->fetchAll();
+}
+/** Comunidades que administra el usuario: las suyas; los mods y el admin, todas las visibles. */
+function my_communities(PDO $pdo, ?array $u): array {
+    if (!$u) return [];
+    if (is_mod()) return $pdo->query("SELECT community_id, name, slug FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
+    $st = $pdo->prepare("SELECT community_id, name, slug FROM communities WHERE owner_id = ? AND status = 'ok' ORDER BY name");
+    $st->execute([$u['user_id']]);
+    return $st->fetchAll();
+}
+/** ¿Puede este usuario añadir o quitar envios en esa comunidad? Su dueño, los mods y el admin. */
+function community_can_manage(PDO $pdo, ?array $u, int $community_id): bool {
+    if (!$u) return false;
+    if (is_mod()) return true;
+    $st = $pdo->prepare("SELECT 1 FROM communities WHERE community_id = ? AND owner_id = ?"); $st->execute([$community_id, $u['user_id']]);
+    return (bool)$st->fetchColumn();
+}
+/** Añade un envio a una comunidad (adopcion). Devuelve null si va bien o el mensaje de error. */
+function community_add_story(PDO $pdo, int $story_id, int $community_id, ?int $by): ?string {
+    $st = $pdo->prepare("SELECT status FROM stories WHERE story_id = ?"); $st->execute([$story_id]);
+    $status = $st->fetchColumn();
+    if (!$status || !in_array($status, ['nuevas', 'candidatas', 'destacadas', 'archived'], true)) return t('Ese envío no se puede añadir a una comunidad.');
+    $st = $pdo->prepare("SELECT 1 FROM communities WHERE community_id = ? AND status = 'ok'"); $st->execute([$community_id]);
+    if (!$st->fetchColumn()) return t('Esa comunidad no existe.');
+    $st = $pdo->prepare("SELECT COUNT(*) FROM story_communities WHERE story_id = ?"); $st->execute([$story_id]);
+    $max = max(1, (int)cfg('comm_max_per_story', 3));
+    if ((int)$st->fetchColumn() >= $max) return t('Un envío puede estar como mucho en %d comunidades.', $max);
+    $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$story_id, $community_id, $by]);
+    return null;
+}
+/** Quita un envio de una comunidad. Si era la principal, pasa a serlo la mas antigua de las que queden (o ninguna). */
+function community_remove_story(PDO $pdo, int $story_id, int $community_id): void {
+    $pdo->prepare("DELETE FROM story_communities WHERE story_id = ? AND community_id = ?")->execute([$story_id, $community_id]);
+    $st = $pdo->prepare("SELECT community_id FROM stories WHERE story_id = ?"); $st->execute([$story_id]);
+    if ((int)$st->fetchColumn() === $community_id) {
+        $st = $pdo->prepare("SELECT community_id FROM story_communities WHERE story_id = ? ORDER BY created LIMIT 1"); $st->execute([$story_id]);
+        $pdo->prepare("UPDATE stories SET community_id = ? WHERE story_id = ?")->execute([$st->fetchColumn() ?: null, $story_id]);
+    }
+}
+/** Cambia la comunidad principal (la que elige el autor o los mods): sustituye la antigua principal por la nueva
+ *  en story_communities y deja las adoptadas como estan. 0 = sin principal (la antigua se quita). */
+function story_set_main_community(PDO $pdo, int $story_id, int $community_id, ?int $by): void {
+    $st = $pdo->prepare("SELECT community_id FROM stories WHERE story_id = ?"); $st->execute([$story_id]);
+    $old = (int)$st->fetchColumn();
+    if ($old === $community_id) return;
+    if ($community_id) {
+        $st = $pdo->prepare("SELECT 1 FROM communities WHERE community_id = ?"); $st->execute([$community_id]);
+        if (!$st->fetchColumn()) return;
+    }
+    if ($old) $pdo->prepare("DELETE FROM story_communities WHERE story_id = ? AND community_id = ?")->execute([$story_id, $old]);
+    if ($community_id) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$story_id, $community_id, $by]);
+    $pdo->prepare("UPDATE stories SET community_id = ? WHERE story_id = ?")->execute([$community_id ?: null, $story_id]);
+}
+
+/* ---- temas: renombrar y borrar (moderadores y admin) ---------------- */
+/** Renombra un tema (minusculas, 2-32 letras/numeros/espacio/guion). Devuelve null o el error. */
+function topic_rename(PDO $pdo, int $topic_id, string $name): ?string {
+    $name = mb_strtolower(trim(preg_replace('/\s+/', ' ', $name)));
+    if (!preg_match('/^[\p{L}\p{N} \-]{2,32}$/u', $name)) return 'Nombre de tema no válido (2–32 letras, números, espacio o guion).';
+    try { $pdo->prepare("UPDATE topics SET name = ? WHERE topic_id = ?")->execute([$name, $topic_id]); }
+    catch (PDOException $e) { return 'Ya hay otro tema con ese nombre.'; }
+    return null;
+}
+/** Borra un tema moviendo antes sus envios (y los medios que lo proponian, y quien aterrizaba en el) al tema $to. */
+function topic_delete(PDO $pdo, int $topic_id, int $to): ?string {
+    if ($topic_id === $to) return 'Elige otro tema al que mover los envíos.';
+    $n = $pdo->query("SELECT COUNT(*) FROM topics")->fetchColumn();
+    if ((int)$n < 2) return 'Tiene que quedar al menos un tema.';
+    $st = $pdo->prepare("SELECT name FROM topics WHERE topic_id = ?");
+    $st->execute([$topic_id]); $name = $st->fetchColumn();
+    $st->execute([$to]);       $toName = $st->fetchColumn();
+    if (!$name || !$toName) return 'Ese tema no existe.';
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare("UPDATE stories SET topic_id = ? WHERE topic_id = ?")->execute([$to, $topic_id]);
+        try { $pdo->prepare("UPDATE sources SET topic_id = ? WHERE topic_id = ?")->execute([$to, $topic_id]); } catch (PDOException $e) {}   // sin fuentes en esta instalacion
+        $pdo->prepare("UPDATE users SET landing = ? WHERE landing = ?")->execute(["t:$to", "t:$topic_id"]);
+        $pdo->prepare("DELETE FROM topics WHERE topic_id = ?")->execute([$topic_id]);
+        $pdo->commit();
+    } catch (PDOException $e) { $pdo->rollBack(); return 'No se pudo borrar el tema: ' . $e->getMessage(); }
+    return null;
 }
 /** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID */
 function landing_url(PDO $pdo, ?array $u): string {

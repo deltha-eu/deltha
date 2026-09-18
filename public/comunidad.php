@@ -1,5 +1,6 @@
 <?php
-/** /comunidad.php?c=slug — todo lo enviado a una comunidad, de más reciente a más antiguo. El creador (y los mods) la editan aquí mismo. */
+/** /comunidad.php?c=slug — todo lo que está en una comunidad (enviado a ella o adoptado por su dueño desde el hilo), lo último
+ *  añadido primero. El creador (y los mods) la editan aquí mismo. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
@@ -26,10 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEdit) {
 }
 
 $page = page_num();
-$cnt = $pdo->prepare("SELECT COUNT(*) FROM stories WHERE community_id = ? AND status IN ('nuevas','candidatas','destacadas','archived')");
+$cnt = $pdo->prepare("SELECT COUNT(*) FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id WHERE sc.community_id = ? AND s.status IN " . DDD_COMM_PUBLIC);
 $cnt->execute([$c['community_id']]);
 $total = (int)$cnt->fetchColumn();
-$st = $pdo->prepare(story_query_base() . " WHERE s.community_id = ? AND s.status IN ('nuevas','candidatas','destacadas','archived') ORDER BY s.sent_date DESC LIMIT ? OFFSET ?");
+$st = $pdo->prepare(story_query_base("FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id") . " WHERE sc.community_id = ? AND s.status IN " . DDD_COMM_PUBLIC . " ORDER BY sc.created DESC, s.sent_date DESC LIMIT ? OFFSET ?");
 $st->bindValue(1, (int)$c['community_id'], PDO::PARAM_INT);
 $st->bindValue(2, (int)cfg('per_page', 20), PDO::PARAM_INT);
 $st->bindValue(3, page_offset($page), PDO::PARAM_INT);
@@ -58,6 +59,6 @@ if ($canEdit) {
 }
 $n = 0;
 foreach ($st as $s) { story_post($pdo, $s, "compact"); $n++; }
-if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay envíos en esta comunidad. <a href="/enviar.php">Envía el primero</a> y elígela en el formulario.') . "</p>";
+if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay envíos en esta comunidad. <a href="/enviar.php">Envía el primero</a> y elígela en el formulario.') . ($canEdit ? " " . t('También puedes añadir a esta comunidad cualquier envío ya publicado desde su hilo.') : '') . "</p>";
 paginate('/comunidad.php?c=' . rawurlencode($slug), $page, $total);
 page_footer();

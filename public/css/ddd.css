@@ -219,6 +219,14 @@ main > p { padding: 0 16px; }
 .modbar select { flex: 0 1 auto; min-width: 0; max-width: 220px; font: inherit; font-size: 14px; padding: 5px 10px; border: 1px solid var(--line2); border-radius: 8px; background: var(--bg); color: var(--fg); }
 .modbar .btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--line2); background: none; color: var(--fg); border-radius: 999px; padding: 5px 14px; cursor: pointer; }
 .modbar .btn:hover { background: var(--hover); }
+/* comunidades del envio (hilo): pastillas con punto del color y «×» para quitar; formulario en linea para añadir */
+.modbar.comms form.inl { display: inline-flex; gap: 6px; align-items: center; }
+.modbar.comms .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1px solid var(--line2); border-radius: 999px; font-size: 13px; }
+.modbar.comms .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc, var(--accent)); flex: none; }
+.modbar.comms .chip a { color: var(--fg); text-decoration: none; font-weight: 600; }
+.modbar.comms .chip small { color: var(--muted); }
+.modbar.comms .chip .x { background: none; border: 0; padding: 0 2px; cursor: pointer; color: var(--muted); font: inherit; font-size: 15px; line-height: 1; }
+.modbar.comms .chip .x:hover { color: var(--fg); }
 .modbar a { font-size: 13px; color: var(--accent); white-space: nowrap; }
 .modbar a:first-of-type { margin-left: auto; }
 .admin input[type=color] { width: 44px; height: 32px; padding: 0; border: 1px solid var(--line2); border-radius: 6px; background: none; }

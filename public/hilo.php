@@ -35,7 +35,7 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 page_header(t('Hilo'), $tab);
 echo "<div class=\"hilo\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
-echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . (!empty($s['comm_slug']) ? " · " . community_link($s) : '') . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span></div>";
+echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span></div>";
 $dest = $s['url'] ?: null;
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
@@ -54,17 +54,46 @@ echo "<div class=\"stats\" id=\"comentarios\"><span><b>" . count($all) . "</b> "
 if ($s['status'] === 'destacadas') echo "<span>" . h(queda($s['published_date'])) . "</span>";
 if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
 echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>" . share_link($s) . "</div>";
-if (is_mod()) {   // moderadores y admin: cambiar el tema del envio
+if (is_mod()) {   // moderadores y admin: cambiar el tema y la comunidad principal del envio
     echo "<form class=\"modbar\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><label>Tema</label><select name=\"topic\">";
     foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) {
         echo "<option value=\"{$t['topic_id']}\"" . ((int)$t['topic_id'] === (int)$s['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
     }
-    echo "</select><label>Comunidad</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
+    echo "</select><label>Comunidad principal</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
     foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) {
         echo "<option value=\"{$co['community_id']}\"" . ((int)$co['community_id'] === (int)$s['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
     }
     echo "</select><button class=\"btn\">Cambiar</button> <a href=\"/editar.php?id=$id\">editar · eliminar</a></form>";
 }
+// comunidades del envio: cualquier dueño de comunidad puede añadir aqui un envio publico (nuevas, candidatas, portada o archivado)
+// a la suya y quitarlo; los moderadores arbitran (añaden y quitan en cualquiera). El autor no interviene.
+$u = user();
+if ($u && in_array($s['status'], ['nuevas', 'candidatas', 'destacadas', 'archived'], true)) {
+    $inComms = story_communities($pdo, $id);
+    $mine = my_communities($pdo, $u);
+    $inIds = array_map('intval', array_column($inComms, 'community_id'));
+    $addable = array_values(array_filter($mine, fn($c) => !in_array((int)$c['community_id'], $inIds, true)));
+    $max = max(1, (int)cfg('comm_max_per_story', 3));
+    $canRemoveAny = false;
+    foreach ($inComms as $c) if (is_mod() || (int)$c['owner_id'] === (int)$u['user_id']) $canRemoveAny = true;
+    if ($canRemoveAny || ($addable && count($inComms) < $max)) {
+        echo "<div class=\"modbar comms\"><label>" . t('Comunidades') . "</label>";
+        foreach ($inComms as $c) {
+            echo "<span class=\"chip\" style=\"--cc:" . h($c['color']) . "\"><i class=\"dot\"></i><a href=\"/comunidad.php?c=" . rawurlencode($c['slug']) . "\">" . h($c['name']) . "</a>";
+            if ($c['main']) echo " <small>(" . t('principal') . ")</small>";
+            if (is_mod() || (int)$c['owner_id'] === (int)$u['user_id'])
+                echo "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"community\" value=\"{$c['community_id']}\"><input type=\"hidden\" name=\"act\" value=\"quitar\"><button class=\"x\" title=\"" . t('quitar de esta comunidad') . "\">×</button></form>";
+            echo "</span>";
+        }
+        if ($addable && count($inComms) < $max) {
+            echo "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"añadir\"><select name=\"community\">";
+            foreach ($addable as $c) echo "<option value=\"{$c['community_id']}\">" . h($c['name']) . "</option>";
+            echo "</select><button class=\"btn\">" . t('Añadir a la comunidad') . "</button></form>";
+        } elseif ($addable) echo "<small>" . t('Un envío puede estar como mucho en %d comunidades.', $max) . "</small>";
+        echo "</div>";
+    }
+}
+if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice' : 'error') . "\">" . h((string)$_GET['comm'] === 'ok' ? t('Guardado.') : (string)$_GET['comm']) . "</p>";
 
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
 if ($can_comment && !$replyTo) composer($id);

@@ -7,9 +7,12 @@ function display_name(array $row, bool $revealed): string {
     return $row['alias'] ?: t('anónimo');
 }
 
-function story_query_base(): string {
-    return "SELECT s.*, t.name AS topic, t.coef, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug, co.skin AS comm_skin
-              FROM stories s
+/** $from permite entrar por otra tabla (p. ej. story_communities sc JOIN stories s ...) manteniendo el alias s. */
+function story_query_base(string $from = 'FROM stories s'): string {
+    return "SELECT s.*, t.name AS topic, t.coef, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug, co.skin AS comm_skin,
+                   (SELECT GROUP_CONCAT(CONCAT(c2.slug, '|', c2.name) ORDER BY (c2.community_id = s.community_id) DESC, c2.name SEPARATOR '\\n')
+                      FROM story_communities sc2 JOIN communities c2 ON c2.community_id = sc2.community_id AND c2.status = 'ok' WHERE sc2.story_id = s.story_id) AS comm_list
+              $from
               JOIN topics t ON t.topic_id = s.topic_id
          LEFT JOIN users  u ON u.user_id  = s.user_id
          LEFT JOIN communities co ON co.community_id = s.community_id AND co.status = 'ok'";
@@ -65,7 +68,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
     $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? " · " . source_link($s) : '');
-    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . (!empty($s['comm_slug']) ? " · " . community_link($s) : '') . $srcLbl . " · " . h($when) . "</span></div>";
+    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . "</span></div>";
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
     if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content'], 0, 240, '…')) . "</p>";

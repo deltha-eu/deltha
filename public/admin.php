@@ -26,6 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st->execute([(float)$c, $col, (int)$id]);
         }
         $out[] = 'Temas guardados.';
+    } elseif ($act === 'tema_borrar') {
+        if (post('seguro') !== '1') $out[] = 'Marca la casilla de confirmación para borrar el tema.';
+        else { $e = topic_delete($pdo, (int)post('topic_id'), (int)post('to')); $out[] = $e ?: 'Tema borrado; sus envíos han pasado al tema elegido.'; }
     } elseif ($act === 'tema_nuevo') {
         $name = mb_strtolower(trim(post('name')));
         $coef = (float)(post('coef') ?: 1);
@@ -418,7 +421,14 @@ if ($tab === 'usuarios') {
     echo "</table><p><button class=\"btn\">Guardar temas</button></p></form>";
     echo "<h3>Nuevo tema</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"tema_nuevo\">";
     echo "<input type=\"text\" name=\"name\" placeholder=\"nombre (minúsculas)\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> coef <input type=\"text\" name=\"coef\" value=\"1.00\" style=\"width:60px\"> <input type=\"color\" name=\"color\" value=\"#534AB7\"> <button class=\"btn\">Crear tema</button></form>";
-    echo "<p><small>El coeficiente multiplica los votos en el δ (1,10 da un 10 % de ventaja al tema). El color es el velo de la foto y la etiqueta. Los temas no se borran: si uno sobra, se le cambia el nombre.</small></p>";
+    $tl = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
+    if (count($tl) > 1) {
+        echo "<h3>Borrar un tema</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"tema_borrar\">";
+        echo "borrar <select name=\"topic_id\">"; foreach ($tl as $t) echo "<option value=\"{$t['topic_id']}\">" . h($t['name']) . "</option>"; echo "</select>";
+        echo " y mover sus envíos a <select name=\"to\">"; foreach ($tl as $t) echo "<option value=\"{$t['topic_id']}\">" . h($t['name']) . "</option>"; echo "</select>";
+        echo " <label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> seguro</label> <button class=\"btn danger\">Borrar tema</button></form>";
+    }
+    echo "<p><small>El coeficiente multiplica los votos en el δ (1,10 da un 10 % de ventaja al tema). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.php.</small></p>";
 
 } elseif ($tab === 'fuentes') {
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
