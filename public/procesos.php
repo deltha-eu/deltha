@@ -7,6 +7,8 @@
  *                   la de mayor delta entre las que ya cumplen delta_min_age_min)
  *  ?v=todo          flujo cronologico de toda la actividad
  *  ?v=envios | comentarios | votos | portadas   flujo filtrado
+ *  &d=hoy | todo    solo lo de hoy / sin ventana de dias (desde /estadisticas.php). «todo»
+ *                   solo en las vistas de un tipo, no en ?v=todo: el UNION sin ventana no seria barato
  *
  * Los votantes aparecen con su alias Ghost del hilo (el mismo que tendrian al
  * comentar) hasta que pasan los ghost_minutes desde el voto. La pagina se recarga
@@ -24,6 +26,12 @@ $page = page_num();
 $per  = (int)cfg('per_page', 20);
 $VIVAS = "('nuevas','candidatas','destacadas','archived')";   // lo que es publico
 $DIAS  = max(1, (int)cfg('procesos_days', 7));                    // ventana del flujo: lo demas ya esta en los hilos
+$d = (string)($_GET['d'] ?? '');
+if (!in_array($d, ['hoy', 'todo'], true) || $v === 'cola' || ($d === 'todo' && $v === 'todo')) $d = '';
+// condicion de fecha de cada parte del flujo, con el alias de la tabla y su columna
+$desde = fn(string $col) => $d === 'hoy' ? "$col >= CURDATE()" : ($d === 'todo' ? '1=1' : "$col >= NOW() - INTERVAL $DIAS DAY");
+[$dS, $dC, $dV, $dP] = [$desde('s.sent_date'), $desde('c.created'), $desde('vt.created'), $desde('p.created')];
+$qd = $d ? "&d=$d" : '';
 
 /* Cache: la pagina es identica para todos los anonimos (sin cookie), asi que
  * Cloudflare puede servirla durante el minuto que dura el refresco y el servidor
@@ -39,6 +47,12 @@ page_header(t('Procesos'), 'procesos', '<meta http-equiv="refresh" content="60">
 echo "<nav class=\"sub\">";
 foreach ($VIEWS as $k => $label) echo "<a href=\"/procesos.php" . ($k === 'cola' ? '' : "?v=$k") . "\"" . ($k === $v ? ' class="on"' : '') . ">" . h($label) . "</a>";
 echo "</nav>";
+if ($v !== 'cola') {   // filtro de fecha: ventana normal / solo hoy / todo (este ultimo no en la vista mezclada)
+    $F = ['' => t('últimos %d días', $DIAS), 'hoy' => t('Hoy')] + ($v === 'todo' ? [] : ['todo' => t('todo el histórico')]);
+    echo "<nav class=\"sub fecha\">";
+    foreach ($F as $k => $label) echo "<a href=\"/procesos.php?v=$v" . ($k ? "&amp;d=$k" : '') . "\"" . ($k === $d ? ' class="on"' : '') . ">" . h($label) . "</a>";
+    echo "</nav>";
+}
 
 if ($v === 'cola') {
     $next  = max(1, (int)ceil((proximo_ciclo() - time()) / 60));
@@ -73,23 +87,23 @@ $parts = [];
 if (in_array($v, ['todo', 'envios'], true))
     $parts[] = "SELECT 'envio' AS kind, s.story_id, s.story_id AS ref, s.sent_date AS ts, s.user_id, s.author_alias AS alias, NULL AS value,
                        s.title, s.status, s.revealed, s.sent_date, s.delta
-                  FROM stories s WHERE s.status IN $VIVAS AND s.sent_date >= NOW() - INTERVAL $DIAS DAY";
+                  FROM stories s WHERE s.status IN $VIVAS AND $dS";
 if (in_array($v, ['todo', 'comentarios'], true))
     $parts[] = "SELECT 'comentario' AS kind, c.story_id, c.comment_id AS ref, c.created AS ts, c.user_id, c.alias, NULL AS value,
                        s.title, s.status, s.revealed, s.sent_date, s.delta
                   FROM comments c JOIN stories s ON s.story_id = c.story_id
-                 WHERE c.status='ok' AND c.created >= NOW() - INTERVAL $DIAS DAY AND s.status IN $VIVAS";
+                 WHERE c.status='ok' AND $dC AND s.status IN $VIVAS";
 if (in_array($v, ['todo', 'votos'], true))
     $parts[] = "SELECT 'voto' AS kind, vt.story_id, vt.story_id AS ref, vt.created AS ts, vt.user_id, ta.alias, vt.value,
                        s.title, s.status, s.revealed, s.sent_date, s.delta
                   FROM votes vt JOIN stories s ON s.story_id = vt.story_id
              LEFT JOIN thread_aliases ta ON ta.story_id = vt.story_id AND ta.user_id = vt.user_id
-                 WHERE vt.created >= NOW() - INTERVAL $DIAS DAY AND s.status IN $VIVAS";
+                 WHERE $dV AND s.status IN $VIVAS";
 if (in_array($v, ['todo', 'portadas'], true))
     $parts[] = "SELECT 'portada' AS kind, p.story_id, p.id AS ref, p.created AS ts, NULL AS user_id, NULL AS alias, NULL AS value,
                        s.title, s.status, s.revealed, s.sent_date, p.delta
                   FROM promo_log p JOIN stories s ON s.story_id = p.story_id
-                 WHERE p.created >= NOW() - INTERVAL $DIAS DAY AND s.status IN $VIVAS";
+                 WHERE $dP AND s.status IN $VIVAS";
 
 $total = 0;
 foreach ($parts as $p) $total += (int)$pdo->query("SELECT COUNT(*) FROM (" . $p . ") x")->fetchColumn();
@@ -106,7 +120,8 @@ if ($ids) {
     foreach ($pdo->query("SELECT user_id, login, avatar, aura FROM users WHERE user_id IN (" . implode(',', $ids) . ")") as $r) $U[(int)$r['user_id']] = $r;
 }
 
-echo "<p class=\"notice\">" . t('Lo que pasa en el sitio, en orden (últimos %d días). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.', $DIAS, (int)cfg('ghost_minutes', 30)) . "</p>";
+$ventana = $d === 'hoy' ? t('solo hoy') : ($d === 'todo' ? t('todo el histórico') : t('últimos %d días', $DIAS));
+echo "<p class=\"notice\">" . t('Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.', $ventana, (int)cfg('ghost_minutes', 30)) . "</p>";
 if (!$ev) echo "<p class=\"end\">" . t('Todavía no hay actividad de este tipo.') . "</p>";
 foreach ($ev as $e) {
     $sid = (int)$e['story_id'];
@@ -144,5 +159,5 @@ foreach ($ev as $e) {
     }
     echo "<div class=\"fz k-{$e['kind']}\">$lead<div class=\"fzt\">$txt<span class=\"meta\"> · " . h(hace($e['ts'])) . "</span></div>" . icon($ic) . "</div>";
 }
-paginate("/procesos.php?v=$v", $page, $total);
+paginate("/procesos.php?v=$v$qd", $page, $total);
 page_footer();
