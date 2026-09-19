@@ -126,7 +126,7 @@ span.vote { display: inline-flex; gap: 22px; }
 .hilo .post.main { border-bottom: 0; }
 .hilo .main h2 { font-size: 24px; line-height: 1.2; }
 .hilo .main .media { aspect-ratio: 4 / 3; }
-.hilo .main .lead { font-size: 17px; line-height: 1.45; }
+.hilo .main .lead { line-height: 1.5; }   /* mismo cuerpo de letra que en la portada: lo fija cada plantilla en su .lead */
 .hilo .main .lead.para { margin: 0 0 1em; }   /* articulos: un parrafo, un hueco */
 .hilo .main .lead.para:last-of-type { margin-bottom: 8px; }
 .hilo .source { display: inline-flex; gap: 6px; align-items: center; color: var(--accent); font-size: 14px; margin: 4px 0; }
