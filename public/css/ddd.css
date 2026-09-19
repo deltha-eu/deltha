@@ -127,6 +127,8 @@ span.vote { display: inline-flex; gap: 22px; }
 .hilo .main h2 { font-size: 24px; line-height: 1.2; }
 .hilo .main .media { aspect-ratio: 4 / 3; }
 .hilo .main .lead { font-size: 17px; line-height: 1.45; }
+.hilo .main .lead.para { margin: 0 0 1em; }   /* articulos: un parrafo, un hueco */
+.hilo .main .lead.para:last-of-type { margin-bottom: 8px; }
 .hilo .source { display: inline-flex; gap: 6px; align-items: center; color: var(--accent); font-size: 14px; margin: 4px 0; }
 .hilo .stats { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .hilo .stats b { color: var(--fg); }
