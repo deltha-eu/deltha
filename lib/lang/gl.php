@@ -471,4 +471,6 @@ return [
 '%d en total. Pulsa en un nombre para ver su perfil público.' => '%d en total. Preme nun nome para ver o seu perfil público.',
 'visto %s' => 'visto %s',
 'Nadie por aquí ahora mismo.' => 'Ninguén por aquí agora mesmo.',
+'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galáctica — ponte de mando: aceiro, ámbar e papel coas esquinas cortadas',
+'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impresionismo — luz de tarde e pinceladas soltas sobre o lenzo',
 ];

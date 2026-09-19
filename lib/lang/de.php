@@ -471,4 +471,6 @@ return [
 '%d en total. Pulsa en un nombre para ver su perfil público.' => '%d insgesamt. Tippe auf einen Namen, um das öffentliche Profil zu sehen.',
 'visto %s' => 'gesehen %s',
 'Nadie por aquí ahora mismo.' => 'Gerade niemand da.',
+'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galactica — Kommandobrücke: Stahl, Bernstein und Papier mit abgeschnittenen Ecken',
+'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impressionismus — Abendlicht und lockere Pinselstriche auf der Leinwand',
 ];

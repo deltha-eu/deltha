@@ -40,7 +40,7 @@ $dest = $s['url'] ?: null;
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
     media_block($s, 'media', null);
-    foreach (preg_split('/\n{2,}/', trim($s['content'])) as $para) echo "<p class=\"lead\">" . nl2br(h(trim($para))) . "</p>";
+    foreach (preg_split('/\R{2,}/', trim($s['content'])) as $para) echo "<p class=\"lead\">" . nl2br(h(trim($para))) . "</p>";
 } else {
     if ($s['content']) echo "<p class=\"lead\">" . nl2br(h($s['content'])) . "</p>";
     media_block($s, 'media', $dest);
