@@ -6,3 +6,8 @@ public/media/
 .vscode/
 Thumbs.db
 desktop.ini
+
+# trabajo ajeno a Deltha
+Entrevista_*
+maquetar_entrevista.py
+revision_entrevista/
