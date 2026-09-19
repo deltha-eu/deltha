@@ -104,6 +104,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<div class=\"actions\">";
     echo "<a href=\"$hrefC\">" . icon('reply') . "<span>{$s['comments']}</span></a>";
     vote_widget($s);
+    echo mod_edit_link($s);   // mods y admin: «editar» a un clic, sin entrar en el hilo
     echo share_link($s);
     echo "</div>";
     echo "</div></article>";
