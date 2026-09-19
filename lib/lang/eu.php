@@ -471,4 +471,6 @@ return [
 '%d en total. Pulsa en un nombre para ver su perfil público.' => '%d guztira. Sakatu izen bat bere profil publikoa ikusteko.',
 'visto %s' => 'ikusia %s',
 'Nadie por aquí ahora mismo.' => 'Inor ez dago hemen orain.',
+'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galaktika — aginte-zubia: altzairua, anbarra eta ertzak moztutako papera',
+'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Inpresionismoa — arratsaldeko argia eta pintzelkada askeak mihisean',
 ];

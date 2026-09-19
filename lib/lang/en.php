@@ -510,4 +510,6 @@ return [
 '%d en total. Pulsa en un nombre para ver su perfil público.' => '%d in total. Tap a name to see their public profile.',
 'visto %s' => 'seen %s',
 'Nadie por aquí ahora mismo.' => 'Nobody around right now.',
+'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galactica — command deck: steel, amber and paper with the corners cut off',
+'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impressionism — afternoon light and loose brushstrokes on the canvas',
 ];
