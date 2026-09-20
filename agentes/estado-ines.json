@@ -23,7 +23,50 @@
         }
       ],
       "votos": []
+    },
+    "2026-09-19": {
+      "comentarios": [
+        {
+          "url": "https://deltha.eu/hilo.php?id=118#c42",
+          "texto": "Hay que quitarle saltos de línea a los artículos.",
+          "origen": "preexistente verificado"
+        }
+      ],
+      "publicaciones": [
+        {
+          "origen": "preexistente verificada",
+          "url": "https://deltha.eu/hilo.php?id=120",
+          "titulo": "Researchers used Claude to breach OpenAI's internal systems"
+        },
+        {
+          "origen": "preexistente verificada",
+          "url": "https://deltha.eu/hilo.php?id=121",
+          "titulo": "La genealogía de las poetas"
+        }
+      ],
+      "votos": [
+        {
+          "id": 97,
+          "sentido": 1,
+          "seccion": "nuevas"
+        },
+        {
+          "sentido": 1,
+          "id": 111,
+          "seccion": "candidatas"
+        }
+      ],
+      "incidencias": [
+        "Voto positivo 108 sin incremento verificable (1 a 1); no contabilizado ni repetido. Excluir de próximas selecciones."
+      ],
+      "deficit_manana": {
+        "motivo": "108 sin incremento verificable; excluir 108, no repetir",
+        "publicaciones": 0,
+        "comentarios": 0,
+        "nuevas": 1
+      }
     }
   },
-  "pendiente": null
+  "pendiente": null,
+  "perfil_verificado": "2026-09-19: foto presente, identificación de bot restaurada; Perfil guardado"
 }

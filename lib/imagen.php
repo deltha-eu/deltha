@@ -1,11 +1,60 @@
 <?php
-/** lib/imagen.php — foto del envio: subida del usuario o og:image; recorte a WxH y JPEG limpio (sin EXIF). */
+/** lib/imagen.php — foto del envio: subida del usuario o og:image; recorte a WxH y JPEG limpio (sin EXIF).
+ *  Formatos de entrada: los de GD (JPEG, PNG, GIF, WebP, BMP) y AVIF (ver imagen_decodificar()). */
 declare(strict_types=1);
+
+/** ¿Son bytes de un AVIF? Contenedor ISOBMFF: caja `ftyp` en el byte 4 y marca avif/avis entre las marcas (mayor o compatibles). */
+function imagen_es_avif(string $bytes): bool {
+    return strlen($bytes) > 16 && substr($bytes, 4, 4) === 'ftyp' && preg_match('/avi[fs]/', substr($bytes, 8, 40)) === 1;
+}
+
+/** Primer ejecutable existente de la lista (o de la clave de config), como curl_impersonate_bin(). */
+function imagen_bin(string $cfgKey, array $cands): ?string {
+    static $cache = [];
+    if (!array_key_exists($cfgKey, $cache)) {
+        $cache[$cfgKey] = null;
+        foreach (array_merge([cfg($cfgKey, '')], $cands) as $c) {
+            if ($c && is_executable($c)) { $cache[$cfgKey] = $c; break; }
+        }
+    }
+    return $cache[$cfgKey];
+}
+
+/** Decodifica bytes de imagen a un recurso GD, o null. Lo que entiende imagecreatefromstring (JPEG, PNG, GIF, WebP, BMP…)
+ *  y ademas AVIF (cada vez mas habitual en los RSS de los medios): 1) GD compilado con libavif (imagecreatefromavif, PHP 8.1+);
+ *  2) si no, `avifdec` o ImageMagick (`magick`/`convert`) si estan instalados, pasando por un PNG temporal.
+ *  $como, si se pasa, recibe el metodo que funciono (para el diagnostico de admin). */
+function imagen_decodificar(string $bytes, ?string &$como = null): ?GdImage {
+    $como = 'gd';
+    $img = @imagecreatefromstring($bytes);
+    if ($img) return $img;
+    if (!imagen_es_avif($bytes)) { $como = null; return null; }
+    $tmp = tempnam(sys_get_temp_dir(), 'ddd-avif-');
+    if ($tmp === false || @file_put_contents($tmp, $bytes) === false) { $como = null; return null; }
+    $png = $tmp . '.png';
+    try {
+        if (function_exists('imagecreatefromavif')) {
+            $como = 'gd/libavif';
+            if ($img = @imagecreatefromavif($tmp)) return $img;
+        }
+        $cmds = [];
+        if ($b = imagen_bin('avifdec', ['/usr/bin/avifdec', '/usr/local/bin/avifdec'])) $cmds['avifdec'] = escapeshellarg($b) . ' ' . escapeshellarg($tmp) . ' ' . escapeshellarg($png);
+        if ($b = imagen_bin('imagemagick', ['/usr/bin/magick', '/usr/local/bin/magick', '/usr/bin/convert', '/usr/local/bin/convert'])) $cmds['imagemagick'] = escapeshellarg($b) . ' ' . escapeshellarg('avif:' . $tmp) . ' ' . escapeshellarg('png:' . $png);
+        foreach ($cmds as $como => $cmd) {
+            @shell_exec($cmd . ' >/dev/null 2>&1');
+            if (is_file($png) && filesize($png) > 0 && ($img = @imagecreatefrompng($png))) return $img;
+        }
+        $como = null;
+        return null;
+    } finally {
+        @unlink($tmp); @unlink($png);
+    }
+}
 
 /** Devuelve nombre de fichero guardado en /media o null. */
 function imagen_desde_bytes(string $bytes): ?string {
     if (strlen($bytes) < 100 || strlen($bytes) > (int)cfg('img_max_bytes', 6000000)) return null;
-    $src = @imagecreatefromstring($bytes);
+    $src = imagen_decodificar($bytes);
     if (!$src) return null;
     $W = (int)cfg('img_w', 1200); $H = (int)cfg('img_h', 900);
     $sw = imagesx($src); $sh = imagesy($src);
@@ -32,7 +81,7 @@ function avatar_desde_subida(array $file): ?string {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return null;
     $bytes = file_get_contents($file['tmp_name']);
     if ($bytes === false || strlen($bytes) > (int)cfg('img_max_bytes', 6000000)) return null;
-    $src = @imagecreatefromstring($bytes);
+    $src = imagen_decodificar($bytes);
     if (!$src) return null;
     $sw = imagesx($src); $sh = imagesy($src); $side = min($sw, $sh);
     if ($side < 64) { imagedestroy($src); return null; }
@@ -73,6 +122,7 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
     if ($bin = curl_impersonate_bin()) {
         $cmd = escapeshellarg($bin) . ' -s -L --max-redirs 4 --max-time ' . ((int)$timeout + 3) . ' --max-filesize ' . (int)$max
              . ' -H ' . escapeshellarg('Accept-Language: es-ES,es;q=0.9')
+             . ' -H ' . escapeshellarg('Accept: text/html,application/xhtml+xml,image/avif,image/webp,image/*,*/*;q=0.8')
              . ' -w ' . escapeshellarg('\n%{http_code}') . ' ' . escapeshellarg($url) . ' 2>/dev/null';
         $out = shell_exec($cmd);
         if (is_string($out) && ($pos = strrpos($out, "\n")) !== false) {
