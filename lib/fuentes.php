@@ -338,7 +338,7 @@ function fuente_diag_imagen(string $url): array {
     $html = http_get($url, $t, 400000);
     $intentos = "intentos: " . implode(' · ', http_last()) . " · curl-impersonate " . (curl_impersonate_bin() ? 'si' : 'NO');
     if (!$html) return ["pagina: SIN RESPUESTA (bloqueo, timeout de {$t}s o mas de 400 KB) -> $url", $intentos,
-        "pista: HTTP 403/503 con 0 bytes = el CDN (Cloudflare, Akamai) no deja pasar al servidor: instala curl-impersonate (config.curl_impersonate); "
+        "pista: HTTP 403/503 en todos los intentos = el CDN (Cloudflare, Akamai) no deja pasar al servidor; si tambien falla curl-impersonate es un veto a la IP del servidor: pedir al medio que la ponga en su lista blanca; "
       . "'timed out' = sube og_timeout_sec; 'Callback aborted' o 'exceeds' = pagina mayor de 400 KB"];
     $log[] = "pagina: " . strlen($html) . " bytes (" . implode(' · ', http_last()) . ")";
     $img = null;
