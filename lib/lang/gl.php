@@ -473,4 +473,12 @@ return [
 'Nadie por aquí ahora mismo.' => 'Ninguén por aquí agora mesmo.',
 'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galáctica — ponte de mando: aceiro, ámbar e papel coas esquinas cortadas',
 'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impresionismo — luz de tarde e pinceladas soltas sobre o lenzo',
+'guardar' => 'gardar',
+'guardado' => 'gardado',
+'guardar en favoritos' => 'gardar en favoritos',
+'quitar de favoritos' => 'quitar de favoritos',
+'Mi perfil' => 'O meu perfil',
+'Favoritos' => 'Favoritos',
+'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Aquí verás o que gardes con «gardar», xunto aos votos, dentro de calquera envío ou artigo. Só o ves ti.',
+'Todavía no has guardado nada.' => 'Aínda non gardaches nada.',
 ];

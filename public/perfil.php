@@ -40,6 +40,7 @@ page_header(t('Perfil'));
 echo "<div class=\"profile\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<div><h1>" . h($u['login']) . "</h1>";
 if ($u['bio']) echo "<p class=\"bio\">" . h($u['bio']) . "</p>";
 echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . " · <a href=\"/u.php?u=" . rawurlencode($u['login']) . "\">" . t('ver perfil público') . "</a> · <a href=\"/usuarios.php\">" . t('usuarios') . "</a> · <a href=\"/comunidades.php\">" . t('comunidades') . "</a>" . (is_mod() ? " · <a href=\"/moderacion.php\">" . t('moderación') . "</a>" : "") . (is_admin() ? " · <a href=\"/admin.php\">admin</a>" : "") . " · <a href=\"/salir.php\">" . t('salir') . "</a></p></div></div>";
+profile_tabs('perfil');
 echo "<p class=\"notice\">" . t('Tu foto y tu frase se ven en tu perfil y junto a tu nombre cuando se revela, a los %d minutos de cada aportación. Hasta entonces eres un alias con halo.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($ok)  echo "<p class=\"notice\">" . h($ok) . "</p>";

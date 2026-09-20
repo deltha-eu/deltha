@@ -473,4 +473,12 @@ return [
 'Nadie por aquí ahora mismo.' => 'Ningú per aquí ara mateix.',
 'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galàctica — pont de comandament: acer, ambre i paper amb les cantonades tallades',
 'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impressionisme — llum de tarda i pinzellades soltes sobre el llenç',
+'guardar' => 'desar',
+'guardado' => 'desat',
+'guardar en favoritos' => 'desar a favorits',
+'quitar de favoritos' => 'treure de favorits',
+'Mi perfil' => 'El meu perfil',
+'Favoritos' => 'Favorits',
+'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Aquí veuràs el que desis amb «desar», al costat dels vots, dins de qualsevol enviament o article. Només ho veus tu.',
+'Todavía no has guardado nada.' => 'Encara no has desat res.',
 ];

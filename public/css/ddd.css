@@ -121,6 +121,15 @@ span.vote { display: inline-flex; gap: 22px; }
 .hilo .stats .share { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
 .hilo .stats .share .i { width: 18px; height: 18px; }
 .hilo .stats .share.copied { color: var(--accent); }
+/* favoritos: boton «guardar»/«guardado» (form sin JS) junto a los votos del hilo y, si ya esta guardado, en el feed */
+form.fav { display: inline-flex; align-items: center; margin: 0; }
+form.fav button { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; }
+form.fav button:hover { color: var(--fg); }
+form.fav .i { width: 18px; height: 18px; }
+form.fav.on button { color: var(--accent); }
+form.fav.on .i { fill: currentColor; }
+.hilo .stats form.fav button { font-size: 14px; }
+[data-skin="comunidad"] .hilo .stats form.fav button { color: #fff; }
 
 /* ---- hilo ---- */
 .hilo .post.main { border-bottom: 0; }

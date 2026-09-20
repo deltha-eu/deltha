@@ -348,3 +348,14 @@ CREATE TABLE user_media (
     CONSTRAINT fk_um_user   FOREIGN KEY (user_id)   REFERENCES users(user_id)     ON DELETE CASCADE,
     CONSTRAINT fk_um_source FOREIGN KEY (source_id) REFERENCES sources(source_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Favoritos: envios y articulos guardados por cada usuario desde el hilo; pestaña Favoritos del perfil. Migracion 043.
+CREATE TABLE favorites (
+    user_id     INT UNSIGNED NOT NULL,
+    story_id    INT UNSIGNED NOT NULL,
+    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, story_id),
+    KEY idx_fav_created (user_id, created),
+    CONSTRAINT fk_fav_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)   ON DELETE CASCADE,
+    CONSTRAINT fk_fav_story FOREIGN KEY (story_id) REFERENCES stories(story_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
