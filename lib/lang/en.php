@@ -512,4 +512,12 @@ return [
 'Nadie por aquí ahora mismo.' => 'Nobody around right now.',
 'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galactica — command deck: steel, amber and paper with the corners cut off',
 'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impressionism — afternoon light and loose brushstrokes on the canvas',
+'guardar' => 'save',
+'guardado' => 'saved',
+'guardar en favoritos' => 'save to favourites',
+'quitar de favoritos' => 'remove from favourites',
+'Mi perfil' => 'My profile',
+'Favoritos' => 'Favourites',
+'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Here you will see what you save with “save”, next to the votes, inside any post or article. Only you can see it.',
+'Todavía no has guardado nada.' => 'You have not saved anything yet.',
 ];

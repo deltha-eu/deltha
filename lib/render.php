@@ -105,6 +105,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<a href=\"$hrefC\">" . icon('reply') . "<span>{$s['comments']}</span></a>";
     vote_widget($s);
     echo mod_edit_link($s);   // mods y admin: «editar» a un clic, sin entrar en el hilo
+    if (is_fav((int)$s['story_id'])) echo fav_link($s);   // en el feed solo si ya esta guardado: marca y permite quitarlo (se guarda desde el hilo)
     echo share_link($s);
     echo "</div>";
     echo "</div></article>";
@@ -201,4 +202,35 @@ function skin_select(string $cur): string {
 function share_link(array $s): string {
     $url = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/hilo.php?id=' . (int)$s['story_id'];
     return "<a class=\"share\" href=\"" . h($url) . "\" data-share data-title=\"" . h($s['title']) . "\" data-copied=\"" . h(t('enlace copiado')) . "\" title=\"" . h(t('copiar el enlace')) . "\">" . icon('share') . "<span>" . t('compartir') . "</span></a>";
+}
+
+/* ---- favoritos --------------------------------------------------- */
+/** Ids de los envios guardados por el usuario actual (una consulta por pagina, cacheada). */
+function fav_ids(): array {
+    static $ids = null; global $pdo;
+    if ($ids !== null) return $ids;
+    $ids = [];
+    if (user()) {
+        try { $st = $pdo->prepare("SELECT story_id FROM favorites WHERE user_id = ?"); $st->execute([user()['user_id']]); $ids = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN)); }
+        catch (Throwable $e) { /* tabla aun sin crear */ }
+    }
+    return $ids;
+}
+function is_fav(int $story_id): bool { return in_array($story_id, fav_ids(), true); }
+
+/** Boton «guardar» / «guardado» (favoritos), solo para registrados; sin JS: un POST a /favorito.php que vuelve a la misma pagina. */
+function fav_link(array $s): string {
+    if (!user()) return '';
+    $id = (int)$s['story_id'];
+    $on = is_fav($id);
+    return "<form class=\"fav" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/favorito.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
+         . "<button title=\"" . h($on ? t('quitar de favoritos') : t('guardar en favoritos')) . "\">" . icon('fav') . "<span>" . ($on ? t('guardado') : t('guardar')) . "</span></button></form>";
+}
+
+/** Pestañas del perfil propio (perfil.php, favoritos.php): datos y favoritos. */
+function profile_tabs(string $on): void {
+    $tabs = ['perfil' => ['/perfil.php', t('Mi perfil')], 'favoritos' => ['/favoritos.php', t('Favoritos')]];
+    echo "<nav class=\"sub\">";
+    foreach ($tabs as $k => [$href, $label]) echo "<a href=\"$href\"" . ($k === $on ? ' class="on"' : '') . ">" . h($label) . "</a>";
+    echo "</nav>";
 }

@@ -512,4 +512,12 @@ return [
 'Nadie por aquí ahora mismo.' => 'Personne par ici pour le moment.',
 'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galactica — passerelle de commandement : acier, ambre et papier aux coins coupés',
 'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impressionnisme — lumière du soir et touches libres sur la toile',
+'guardar' => 'enregistrer',
+'guardado' => 'enregistré',
+'guardar en favoritos' => 'ajouter aux favoris',
+'quitar de favoritos' => 'retirer des favoris',
+'Mi perfil' => 'Mon profil',
+'Favoritos' => 'Favoris',
+'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Ici apparaîtra ce que vous enregistrez avec « enregistrer », à côté des votes, dans n’importe quel envoi ou article. Vous seul le voyez.',
+'Todavía no has guardado nada.' => 'Vous n’avez encore rien enregistré.',
 ];

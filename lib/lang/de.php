@@ -473,4 +473,12 @@ return [
 'Nadie por aquí ahora mismo.' => 'Gerade niemand da.',
 'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galactica — Kommandobrücke: Stahl, Bernstein und Papier mit abgeschnittenen Ecken',
 'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Impressionismus — Abendlicht und lockere Pinselstriche auf der Leinwand',
+'guardar' => 'speichern',
+'guardado' => 'gespeichert',
+'guardar en favoritos' => 'zu Favoriten hinzufügen',
+'quitar de favoritos' => 'aus Favoriten entfernen',
+'Mi perfil' => 'Mein Profil',
+'Favoritos' => 'Favoriten',
+'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Hier siehst du, was du mit „speichern“ neben den Stimmen in jedem Beitrag oder Artikel sicherst. Nur du siehst es.',
+'Todavía no has guardado nada.' => 'Du hast noch nichts gespeichert.',
 ];

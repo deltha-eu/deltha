@@ -473,4 +473,12 @@ return [
 'Nadie por aquí ahora mismo.' => 'Inor ez dago hemen orain.',
 'Galáctica — puente de mando: acero, ámbar y papel con las esquinas cortadas' => 'Galaktika — aginte-zubia: altzairua, anbarra eta ertzak moztutako papera',
 'Impresionismo — luz de tarde y pinceladas sueltas sobre el lienzo' => 'Inpresionismoa — arratsaldeko argia eta pintzelkada askeak mihisean',
+'guardar' => 'gorde',
+'guardado' => 'gordeta',
+'guardar en favoritos' => 'gogokoetan gorde',
+'quitar de favoritos' => 'gogokoetatik kendu',
+'Mi perfil' => 'Nire profila',
+'Favoritos' => 'Gogokoak',
+'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Hemen ikusiko duzu «gorde» botoiarekin gordetzen duzuna, botoen ondoan, edozein bidalketa edo artikuluren barruan. Zuk bakarrik ikusten duzu.',
+'Todavía no has guardado nada.' => 'Oraindik ez duzu ezer gorde.',
 ];
