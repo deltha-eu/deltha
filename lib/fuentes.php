@@ -194,8 +194,9 @@ function fuente_imagen(array $src, array $it, bool $reset = false): ?string {
         $bytes = http_get($it['thumb'], 3, 600000);
         if ($bytes === null || strlen($bytes) < 100) { $fails++; return null; }
         $info = @getimagesizefromstring($bytes);
-        $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'][$info['mime'] ?? ''] ?? null;
-        if (!$ext) return null;
+        $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif', 'image/avif' => 'avif'][$info['mime'] ?? ''] ?? null;
+        if (!$ext && imagen_es_avif($bytes)) $ext = 'avif';   // getimagesize solo reconoce AVIF desde PHP 8.1: mirar la cabecera
+        if (!$ext) return null;   // (la miniatura se guarda tal cual y la pinta el navegador: todos los actuales muestran AVIF)
         if (!is_dir(DDD_FUENTES_DIR)) @mkdir(DDD_FUENTES_DIR, 0775, true);
         $name = preg_replace('/[^a-z0-9]/', '', $src['slug']) . '-' . preg_replace('/[^A-Za-z0-9_-]/', '', $it['ext_id']) . '.' . $ext;
         return @file_put_contents(DDD_FUENTES_DIR . '/' . $name, $bytes) ? 'fuentes/' . $name : null;
@@ -346,12 +347,16 @@ function fuente_diag_imagen(string $url): array {
     $bytes = http_get($img, $t);
     if (!$bytes) return array_merge($log, ["imagen: SIN RESPUESTA al descargarla"]);
     $info = @getimagesizefromstring($bytes);
-    $log[] = "imagen: " . strlen($bytes) . " bytes, " . ($info ? "{$info[0]}x{$info[1]} {$info['mime']}" : "formato no reconocido por GD");
+    $log[] = "imagen: " . strlen($bytes) . " bytes, " . ($info ? "{$info[0]}x{$info[1]} {$info['mime']}" : (imagen_es_avif($bytes) ? "AVIF (por la cabecera)" : "formato no reconocido por GD"));
     $gd = gd_info();
-    $log[] = "GD: webp " . (!empty($gd['WebP Support']) ? 'si' : 'NO') . " · avif " . (!empty($gd['AVIF Support']) ? 'si' : 'no') . " · jpeg " . (!empty($gd['JPEG Support']) ? 'si' : 'NO');
-    $src = @imagecreatefromstring($bytes);
-    if (!$src) return array_merge($log, ["GD: no puede decodificar esta imagen (falta soporte del formato)"]);
-    $log[] = "GD: decodificada " . imagesx($src) . "x" . imagesy($src) . (imagesx($src) < 240 || imagesy($src) < 180 ? " -> DEMASIADO PEQUEÑA (minimo 240x180)" : " -> valida");
+    $log[] = "GD: webp " . (!empty($gd['WebP Support']) ? 'si' : 'NO') . " · avif " . (!empty($gd['AVIF Support']) ? 'si' : 'no') . " · jpeg " . (!empty($gd['JPEG Support']) ? 'si' : 'NO')
+           . " · avifdec " . (imagen_bin('avifdec', ['/usr/bin/avifdec', '/usr/local/bin/avifdec']) ? 'si' : 'no')
+           . " · imagemagick " . (imagen_bin('imagemagick', ['/usr/bin/magick', '/usr/local/bin/magick', '/usr/bin/convert', '/usr/local/bin/convert']) ? 'si' : 'no');
+    $src = imagen_decodificar($bytes, $como);
+    if (!$src) return array_merge($log, [imagen_es_avif($bytes)
+        ? "AVIF: no se puede decodificar en este servidor (instala php-gd con libavif, el paquete libavif-bin [avifdec] o ImageMagick)"
+        : "GD: no puede decodificar esta imagen (falta soporte del formato)"]);
+    $log[] = "decodificada con $como: " . imagesx($src) . "x" . imagesy($src) . (imagesx($src) < 240 || imagesy($src) < 180 ? " -> DEMASIADO PEQUEÑA (minimo 240x180)" : " -> valida");
     return $log;
 }
 
