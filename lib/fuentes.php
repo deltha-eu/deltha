@@ -336,8 +336,11 @@ function fuente_diag_imagen(string $url): array {
     $log = [];
     $t = (int)cfg('og_timeout_sec', 3);
     $html = http_get($url, $t, 400000);
-    if (!$html) return ["pagina: SIN RESPUESTA (bloqueo, timeout de {$t}s o mas de 400 KB) -> $url"];
-    $log[] = "pagina: " . strlen($html) . " bytes";
+    $intentos = "intentos: " . implode(' · ', http_last()) . " · curl-impersonate " . (curl_impersonate_bin() ? 'si' : 'NO');
+    if (!$html) return ["pagina: SIN RESPUESTA (bloqueo, timeout de {$t}s o mas de 400 KB) -> $url", $intentos,
+        "pista: HTTP 403/503 con 0 bytes = el CDN (Cloudflare, Akamai) no deja pasar al servidor: instala curl-impersonate (config.curl_impersonate); "
+      . "'timed out' = sube og_timeout_sec; 'Callback aborted' o 'exceeds' = pagina mayor de 400 KB"];
+    $log[] = "pagina: " . strlen($html) . " bytes (" . implode(' · ', http_last()) . ")";
     $img = null;
     if (preg_match('/<meta[^>]+(?:property|name)=["\']og:image(?::secure_url|:url)?["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)
      || preg_match('/<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\']og:image["\']/i', $html, $m)
@@ -345,7 +348,7 @@ function fuente_diag_imagen(string $url): array {
     if (!$img) return array_merge($log, ["og:image: NO ENCONTRADA en el HTML"]);
     $log[] = "og:image: $img";
     $bytes = http_get($img, $t);
-    if (!$bytes) return array_merge($log, ["imagen: SIN RESPUESTA al descargarla"]);
+    if (!$bytes) return array_merge($log, ["imagen: SIN RESPUESTA al descargarla (" . implode(' · ', http_last()) . ")"]);
     $info = @getimagesizefromstring($bytes);
     $log[] = "imagen: " . strlen($bytes) . " bytes, " . ($info ? "{$info[0]}x{$info[1]} {$info['mime']}" : (imagen_es_avif($bytes) ? "AVIF (por la cabecera)" : "formato no reconocido por GD"));
     $gd = gd_info();
