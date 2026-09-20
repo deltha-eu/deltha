@@ -115,9 +115,18 @@ function curl_impersonate_bin(): ?string {
     return $bin;
 }
 
+/** Rastro de la ultima http_get(): un texto por intento («curl-impersonate: HTTP 403 en 210 ms»), para el diagnostico de admin. */
+function http_last(): array { return $GLOBALS['ddd_http_last'] ?? []; }
+
 /** Peticion HTTP. 1) curl-impersonate como Chrome si existe; 2) curl de PHP con cascada navegador -> Twitterbot -> facebookexternalhit. */
 function http_get(string $url, int $timeout, int $max = 3000000): ?string {
-    if (!preg_match('#^https?://[^\s\'"]+$#i', $url)) return null;
+    $GLOBALS['ddd_http_last'] = [];
+    if (!preg_match('#^https?://[^\s\'"]+$#i', $url)) { $GLOBALS['ddd_http_last'][] = 'URL no valida'; return null; }
+    $t0 = microtime(true);
+    $traza = function (string $via, int $code, int $bytes, string $err = '') use (&$t0) {
+        $GLOBALS['ddd_http_last'][] = "$via: " . ($code > 0 ? "HTTP $code" : 'sin codigo') . ", $bytes bytes en " . (int)round((microtime(true) - $t0) * 1000) . " ms" . ($err !== '' ? " ($err)" : '');
+        $t0 = microtime(true);
+    };
 
     if ($bin = curl_impersonate_bin()) {
         $cmd = escapeshellarg($bin) . ' -s -L --max-redirs 4 --max-time ' . ((int)$timeout + 3) . ' --max-filesize ' . (int)$max
@@ -128,8 +137,9 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
         if (is_string($out) && ($pos = strrpos($out, "\n")) !== false) {
             $code = (int)substr($out, $pos + 1);
             $body = substr($out, 0, $pos);
+            $traza('curl-impersonate', $code, strlen($body));
             if ($code > 0 && $code < 400 && $body !== '') return $body;
-        }
+        } else $traza('curl-impersonate', 0, 0, 'sin salida');
         // si falla, seguimos con el curl normal
     }
 
@@ -157,7 +167,9 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
         ]);
         $data = curl_exec($ch);
         $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $err  = curl_errno($ch) ? curl_error($ch) : '';
         curl_close($ch);
+        $traza('curl ' . explode('/', $ua)[0], $code, is_string($data) ? strlen($data) : 0, $err);
         if ($data !== false && $code > 0 && $code < 400 && strlen($data) > 0) return $data;
         if ($code !== 403 && $code !== 429 && $code !== 503 && $code !== 0) return null; // 404 etc: no reintentar
     }
