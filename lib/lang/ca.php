@@ -393,6 +393,7 @@ return [
 'Último en substacks' => 'Últim als Substacks',
 'todos' => 'tots',
 'todas' => 'totes',
+'Último en agregadores' => 'Últim als agregadors',
 'Grotesque — agregador oscuro y denso, carbón y grotesca, la caja de votos al lado del titular' => 'Grotesque — agregador fosc i dens, carbó i grotesca, la caixa de vots al costat del titular',
 'Phantom — tarjetas blancas sobre gris, azul eléctrico, miniatura al lado' => 'Phantom — targetes blanques sobre gris, blau elèctric, miniatura al costat',
 'B/W — Editorial sin un solo color: fotos, avatares y laterales en blanco y negro' => 'B/W — Editorial sense cap color: fotos, avatars i laterals en blanc i negre',
