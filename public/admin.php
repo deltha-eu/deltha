@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $out[] = 'Config guardada.';
     } elseif ($act === 'pagina') {
         $pdo->prepare("INSERT INTO pages (slug, title, body) VALUES (?,?,?) ON DUPLICATE KEY UPDATE title = VALUES(title), body = VALUES(body)")
-            ->execute([in_array(post('slug'), ['privacidad', 'normas', 'algoritmo'], true) ? post('slug') : 'privacidad', post('title', 'Página'), (string)($_POST['body'] ?? '')]);
+            ->execute([in_array(post('slug'), ['privacidad', 'normas', 'algoritmo', 'que-es'], true) ? post('slug') : 'privacidad', post('title', 'Página'), (string)($_POST['body'] ?? '')]);
         $out[] = 'Página guardada.';
     } elseif ($act === 'topics') {
         $st = $pdo->prepare("UPDATE topics SET coef = ?, color = ? WHERE topic_id = ?");
@@ -521,8 +521,8 @@ if ($tab === 'usuarios') {
        . " · config: logo_light=<code>" . h((string)cfg('logo_light')) . "</code> logo_dark=<code>" . h((string)cfg('logo_dark')) . "</code> logo_icon=<code>" . h((string)cfg('logo_icon')) . "</code></small></p>";
 
 } elseif ($tab === 'privacidad') {
-    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{mincand}</code> <code>{newttl}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code>.</small></p>";
-    foreach (['privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso', 'algoritmo' => 'Cómo funciona el δ'] as $slug => $lbl) {
+    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{mincand}</code> <code>{newttl}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code> <code>{skins}</code> (número de skins) <code>{auradl}</code> (fecha de <code>aura_deadline</code>, «31 de diciembre de 2026»).</small></p>";
+    foreach (['que-es' => '¿Qué es Deltha?', 'privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso', 'algoritmo' => 'Cómo funciona el δ'] as $slug => $lbl) {
         $pg = page_get($pdo, $slug);
         echo "<h3>$lbl</h3><p><small>Se muestra en <a href=\"/$slug.php\">/$slug.php</a>" . ($pg['updated'] ? " · última edición " . h($pg['updated']) : "") . ".</small></p>";
         echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"pagina\"><input type=\"hidden\" name=\"slug\" value=\"$slug\">";

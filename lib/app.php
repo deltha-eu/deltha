@@ -91,7 +91,7 @@ function is_mod(): bool { $u = user(); return $u && in_array($u['level'], ['mod'
 
 /* ---- acceso privado temporal (clave) --------------------------------
  * Mientras config.access_key no este vacia, la web es privada: quien no
- * tenga la clave ve la presentacion (/delta/) en vez de la portada.
+ * tenga la clave va a la puerta (/delta/clave.php) en vez de a la portada.
  * Pasan: usuarios logueados y quien haya introducido la clave en
  * /delta/clave.php (cookie tecnica ddd_k con un HMAC de la clave; cambiar
  * la clave en admin invalida todas las cookies). Vaciar access_key abre
@@ -108,7 +108,7 @@ function gate_open(): bool {
 // En CLI (cron: promocionar.php, moderar.php) no hay cookie ni sesion: sin esta
 // excepcion, con la clave activa redirect() hacia exit y el ciclo moria en silencio
 // (las nuevas no subian a candidatas, ni revelado, ni archivo, ni decaimiento de aura).
-if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/clave.php');   // la presentacion (/delta/) queda solo tras «¿Que es Deltha?»
+if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/clave.php');   // /que-es.php, privacidad, normas y algoritmo son publicas (DDD_PUBLIC)
 
 /* ---- helpers ------------------------------------------------------- */
 /** Casilla «mostrar contraseña» para un formulario (la activa /app/pw.js; sin JS no aparece). */
@@ -327,9 +327,15 @@ function page_get(PDO $pdo, string $slug): array {
     $st->execute([$slug]);
     return $st->fetch() ?: ['slug' => $slug, 'title' => ucfirst($slug), 'body' => '<p>Sin contenido todavía.</p>', 'updated' => null];
 }
-/** Cuerpo HTML con {site}, {ttl} y {gm} sustituidos por la config actual */
+/** Cuerpo HTML con {site}, {ttl}, {gm}… sustituidos por la config actual (lista en admin -> Paginas) */
 /** Numero en formato español, sin ceros sobrantes (0.05 -> 0,05; 1.00 -> 1; 2.50 -> 2,5) */
 function num_es($v): string { $s = rtrim(rtrim(number_format((float)$v, 3, ',', '.'), '0'), ','); return $s === '' ? '0' : $s; }
+/** «31 de diciembre de 2026» a partir de una fecha Y-m-d (para {auradl}) */
+function fecha_larga(string $ymd): string {
+    $t = strtotime($ymd) ?: time();
+    $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return (int)date('j', $t) . ' de ' . $meses[(int)date('n', $t) - 1] . ' de ' . date('Y', $t);
+}
 function page_body(array $pg): string {
     return strtr($pg['body'], [
         '{site}' => h(cfg('site_name', 'Deltha')),
@@ -353,6 +359,9 @@ function page_body(array $pg): string {
         '{commmax}'  => (string)(int)cfg('comm_max_per_user', 3),
         '{editaura}' => num_es(cfg('comment_edit_min_aura', 10)),
         '{editmin}'  => (string)(int)cfg('comment_edit_minutes', 10),
+        // pagina «¿Que es Deltha?»
+        '{skins}'    => (string)count(DDD_SKINS),
+        '{auradl}'   => fecha_larga(cfg('aura_deadline', '2026-12-31')),
     ]);
 }
 
@@ -636,7 +645,7 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/delta/\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a>";
+    $h  = "<a href=\"/que-es.php\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a>";
     // fuentes externas pintadas con Deltha: los agregadores (Meneame) y el enlace al catalogo de medios
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
