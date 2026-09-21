@@ -32,7 +32,8 @@ foreach ($all as $c) { $k = $c['root_id'] ?: $c['comment_id']; $threads[$k][] = 
 $replyTo = (int)($_GET['r'] ?? 0);
 $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo] : null;
 
-page_header(t('Hilo'), $tab);
+// Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
+page_header(t('Hilo'), $tab, og_tags($s['title'], (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo.php?id=' . $id)), $s['title']);
 echo "<div class=\"hilo\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span>" . (is_mod() ? " · " . mod_edit_link($s) : '') . "</div>";

@@ -583,6 +583,20 @@ function mod_edit_link(array $s): string {
 }
 
 /* ---- layout (estilo timeline) -------------------------------------- */
+/** URL absoluta (esquema + host) de una ruta del sitio, para Open Graph y compartir. */
+function abs_url(string $path): string {
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $path;
+}
+/** Metas Open Graph: titulo, descripcion, imagen (absoluta; por defecto el icono de 512 en vigor) y url (la actual). */
+function og_tags(string $title, string $descr = '', string $image = '', string $url = ''): string {
+    $img = $image !== '' ? (preg_match('#^https?://#i', $image) ? $image : abs_url($image)) : abs_url(icon_src(512));
+    $h  = "<meta property=\"og:site_name\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta property=\"og:type\" content=\"website\">";
+    $h .= "<meta property=\"og:title\" content=\"" . h($title) . "\">";
+    if ($descr !== '') $h .= "<meta property=\"og:description\" content=\"" . h(mb_strimwidth($descr, 0, 200, '…')) . "\">";
+    $h .= "<meta property=\"og:image\" content=\"" . h($img) . "\"><meta property=\"og:url\" content=\"" . h($url ?: abs_url((string)($_SERVER['REQUEST_URI'] ?? '/'))) . "\">";
+    $h .= "<meta name=\"twitter:card\" content=\"" . ($image !== '' ? 'summary_large_image' : 'summary') . "\">";
+    return $h;
+}
 /** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
  *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
@@ -598,6 +612,9 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
     echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
+    // Open Graph: lo que enseñan los cuadros de «compartir» (Windows, WhatsApp, Telegram...). Por defecto el icono del sitio en vigor;
+    // una pagina (el hilo) puede mandar los suyos en $head y entonces no se repiten.
+    if (!str_contains($head, 'og:image')) $head = og_tags($doc ?: $title) . $head;
     echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
     require_once __DIR__ . '/lateral.php';
     echo "<div class=\"cols\">";   // escritorio: rail | shell | side (las columnas laterales van ocultas en movil)
