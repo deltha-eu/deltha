@@ -44,13 +44,13 @@ nav.tabs-top a { flex: 1; text-align: center; padding: 13px 0 10px; color: var(-
 nav.tabs-top a .i { display: none; }
 nav.tabs-top a.on { color: var(--fg); font-weight: 700; }
 nav.tabs-top a.on::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; width: 56px; height: 4px; border-radius: 2px; background: var(--accent); }
-/* franja bajo las pestañas (solo sin rail, < 1100 px): Substacks · Medios · Agregadores · Temas · Comunidades, icono + rotulo como el muelle */
+/* franja bajo las pestañas (solo sin rail, < 1340 px): Substacks · Medios · Agregadores · Temas · Comunidades, icono + rotulo como el muelle */
 nav.tabs-fuentes { display: flex; border-bottom: 1px solid var(--line); background: var(--bg); }
 nav.tabs-fuentes a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 0 6px; color: var(--muted); font-size: 10px; }
 nav.tabs-fuentes a .i { width: 22px; height: 22px; }
 nav.tabs-fuentes a.on { color: var(--fg); }
 nav.tabs-fuentes a.on .i { stroke-width: 2.4; }
-@media (min-width: 1100px) { nav.tabs-fuentes { display: none; } }
+@media (min-width: 1340px) { nav.tabs-fuentes { display: none; } }
 /* Barra inferior con iconos: en todas las pantallas (en el PC, ceñida a la columna) */
 .dock { position: fixed; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; bottom: 0; z-index: 5;
   background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -2045,7 +2045,7 @@ details.editbox form.plain { padding-top: 0; }
 }
 
 /* ---- las once en el escritorio ancho: muestras del rail y acentos de rail/side ---- */
-@media (min-width: 1100px) {
+@media (min-width: 1340px) {
   .rail .sw-hyperpop { --s1: #F6F7FB; --s2: #FF4FD8; }
   .rail .sw-neobrutal { --s1: #FFE600; --s2: #111111; }
   .rail .sw-stickerbomb { --s1: #ECEBE7; --s2: #FFE14D; }
@@ -2138,14 +2138,19 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin] .av.photo { background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent; }
 
 /* =====================================================================
-   ESCRITORIO ANCHO (>= 1100 px): tres columnas — rail | shell | side.
+   ESCRITORIO ANCHO (>= 1340 px): tres columnas — rail | shell | side.
    El rail sustituye a las pestañas de arriba y al muelle; la side enseña
    lo que pasa (ciclo, comunidades) y lleva el pie. En movil no existen.
    ===================================================================== */
 .rail, .side { display: none; }
-@media (min-width: 1100px) {
-  .cols { display: grid; grid-template-columns: 220px 600px 300px; column-gap: 28px; justify-content: center; align-items: start; }
-  .shell { margin: 0; }
+@media (min-width: 1340px) {
+  /* 230 + 30 + 750 + 30 + 300 = 1340 px (antes 220/600/300 con hueco 28 = 1176). La columna central pasa de 600 a 750,
+     pero las fotos conservan la altura que tenian a 600 (max-height: 320 en el feed, 426 en el hilo): salen mas apaisadas, recortadas por .pic (cover). */
+  .cols { display: grid; grid-template-columns: 230px 750px 300px; column-gap: 30px; justify-content: center; align-items: start; }
+  .shell { margin: 0; max-width: 750px; }
+  .post .media, .post .media.sm { max-height: 320px; }
+  .hilo .main .media { max-height: 426px; }
+  .fab { right: calc(50% - 375px - 76px); }
   .rail, .side { display: flex; flex-direction: column; position: sticky; top: 0; max-height: 100vh; overflow-y: auto; scrollbar-width: none; }
   .rail::-webkit-scrollbar, .side::-webkit-scrollbar { display: none; }
   nav.tabs-top, .dock, .fab, header.top .me, header.top .logo { display: none; }
