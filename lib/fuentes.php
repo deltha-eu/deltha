@@ -156,9 +156,10 @@ function fuente_smf_completar(PDO $pdo, array $src, array &$items, int $timeout)
     return $n;
 }
 /** Fuentes sin votos (foros SMF): no se pintan las flechas ni «↑ n» en la columna. */
-/** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml),
- *  XenForo (index.rss: Burbuja) y agregadores cuyo RSS es generico, sin votos (Renegados). */
-const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'renegados.es'];
+/** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
+ *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
+ *  «burbuja» de votos en su pagina (skin Phantom), asi que se pinta el widget normal, a 0 hasta que su feed los incluya. */
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss'];
 function fuente_sin_votos(array $src): bool {
     foreach (DDD_FEEDS_SIN_VOTOS as $p) if (str_contains((string)$src['feed_portada'], $p)) return true;
     return false;
