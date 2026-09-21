@@ -1,12 +1,12 @@
 <?php
 /** /delta/clave.php — puerta de acceso mientras Deltha es privada (config.access_key).
- *  Enlace directo sin presentacion: /delta/clave.php?k=CLAVE */
+ *  Enlace directo: /delta/clave.php?k=CLAVE */
 define('DDD_PUBLIC', true);
 require __DIR__ . '/../../lib/app.php';
 if (gate_open()) redirect('/');
 
 $err = null;
-// Clave por formulario (POST) o por enlace directo /delta/clave.php?k=CLAVE (salta la presentacion).
+// Clave por formulario (POST) o por enlace directo /delta/clave.php?k=CLAVE.
 $clave = $_SERVER['REQUEST_METHOD'] === 'POST' ? post('clave') : trim((string)($_GET['k'] ?? ''));
 if ($clave !== '') {
     if (hash_equals(trim((string)cfg('access_key')), $clave)) {
@@ -54,6 +54,6 @@ html, body { height: 100%; }
     <input type="password" name="clave" required autocomplete="off" autofocus placeholder="<?= t('clave') ?>">
     <button><?= t('Entrar') ?></button>
   </form>
-  <p class="back"><a href="/delta/"><?= t('¿Qué es Deltha?') ?></a> · <a href="/login.php"><?= t('Ya tengo cuenta') ?></a> · <a href="/privacidad.php"><?= t('Privacidad') ?></a></p>
+  <p class="back"><a href="/que-es.php"><?= t('¿Qué es Deltha?') ?></a> · <a href="/login.php"><?= t('Ya tengo cuenta') ?></a> · <a href="/privacidad.php"><?= t('Privacidad') ?></a></p>
 </div>
 </body></html>
