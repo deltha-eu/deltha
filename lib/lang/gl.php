@@ -393,6 +393,7 @@ return [
 'Último en substacks' => 'Último nos Substacks',
 'todos' => 'todos',
 'todas' => 'todas',
+'Sobre %s' => 'Sobre %s',
 'Último en agregadores' => 'Último en agregadores',
 'Grotesque — agregador oscuro y denso, carbón y grotesca, la caja de votos al lado del titular' => 'Grotesque — agregador escuro e denso, carbón e grotesca, a caixa de votos á beira do titular',
 'Phantom — tarjetas blancas sobre gris, azul eléctrico, miniatura al lado' => 'Phantom — tarxetas brancas sobre gris, azul eléctrico, miniatura ao lado',
