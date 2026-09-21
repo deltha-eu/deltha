@@ -265,6 +265,7 @@ nav.sub a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bo
 .fz .fzt .t { font-family: var(--serif); font-size: 15px; }
 .fz .fzt .t:hover { text-decoration: underline; }
 .fz .fzt .meta { color: var(--muted); white-space: nowrap; }
+.fz.medio .fzt .meta { white-space: normal; }   /* catalogo /medios.php: la descripcion puede ser larga; que baje de linea en vez de salirse */
 .fz .pos, .fz .neg { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
 .fz .neg { color: var(--neg); }
 .fz .delta { display: inline; margin: 0 0 0 4px; }
@@ -2380,6 +2381,8 @@ form.plain select.medsel { margin-bottom: 6px; }
 /* rail: «Mis medios» con el mismo aspecto que Plantilla / Aspecto / Idioma (details.rail-dd de cada plantilla), pero siempre abierto: sin flecha ni plegado */
 .rail details.rail-dd.medios { margin-top: 10px; padding-top: 6px; border-top: 1px solid var(--line) !important; }
 .rail details.rail-dd.medios summary { pointer-events: none; }
+.rail details.rail-dd.medios summary > a { pointer-events: auto; display: flex; align-items: center; gap: inherit; color: inherit; text-decoration: none; }   /* la cabecera lleva a /ultimo.php?k=… */
+.rail details.rail-dd.medios summary > a:hover span, .rail details.rail-dd.medios summary > a.on span { text-decoration: underline; text-underline-offset: 3px; }
 .rail details.rail-dd.medios summary::after { content: none; }
 /* admin -> Fuentes: formulario de alta/edicion en rejilla limpia */
 .admin form.fuente table td:first-child { width: 110px; color: var(--muted); white-space: nowrap; padding-top: 10px; }
