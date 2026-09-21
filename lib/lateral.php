@@ -154,11 +154,12 @@ function side_comunidades(PDO $pdo): void {
                            JOIN stories s ON s.story_id = (SELECT sc.story_id FROM story_communities sc JOIN stories x ON x.story_id = sc.story_id WHERE sc.community_id = c.community_id AND x.status IN ('nuevas','candidatas','destacadas','archived') ORDER BY sc.created DESC LIMIT 1)
                           WHERE c.status = 'ok' ORDER BY s.sent_date DESC LIMIT 8")->fetchAll();
     if (!$rows) return;
-    echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "</h3>";
+    // «todas» en la cabecera, como en los modulos de substacks y medios
+    echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "<span><a href=\"/comunidades.php\">" . t('todas') . "</a></span></h3>";
     foreach ($rows as $r) {
         echo "<a class=\"row\" href=\"/hilo.php?id=" . (int)$r['story_id'] . "\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
     }
-    echo "<p class=\"more\"><a href=\"/comunidades.php\">" . t('todas las comunidades') . "</a></p></section>";
+    echo "</section>";
 }
 
 /** Fuentes externas en la columna derecha: los agregadores (Meneame, tres ultimas de portada con votos) y, para medios y newsletters,

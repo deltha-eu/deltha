@@ -392,6 +392,7 @@ return [
 'Último en medios' => 'Azkena hedabideetan',
 'Último en substacks' => 'Azkena Substacketan',
 'todos' => 'denak',
+'todas' => 'guztiak',
 'principal' => 'nagusia',
 'quitar de esta comunidad' => 'komunitate honetatik kendu',
 'Añadir a la comunidad' => 'Komunitatera gehitu',
