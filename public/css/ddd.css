@@ -2411,3 +2411,36 @@ form.plain select.medsel { margin-bottom: 6px; }
 .rail > * { flex: none; }
 /* Orange y Foro colocan el post en rejilla (.pc es display: contents): la miniatura de fuente ocupa la celda de la foto, no flota */
 [data-skin="orange"] .post.ext .thumb { float: none; grid-area: media; width: 100%; height: auto; aspect-ratio: 4 / 3; margin: 0; border-radius: 5px; align-self: start; }   /* llena su columna (96 px, 80 px en movil) */
+
+/* =====================================================================
+   Una fuente por skin (21/09/2026). Cada skin declara --font (texto corriente: cuerpo, paginas legales/«que es», avisos,
+   formularios) y --head (titulares sin regla propia: h1, h2, h3, .legal h2, cabeceras de la columna derecha). Las reglas
+   mas concretas de cada skin (titular del envio en Archivo Black, pestañas, etc.) siguen mandando; esto tapa lo que se
+   quedaba en la fuente generica (Inter / sistema / serif por defecto) y se veia ajeno a la skin, p. ej. la pagina
+   «¿Que es Deltha?» en GAME HUD. Se aplica a todas las skins.
+   ===================================================================== */
+:root { --font: var(--sans); --head: var(--serif); }
+[data-skin="editorial"], [data-skin="delta"], [data-skin="flujo"], [data-skin="zen"] { --font: var(--serif); --head: var(--serif); }
+[data-skin="comunidad"]     { --font: var(--forum); --head: var(--forum); }
+[data-skin="retro"]         { --font: var(--mono);  --head: var(--mono); }
+[data-skin="manga"]         { --font: var(--cond);  --head: var(--cond); }
+[data-skin="punk"]          { --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; --head: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+[data-skin="popart"]        { --font: var(--sans);  --head: var(--black); }
+[data-skin="orange"]        { --font: var(--sans);  --head: var(--serif); }
+[data-skin="foro"]          { --font: var(--sans);  --head: var(--sans); }
+[data-skin="hyperpop"]      { --font: var(--grot);  --head: var(--black); }
+[data-skin="neobrutal"]     { --font: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; --head: var(--black); }
+[data-skin="stickerbomb"]   { --font: "IBM Plex Sans", Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; --head: var(--black); }
+[data-skin="riso"]          { --font: var(--slab);  --head: var(--slab); }
+[data-skin="aero"]          { --font: "Nunito Sans", Nunito, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --head: "Nunito Sans", Nunito, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+[data-skin="hud"]           { --font: var(--mono);  --head: var(--mono); }
+[data-skin="acid"]          { --font: "Space Grotesk", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --head: var(--black); }
+[data-skin="pixel"]         { --font: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --head: var(--px); }
+[data-skin="dopamine"]      { --font: var(--grot);  --head: var(--grot); }
+[data-skin="www1998"]       { --font: var(--tnr);   --head: var(--tnr); }
+[data-skin="solarpunk"]     { --font: var(--disp);  --head: var(--disp); }
+[data-skin="galactica"]     { --font: var(--cond);  --head: var(--cond); }
+[data-skin="impresionismo"] { --font: var(--serif); --head: var(--disp); }
+[data-skin] body { font-family: var(--font); }
+[data-skin] h1, [data-skin] h2, [data-skin] h3, [data-skin] .legal h2, [data-skin] .side .mod h3, [data-skin] .ttl { font-family: var(--head); }
+[data-skin] input, [data-skin] select, [data-skin] textarea, [data-skin] button { font-family: inherit; }
