@@ -393,6 +393,7 @@ return [
 'Último en substacks' => 'Azkena Substacketan',
 'todos' => 'denak',
 'todas' => 'guztiak',
+'Sobre %s' => '%s-i buruz',
 'Último en agregadores' => 'Azkena agregatzaileetan',
 'Grotesque — agregador oscuro y denso, carbón y grotesca, la caja de votos al lado del titular' => 'Grotesque — agregatzaile ilun eta trinkoa, ikatza eta grotesca, boto-kutxa titularraren ondoan',
 'Phantom — tarjetas blancas sobre gris, azul eléctrico, miniatura al lado' => 'Phantom — txartel zuriak grisaren gainean, urdin elektrikoa, miniatura ondoan',

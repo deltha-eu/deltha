@@ -583,8 +583,9 @@ function mod_edit_link(array $s): string {
 }
 
 /* ---- layout (estilo timeline) -------------------------------------- */
-/** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php) */
-function page_header(string $title, string $tab = '', string $head = ''): void {
+/** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
+ *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
+function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $u = user();
     $theme = theme();   // null = sigue al sistema
@@ -596,7 +597,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     echo "<link rel=\"manifest\" href=\"/app/manifest.php\"><meta name=\"theme-color\" content=\"#ffffff\" media=\"(prefers-color-scheme: light)\"><meta name=\"theme-color\" content=\"#000000\" media=\"(prefers-color-scheme: dark)\">";
     echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
-    echo "<title>" . h($title) . " · " . h(cfg('site_name')) . "</title>";
+    echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
     echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
     require_once __DIR__ . '/lateral.php';
     echo "<div class=\"cols\">";   // escritorio: rail | shell | side (las columnas laterales van ocultas en movil)
