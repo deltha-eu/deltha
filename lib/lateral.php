@@ -53,16 +53,18 @@ function rail_skins(): void {
     rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
 }
 
-/** Cuarto grupo del rail: «Mis medios» como cabecera (mismo aspecto que Plantilla / Aspecto / Idioma, sin flecha ni plegado)
- *  y debajo, siempre visibles, solo los nombres: los elegidos en el perfil o, sin eleccion / sin cuenta, los destacados en admin. */
+/** Cuarto grupo del rail: «Mis substacks», «Mis medios» y «Mis agregadores» como cabeceras (mismo aspecto que Plantilla / Aspecto / Idioma,
+ *  sin flecha ni plegado), cada una pulsable → /ultimo.php?k=… (las diez ultimas noticias del grupo en formato normal), y debajo, siempre
+ *  visibles, solo los nombres: los elegidos en el perfil o, sin eleccion / sin cuenta, los destacados en admin (agregadores: todos los activos). */
 function rail_medios(): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
     $u = user();
-    foreach (DDD_MEDIA_KINDS as $kind => [, $label]) {
-        if (!($list = medios_menu($pdo, $u, 0, $kind))) continue;
-        $mine = (bool)mis_medios($pdo, $u, $kind);
-        echo "<details class=\"rail-dd medios\" open><summary>" . icon('news') . "<span>" . t($label) . "<small>" . ($mine ? t('%d elegidos', count($list)) : t('destacados')) . "</small></span></summary><div class=\"list\">";
+    foreach (DDD_ULTIMO_KINDS as $kind => [$label, $ic]) {
+        if (!($list = ultimo_fuentes($pdo, $u, $kind))) continue;
+        $mine = $kind !== 'agregador' && mis_medios($pdo, $u, $kind);
+        $on = current_tab() === "ultimo:$kind" ? ' class="on"' : '';
+        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo.php?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($kind === 'agregador' ? t('%d fuentes', count($list)) : ($mine ? t('%d elegidos', count($list)) : t('destacados'))) . "</small></span></a></summary><div class=\"list\">";
         foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
         echo "</div></details>";
     }
