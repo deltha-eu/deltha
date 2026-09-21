@@ -568,6 +568,7 @@ function icon(string $n): string {
         'news'   => '<rect x="3" y="5" width="15" height="15" rx="2"/><path d="M18 9h2a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2"/><path d="M7 9h7M7 13h7M7 17h4"/>',
         'edit'   => '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m13.5 8.5 3 3"/>',
         'fav'    => '<path d="M6 4h12v17l-6-4.5L6 21z"/>',
+        'agg'    => '<circle cx="5" cy="6" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 6H20"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 18H20"/>',   // agregadores: lista de fuentes
         'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
     ][$n] ?? '';
     return "<svg class=\"i\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">$p</svg>";

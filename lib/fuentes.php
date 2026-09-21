@@ -45,11 +45,10 @@ function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'ag
 /** Grupos elegibles por el usuario: tipo => [clave de config del maximo, etiqueta del grupo, campo del formulario del perfil] */
 const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios', 'media'], 'newsletter' => ['news_max_per_user', 'Mis substacks', 'news']];
 /** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen en el perfil (DDD_MEDIA_KINDS). */
-const DDD_ULTIMO_KINDS = ['newsletter' => ['Mis substacks', 'letter'], 'medio' => ['Mis medios', 'news'], 'agregador' => ['Mis agregadores', 'proc']];
-/** Fuentes que se muestran en el rail para un grupo: medios_menu() para medios y substacks; todos los agregadores activos. */
-function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array {
-    return $kind === 'agregador' ? fuentes_activas($pdo, 'agregador') : medios_menu($pdo, $u, 0, $kind);
-}
+const DDD_ULTIMO_KINDS = ['newsletter' => ['Mis substacks', 'letter'], 'medio' => ['Mis medios', 'news'], 'agregador' => ['Mis agregadores', 'agg']];
+/** Fuentes que se muestran en el rail para un grupo: medios_menu() — las elegidas, si no las destacadas, si no las primeras; nunca mas de
+ *  tres (media_max_per_user). Los agregadores no se eligen en el perfil, asi que salen los destacados en admin (sources.featured). */
+function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array { return medios_menu($pdo, $u, 0, $kind); }
 function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[$kind][0] ?? 'media_max_per_user', 3)); }
 
 /** Fuentes de un tipo elegidas por un usuario (en su orden). Vacio si no ha elegido. */
