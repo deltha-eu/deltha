@@ -392,6 +392,7 @@ return [
 'Último en medios' => 'Neues aus den Medien',
 'Último en substacks' => 'Neues aus den Substacks',
 'todos' => 'alle',
+'todas' => 'alle',
 'principal' => 'Haupt',
 'quitar de esta comunidad' => 'aus dieser Community entfernen',
 'Añadir a la comunidad' => 'Zur Community hinzufügen',
