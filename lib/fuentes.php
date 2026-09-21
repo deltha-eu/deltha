@@ -111,7 +111,7 @@ function fuente_actualizar(PDO $pdo, array $src): array {
         $url = trim((string)$feeds[$phase]);
         if ($url === '') continue;
         $xml = http_get($url, $timeout, 4000000);
-        if ($xml === null) { $err[] = "$phase: sin respuesta"; continue; }
+        if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
         // antiguedad maxima: algunos feeds (El Pais / Babelia) cuelan articulos de hace anos entre los nuevos; fuera lo que pase de
