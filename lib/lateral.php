@@ -187,7 +187,8 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
                               WHERE s.kind = ? AND s.status = 'ok' ORDER BY i.pub_date DESC LIMIT 5");
         $st->execute([$kind]);
         if (!($rows = $st->fetchAll())) continue;
-        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php\">" . t('todos') . "</a></span></h3>";
+        // «todos» lleva al catalogo filtrado por este grupo (/medios.php?k=medio|newsletter)
+        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
         // el enlace lleva a la pagina del medio en Deltha (/fuente.php?f=slug), no a la noticia
         foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h(fuente_url(['slug' => $r['slug']])) . "\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
         echo "</section>";
