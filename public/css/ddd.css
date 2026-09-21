@@ -2228,28 +2228,14 @@ details.editbox form.plain { padding-top: 0; }
 }
 
 /* =====================================================================
-   B/W — Editorial en blanco y negro: la misma maqueta, sin un solo color. El filtro va en el elemento raiz (la unica posicion en
-   la que no rompe los fijos como el dock), asi que tambien desatura fotos, avatares, puntos de comunidad y laterales.
+   B/W — Editorial en blanco y negro: la misma maqueta y los mismos botones, sin un solo color. El filtro va en el elemento raiz (la
+   unica posicion en la que no rompe los fijos como el dock), asi que tambien desatura fotos, avatares, puntos de comunidad y laterales.
+   No se cambia nada mas: lo que en Editorial es un boton, un aviso o una etiqueta se ve igual, solo sin color.
    ===================================================================== */
 [data-skin="bw"] { --bg: #ffffff; --fg: #111111; --muted: #666666; --line: #e6e6e6; --line2: #c8c8c8; --hover: #f5f5f5; --accent: #111111; --life: #444444; --halo: #333333; --neg: #777777; filter: grayscale(1); }
 @media (prefers-color-scheme: dark) { [data-skin="bw"]:not([data-theme="light"]) { --bg: #000000; --fg: #eaeaea; --muted: #8c8c8c; --line: #262626; --line2: #3d3d3d; --hover: #0c0c0c; --accent: #eaeaea; --life: #9a9a9a; --halo: #bdbdbd; --neg: #8c8c8c; } }
 [data-skin="bw"][data-theme="dark"] { --bg: #000000; --fg: #eaeaea; --muted: #8c8c8c; --line: #262626; --line2: #3d3d3d; --hover: #0c0c0c; --accent: #eaeaea; --life: #9a9a9a; --halo: #bdbdbd; --neg: #8c8c8c; }
 [data-skin="bw"] .media .pic, [data-skin="bw"] .thumb, [data-skin="bw"] .av.photo { filter: grayscale(1) contrast(1.08); }   /* un punto mas de contraste, como una foto de prensa */
-[data-skin="bw"] .media { border-radius: 4px; border: 1px solid var(--line2); }
-[data-skin="bw"] .tag, [data-skin="bw"] .media .tag { background: #111; color: #fff; border-radius: 2px; backdrop-filter: none; }
-[data-skin="bw"] .life { background: var(--line); }
-[data-skin="bw"] .life span { background: #111; }
-[data-skin="bw"][data-theme="dark"] .life span { background: #eaeaea; }
-[data-skin="bw"] .actions .vote button[value="1"], [data-skin="bw"] .actions .vote > span:first-child, [data-skin="bw"] .stats .vote button[value="1"], [data-skin="bw"] .stats .vote > span:first-child { color: var(--fg); font-weight: 700; }
-[data-skin="bw"] .fab { background: var(--fg); color: var(--bg); border-radius: 4px; box-shadow: none; }
-[data-skin="bw"] nav.tabs-top a.on::after { background: var(--fg); height: 3px; }
-[data-skin="bw"] .notice { border: 1px solid var(--line2); border-radius: 2px; background: var(--bg); color: var(--fg); }
-[data-skin="bw"] .notice a, [data-skin="bw"] .legal a { color: var(--fg); text-decoration: underline; }
-[data-skin="bw"] form.plain button, [data-skin="bw"] .composer button, [data-skin="bw"] .newmsg button, [data-skin="bw"] .modbar .btn, [data-skin="bw"] .admin .btn { background: var(--fg); color: var(--bg); border: 0; border-radius: 2px; }
-[data-skin="bw"] form.plain input, [data-skin="bw"] form.plain select, [data-skin="bw"] form.plain textarea, [data-skin="bw"] .newmsg input, [data-skin="bw"] .composer textarea { border: 1px solid var(--line2); border-radius: 2px; background: var(--bg); color: var(--fg); }
-[data-skin="bw"] .statspage .tile { border: 1px solid var(--line2); border-radius: 2px; }
-[data-skin="bw"] .statspage .tile b { color: var(--fg); }
-
 /* =====================================================================
    SURREALISMO — cielo de tarde con nubes (fondo), cartas que flotan un poco inclinadas y con sombra larga, fotos con marco
    que se derrite (radios desiguales), avatares como manzanas verdes con hoja, etiqueta como una nube, titulares en serif con
@@ -2367,8 +2353,6 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="phantom"] .rail nav a { border-radius: 8px; font-weight: 600; font-size: 15px; }
   [data-skin="phantom"] .rail nav a.on { background: var(--vi); color: #fff; }
   [data-skin="phantom"] .rail .pub { background: var(--vi); color: #fff; border-radius: 8px; font-weight: 600; }
-  [data-skin="bw"] .side .mod { border: 1px solid var(--line2); border-radius: 2px; }
-  [data-skin="bw"] .rail nav a.on, [data-skin="bw"] .rail .pub { background: var(--fg); color: var(--bg); border-radius: 2px; }
   [data-skin="surrealismo"] .side .mod { border: 0; border-radius: 14px 22px 12px 24px / 22px 12px 24px 14px; background: var(--cloud); box-shadow: 8px 10px 0 -4px color-mix(in srgb, var(--ink) 10%, transparent); transform: rotate(-.5deg); }
   [data-skin="surrealismo"] .side .mod:nth-child(even) { transform: rotate(.5deg); }
   [data-skin="surrealismo"] .side .mod h3 { font-family: var(--disp); font-style: italic; font-weight: 600; color: var(--blue); }
