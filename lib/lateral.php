@@ -78,7 +78,7 @@ function side_modules(): array {
             'temas'       => [t('Temas'), 'side_temas'],
             'comunidades' => [t('En comunidades'), 'side_comunidades'],
             'votadas'     => [t('Las más votadas'), 'side_votadas'],
-            'agregadores' => [t('Agregadores (Menéame, Areópago…)'), 'side_agregadores'],
+            'agregadores' => [t('Último en agregadores'), 'side_agregadores'],
             'medios'      => [t('Último en medios'), 'side_medios'],
             'substacks'   => [t('Último en substacks'), 'side_substacks']];
 }
@@ -164,22 +164,10 @@ function side_comunidades(PDO $pdo): void {
     echo "</section>";
 }
 
-/** Fuentes externas en la columna derecha: los agregadores (Meneame, tres ultimas de portada con votos) y, para medios y newsletters,
- *  un modulo por grupo («Ultimo en medios», «Ultimo en substacks») con las cinco ultimas noticias de TODO el catalogo (no solo las
- *  elegidas por el usuario), cada una con su medio; el enlace lleva al articulo. */
-function side_agregadores(PDO $pdo): void {
-    require_once __DIR__ . '/fuentes.php';
-    if (!fuentes_on()) return;
-    foreach (fuentes_activas($pdo, 'agregador') as $src) {
-        $st = $pdo->prepare("SELECT title, url, votes, comments FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
-        $st->execute([$src['source_id']]);
-        if (!($rows = $st->fetchAll())) continue;
-        $sinVotos = fuente_sin_votos($src);   // foros: en vez de votos, el numero del mensaje en su hilo
-        echo "<section class=\"mod fuente\"><h3>" . h($src['name']) . "<span>" . ($sinVotos ? t('último') : t('portada')) . "</span></h3>";
-        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . ($sinVotos ? icon('reply') : icon('up')) . (int)($sinVotos ? $r['comments'] : $r['votes']) . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
-        echo "<p class=\"more\"><a href=\"" . h(fuente_url($src)) . "\">" . t('%s visto desde Deltha', $src['name']) . "</a></p></section>";
-    }
-}
+/** Fuentes externas en la columna derecha: un modulo por grupo («Ultimo en agregadores», «Ultimo en medios», «Ultimo en substacks»)
+ *  con las cinco ultimas noticias de portada de TODO el catalogo del grupo (no solo las elegidas por el usuario), cada una con su
+ *  fuente delante; el enlace lleva a la pagina de la fuente en Deltha y «todos», al catalogo del grupo. */
+function side_agregadores(PDO $pdo): void { side_ultimo($pdo, 'agregador', t('Último en agregadores')); }
 function side_medios(PDO $pdo): void { side_ultimo($pdo, 'medio', t('Último en medios')); }
 function side_substacks(PDO $pdo): void { side_ultimo($pdo, 'newsletter', t('Último en substacks')); }
 function side_ultimo(PDO $pdo, string $kind, string $title): void {
@@ -187,7 +175,7 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
     if (!fuentes_on()) return;
     foreach ([$kind => $title] as $kind => $title) {
         $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug FROM source_items i JOIN sources s ON s.source_id = i.source_id
-                              WHERE s.kind = ? AND s.status = 'ok' ORDER BY i.pub_date DESC LIMIT 5");
+                              WHERE s.kind = ? AND s.status = 'ok' AND i.phase = 'portada' ORDER BY i.pub_date DESC LIMIT 5");
         $st->execute([$kind]);
         if (!($rows = $st->fetchAll())) continue;
         // «todos» lleva al catalogo filtrado por este grupo (/medios.php?k=medio|newsletter)
