@@ -157,7 +157,13 @@ function fuente_smf_completar(PDO $pdo, array $src, array &$items, int $timeout)
     return $n;
 }
 /** Fuentes sin votos (foros SMF): no se pintan las flechas ni «↑ n» en la columna. */
-function fuente_sin_votos(array $src): bool { return str_contains((string)$src['feed_portada'], 'action=.xml'); }
+/** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml),
+ *  XenForo (index.rss: Burbuja) y agregadores cuyo RSS es generico, sin votos (Renegados). */
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'renegados.es'];
+function fuente_sin_votos(array $src): bool {
+    foreach (DDD_FEEDS_SIN_VOTOS as $p) if (str_contains((string)$src['feed_portada'], $p)) return true;
+    return false;
+}
 
 /** Upsert de los items de un feed. Devuelve [nuevos, actualizados]. */
 function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): array {
@@ -221,6 +227,12 @@ function fuente_imagen(array $src, array $it, bool $reset = false): ?string {
 
 /** Parser de RSS 2.0: el de Meneame (rss2.php, espacio de nombres meneame:) y el generico (WordPress y similares).
  *  Devuelve items normalizados: ext_id, title, url, thread_url, source, topic, author, content, thumb, votes, negatives, comments, pub_date. */
+/** Hijos de un item en un espacio de nombres, aceptando la URI con http:// o https:// (Mediatize declara los modulos estandar con https). */
+function fuentes_ns(SimpleXMLElement $i, string $uri): SimpleXMLElement {
+    $c = $i->children($uri);
+    if (!count($c)) $c = $i->children(str_starts_with($uri, 'https://') ? 'http://' . substr($uri, 8) : 'https://' . substr($uri, 7));
+    return $c;
+}
 function fuentes_parse_rss(string $xml): array {
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
@@ -230,11 +242,14 @@ function fuentes_parse_rss(string $xml): array {
     if (!isset($doc->channel->item)) return [];
     $out = [];
     foreach ($doc->channel->item as $i) {
+        // Meneame y sus derivados (Mediatize: xmlns:mediatize) llevan link_id, votes, comments... en un espacio de nombres propio
         $mn = $i->children('http://meneame.net/faq-es.php');
-        $md = $i->children('http://search.yahoo.com/mrss/');
-        $dc = $i->children('http://purl.org/dc/elements/1.1/');
-        $dt = $i->children('http://purl.org/dc/terms');   // algunos feeds (RBA: National Geographic) usan dc:terms: creator y abstract
-        $ce = $i->children('http://purl.org/rss/1.0/modules/content/');
+        if (!count($mn)) foreach ($i->getNamespaces(true) as $uri) { $c = $i->children($uri); if (isset($c->link_id)) { $mn = $c; break; } }
+        $md = fuentes_ns($i, 'http://search.yahoo.com/mrss/');
+        $dc = fuentes_ns($i, 'http://purl.org/dc/elements/1.1/');
+        $dt = fuentes_ns($i, 'http://purl.org/dc/terms');   // algunos feeds (RBA: National Geographic) usan dc:terms: creator y abstract
+        $ce = fuentes_ns($i, 'http://purl.org/rss/1.0/modules/content/');
+        $sl = fuentes_ns($i, 'http://purl.org/rss/1.0/modules/slash/');   // slash:comments (XenForo: Burbuja)
         $link = trim((string)$i->link);
         if ($link === '') continue;
         $desc = (string)$i->description;
@@ -254,7 +269,8 @@ function fuentes_parse_rss(string $xml): array {
         if ($meneame) {
             $source = null;
             if (preg_match('/noticia original<\/a>\s*\(([^)]+)\)/u', $desc, $m)) $source = strtolower(preg_replace('/^www\./', '', trim($m[1])));
-            $url = 'https://www.meneame.net/go?id=' . (int)$mn->link_id;   // redirige al articulo original
+            // meneame:url / mediatize:url = el articulo original; si no viene, el redirector go?id= del propio agregador
+            $url = trim((string)($mn->url ?? '')) ?: (preg_replace('#^(https?://[^/]+).*$#', '$1', $link) . '/go?id=' . (int)$mn->link_id);
             $thread = $link;
             $txt = preg_replace('/<p><strong>etiquetas<\/strong>.*$/su', '', $desc);
             $txt = preg_replace('/<p>[^<]*<a href="[^"]*go\?id=\d+"[^>]*>noticia original<\/a>.*$/su', '', $txt);
@@ -285,7 +301,7 @@ function fuentes_parse_rss(string $xml): array {
             'thumb'      => preg_match('#^https?://#i', $thumb) ? $thumb : '',
             'votes'      => (int)($mn->votes ?? 0),
             'negatives'  => (int)($mn->negatives ?? 0),
-            'comments'   => (int)($mn->comments ?? 0),
+            'comments'   => (int)($mn->comments ?? ($sl->comments ?? 0)),
             'pub_date'   => date('Y-m-d H:i:s', $ts),
             'smf'        => $smf,
         ];
