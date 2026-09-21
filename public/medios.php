@@ -28,7 +28,7 @@ foreach ($kinds as $kind) {
     usort($lista, fn($a, $b) => strcmp((string)$b['last'], (string)$a['last']));
     foreach ($lista as $m) {
         $descr = $kind === 'agregador' ? t('portada, candidatas y nuevas, solo lectura') : h((string)$m['descr'] ?: source_of($m['home']));
-        echo "<a class=\"fz medio\" href=\"" . h(fuente_url($m)) . "\">" . avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . (in_array($m['source_id'], $mine, false) ? " <small class=\"mine\">" . t('mío') . "</small>" : "") . "</span><br><span class=\"meta\">" . $descr . " · " . t('%d noticias', (int)$m['cnt']) . ($m['last'] ? " · " . h(hace($m['last'])) : '') . "</span></span>" . icon($kind === 'agregador' ? 'proc' : 'news') . "</a>";
+        echo "<a class=\"fz medio\" href=\"" . h(fuente_url($m)) . "\">" . avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . (in_array($m['source_id'], $mine, false) ? " <small class=\"mine\">" . t('mío') . "</small>" : "") . "</span><br><span class=\"meta\">" . $descr . " · " . t('%d noticias', (int)$m['cnt']) . ($m['last'] ? " · " . h(hace($m['last'])) : '') . "</span></span>" . icon($kind === 'agregador' ? 'agg' : 'news') . "</a>";
     }
 }
 // abajo, los tres grupos (y «todos» cuando se esta viendo uno solo)
