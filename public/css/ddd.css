@@ -389,6 +389,10 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-solarpunk { --s1: #F4F0DF; --s2: #557C4C; }
 .sw-galactica { --s1: #0b0e13; --s2: #F2A93B; }
 .sw-impresionismo { --s1: #F7F2E8; --s2: #7B6BB0; }
+.sw-grotesque { --s1: #2b2b2b; --s2: #ff7a29; }
+.sw-phantom { --s1: #f3f4f6; --s2: #3b82f6; }
+.sw-bw { --s1: #ffffff; --s2: #111111; }
+.sw-surrealismo { --s1: #cfe6f7; --s2: #c8102e; }
 /* /plantilla.php: lista de casillas (una sola marcada), con muestra, nombre, descripcion y «ver» */
 form.plain.skinform { gap: 6px; }
 .skinlist { display: flex; flex-direction: column; margin: 0 0 8px; }
@@ -2044,6 +2048,264 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="impresionismo"] body::after { right: calc(50% - 300px - 200px); bottom: 90px; transform: rotate(172deg); }
 }
 
+
+/* =====================================================================
+   GROTESQUE — a la manera de Mediatize: agregador oscuro, carbon (#333) y grotesca (Helvetica / Arial), lista densa con
+   caja de votos a la izquierda del titular y miniatura pequeña a la derecha. Es la skin que lleva la fuente Mediatize.
+   ===================================================================== */
+[data-skin="grotesque"] { --carbon: #2b2b2b; --card: #353535; --ink: #ededed; --or: #ff7a29; --bl: #7fb8ff;
+  --grot: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+  --bg: var(--carbon); --fg: var(--ink); --muted: #a6a6a6; --line: #414141; --line2: #5a5a5a; --hover: #313131; --accent: var(--or); --life: var(--or); --halo: var(--bl); --neg: #8f8f8f;
+  --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
+[data-skin="grotesque"][data-theme="light"] { --carbon: #e9e9e9; --card: #ffffff; --ink: #1c1c1c; --or: #e05a10; --bl: #2f6fbf;
+  --muted: #6a6a6a; --line: #d6d6d6; --line2: #b9b9b9; --hover: #f2f2f2; --logo-l: block; --logo-d: none; --ink-invert: 0; color-scheme: light; }
+[data-skin="grotesque"] body { font-family: var(--grot); font-size: 14px; line-height: 1.4; }
+[data-skin="grotesque"] .shell { border-color: var(--line); background: var(--card); }
+[data-skin="grotesque"] header.top { background: #1f1f1f; border-bottom: 2px solid var(--or); }
+[data-skin="grotesque"][data-theme="light"] header.top { background: #2b2b2b; }
+[data-skin="grotesque"] header.top .ttl, [data-skin="grotesque"] header.top .me { color: #fff; font-family: var(--grot); font-weight: 700; font-size: 17px; letter-spacing: .01em; text-transform: lowercase; }
+[data-skin="grotesque"] nav.tabs-top { background: var(--card); border-bottom: 1px solid var(--line); }
+[data-skin="grotesque"] nav.tabs-top a { font-size: 13px; font-weight: 700; text-transform: lowercase; letter-spacing: .02em; padding: 11px 0 9px; }
+[data-skin="grotesque"] nav.tabs-top a.on { color: var(--or); }
+[data-skin="grotesque"] nav.tabs-top a.on::after { background: var(--or); height: 3px; width: 100%; border-radius: 0; }
+[data-skin="grotesque"] .post.full, [data-skin="grotesque"] .post.compact { padding: 12px 16px 10px 88px; border-bottom: 1px solid var(--line); position: relative; }
+[data-skin="grotesque"] .post.full:hover, [data-skin="grotesque"] .post.compact:hover { background: var(--hover); }
+/* caja de votos a la izquierda, como en los agregadores clasicos: el numero grande y «votos» debajo */
+[data-skin="grotesque"] .post.full .actions .vote, [data-skin="grotesque"] .post.compact .actions .vote { position: absolute; left: 16px; top: 14px; width: 58px; display: flex; flex-direction: column; align-items: center; gap: 0; border: 1px solid var(--line2); border-radius: 4px; background: var(--carbon); padding: 4px 0 6px; }
+[data-skin="grotesque"] .post .actions .vote button, [data-skin="grotesque"] .post .actions .vote > span { flex-direction: column; gap: 0; color: var(--muted); font-size: 11px; }
+[data-skin="grotesque"] .post .actions .vote button[value="1"], [data-skin="grotesque"] .post .actions .vote > span:first-child { color: var(--fg); }
+[data-skin="grotesque"] .post .actions .vote button[value="1"] span, [data-skin="grotesque"] .post .actions .vote > span:first-child span { font-size: 20px; font-weight: 700; color: var(--or); line-height: 1.1; }
+[data-skin="grotesque"] .post .actions .vote .i { width: 14px; height: 14px; }
+[data-skin="grotesque"] .post > .av, [data-skin="grotesque"] .post > .avl .av { width: 22px; height: 22px; font-size: 11px; border-width: 1px; box-shadow: none; border-radius: 3px; }
+[data-skin="grotesque"] .post .l1 { font-size: 12px; color: var(--muted); line-height: 22px; }
+[data-skin="grotesque"] .post .l1 b { color: var(--fg); font-weight: 700; }
+[data-skin="grotesque"] .post .l1 .meta .sep + a { color: var(--bl); }
+[data-skin="grotesque"] .post h2, [data-skin="grotesque"] .hilo .main h2 { font-family: var(--grot); font-weight: 700; font-size: 18px; line-height: 1.25; margin: 4px 0 4px; letter-spacing: -.01em; }
+[data-skin="grotesque"] .post h2 a:hover { color: var(--or); text-decoration: underline; }
+[data-skin="grotesque"] .hilo .main h2 { font-size: 24px; }
+[data-skin="grotesque"] .lead { font-size: 13.5px; line-height: 1.45; color: color-mix(in srgb, var(--fg) 85%, var(--bg)); }
+[data-skin="grotesque"] .post.full .media, [data-skin="grotesque"] .post.compact .media, [data-skin="grotesque"] .post.full .media.sm, [data-skin="grotesque"] .post.compact .media.sm { width: 132px; max-width: 40%; float: right; margin: 2px 0 6px 14px; aspect-ratio: 4 / 3; border-radius: 3px; border: 1px solid var(--line2); }   /* miniatura a la derecha */
+[data-skin="grotesque"] .post .media .tag { left: 4px; bottom: 4px; font-size: 9px; padding: 2px 5px; }
+[data-skin="grotesque"] .tag, [data-skin="grotesque"] .media .tag { border-radius: 2px; background: var(--or); color: #fff; font-weight: 700; text-transform: lowercase; letter-spacing: .02em; backdrop-filter: none; }
+[data-skin="grotesque"] .life { height: 3px; border-radius: 0; background: var(--line); }
+[data-skin="grotesque"] .life span { background: var(--or); border-radius: 0; }
+[data-skin="grotesque"] .peek { border-left: 2px solid var(--line2); padding-left: 10px; font-size: 13px; }
+[data-skin="grotesque"] .delta { color: var(--bl); }
+[data-skin="grotesque"] .actions { gap: 18px; font-size: 12px; text-transform: lowercase; clear: both; }
+[data-skin="grotesque"] .actions a:hover { color: var(--or); }
+[data-skin="grotesque"] .hilo .stats .vote button[value="1"] span, [data-skin="grotesque"] .hilo .stats .vote > span:first-child span { color: var(--or); font-weight: 700; }
+[data-skin="grotesque"] .fab { border-radius: 4px; background: var(--or); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+[data-skin="grotesque"] .dock { background: #1f1f1f; border-top: 1px solid var(--line); }
+[data-skin="grotesque"] nav.tabs-bottom a { font-size: 10px; text-transform: lowercase; color: #b5b5b5; }
+[data-skin="grotesque"] nav.tabs-bottom a.on { color: var(--or); }
+[data-skin="grotesque"] nav.tabs-fuentes { background: var(--card); }
+[data-skin="grotesque"] .notice { border: 1px solid var(--line2); border-radius: 3px; background: var(--carbon); color: var(--fg); margin: 12px 16px 0; font-size: 13px; }
+[data-skin="grotesque"] .notice a, [data-skin="grotesque"] .legal a, [data-skin="grotesque"] .commhead .meta a, [data-skin="grotesque"] .profile .meta a { color: var(--bl); }
+[data-skin="grotesque"] .error { border: 1px solid var(--or); border-radius: 3px; background: color-mix(in srgb, var(--or) 18%, var(--bg)); color: var(--fg); }
+[data-skin="grotesque"] .fz { border-bottom: 1px solid var(--line); font-size: 13px; }
+[data-skin="grotesque"] .msg .bubble, [data-skin="grotesque"] .quote { border: 1px solid var(--line2); border-radius: 4px; background: var(--carbon); color: var(--fg); }
+[data-skin="grotesque"] form.plain input, [data-skin="grotesque"] form.plain select, [data-skin="grotesque"] form.plain textarea, [data-skin="grotesque"] .newmsg input, [data-skin="grotesque"] .modbar select, [data-skin="grotesque"] .composer textarea { border: 1px solid var(--line2); border-radius: 3px; background: var(--carbon); color: var(--fg); font-family: var(--grot); }
+[data-skin="grotesque"] form.plain button, [data-skin="grotesque"] .composer button, [data-skin="grotesque"] .newmsg button, [data-skin="grotesque"] .modbar .btn, [data-skin="grotesque"] .admin .btn { border-radius: 3px; border: 0; background: var(--or); color: #fff; font-family: var(--grot); font-weight: 700; text-transform: lowercase; }
+[data-skin="grotesque"] .statspage .tile { border: 1px solid var(--line2); border-radius: 4px; background: var(--carbon); }
+[data-skin="grotesque"] .statspage .tile b { color: var(--or); }
+[data-skin="grotesque"] h1, [data-skin="grotesque"] .commhead h1, [data-skin="grotesque"] .profile h1 { font-family: var(--grot); font-weight: 700; letter-spacing: -.01em; }
+[data-skin="grotesque"] nav.sub a.on::after { background: var(--or); height: 3px; border-radius: 0; }
+[data-skin="grotesque"] .hilo .stats { border-color: var(--line); }
+
+/* =====================================================================
+   PHANTOM — a la manera de Renegados: interfaz limpia de utilidades (Tailwind), gris muy claro de fondo, tarjetas blancas con
+   radio 12 y sombra tenue, azul #3b82f6, miniatura cuadrada a la izquierda del titular, pastillas. Con modo oscuro pizarra.
+   Es la skin que lleva la fuente Renegados.
+   ===================================================================== */
+[data-skin="phantom"] { --bl: #3b82f6; --bl2: #2563eb; --slate: #0f172a; --card: #ffffff; --pill: #eff6ff;
+  --ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --bg: #f3f4f6; --fg: #111827; --muted: #6b7280; --line: #e5e7eb; --line2: #d1d5db; --hover: #f9fafb; --accent: var(--bl); --life: var(--bl); --halo: var(--bl); --neg: #9ca3af;
+  --logo-l: block; --logo-d: none; --ink-invert: 0; color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  [data-skin="phantom"]:not([data-theme="light"]) { --bl: #60a5fa; --bl2: #3b82f6; --card: #1e293b; --pill: #1e3a5f; --bg: #0f172a; --fg: #e5e7eb; --muted: #94a3b8; --line: #334155; --line2: #475569; --hover: #172033; --neg: #64748b;
+    --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
+}
+[data-skin="phantom"][data-theme="dark"] { --bl: #60a5fa; --bl2: #3b82f6; --card: #1e293b; --pill: #1e3a5f; --bg: #0f172a; --fg: #e5e7eb; --muted: #94a3b8; --line: #334155; --line2: #475569; --hover: #172033; --neg: #64748b;
+  --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
+[data-skin="phantom"] body { font-family: var(--ui); font-size: 14px; line-height: 1.45; }
+[data-skin="phantom"] .shell { border-color: transparent; }
+[data-skin="phantom"] header.top { background: var(--card); border-bottom: 1px solid var(--line); }
+[data-skin="phantom"] .ttl { font-family: var(--ui); font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+[data-skin="phantom"] nav.tabs-top { background: var(--card); border-bottom: 1px solid var(--line); gap: 4px; padding: 6px 8px; }
+[data-skin="phantom"] nav.tabs-top a { flex: 1 1 auto; font-size: 13px; font-weight: 600; padding: 7px 8px; border-radius: 8px; }
+[data-skin="phantom"] nav.tabs-top a.on { background: var(--pill); color: var(--bl); }
+[data-skin="phantom"] nav.tabs-top a.on::after { display: none; }
+[data-skin="phantom"] nav.tabs-top a:hover:not(.on) { background: var(--hover); }
+[data-skin="phantom"] main { padding: 10px 10px 8px; }
+[data-skin="phantom"] .post.full, [data-skin="phantom"] .post.compact { display: grid; grid-template-columns: 90px minmax(0, 1fr); column-gap: 14px; row-gap: 0; align-items: start;
+  grid-template-areas: "media l1" "media h2" "media lead" "media delta" "actions actions"; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.06); padding: 12px 14px 8px; margin: 0 0 10px; }
+[data-skin="phantom"] .post.full:hover, [data-skin="phantom"] .post.compact:hover { background: var(--card); box-shadow: 0 4px 12px rgba(15,23,42,.10); border-color: var(--line2); }
+[data-skin="phantom"] .post.full .pc, [data-skin="phantom"] .post.compact .pc { display: contents; }
+[data-skin="phantom"] .post.full > .av, [data-skin="phantom"] .post.compact > .av, [data-skin="phantom"] .post.full > .avl, [data-skin="phantom"] .post.compact > .avl { display: none; }
+[data-skin="phantom"] .post.full .l1, [data-skin="phantom"] .post.compact .l1 { grid-area: l1; font-size: 12px; color: var(--muted); line-height: 18px; }
+[data-skin="phantom"] .post .l1 b { color: var(--fg); font-weight: 600; }
+[data-skin="phantom"] .post .l1 .meta .sep + a { color: var(--bl); background: var(--pill); border-radius: 999px; padding: 1px 8px; font-weight: 600; }
+[data-skin="phantom"] .post.full h2, [data-skin="phantom"] .post.compact h2 { grid-area: h2; font-family: var(--ui); font-weight: 600; font-size: 17px; line-height: 1.3; margin: 4px 0 4px; letter-spacing: -.01em; }
+[data-skin="phantom"] .post h2 a:hover { color: var(--bl); }
+[data-skin="phantom"] .hilo .main h2 { font-family: var(--ui); font-weight: 700; font-size: 24px; letter-spacing: -.02em; }
+[data-skin="phantom"] .post .lead { grid-area: lead; font-size: 13.5px; line-height: 1.45; color: var(--muted); margin: 0 0 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+[data-skin="phantom"] .post .media, [data-skin="phantom"] .post .media.sm { grid-area: media; width: 90px; aspect-ratio: 1 / 1; margin: 2px 0 0; border-radius: 10px; align-self: start; border: 0; }
+[data-skin="phantom"] .post .media .tag { display: none; }
+[data-skin="phantom"] .post .delta { grid-area: delta; }
+[data-skin="phantom"] .post .life, [data-skin="phantom"] .post .peek, [data-skin="phantom"] .post .dval { display: none; }
+[data-skin="phantom"] .post .actions { grid-area: actions; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; gap: 6px; }
+[data-skin="phantom"] .actions a, [data-skin="phantom"] .actions .vote > span, [data-skin="phantom"] .actions button { border-radius: 999px; padding: 4px 10px; background: var(--hover); color: var(--muted); font-weight: 600; }
+[data-skin="phantom"] .actions .vote { display: inline-flex; gap: 2px; }
+[data-skin="phantom"] .actions .vote button[value="1"], [data-skin="phantom"] .actions .vote > span:first-child, [data-skin="phantom"] .stats .vote button[value="1"], [data-skin="phantom"] .stats .vote > span:first-child { color: var(--bl); background: var(--pill); }
+[data-skin="phantom"] .actions .share { margin-left: auto; }
+[data-skin="phantom"] .actions .i { width: 16px; height: 16px; }
+[data-skin="phantom"] .tag, [data-skin="phantom"] .media .tag { border-radius: 999px; background: var(--pill); color: var(--bl); font-weight: 600; text-transform: none; letter-spacing: 0; backdrop-filter: none; }
+[data-skin="phantom"] .hilo .post.main { background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin: 0 0 10px; }
+[data-skin="phantom"] .hilo .main .media { border-radius: 10px; }
+[data-skin="phantom"] .post.reply { background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin: 0 0 8px; }
+[data-skin="phantom"] .life { height: 4px; border-radius: 2px; background: var(--line); }
+[data-skin="phantom"] .life span { background: var(--bl); border-radius: 2px; }
+[data-skin="phantom"] .fab { border-radius: 12px; background: var(--bl); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--bl) 40%, transparent); }
+[data-skin="phantom"] .dock { background: var(--card); border-top: 1px solid var(--line); }
+[data-skin="phantom"] nav.tabs-bottom a.on, [data-skin="phantom"] nav.tabs-fuentes a.on { color: var(--bl); }
+[data-skin="phantom"] nav.tabs-fuentes { background: var(--card); }
+[data-skin="phantom"] .notice { border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--fg); margin: 4px 6px 10px; font-size: 13px; }
+[data-skin="phantom"] .notice a, [data-skin="phantom"] .legal a, [data-skin="phantom"] .commhead .meta a, [data-skin="phantom"] .profile .meta a { color: var(--bl); }
+[data-skin="phantom"] .error { border: 1px solid #fca5a5; border-radius: 12px; background: #fef2f2; color: #991b1b; }
+[data-skin="phantom"] .fz { border-bottom: 1px solid var(--line); background: var(--card); }
+[data-skin="phantom"] .msg .bubble, [data-skin="phantom"] .quote { border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--fg); }
+[data-skin="phantom"] .msg.me .bubble { background: var(--pill); border-color: transparent; }
+[data-skin="phantom"] form.plain input, [data-skin="phantom"] form.plain select, [data-skin="phantom"] form.plain textarea, [data-skin="phantom"] .newmsg input, [data-skin="phantom"] .modbar select, [data-skin="phantom"] .composer textarea { border: 1px solid var(--line2); border-radius: 8px; background: var(--card); color: var(--fg); font-family: var(--ui); }
+[data-skin="phantom"] form.plain input:focus, [data-skin="phantom"] form.plain textarea:focus, [data-skin="phantom"] .composer textarea:focus { outline: 2px solid color-mix(in srgb, var(--bl) 45%, transparent); border-color: var(--bl); }
+[data-skin="phantom"] form.plain button, [data-skin="phantom"] .composer button, [data-skin="phantom"] .newmsg button, [data-skin="phantom"] .modbar .btn, [data-skin="phantom"] .admin .btn { border-radius: 8px; border: 0; background: var(--bl); color: #fff; font-family: var(--ui); font-weight: 600; }
+[data-skin="phantom"] form.plain button:hover, [data-skin="phantom"] .composer button:hover { background: var(--bl2); }
+[data-skin="phantom"] .statspage .tile { border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 1px 2px rgba(15,23,42,.06); }
+[data-skin="phantom"] .statspage .tile b { color: var(--bl); }
+[data-skin="phantom"] h1, [data-skin="phantom"] .commhead h1, [data-skin="phantom"] .profile h1 { font-family: var(--ui); font-weight: 700; letter-spacing: -.02em; }
+[data-skin="phantom"] nav.sub { gap: 4px; }
+[data-skin="phantom"] nav.sub a { border-radius: 8px; }
+[data-skin="phantom"] nav.sub a.on { background: var(--pill); color: var(--bl); }
+[data-skin="phantom"] nav.sub a.on::after { display: none; }
+[data-skin="phantom"] .hilo .stats { border-color: var(--line); }
+@media (max-width: 400px) {
+  [data-skin="phantom"] .post.full, [data-skin="phantom"] .post.compact { grid-template-columns: 72px minmax(0, 1fr); column-gap: 10px; }
+  [data-skin="phantom"] .post .media, [data-skin="phantom"] .post .media.sm { width: 72px; }
+}
+
+/* =====================================================================
+   B/W — Editorial en blanco y negro: la misma maqueta, sin un solo color. El filtro va en el elemento raiz (la unica posicion en
+   la que no rompe los fijos como el dock), asi que tambien desatura fotos, avatares, puntos de comunidad y laterales.
+   ===================================================================== */
+[data-skin="bw"] { --bg: #ffffff; --fg: #111111; --muted: #666666; --line: #e6e6e6; --line2: #c8c8c8; --hover: #f5f5f5; --accent: #111111; --life: #444444; --halo: #333333; --neg: #777777; filter: grayscale(1); }
+@media (prefers-color-scheme: dark) { [data-skin="bw"]:not([data-theme="light"]) { --bg: #000000; --fg: #eaeaea; --muted: #8c8c8c; --line: #262626; --line2: #3d3d3d; --hover: #0c0c0c; --accent: #eaeaea; --life: #9a9a9a; --halo: #bdbdbd; --neg: #8c8c8c; } }
+[data-skin="bw"][data-theme="dark"] { --bg: #000000; --fg: #eaeaea; --muted: #8c8c8c; --line: #262626; --line2: #3d3d3d; --hover: #0c0c0c; --accent: #eaeaea; --life: #9a9a9a; --halo: #bdbdbd; --neg: #8c8c8c; }
+[data-skin="bw"] .media .pic, [data-skin="bw"] .thumb, [data-skin="bw"] .av.photo { filter: grayscale(1) contrast(1.08); }   /* un punto mas de contraste, como una foto de prensa */
+[data-skin="bw"] .media { border-radius: 4px; border: 1px solid var(--line2); }
+[data-skin="bw"] .tag, [data-skin="bw"] .media .tag { background: #111; color: #fff; border-radius: 2px; backdrop-filter: none; }
+[data-skin="bw"] .life { background: var(--line); }
+[data-skin="bw"] .life span { background: #111; }
+[data-skin="bw"][data-theme="dark"] .life span { background: #eaeaea; }
+[data-skin="bw"] .actions .vote button[value="1"], [data-skin="bw"] .actions .vote > span:first-child, [data-skin="bw"] .stats .vote button[value="1"], [data-skin="bw"] .stats .vote > span:first-child { color: var(--fg); font-weight: 700; }
+[data-skin="bw"] .fab { background: var(--fg); color: var(--bg); border-radius: 4px; box-shadow: none; }
+[data-skin="bw"] nav.tabs-top a.on::after { background: var(--fg); height: 3px; }
+[data-skin="bw"] .notice { border: 1px solid var(--line2); border-radius: 2px; background: var(--bg); color: var(--fg); }
+[data-skin="bw"] .notice a, [data-skin="bw"] .legal a { color: var(--fg); text-decoration: underline; }
+[data-skin="bw"] form.plain button, [data-skin="bw"] .composer button, [data-skin="bw"] .newmsg button, [data-skin="bw"] .modbar .btn, [data-skin="bw"] .admin .btn { background: var(--fg); color: var(--bg); border: 0; border-radius: 2px; }
+[data-skin="bw"] form.plain input, [data-skin="bw"] form.plain select, [data-skin="bw"] form.plain textarea, [data-skin="bw"] .newmsg input, [data-skin="bw"] .composer textarea { border: 1px solid var(--line2); border-radius: 2px; background: var(--bg); color: var(--fg); }
+[data-skin="bw"] .statspage .tile { border: 1px solid var(--line2); border-radius: 2px; }
+[data-skin="bw"] .statspage .tile b { color: var(--fg); }
+
+/* =====================================================================
+   SURREALISMO — cielo de tarde con nubes (fondo), cartas que flotan un poco inclinadas y con sombra larga, fotos con marco
+   que se derrite (radios desiguales), avatares como manzanas verdes con hoja, etiqueta como una nube, titulares en serif con
+   itálica; acentos: azul cielo, rojo sangre y verde manzana. Sin cuadros ni nombres: solo el clima.
+   ===================================================================== */
+[data-skin="surrealismo"] { --sky: #cfe6f7; --sky2: #eef7fd; --cloud: #ffffff; --blue: #2b5f9e; --red: #c8102e; --apple: #6faa3c; --gold: #d9a441; --ink: #1f2a3a;
+  --disp: "Cormorant Garamond", Fraunces, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --bg: var(--sky2); --fg: var(--ink); --muted: #5c6b7d; --line: #c9dcea; --line2: #a9c2d8; --hover: rgba(255,255,255,.55); --accent: var(--blue); --life: var(--apple); --halo: var(--blue); --neg: var(--red);
+  --logo-l: block; --logo-d: none; --ink-invert: 0; color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  [data-skin="surrealismo"]:not([data-theme="light"]) { --sky: #1b2a44; --sky2: #0f1a2e; --cloud: #24344f; --blue: #8fb8ea; --red: #ff6b6b; --apple: #9ad46a; --gold: #e8c46a; --ink: #e8eef6; --muted: #9fb0c4; --line: #2b3d5a; --line2: #3f5578; --hover: rgba(255,255,255,.06);
+    --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
+}
+[data-skin="surrealismo"][data-theme="dark"] { --sky: #1b2a44; --sky2: #0f1a2e; --cloud: #24344f; --blue: #8fb8ea; --red: #ff6b6b; --apple: #9ad46a; --gold: #e8c46a; --ink: #e8eef6; --muted: #9fb0c4; --line: #2b3d5a; --line2: #3f5578; --hover: rgba(255,255,255,.06);
+  --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
+/* cielo: degradado y nubes (elipses blancas, fijas) */
+[data-skin="surrealismo"] body { font-family: var(--serif); font-size: 15px; line-height: 1.5;
+  /* las nubes van primero (la primera capa es la de encima) y el cielo, de fondo */
+  background: radial-gradient(ellipse 140px 48px at 12% 18%, var(--cloud) 96%, transparent) fixed, radial-gradient(ellipse 90px 36px at 18% 14%, var(--cloud) 96%, transparent) fixed,
+    radial-gradient(ellipse 180px 56px at 86% 30%, var(--cloud) 96%, transparent) fixed, radial-gradient(ellipse 110px 40px at 90% 26%, var(--cloud) 96%, transparent) fixed,
+    radial-gradient(ellipse 150px 50px at 8% 78%, var(--cloud) 96%, transparent) fixed, radial-gradient(ellipse 160px 52px at 92% 86%, var(--cloud) 96%, transparent) fixed,
+    linear-gradient(180deg, var(--sky) 0%, var(--sky2) 60%, var(--sky) 100%) fixed; }
+[data-skin="surrealismo"] .shell { border: 0; background: transparent; }
+[data-skin="surrealismo"] header.top { background: color-mix(in srgb, var(--cloud) 70%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+[data-skin="surrealismo"] .ttl { font-family: var(--disp); font-style: italic; font-weight: 500; font-size: 23px; color: var(--blue); letter-spacing: .02em; transform: rotate(-1.5deg); display: inline-block; }
+[data-skin="surrealismo"] nav.tabs-top { background: color-mix(in srgb, var(--cloud) 70%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+[data-skin="surrealismo"] nav.tabs-top a { font-family: var(--disp); font-size: 18px; font-weight: 500; }
+[data-skin="surrealismo"] nav.tabs-top a.on { color: var(--red); font-style: italic; font-weight: 600; }
+[data-skin="surrealismo"] nav.tabs-top a.on::after { background: var(--red); height: 3px; width: 28px; border-radius: 50% 50% 50% 50% / 100% 100% 0 0; transform: translateX(-50%) rotate(-3deg); }
+[data-skin="surrealismo"] main { padding: 12px 12px 8px; }
+/* cada noticia, una carta que flota: inclinacion alterna, sombra larga hacia abajo a la derecha (la luz viene de la izquierda) */
+[data-skin="surrealismo"] .post.full, [data-skin="surrealismo"] .post.compact, [data-skin="surrealismo"] .hilo .post.main { background: var(--cloud); border: 1px solid var(--line); border-radius: 10px 18px 12px 22px / 16px 10px 20px 12px; padding: 18px 20px 14px; margin: 0 0 22px; box-shadow: 14px 18px 0 -6px color-mix(in srgb, var(--ink) 10%, transparent), 0 2px 6px color-mix(in srgb, var(--ink) 12%, transparent); transform: rotate(-.6deg); }
+[data-skin="surrealismo"] .post.full:nth-child(even), [data-skin="surrealismo"] .post.compact:nth-child(even) { transform: rotate(.5deg); border-radius: 20px 10px 22px 12px / 12px 18px 10px 16px; }
+[data-skin="surrealismo"] .post.full:hover, [data-skin="surrealismo"] .post.compact:hover { background: var(--cloud); transform: rotate(0) translateY(-2px); transition: transform .25s ease; }
+[data-skin="surrealismo"] .hilo .post.main { transform: none; }
+[data-skin="surrealismo"] .post .l1 { font-size: 13.5px; color: var(--muted); font-style: italic; }
+[data-skin="surrealismo"] .post .l1 b { color: var(--fg); font-style: normal; font-weight: 600; }
+[data-skin="surrealismo"] .post .l1 .meta .sep + a { color: var(--blue); font-style: normal; }
+[data-skin="surrealismo"] .post h2, [data-skin="surrealismo"] .hilo .main h2 { font-family: var(--disp); font-weight: 600; font-size: 27px; line-height: 1.1; letter-spacing: -.01em; margin: 8px 0 10px; }
+[data-skin="surrealismo"] .post h2 a:hover { color: var(--red); font-style: italic; }
+[data-skin="surrealismo"] .post.compact h2 { font-size: 22px; }
+[data-skin="surrealismo"] .hilo .main h2 { font-size: 32px; }
+[data-skin="surrealismo"] .lead { font-size: 15.5px; line-height: 1.5; color: color-mix(in srgb, var(--fg) 85%, var(--cloud)); margin-bottom: 12px; }
+/* avatares: manzanas verdes con su hoja */
+[data-skin="surrealismo"] .av, [data-skin="surrealismo"] .av.mini, [data-skin="surrealismo"] .fz .av, [data-skin="surrealismo"] .pk .av, [data-skin="surrealismo"] .reply .av, [data-skin="surrealismo"] .profile .av, [data-skin="surrealismo"] .composer .av { position: relative; border-radius: 50% 50% 46% 46% / 55% 55% 45% 45%; border: 0; box-shadow: inset -6px -5px 10px rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.15); background-color: var(--apple); color: #fff; font-family: var(--disp); font-weight: 700; }
+[data-skin="surrealismo"] .av:not(.photo)::after { content: ""; position: absolute; top: -5px; left: 55%; width: 10px; height: 7px; border-radius: 0 100% 0 100%; background: #3f7d2a; transform: rotate(-25deg); }
+[data-skin="surrealismo"] .av.photo { background-color: transparent; box-shadow: 0 3px 6px rgba(0,0,0,.15); }
+/* fotos: el marco se derrite */
+[data-skin="surrealismo"] .media { border: 4px solid var(--cloud); border-radius: 12px 40px 8px 46px / 48px 8px 44px 12px; margin: 12px 0 14px; box-shadow: 0 10px 0 -4px color-mix(in srgb, var(--ink) 14%, transparent), 0 14px 24px color-mix(in srgb, var(--ink) 16%, transparent); transform: rotate(.8deg); }
+[data-skin="surrealismo"] .post:nth-child(even) .media { transform: rotate(-.8deg); border-radius: 44px 10px 40px 14px / 10px 46px 12px 40px; }
+[data-skin="surrealismo"] .media .pic { filter: saturate(1.2) contrast(1.05); }
+[data-skin="surrealismo"] .tag, [data-skin="surrealismo"] .media .tag { border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: var(--cloud); color: var(--blue); font-family: var(--disp); font-style: italic; font-weight: 600; text-transform: none; letter-spacing: .02em; font-size: 12.5px; padding: 4px 14px; backdrop-filter: none; box-shadow: 0 2px 4px rgba(0,0,0,.12); }
+[data-skin="surrealismo"] .life { height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--sky) 60%, var(--cloud)); transform: rotate(-.4deg); }
+[data-skin="surrealismo"] .life span { border-radius: 3px; background: linear-gradient(90deg, var(--apple), var(--gold)); }
+[data-skin="surrealismo"] .peek { border-left: 3px dotted var(--blue); padding-left: 12px; font-style: italic; color: var(--muted); }
+[data-skin="surrealismo"] .pk b { color: var(--fg); font-style: normal; }
+[data-skin="surrealismo"] .delta { color: var(--blue); font-family: var(--disp); font-style: italic; }
+[data-skin="surrealismo"] .actions { gap: 26px; color: var(--muted); }
+[data-skin="surrealismo"] .actions .vote button[value="1"], [data-skin="surrealismo"] .actions .vote > span:first-child, [data-skin="surrealismo"] .stats .vote button[value="1"], [data-skin="surrealismo"] .stats .vote > span:first-child { color: var(--apple); font-weight: 700; }
+[data-skin="surrealismo"] .actions .vote button[value="-1"], [data-skin="surrealismo"] .actions .vote > span:last-child { color: var(--red); }
+[data-skin="surrealismo"] .post.reply { background: color-mix(in srgb, var(--cloud) 70%, transparent); border: 0; border-bottom: 1px dotted var(--line2); }
+/* el «+»: un globo rojo que sube */
+[data-skin="surrealismo"] .fab { border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%; background: radial-gradient(circle at 35% 30%, #ff7b8a, var(--red) 60%); color: #fff; box-shadow: 0 10px 22px color-mix(in srgb, var(--red) 40%, transparent); }
+[data-skin="surrealismo"] .fab::after { content: ""; position: absolute; left: 50%; bottom: -14px; width: 1px; height: 14px; background: var(--ink); opacity: .4; }
+[data-skin="surrealismo"] .dock { background: color-mix(in srgb, var(--cloud) 80%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+[data-skin="surrealismo"] nav.tabs-bottom a { font-family: var(--disp); font-size: 12px; }
+[data-skin="surrealismo"] nav.tabs-bottom a.on, [data-skin="surrealismo"] nav.tabs-fuentes a.on { color: var(--red); font-style: italic; }
+[data-skin="surrealismo"] nav.tabs-fuentes { background: color-mix(in srgb, var(--cloud) 70%, transparent); }
+[data-skin="surrealismo"] .notice { border: 0; border-radius: 30px 30px 30px 30px / 40px 40px 40px 40px; background: var(--cloud); color: var(--fg); margin: 6px 8px 14px; font-style: italic; box-shadow: 0 6px 14px color-mix(in srgb, var(--ink) 10%, transparent); }
+[data-skin="surrealismo"] .notice a, [data-skin="surrealismo"] .legal a { color: var(--blue); text-decoration: underline; }
+[data-skin="surrealismo"] .error { border: 0; border-radius: 30px / 40px; background: color-mix(in srgb, var(--red) 18%, var(--cloud)); color: var(--fg); }
+[data-skin="surrealismo"] .fz { border-bottom: 1px dotted var(--line2); }
+[data-skin="surrealismo"] .msg .bubble, [data-skin="surrealismo"] .quote { border: 0; border-radius: 18px 24px 16px 26px; background: var(--cloud); color: var(--fg); box-shadow: 0 3px 8px color-mix(in srgb, var(--ink) 10%, transparent); }
+[data-skin="surrealismo"] .msg.me .bubble { background: color-mix(in srgb, var(--blue) 18%, var(--cloud)); }
+[data-skin="surrealismo"] form.plain input, [data-skin="surrealismo"] form.plain select, [data-skin="surrealismo"] form.plain textarea, [data-skin="surrealismo"] .newmsg input, [data-skin="surrealismo"] .modbar select, [data-skin="surrealismo"] .composer textarea { border: 1px solid var(--line2); border-radius: 12px 16px 12px 16px; background: var(--cloud); color: var(--fg); font-family: var(--serif); }
+[data-skin="surrealismo"] form.plain label { font-family: var(--disp); font-style: italic; font-size: 16px; }
+[data-skin="surrealismo"] form.plain button, [data-skin="surrealismo"] .composer button, [data-skin="surrealismo"] .newmsg button, [data-skin="surrealismo"] .modbar .btn, [data-skin="surrealismo"] .admin .btn { border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; border: 0; background: var(--blue); color: #fff; font-family: var(--disp); font-weight: 600; font-style: italic; padding: 8px 18px; }
+[data-skin="surrealismo"] .statspage .tile { border: 0; border-radius: 14px 22px 12px 24px / 22px 12px 24px 14px; background: var(--cloud); box-shadow: 8px 10px 0 -4px color-mix(in srgb, var(--ink) 10%, transparent); transform: rotate(-.6deg); }
+[data-skin="surrealismo"] .statspage .tile:nth-child(even) { transform: rotate(.6deg); }
+[data-skin="surrealismo"] .statspage .tile b { font-family: var(--disp); color: var(--blue); }
+[data-skin="surrealismo"] h1, [data-skin="surrealismo"] .commhead h1, [data-skin="surrealismo"] .profile h1 { font-family: var(--disp); font-weight: 600; font-style: italic; color: var(--blue); }
+[data-skin="surrealismo"] .legal h2 { font-family: var(--disp); font-style: italic; color: var(--red); }
+[data-skin="surrealismo"] .hilo .stats { border-color: var(--line); }
+[data-skin="surrealismo"] nav.sub a.on::after { background: var(--red); border-radius: 50% 50% 0 0 / 100% 100% 0 0; height: 3px; }
+@media (prefers-reduced-motion: reduce) { [data-skin="surrealismo"] .post.full, [data-skin="surrealismo"] .post.compact, [data-skin="surrealismo"] .media, [data-skin="surrealismo"] .statspage .tile { transform: none; } }
+/* retoques comunes a las cuatro: miniaturas de agregador (.thumb) y posts sin foto en Phantom */
+[data-skin="phantom"] .post.ext .thumb { float: none; grid-area: media; width: 90px; height: 90px; margin: 2px 0 0; border-radius: 10px; }
+[data-skin="phantom"] .post.full:not(:has(.media, .thumb)), [data-skin="phantom"] .post.compact:not(:has(.media, .thumb)) { grid-template-columns: 0 minmax(0, 1fr); column-gap: 0; }
+[data-skin="grotesque"] .post.ext .thumb { width: 132px; height: 99px; border-radius: 3px; border: 1px solid var(--line2); margin: 2px 0 6px 14px; }
+[data-skin="surrealismo"] .post.ext .thumb { border: 3px solid var(--cloud); border-radius: 12px 30px 8px 34px / 34px 8px 30px 12px; box-shadow: 0 6px 14px color-mix(in srgb, var(--ink) 16%, transparent); transform: rotate(2deg); }
+
 /* ---- las once en el escritorio ancho: muestras del rail y acentos de rail/side ---- */
 @media (min-width: 1300px) {
   .rail .sw-hyperpop { --s1: #F6F7FB; --s2: #FF4FD8; }
@@ -2059,6 +2321,28 @@ details.editbox form.plain { padding-top: 0; }
   .rail .sw-solarpunk { --s1: #F4F0DF; --s2: #557C4C; }
   .rail .sw-galactica { --s1: #0b0e13; --s2: #F2A93B; }
   .rail .sw-impresionismo { --s1: #F7F2E8; --s2: #7B6BB0; }
+  .rail .sw-grotesque { --s1: #2b2b2b; --s2: #ff7a29; }
+  .rail .sw-phantom { --s1: #f3f4f6; --s2: #3b82f6; }
+  .rail .sw-bw { --s1: #ffffff; --s2: #111111; }
+  .rail .sw-surrealismo { --s1: #cfe6f7; --s2: #c8102e; }
+  [data-skin="grotesque"] .side .mod { border: 1px solid var(--line2); border-radius: 4px; background: var(--card); }
+  [data-skin="grotesque"] .side .mod h3 { font-family: var(--grot); font-weight: 700; text-transform: lowercase; }
+  [data-skin="grotesque"] .rail nav a { border-radius: 4px; font-size: 15px; text-transform: lowercase; font-weight: 700; }
+  [data-skin="grotesque"] .rail nav a.on { color: var(--or); background: var(--hover); }
+  [data-skin="grotesque"] .rail .pub { background: var(--or); color: #fff; border-radius: 4px; text-transform: lowercase; font-weight: 700; }
+  [data-skin="phantom"] .side .mod { border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 1px 2px rgba(15,23,42,.06); }
+  [data-skin="phantom"] .side .mod h3 { font-family: var(--ui); font-weight: 700; }
+  [data-skin="phantom"] .rail nav a { border-radius: 8px; font-weight: 600; font-size: 15px; }
+  [data-skin="phantom"] .rail nav a.on { background: var(--pill); color: var(--bl); }
+  [data-skin="phantom"] .rail .pub { background: var(--bl); color: #fff; border-radius: 8px; font-weight: 600; }
+  [data-skin="bw"] .side .mod { border: 1px solid var(--line2); border-radius: 2px; }
+  [data-skin="bw"] .rail nav a.on, [data-skin="bw"] .rail .pub { background: var(--fg); color: var(--bg); border-radius: 2px; }
+  [data-skin="surrealismo"] .side .mod { border: 0; border-radius: 14px 22px 12px 24px / 22px 12px 24px 14px; background: var(--cloud); box-shadow: 8px 10px 0 -4px color-mix(in srgb, var(--ink) 10%, transparent); transform: rotate(-.5deg); }
+  [data-skin="surrealismo"] .side .mod:nth-child(even) { transform: rotate(.5deg); }
+  [data-skin="surrealismo"] .side .mod h3 { font-family: var(--disp); font-style: italic; font-weight: 600; color: var(--blue); }
+  [data-skin="surrealismo"] .rail nav a { font-family: var(--disp); font-size: 19px; }
+  [data-skin="surrealismo"] .rail nav a.on { color: var(--red); font-style: italic; font-weight: 600; }
+  [data-skin="surrealismo"] .rail .pub { background: var(--red); color: #fff; border-radius: 18px 22px 16px 24px / 22px 16px 24px 18px; font-family: var(--disp); font-style: italic; }
   [data-skin="hyperpop"] .side .mod { border: 2px solid var(--ink); border-radius: 16px; background: var(--card); box-shadow: 4px 4px 0 var(--vi); }
   [data-skin="hyperpop"] .rail nav a.on, [data-skin="hyperpop"] .rail .pub { background: var(--li); color: #111; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--pk); }
   [data-skin="neobrutal"] .rail nav a, [data-skin="neobrutal"] .rail .pub, [data-skin="neobrutal"] .rail .me, [data-skin="neobrutal"] .side .mod { border-radius: 2px; }
@@ -2443,6 +2727,10 @@ form.plain select.medsel { margin-bottom: 6px; }
 [data-skin="solarpunk"]     { --font: var(--disp);  --head: var(--disp); }
 [data-skin="galactica"]     { --font: var(--cond);  --head: var(--cond); }
 [data-skin="impresionismo"] { --font: var(--serif); --head: var(--disp); }
+[data-skin="grotesque"]     { --font: var(--grot);  --head: var(--grot); }
+[data-skin="phantom"]       { --font: var(--ui);    --head: var(--ui); }
+[data-skin="bw"]            { --font: var(--serif); --head: var(--serif); }
+[data-skin="surrealismo"]   { --font: var(--serif); --head: var(--disp); }
 [data-skin] body { font-family: var(--font); }
 [data-skin] h1, [data-skin] h2, [data-skin] h3, [data-skin] .legal h2, [data-skin] .side .mod h3, [data-skin] .ttl { font-family: var(--head); }
 [data-skin] input, [data-skin] select, [data-skin] textarea, [data-skin] button { font-family: inherit; }
