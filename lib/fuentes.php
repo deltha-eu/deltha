@@ -115,6 +115,7 @@ function fuente_actualizar(PDO $pdo, array $src): array {
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
         if (!empty($items[0]['smf'])) { $k = fuente_smf_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']}: $k mensajes leidos del foro"; }
+        if (str_contains($url, 'renegados.es')) { $k = fuente_renegados_completar($items, $timeout); if ($k) $log[] = "fuente {$src['slug']} $phase: votos y comentarios de la API para $k items"; }
         [$new, $upd] = fuente_guardar($pdo, $src, $phase, $items);
         $log[] = "fuente {$src['slug']} $phase: " . count($items) . " items, $new nuevos, $upd actualizados";
     }
@@ -155,6 +156,39 @@ function fuente_smf_completar(PDO $pdo, array $src, array &$items, int $timeout)
     unset($it);
     return $n;
 }
+/** Renegados: el RSS no trae votos ni comentarios, pero su API publica (api.renegados.es/api/v1/posts, 25 por pagina, ?page=N)
+ *  los da con el slug del post, junto con la URL del articulo original. Se leen sources_renegados_pages paginas (2) por pasada,
+ *  cacheadas un minuto en fichero para no repetir entre «nuevas» y «portada», y se cruzan por el slug del <link> (/posts/slug).
+ *  Ademas la url pasa a ser el articulo original (como en Meneame) y thread_url, el post en Renegados. Devuelve items completados. */
+function fuente_renegados_completar(array &$items, int $timeout): int {
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        $cache = sys_get_temp_dir() . '/deltha-renegados.json';
+        if (is_file($cache) && time() - filemtime($cache) < 60) $map = json_decode((string)file_get_contents($cache), true) ?: [];
+        else {
+            $pages = max(1, min(10, (int)cfg('sources_renegados_pages', 2)));
+            for ($p = 1; $p <= $pages; $p++) {
+                $json = http_get('https://api.renegados.es/api/v1/posts?page=' . $p, $timeout, 2000000);
+                if ($json === null) break;
+                $d = json_decode($json, true);
+                if (!is_array($d['data'] ?? null) || !$d['data']) break;
+                foreach ($d['data'] as $row) if (!empty($row['slug'])) $map[$row['slug']] = ['v' => (int)($row['vote_count'] ?? 0), 'c' => (int)($row['comment_count'] ?? 0), 'u' => (string)($row['url'] ?? '')];
+            }
+            if ($map) @file_put_contents($cache, json_encode($map));
+        }
+    }
+    $n = 0;
+    foreach ($items as &$it) {
+        if (!preg_match('#/posts/([^/?\#]+)#', $it['thread_url'] ?: $it['url'], $m) || !isset($map[$m[1]])) continue;
+        $r = $map[$m[1]];
+        $it['votes'] = $r['v']; $it['comments'] = max((int)$it['comments'], $r['c']);
+        if ($r['u'] !== '' && preg_match('#^https?://#i', $r['u'])) { $it['thread_url'] = $it['url']; $it['url'] = mb_substr($r['u'], 0, 600); $it['source'] = ($so = source_of($r['u'])) ? mb_substr($so, 0, 100) : null; }
+        $n++;
+    }
+    unset($it);
+    return $n;
+}
 /** Fuentes sin votos (foros SMF): no se pintan las flechas ni «↑ n» en la columna. */
 /** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
  *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
@@ -171,8 +205,8 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
     $ins = $pdo->prepare("INSERT INTO source_items (source_id, ext_id, phase, title, url, thread_url, source, topic, author, content, image, votes, negatives, comments, pub_date)
                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     // (la fecha nueva se decide en PHP: MySQL evalua los SET de izquierda a derecha y phase ya tendria el valor nuevo)
-    $upd = $pdo->prepare("UPDATE source_items SET phase = ?, title = ?, source = COALESCE(?, source), topic = COALESCE(?, topic), content = IF(? = '', content, ?),
-                          image = COALESCE(image, ?), votes = ?, negatives = ?, comments = GREATEST(comments, ?), pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");
+    $upd = $pdo->prepare("UPDATE source_items SET phase = ?, title = ?, url = ?, thread_url = ?, source = COALESCE(?, source), topic = COALESCE(?, topic), content = IF(? = '', content, ?),
+                          image = COALESCE(image, ?), votes = ?, negatives = ?, comments = GREATEST(comments, ?), pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");   // url/thread_url se refrescan: Renegados los completa desde su API
     $new = $updated = 0;
     foreach ($items as $it) {
         $sel->execute([$src['source_id'], $it['ext_id']]);
@@ -184,7 +218,7 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
         $img = ($row && $row['image']) ? null : fuente_imagen($src, $it);
         if ($row) {
             $newDate = $row['phase'] === $phase ? null : $it['pub_date'];   // cambio de fase (nuevas -> portada): fecha de publicacion
-            $upd->execute([$phase, $it['title'], $it['source'], $it['topic'], $it['content'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $newDate, $row['item_id']]);
+            $upd->execute([$phase, $it['title'], $it['url'], $it['thread_url'], $it['source'], $it['topic'], $it['content'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $newDate, $row['item_id']]);
             $updated++;
         } else {
             $ins->execute([$src['source_id'], $it['ext_id'], $phase, $it['title'], $it['url'], $it['thread_url'], $it['source'], $it['topic'], $it['author'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $it['pub_date']]);
