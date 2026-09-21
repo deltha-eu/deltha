@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 90);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 91);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -569,6 +569,8 @@ function icon(string $n): string {
         'edit'   => '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m13.5 8.5 3 3"/>',
         'fav'    => '<path d="M6 4h12v17l-6-4.5L6 21z"/>',
         'agg'    => '<circle cx="5" cy="6" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 6H20"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 18H20"/>',   // agregadores: lista de fuentes
+        'tag'    => '<path d="M3 11V4h7l10 10-7 7z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',   // temas
+        'comm'   => '<circle cx="12" cy="8" r="3.2"/><circle cx="5" cy="11" r="2.2"/><circle cx="19" cy="11" r="2.2"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0"/><path d="M2 17.5a3.5 3.5 0 0 1 3-2.3M22 17.5a3.5 3.5 0 0 0-3-2.3"/>',   // comunidades
         'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
     ][$n] ?? '';
     return "<svg class=\"i\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">$p</svg>";
@@ -606,6 +608,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
     echo "</header>";
     nav_tabs($tab, 'tabs-top');
+    nav_fuentes($tab);
     echo "<main>";
 }
 /* Dos menus: arriba el contenido (las fases del ciclo), abajo la comunidad y las
@@ -635,6 +638,18 @@ function nav_tabs(string $tab, string $cls): void {
     }
     echo "</nav>";
 }
+/** Franja bajo las pestañas, solo cuando no hay rail (movil y tablet, < 1100 px): lo que en escritorio esta en el rail y en la columna
+ *  derecha — Substacks, Medios y Agregadores (/ultimo.php), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
+function nav_fuentes(string $tab): void {
+    global $pdo; require_once __DIR__ . '/fuentes.php';
+    $tabs = [];
+    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_activas($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo.php?k=$k", t(['newsletter' => 'Substacks', 'medio' => 'Medios', 'agregador' => 'Agregadores'][$k]), $ic];
+    $tabs['temas'] = ['/temas.php', t('Temas'), 'tag'];
+    $tabs['comunidades'] = ['/comunidades.php', t('Comunidades'), 'comm'];
+    echo "<nav class=\"tabs-fuentes\">";
+    foreach ($tabs as $k => [$href, $label, $ic]) echo "<a href=\"" . h($href) . "\"" . ($k === $tab ? ' class="on"' : '') . ">" . icon($ic) . "<span>" . h($label) . "</span></a>";
+    echo "</nav>";
+}
 /** Mensajes privados sin leer del usuario actual (una consulta por pagina, cacheada) */
 function unread_msgs(): int {
     static $n = null; global $pdo;
@@ -648,11 +663,10 @@ function unread_msgs(): int {
 }
 function footer_links(): string {
     $h  = "<a href=\"/que-es.php\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a>";
-    // fuentes externas pintadas con Deltha: los agregadores (Meneame) y el enlace al catalogo de medios
+    // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios.php?k=…), no uno por agregador
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
-        foreach (fuentes_activas($pdo, 'agregador') as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\" title=\"" . h(t('%s visto desde Deltha', $src['name'])) . "\">" . h($src['name']) . "</a>";
-        if (fuentes_activas($pdo, 'medio') || fuentes_activas($pdo, 'newsletter')) $h .= " · <a href=\"/medios.php\">" . t('Medios') . "</a>";
+        foreach (['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_activas($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
     }
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
