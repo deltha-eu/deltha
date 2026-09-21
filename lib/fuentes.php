@@ -114,6 +114,14 @@ function fuente_actualizar(PDO $pdo, array $src): array {
         if ($xml === null) { $err[] = "$phase: sin respuesta"; continue; }
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
+        // antiguedad maxima: algunos feeds (El Pais / Babelia) cuelan articulos de hace anos entre los nuevos; fuera lo que pase de
+        // sources_max_age_days (0 = sin limite). Lo ya guardado y que deje de verse caduca solo a los sources_keep_days.
+        if (($maxAge = (int)cfg('sources_max_age_days', 45)) > 0) {
+            $lim = date('Y-m-d H:i:s', time() - $maxAge * 86400); $n0 = count($items);
+            $items = array_values(array_filter($items, fn($it) => $it['pub_date'] >= $lim));
+            if ($n0 - count($items)) $log[] = "fuente {$src['slug']} $phase: " . ($n0 - count($items)) . " items de hace mas de $maxAge dias, descartados";
+            if (!$items) { $err[] = "$phase: todo lo del feed tiene mas de $maxAge dias"; continue; }
+        }
         if (!empty($items[0]['smf'])) { $k = fuente_smf_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']}: $k mensajes leidos del foro"; }
         if (str_contains($url, 'renegados.es')) { $k = fuente_renegados_completar($items, $timeout); if ($k) $log[] = "fuente {$src['slug']} $phase: votos y comentarios de la API para $k items"; }
         [$new, $upd] = fuente_guardar($pdo, $src, $phase, $items);
