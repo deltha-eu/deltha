@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 89);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 99);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -382,7 +382,7 @@ function page_body(array $pg): string {
  * Orden de preferencia: ?skin= en la URL (probar sin guardar) > communities.skin (en la comunidad y sus hilos) > users.skin > cookie ddd_skin (solo anonimos que eligieron) > config.skin_default. */
 const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk', 'popart' => 'Pop Art', 'zen' => 'Zen', 'orange' => 'Orange', 'foro' => 'Foro',
     'hyperpop' => 'Hyperpop / Y2K', 'neobrutal' => 'Neo-Brutal', 'stickerbomb' => 'Stickerbomb', 'riso' => 'Riso / Zine', 'aero' => 'Frutiger Aero', 'hud' => 'Game HUD', 'acid' => 'Acid Web', 'pixel' => 'Pixel / 16-bit', 'dopamine' => 'Dopamine', 'www1998' => 'WWW 1998', 'solarpunk' => 'Solarpunk',
-    'galactica' => 'Galáctica', 'impresionismo' => 'Impresionismo'];
+    'galactica' => 'Galáctica', 'impresionismo' => 'Impresionismo', 'grotesque' => 'Grotesque', 'phantom' => 'Phantom', 'bw' => 'B/W', 'surrealismo' => 'Surrealismo'];
 /** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin.php) o en /plantilla.php. */
 const DDD_SKIN_COOKIE = 'ddd_skin';
 /** Cookie de preferencia (plantilla, tema, idioma) para quien no tiene cuenta: un año, y solo porque la persona la pidio; '' la borra. */
@@ -578,7 +578,11 @@ function icon(string $n): string {
         'user'   => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
         'news'   => '<rect x="3" y="5" width="15" height="15" rx="2"/><path d="M18 9h2a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2"/><path d="M7 9h7M7 13h7M7 17h4"/>',
         'edit'   => '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m13.5 8.5 3 3"/>',
-        'fav'    => '<path d="M6 4h12v17l-6-4.5L6 21z"/>',   // marcador: relleno via CSS cuando esta guardado
+        'fav'    => '<path d="M6 4h12v17l-6-4.5L6 21z"/>',
+        'agg'    => '<circle cx="5" cy="6" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 6H20"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 18H20"/>',   // agregadores: lista de fuentes
+        'tag'    => '<path d="M3 11V4h7l10 10-7 7z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',   // temas
+        'comm'   => '<circle cx="12" cy="8" r="3.2"/><circle cx="5" cy="11" r="2.2"/><circle cx="19" cy="11" r="2.2"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0"/><path d="M2 17.5a3.5 3.5 0 0 1 3-2.3M22 17.5a3.5 3.5 0 0 0-3-2.3"/>',   // comunidades
+        'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
     ][$n] ?? '';
     return "<svg class=\"i\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">$p</svg>";
 }
@@ -595,8 +599,23 @@ function own_edit_link(array $s): string {
 }
 
 /* ---- layout (estilo timeline) -------------------------------------- */
-/** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php) */
-function page_header(string $title, string $tab = '', string $head = ''): void {
+/** URL absoluta (esquema + host) de una ruta del sitio, para Open Graph y compartir. */
+function abs_url(string $path): string {
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $path;
+}
+/** Metas Open Graph: titulo, descripcion, imagen (absoluta; por defecto el icono de 512 en vigor) y url (la actual). */
+function og_tags(string $title, string $descr = '', string $image = '', string $url = ''): string {
+    $img = $image !== '' ? (preg_match('#^https?://#i', $image) ? $image : abs_url($image)) : abs_url(icon_src(512));
+    $h  = "<meta property=\"og:site_name\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta property=\"og:type\" content=\"website\">";
+    $h .= "<meta property=\"og:title\" content=\"" . h($title) . "\">";
+    if ($descr !== '') $h .= "<meta property=\"og:description\" content=\"" . h(mb_strimwidth($descr, 0, 200, '…')) . "\">";
+    $h .= "<meta property=\"og:image\" content=\"" . h($img) . "\"><meta property=\"og:url\" content=\"" . h($url ?: abs_url((string)($_SERVER['REQUEST_URI'] ?? '/'))) . "\">";
+    $h .= "<meta name=\"twitter:card\" content=\"" . ($image !== '' ? 'summary_large_image' : 'summary') . "\">";
+    return $h;
+}
+/** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
+ *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
+function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $u = user();
     $theme = theme();   // null = sigue al sistema
@@ -608,7 +627,10 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     echo "<link rel=\"manifest\" href=\"/app/manifest.php\"><meta name=\"theme-color\" content=\"#ffffff\" media=\"(prefers-color-scheme: light)\"><meta name=\"theme-color\" content=\"#000000\" media=\"(prefers-color-scheme: dark)\">";
     echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
-    echo "<title>" . h($title) . " · " . h(cfg('site_name')) . "</title>";
+    echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
+    // Open Graph: lo que enseñan los cuadros de «compartir» (Windows, WhatsApp, Telegram...). Por defecto el icono del sitio en vigor;
+    // una pagina (el hilo) puede mandar los suyos en $head y entonces no se repiten.
+    if (!str_contains($head, 'og:image')) $head = og_tags($doc ?: $title) . $head;
     echo "<link rel=\"stylesheet\" href=\"/css/ddd.css?v=" . DDD_CSS_VER . "\">" . $head . "</head><body>";
     require_once __DIR__ . '/lateral.php';
     echo "<div class=\"cols\">";   // escritorio: rail | shell | side (las columnas laterales van ocultas en movil)
@@ -620,6 +642,7 @@ function page_header(string $title, string $tab = '', string $head = ''): void {
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
     echo "</header>";
     nav_tabs($tab, 'tabs-top');
+    nav_fuentes($tab);
     echo "<main>";
 }
 /* Dos menus: arriba el contenido (las fases del ciclo), abajo la comunidad y las
@@ -649,6 +672,18 @@ function nav_tabs(string $tab, string $cls): void {
     }
     echo "</nav>";
 }
+/** Franja bajo las pestañas, solo cuando no hay rail (movil y tablet, < 1100 px): lo que en escritorio esta en el rail y en la columna
+ *  derecha — Substacks, Medios y Agregadores (/ultimo.php), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
+function nav_fuentes(string $tab): void {
+    global $pdo; require_once __DIR__ . '/fuentes.php';
+    $tabs = [];
+    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_activas($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo.php?k=$k", t(['newsletter' => 'Substacks', 'medio' => 'Medios', 'agregador' => 'Agregadores'][$k]), $ic];
+    $tabs['temas'] = ['/temas.php', t('Temas'), 'tag'];
+    $tabs['comunidades'] = ['/comunidades.php', t('Comunidades'), 'comm'];
+    echo "<nav class=\"tabs-fuentes\">";
+    foreach ($tabs as $k => [$href, $label, $ic]) echo "<a href=\"" . h($href) . "\"" . ($k === $tab ? ' class="on"' : '') . ">" . icon($ic) . "<span>" . h($label) . "</span></a>";
+    echo "</nav>";
+}
 /** Mensajes privados sin leer del usuario actual (una consulta por pagina, cacheada) */
 function unread_msgs(): int {
     static $n = null; global $pdo;
@@ -662,11 +697,10 @@ function unread_msgs(): int {
 }
 function footer_links(): string {
     $h  = "<a href=\"/que-es.php\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a>";
-    // fuentes externas pintadas con Deltha: los agregadores (Meneame) y el enlace al catalogo de medios
+    // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios.php?k=…), no uno por agregador
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
-        foreach (fuentes_activas($pdo, 'agregador') as $src) $h .= " · <a href=\"" . h(fuente_url($src)) . "\" title=\"" . h(t('%s visto desde Deltha', $src['name'])) . "\">" . h($src['name']) . "</a>";
-        if (fuentes_activas($pdo, 'medio') || fuentes_activas($pdo, 'newsletter')) $h .= " · <a href=\"/medios.php\">" . t('Medios') . "</a>";
+        foreach (['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_activas($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
     }
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";

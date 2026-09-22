@@ -446,6 +446,12 @@ if ($tab === 'usuarios') {
     echo "<p><small>El coeficiente multiplica los votos en el δ (1,10 da un 10 % de ventaja al tema). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.php.</small></p>";
 
 } elseif ($tab === 'fuentes') {
+    // subpestañas por tipo de fuente: Substack (newsletter), Medios, Agregadores; los formularios vuelven a la subpestaña (campo oculto k)
+    $FK = ['newsletter' => 'Substack', 'medio' => 'Medios', 'agregador' => 'Agregadores'];
+    $fk = (string)($_GET['k'] ?? $_POST['k'] ?? 'newsletter');
+    if (in_array($_POST['act'] ?? '', ['fuente', 'fuente_nueva'], true) && isset($FK[$_POST['kind'] ?? ''])) $fk = $_POST['kind'];   // al guardar, a la subpestaña del tipo elegido
+    if (!isset($FK[$fk])) $fk = 'newsletter';
+    $T .= "<input type=\"hidden\" name=\"k\" value=\"$fk\">";
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
@@ -470,14 +476,20 @@ if ($tab === 'usuarios') {
     };
     echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios.php\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, elegible por los usuarios en «Mis medios» (hasta <code>media_max_per_user</code>), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
     echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><button class=\"btn\">Leer todas las fuentes ahora</button><small>sin esperar al intervalo; tarda unos segundos por fuente (feeds e imágenes)</small></form>";
-    $rows = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s ORDER BY s.kind, s.name")->fetchAll();
+    $nk = $pdo->query("SELECT kind, COUNT(*) FROM sources GROUP BY kind")->fetchAll(PDO::FETCH_KEY_PAIR);
+    echo "<nav class=\"sub\">";
+    foreach ($FK as $k => $v) echo "<a href=\"/admin.php?t=fuentes&amp;k=$k\"" . ($k === $fk ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
+    echo "</nav>";
+    $rows = $pdo->prepare("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s WHERE s.kind = ? ORDER BY s.name");
+    $rows->execute([$fk]); $rows = $rows->fetchAll();
+    if (!$rows) echo "<p class=\"end\">No hay fuentes de este tipo.</p>";
     foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
         echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
         echo $fuente_form($f, 'fuente');
         echo "<p><form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
     }
-    echo "<h3>Nueva fuente</h3>" . $fuente_form(['interval_min' => 60], 'fuente_nueva');
+    echo "<h3>Nueva fuente</h3>" . $fuente_form(['interval_min' => 60, 'kind' => $fk], 'fuente_nueva');
 
 } elseif ($tab === 'lateral') {
     require_once __DIR__ . '/../lib/lateral.php';

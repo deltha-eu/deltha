@@ -87,4 +87,6 @@
 
     # robots
     Alias /robots.txt /var/www/deltha/public/robots.txt
+    # /favicon.ico (lo piden Windows, lectores y clientes viejos sin mirar el <link rel="icon">): el icono en vigor, servido por PHP
+    AliasMatch ^/favicon\.ico$ /var/www/deltha/public/favicon.php
 </VirtualHost>

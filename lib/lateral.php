@@ -53,16 +53,18 @@ function rail_skins(): void {
     rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
 }
 
-/** Cuarto grupo del rail: «Mis medios» como cabecera (mismo aspecto que Plantilla / Aspecto / Idioma, sin flecha ni plegado)
- *  y debajo, siempre visibles, solo los nombres: los elegidos en el perfil o, sin eleccion / sin cuenta, los destacados en admin. */
+/** Cuarto grupo del rail: «Mis substacks», «Mis medios» y «Mis agregadores» como cabeceras (mismo aspecto que Plantilla / Aspecto / Idioma,
+ *  sin flecha ni plegado), cada una pulsable → /ultimo.php?k=… (las diez ultimas noticias del grupo en formato normal), y debajo, siempre
+ *  visibles, solo los nombres: los elegidos en el perfil o, sin eleccion / sin cuenta, los destacados en admin (agregadores: todos los activos). */
 function rail_medios(): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
     $u = user();
-    foreach (DDD_MEDIA_KINDS as $kind => [, $label]) {
-        if (!($list = medios_menu($pdo, $u, 0, $kind))) continue;
-        $mine = (bool)mis_medios($pdo, $u, $kind);
-        echo "<details class=\"rail-dd medios\" open><summary>" . icon('news') . "<span>" . t($label) . "<small>" . ($mine ? t('%d elegidos', count($list)) : t('destacados')) . "</small></span></summary><div class=\"list\">";
+    foreach (DDD_ULTIMO_KINDS as $kind => [$label, $ic]) {
+        if (!($list = ultimo_fuentes($pdo, $u, $kind))) continue;
+        $mine = $kind !== 'agregador' && mis_medios($pdo, $u, $kind);
+        $on = current_tab() === "ultimo:$kind" ? ' class="on"' : '';
+        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo.php?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($kind === 'agregador' ? t('%d fuentes', count($list)) : ($mine ? t('%d elegidos', count($list)) : t('destacados'))) . "</small></span></a></summary><div class=\"list\">";
         foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
         echo "</div></details>";
     }
@@ -76,7 +78,7 @@ function side_modules(): array {
             'temas'       => [t('Temas'), 'side_temas'],
             'comunidades' => [t('En comunidades'), 'side_comunidades'],
             'votadas'     => [t('Las más votadas'), 'side_votadas'],
-            'agregadores' => [t('Agregadores (Menéame, Areópago…)'), 'side_agregadores'],
+            'agregadores' => [t('Último en agregadores'), 'side_agregadores'],
             'medios'      => [t('Último en medios'), 'side_medios'],
             'substacks'   => [t('Último en substacks'), 'side_substacks']];
 }
@@ -154,29 +156,18 @@ function side_comunidades(PDO $pdo): void {
                            JOIN stories s ON s.story_id = (SELECT sc.story_id FROM story_communities sc JOIN stories x ON x.story_id = sc.story_id WHERE sc.community_id = c.community_id AND x.status IN ('nuevas','candidatas','destacadas','archived') ORDER BY sc.created DESC LIMIT 1)
                           WHERE c.status = 'ok' ORDER BY s.sent_date DESC LIMIT 8")->fetchAll();
     if (!$rows) return;
-    echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "</h3>";
+    // «todas» en la cabecera, como en los modulos de substacks y medios
+    echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "<span><a href=\"/comunidades.php\">" . t('todas') . "</a></span></h3>";
     foreach ($rows as $r) {
         echo "<a class=\"row\" href=\"/hilo.php?id=" . (int)$r['story_id'] . "\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
     }
-    echo "<p class=\"more\"><a href=\"/comunidades.php\">" . t('todas las comunidades') . "</a></p></section>";
+    echo "</section>";
 }
 
-/** Fuentes externas en la columna derecha: los agregadores (Meneame, tres ultimas de portada con votos) y, para medios y newsletters,
- *  un modulo por grupo («Ultimo en medios», «Ultimo en substacks») con las cinco ultimas noticias de TODO el catalogo (no solo las
- *  elegidas por el usuario), cada una con su medio; el enlace lleva al articulo. */
-function side_agregadores(PDO $pdo): void {
-    require_once __DIR__ . '/fuentes.php';
-    if (!fuentes_on()) return;
-    foreach (fuentes_activas($pdo, 'agregador') as $src) {
-        $st = $pdo->prepare("SELECT title, url, votes, comments FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC LIMIT 3");
-        $st->execute([$src['source_id']]);
-        if (!($rows = $st->fetchAll())) continue;
-        $sinVotos = fuente_sin_votos($src);   // foros: en vez de votos, el numero del mensaje en su hilo
-        echo "<section class=\"mod fuente\"><h3>" . h($src['name']) . "<span>" . ($sinVotos ? t('último') : t('portada')) . "</span></h3>";
-        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h($r['url']) . "\" rel=\"noopener nofollow\"><b>" . ($sinVotos ? icon('reply') : icon('up')) . (int)($sinVotos ? $r['comments'] : $r['votes']) . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
-        echo "<p class=\"more\"><a href=\"" . h(fuente_url($src)) . "\">" . t('%s visto desde Deltha', $src['name']) . "</a></p></section>";
-    }
-}
+/** Fuentes externas en la columna derecha: un modulo por grupo («Ultimo en agregadores», «Ultimo en medios», «Ultimo en substacks»)
+ *  con las cinco ultimas noticias de portada de TODO el catalogo del grupo (no solo las elegidas por el usuario), cada una con su
+ *  fuente delante; el enlace lleva a la pagina de la fuente en Deltha y «todos», al catalogo del grupo. */
+function side_agregadores(PDO $pdo): void { side_ultimo($pdo, 'agregador', t('Último en agregadores')); }
 function side_medios(PDO $pdo): void { side_ultimo($pdo, 'medio', t('Último en medios')); }
 function side_substacks(PDO $pdo): void { side_ultimo($pdo, 'newsletter', t('Último en substacks')); }
 function side_ultimo(PDO $pdo, string $kind, string $title): void {
@@ -184,10 +175,11 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
     if (!fuentes_on()) return;
     foreach ([$kind => $title] as $kind => $title) {
         $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug FROM source_items i JOIN sources s ON s.source_id = i.source_id
-                              WHERE s.kind = ? AND s.status = 'ok' ORDER BY i.pub_date DESC LIMIT 5");
+                              WHERE s.kind = ? AND s.status = 'ok' AND i.phase = 'portada' ORDER BY i.pub_date DESC LIMIT 5");
         $st->execute([$kind]);
         if (!($rows = $st->fetchAll())) continue;
-        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php\">" . t('todos') . "</a></span></h3>";
+        // «todos» lleva al catalogo filtrado por este grupo (/medios.php?k=medio|newsletter)
+        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
         // el enlace lleva a la pagina del medio en Deltha (/fuente.php?f=slug), no a la noticia
         foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h(fuente_url(['slug' => $r['slug']])) . "\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
         echo "</section>";
