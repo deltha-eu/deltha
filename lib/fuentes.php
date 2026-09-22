@@ -44,6 +44,11 @@ function fuente_url(array $src, string $view = ''): string {
 function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar a Nuevas»
 /** Grupos elegibles por el usuario: tipo => [clave de config del maximo, etiqueta del grupo, campo del formulario del perfil] */
 const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios', 'media'], 'newsletter' => ['news_max_per_user', 'Mis substacks', 'news']];
+/** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen en el perfil (DDD_MEDIA_KINDS). */
+const DDD_ULTIMO_KINDS = ['newsletter' => ['Mis substacks', 'letter'], 'medio' => ['Mis medios', 'news'], 'agregador' => ['Mis agregadores', 'agg']];
+/** Fuentes que se muestran en el rail para un grupo: medios_menu() — las elegidas, si no las destacadas, si no las primeras; nunca mas de
+ *  tres (media_max_per_user). Los agregadores no se eligen en el perfil, asi que salen los destacados en admin (sources.featured). */
+function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array { return medios_menu($pdo, $u, 0, $kind); }
 function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[$kind][0] ?? 'media_max_per_user', 3)); }
 
 /** Fuentes de un tipo elegidas por un usuario (en su orden). Vacio si no ha elegido. */
@@ -106,10 +111,19 @@ function fuente_actualizar(PDO $pdo, array $src): array {
         $url = trim((string)$feeds[$phase]);
         if ($url === '') continue;
         $xml = http_get($url, $timeout, 4000000);
-        if ($xml === null) { $err[] = "$phase: sin respuesta"; continue; }
+        if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
+        // antiguedad maxima: algunos feeds (El Pais / Babelia) cuelan articulos de hace anos entre los nuevos; fuera lo que pase de
+        // sources_max_age_days (0 = sin limite). Lo ya guardado y que deje de verse caduca solo a los sources_keep_days.
+        if (($maxAge = (int)cfg('sources_max_age_days', 45)) > 0) {
+            $lim = date('Y-m-d H:i:s', time() - $maxAge * 86400); $n0 = count($items);
+            $items = array_values(array_filter($items, fn($it) => $it['pub_date'] >= $lim));
+            if ($n0 - count($items)) $log[] = "fuente {$src['slug']} $phase: " . ($n0 - count($items)) . " items de hace mas de $maxAge dias, descartados";
+            if (!$items) { $err[] = "$phase: todo lo del feed tiene mas de $maxAge dias"; continue; }
+        }
         if (!empty($items[0]['smf'])) { $k = fuente_smf_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']}: $k mensajes leidos del foro"; }
+        if (str_contains($url, 'renegados.es')) { $k = fuente_renegados_completar($items, $timeout); if ($k) $log[] = "fuente {$src['slug']} $phase: votos y comentarios de la API para $k items"; }
         [$new, $upd] = fuente_guardar($pdo, $src, $phase, $items);
         $log[] = "fuente {$src['slug']} $phase: " . count($items) . " items, $new nuevos, $upd actualizados";
     }
@@ -150,8 +164,48 @@ function fuente_smf_completar(PDO $pdo, array $src, array &$items, int $timeout)
     unset($it);
     return $n;
 }
+/** Renegados: el RSS no trae votos ni comentarios, pero su API publica (api.renegados.es/api/v1/posts, 25 por pagina, ?page=N)
+ *  los da con el slug del post, junto con la URL del articulo original. Se leen sources_renegados_pages paginas (2) por pasada,
+ *  cacheadas un minuto en fichero para no repetir entre «nuevas» y «portada», y se cruzan por el slug del <link> (/posts/slug).
+ *  Ademas la url pasa a ser el articulo original (como en Meneame) y thread_url, el post en Renegados. Devuelve items completados. */
+function fuente_renegados_completar(array &$items, int $timeout): int {
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        $cache = sys_get_temp_dir() . '/deltha-renegados.json';
+        if (is_file($cache) && time() - filemtime($cache) < 60) $map = json_decode((string)file_get_contents($cache), true) ?: [];
+        else {
+            $pages = max(1, min(10, (int)cfg('sources_renegados_pages', 2)));
+            for ($p = 1; $p <= $pages; $p++) {
+                $json = http_get('https://api.renegados.es/api/v1/posts?page=' . $p, $timeout, 2000000);
+                if ($json === null) break;
+                $d = json_decode($json, true);
+                if (!is_array($d['data'] ?? null) || !$d['data']) break;
+                foreach ($d['data'] as $row) if (!empty($row['slug'])) $map[$row['slug']] = ['v' => (int)($row['vote_count'] ?? 0), 'c' => (int)($row['comment_count'] ?? 0), 'u' => (string)($row['url'] ?? '')];
+            }
+            if ($map) @file_put_contents($cache, json_encode($map));
+        }
+    }
+    $n = 0;
+    foreach ($items as &$it) {
+        if (!preg_match('#/posts/([^/?\#]+)#', $it['thread_url'] ?: $it['url'], $m) || !isset($map[$m[1]])) continue;
+        $r = $map[$m[1]];
+        $it['votes'] = $r['v']; $it['comments'] = max((int)$it['comments'], $r['c']);
+        if ($r['u'] !== '' && preg_match('#^https?://#i', $r['u'])) { $it['thread_url'] = $it['url']; $it['url'] = mb_substr($r['u'], 0, 600); $it['source'] = ($so = source_of($r['u'])) ? mb_substr($so, 0, 100) : null; }
+        $n++;
+    }
+    unset($it);
+    return $n;
+}
 /** Fuentes sin votos (foros SMF): no se pintan las flechas ni «↑ n» en la columna. */
-function fuente_sin_votos(array $src): bool { return str_contains((string)$src['feed_portada'], 'action=.xml'); }
+/** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
+ *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
+ *  «burbuja» de votos en su pagina (skin Phantom), asi que se pinta el widget normal, a 0 hasta que su feed los incluya. */
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss'];
+function fuente_sin_votos(array $src): bool {
+    foreach (DDD_FEEDS_SIN_VOTOS as $p) if (str_contains((string)$src['feed_portada'], $p)) return true;
+    return false;
+}
 
 /** Upsert de los items de un feed. Devuelve [nuevos, actualizados]. */
 function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): array {
@@ -159,8 +213,8 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
     $ins = $pdo->prepare("INSERT INTO source_items (source_id, ext_id, phase, title, url, thread_url, source, topic, author, content, image, votes, negatives, comments, pub_date)
                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     // (la fecha nueva se decide en PHP: MySQL evalua los SET de izquierda a derecha y phase ya tendria el valor nuevo)
-    $upd = $pdo->prepare("UPDATE source_items SET phase = ?, title = ?, source = COALESCE(?, source), topic = COALESCE(?, topic), content = IF(? = '', content, ?),
-                          image = COALESCE(image, ?), votes = ?, negatives = ?, comments = GREATEST(comments, ?), pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");
+    $upd = $pdo->prepare("UPDATE source_items SET phase = ?, title = ?, url = ?, thread_url = ?, source = COALESCE(?, source), topic = COALESCE(?, topic), content = IF(? = '', content, ?),
+                          image = COALESCE(image, ?), votes = ?, negatives = ?, comments = GREATEST(comments, ?), pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");   // url/thread_url se refrescan: Renegados los completa desde su API
     $new = $updated = 0;
     foreach ($items as $it) {
         $sel->execute([$src['source_id'], $it['ext_id']]);
@@ -172,7 +226,7 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
         $img = ($row && $row['image']) ? null : fuente_imagen($src, $it);
         if ($row) {
             $newDate = $row['phase'] === $phase ? null : $it['pub_date'];   // cambio de fase (nuevas -> portada): fecha de publicacion
-            $upd->execute([$phase, $it['title'], $it['source'], $it['topic'], $it['content'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $newDate, $row['item_id']]);
+            $upd->execute([$phase, $it['title'], $it['url'], $it['thread_url'], $it['source'], $it['topic'], $it['content'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $newDate, $row['item_id']]);
             $updated++;
         } else {
             $ins->execute([$src['source_id'], $it['ext_id'], $phase, $it['title'], $it['url'], $it['thread_url'], $it['source'], $it['topic'], $it['author'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $it['pub_date']]);
@@ -215,6 +269,12 @@ function fuente_imagen(array $src, array $it, bool $reset = false): ?string {
 
 /** Parser de RSS 2.0: el de Meneame (rss2.php, espacio de nombres meneame:) y el generico (WordPress y similares).
  *  Devuelve items normalizados: ext_id, title, url, thread_url, source, topic, author, content, thumb, votes, negatives, comments, pub_date. */
+/** Hijos de un item en un espacio de nombres, aceptando la URI con http:// o https:// (Mediatize declara los modulos estandar con https). */
+function fuentes_ns(SimpleXMLElement $i, string $uri): SimpleXMLElement {
+    $c = $i->children($uri);
+    if (!count($c)) $c = $i->children(str_starts_with($uri, 'https://') ? 'http://' . substr($uri, 8) : 'https://' . substr($uri, 7));
+    return $c;
+}
 function fuentes_parse_rss(string $xml): array {
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
@@ -224,11 +284,14 @@ function fuentes_parse_rss(string $xml): array {
     if (!isset($doc->channel->item)) return [];
     $out = [];
     foreach ($doc->channel->item as $i) {
+        // Meneame y sus derivados (Mediatize: xmlns:mediatize) llevan link_id, votes, comments... en un espacio de nombres propio
         $mn = $i->children('http://meneame.net/faq-es.php');
-        $md = $i->children('http://search.yahoo.com/mrss/');
-        $dc = $i->children('http://purl.org/dc/elements/1.1/');
-        $dt = $i->children('http://purl.org/dc/terms');   // algunos feeds (RBA: National Geographic) usan dc:terms: creator y abstract
-        $ce = $i->children('http://purl.org/rss/1.0/modules/content/');
+        if (!count($mn)) foreach ($i->getNamespaces(true) as $uri) { $c = $i->children($uri); if (isset($c->link_id)) { $mn = $c; break; } }
+        $md = fuentes_ns($i, 'http://search.yahoo.com/mrss/');
+        $dc = fuentes_ns($i, 'http://purl.org/dc/elements/1.1/');
+        $dt = fuentes_ns($i, 'http://purl.org/dc/terms');   // algunos feeds (RBA: National Geographic) usan dc:terms: creator y abstract
+        $ce = fuentes_ns($i, 'http://purl.org/rss/1.0/modules/content/');
+        $sl = fuentes_ns($i, 'http://purl.org/rss/1.0/modules/slash/');   // slash:comments (XenForo: Burbuja)
         $link = trim((string)$i->link);
         if ($link === '') continue;
         $desc = (string)$i->description;
@@ -248,7 +311,8 @@ function fuentes_parse_rss(string $xml): array {
         if ($meneame) {
             $source = null;
             if (preg_match('/noticia original<\/a>\s*\(([^)]+)\)/u', $desc, $m)) $source = strtolower(preg_replace('/^www\./', '', trim($m[1])));
-            $url = 'https://www.meneame.net/go?id=' . (int)$mn->link_id;   // redirige al articulo original
+            // meneame:url / mediatize:url = el articulo original; si no viene, el redirector go?id= del propio agregador
+            $url = trim((string)($mn->url ?? '')) ?: (preg_replace('#^(https?://[^/]+).*$#', '$1', $link) . '/go?id=' . (int)$mn->link_id);
             $thread = $link;
             $txt = preg_replace('/<p><strong>etiquetas<\/strong>.*$/su', '', $desc);
             $txt = preg_replace('/<p>[^<]*<a href="[^"]*go\?id=\d+"[^>]*>noticia original<\/a>.*$/su', '', $txt);
@@ -279,7 +343,7 @@ function fuentes_parse_rss(string $xml): array {
             'thumb'      => preg_match('#^https?://#i', $thumb) ? $thumb : '',
             'votes'      => (int)($mn->votes ?? 0),
             'negatives'  => (int)($mn->negatives ?? 0),
-            'comments'   => (int)($mn->comments ?? 0),
+            'comments'   => (int)($mn->comments ?? ($sl->comments ?? 0)),
             'pub_date'   => date('Y-m-d H:i:s', $ts),
             'smf'        => $smf,
         ];
