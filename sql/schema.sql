@@ -119,6 +119,7 @@ CREATE TABLE stories (
     status          ENUM('pending_mod','rejected','nuevas','candidatas','destacadas','archived','discard')
                     NOT NULL DEFAULT 'nuevas',
     sent_date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at       DATETIME DEFAULT NULL,           -- ultima edicion (autor en plazo o moderacion)
     published_date  DATETIME DEFAULT NULL,
     votes_pos       INT NOT NULL DEFAULT 0,
     votes_neg       INT NOT NULL DEFAULT 0,
