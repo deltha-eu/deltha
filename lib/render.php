@@ -68,7 +68,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
     $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? " · " . source_link($s) : '');
-    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . "</span></div>";
+    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span></div>";
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
     if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content'], 0, 240, '…')) . "</p>";
@@ -104,7 +104,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<div class=\"actions\">";
     echo "<a href=\"$hrefC\">" . icon('reply') . "<span>{$s['comments']}</span></a>";
     vote_widget($s);
-    echo mod_edit_link($s);   // mods y admin: «editar» a un clic, sin entrar en el hilo
+    echo mod_edit_link($s) . own_edit_link($s);   // mods y admin: «editar» a un clic; el autor, en plazo, tambien
     if (is_fav((int)$s['story_id'])) echo fav_link($s);   // en el feed solo si ya esta guardado: marca y permite quitarlo (se guarda desde el hilo)
     echo share_link($s);
     echo "</div>";

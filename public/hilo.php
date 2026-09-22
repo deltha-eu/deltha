@@ -35,7 +35,7 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 page_header(t('Hilo'), $tab);
 echo "<div class=\"hilo\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
-echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . "</span>" . (is_mod() ? " · " . mod_edit_link($s) : '') . "</div>";
+echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
 $dest = $s['url'] ?: null;
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {

@@ -312,6 +312,15 @@ function can_edit_own_comment(array $c): bool {
     if ((float)$u['aura'] <= (float)cfg('comment_edit_min_aura', 10)) return false;
     return time() - strtotime($c['created']) < (int)cfg('comment_edit_minutes', 10) * 60;
 }
+/** El usuario actual puede editar (o retirar) este envio suyo? Aura > story_edit_min_aura, menos de
+ *  story_edit_minutes desde el envio y el envio aun sin llegar a portada (nuevas o candidatas). */
+function can_edit_own_story(array $s): bool {
+    $u = user();
+    if (!$u || empty($s['user_id']) || (int)$s['user_id'] !== (int)$u['user_id']) return false;
+    if (!in_array($s['status'], ['pending_mod', 'nuevas', 'candidatas'], true)) return false;   // en portada (o archivado) ya no
+    if ((float)$u['aura'] <= (float)cfg('story_edit_min_aura', 10)) return false;
+    return time() - strtotime($s['sent_date']) < (int)cfg('story_edit_minutes', 15) * 60;
+}
 /** Reportes de comentarios pendientes (para el enlace de moderacion) */
 function open_reports(): int {
     static $n = null; global $pdo;
@@ -359,6 +368,8 @@ function page_body(array $pg): string {
         '{commmax}'  => (string)(int)cfg('comm_max_per_user', 3),
         '{editaura}' => num_es(cfg('comment_edit_min_aura', 10)),
         '{editmin}'  => (string)(int)cfg('comment_edit_minutes', 10),
+        '{seditaura}'=> num_es(cfg('story_edit_min_aura', 10)),
+        '{seditmin}' => (string)(int)cfg('story_edit_minutes', 15),
         // pagina «¿Que es Deltha?»
         '{skins}'    => (string)count(DDD_SKINS),
         '{auradl}'   => fecha_larga(cfg('aura_deadline', '2026-12-31')),
@@ -576,6 +587,11 @@ function icon(string $n): string {
 function mod_edit_link(array $s): string {
     if (!is_mod()) return '';
     return "<a class=\"modlink\" href=\"/editar.php?id={$s['story_id']}\" title=\"" . t('editar (moderación)') . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
+}
+/** Enlace «editar» para el autor de un envío dentro del plazo (misma pagina /editar.php, campos limitados). '' si no procede. */
+function own_edit_link(array $s): string {
+    if (is_mod() || !can_edit_own_story($s)) return '';
+    return "<a class=\"modlink\" href=\"/editar.php?id={$s['story_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('story_edit_minutes', 15)) . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
 }
 
 /* ---- layout (estilo timeline) -------------------------------------- */
