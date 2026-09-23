@@ -54,3 +54,43 @@ function modedit_form(PDO $pdo, array $p, string $back = ''): string {
     }
     return $h;
 }
+
+/* ---- alta de usuarios por el admin (/crear-usuario.php; formulario en /usuarios.php y en admin > Usuarios) ----------------
+ * Sin pasar por /registro.php: no comprueba el dominio del correo ni el tope por IP. Con «correo validado» la cuenta entra ya;
+ * sin marcar, se envia el correo de activacion normal. */
+
+/** Crea la cuenta. Devuelve [user_id, null] o [0, 'error']. $level: normal | mod. */
+function user_create(PDO $pdo, string $login, string $email, string $pass, string $level = 'normal', ?float $aura = null, bool $verified = true): array {
+    $login = trim($login); $email = mb_strtolower(trim($email));
+    if (!preg_match('/^[a-z0-9_\-]{3,32}$/i', $login)) return [0, 'Usuario: 3–32 caracteres, letras, números, guion o guion bajo.'];
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 128) return [0, 'El correo no es válido.'];
+    if (strlen($pass) < 8) return [0, 'La contraseña debe tener al menos 8 caracteres.'];
+    $q = $pdo->prepare("SELECT login, email FROM users WHERE login = ? OR email = ? LIMIT 1"); $q->execute([$login, $email]);
+    if ($r = $q->fetch()) return [0, strcasecmp((string)$r['login'], $login) === 0 ? 'Ese nombre de usuario ya existe.' : 'Ese correo ya lo usa otra cuenta.'];
+    $level = $level === 'mod' ? 'mod' : 'normal';
+    $aura = $aura === null ? (float)cfg('aura_start', 5) : max(0.0, min((float)cfg('aura_max', 50), $aura));
+    try {
+        $pdo->prepare("INSERT INTO users (login, email, pass, verified, aura, level) VALUES (?,?,?,?,?,?)")
+            ->execute([$login, $email, password_hash($pass, PASSWORD_DEFAULT), $verified ? 1 : 0, round($aura, 3), $level]);
+    } catch (PDOException $e) { return [0, 'Ese usuario o correo ya existe.']; }
+    return [(int)$pdo->lastInsertId(), null];
+}
+
+/** Formulario de alta (solo admin). $back: 'usuarios' | 'admin' = adonde vuelve si hay error. */
+function user_create_form(string $back): string {
+    if (!is_admin()) return '';
+    $open = isset($_GET['nuevo_err']) ? ' open' : '';
+    $h = "<details class=\"editbox newuser\" id=\"nuevo-usuario\"$open><summary>+ Crear un usuario</summary>";
+    if (isset($_GET['nuevo_err'])) $h .= "<p class=\"error\">" . h((string)$_GET['nuevo_err']) . "</p>";
+    $h .= "<form class=\"plain\" method=\"post\" action=\"/crear-usuario.php\"><input type=\"hidden\" name=\"back\" value=\"" . h($back) . "\">";
+    $h .= "<label>Nombre de usuario</label><input type=\"text\" name=\"login\" required pattern=\"[A-Za-z0-9_\\-]{3,32}\" autocomplete=\"off\" value=\"" . h((string)($_GET['nl'] ?? '')) . "\">";
+    $h .= "<label>Correo</label><input type=\"email\" name=\"email\" required autocomplete=\"off\" value=\"" . h((string)($_GET['ne'] ?? '')) . "\"><small class=\"hint\">Obligatorio y único. Si la cuenta no va a recibir correo (una cuenta de revisión, por ejemplo), vale uno inventado y dejar marcado «correo validado».</small>";
+    $h .= "<label>Contraseña</label><input type=\"password\" name=\"pass\" data-pw required minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";
+    $h .= pw_toggle();
+    $h .= "<label>Nivel</label><select name=\"level\"><option value=\"normal\">normal</option><option value=\"mod\">moderador</option></select>";
+    $h .= "<label>Aura inicial</label><input type=\"number\" name=\"aura\" min=\"0\" max=\"" . h((string)cfg('aura_max', 50)) . "\" step=\"0.001\" value=\"" . h((string)cfg('aura_start', 5)) . "\">";
+    $h .= "<label><input type=\"checkbox\" name=\"verified\" value=\"1\" checked> correo validado (entra ya; sin marcar, se le envía el correo de activación)</label>";
+    $h .= "<button>Crear usuario</button></form></details>";
+    return $h;
+}
+

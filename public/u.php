@@ -23,7 +23,7 @@ echo "</p></div></div>";
 // moderadores y admin: edicion del perfil aqui mismo, sin pasar por moderacion ni admin
 if ($canMod) {
     echo "<details class=\"editbox\" id=\"modedit\"" . (isset($_GET['ok']) || isset($_GET['err']) ? ' open' : '') . "><summary>Editar este perfil (" . (is_admin() ? 'admin' : 'moderación') . ")</summary>";
-    if (isset($_GET['ok'])) echo "<p class=\"notice\">" . (($_GET['ok'] ?? '') === '2' ? 'Perfil guardado y contraseña cambiada.' : 'Perfil guardado.') . "</p>";
+    if (isset($_GET['ok'])) echo "<p class=\"notice\">" . (['2' => 'Perfil guardado y contraseña cambiada.', 'creado' => 'Usuario creado. Ya puede entrar con su nombre y contraseña (o, si no marcaste «correo validado», cuando abra el correo de activación).'][(string)$_GET['ok']] ?? 'Perfil guardado.') . "</p>";
     if (isset($_GET['err'])) echo "<p class=\"error\">" . h((string)$_GET['err']) . "</p>";
     $ex = $pdo->prepare("SELECT user_id, login, email, level, aura, avatar, bio, verified FROM users WHERE user_id = ?"); $ex->execute([$p['user_id']]);
     echo modedit_form($pdo, $ex->fetch(), 'u');

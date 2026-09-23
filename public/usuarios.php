@@ -5,6 +5,7 @@
  *  sin ?v         todos los registrados */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
+require __DIR__ . '/../lib/usuarios.php';   // alta de usuarios por el admin (user_create_form)
 if (!user()) redirect('/login.php');
 
 $onlineMin = (int)cfg('online_minutes', 5);
@@ -29,6 +30,7 @@ foreach ($VIEWS as $k => $label) echo "<a href=\"/usuarios.php" . ($k === '' ? '
 echo "</nav>";
 echo "<p class=\"notice\">" . t('La gente de %s y sus <a href="/comunidades.php"><b>comunidades</b></a>', h(cfg('site_name'))) . (community_quota($pdo, user()) > 0 ? " · <a href=\"/comunidades.php#crear\">" . t('crear una comunidad') . "</a>" : "") . ".</p>";
 echo "<h1>" . h($VIEWS[$v]) . "</h1><p class=\"notice\">" . t('%d en total. Pulsa en un nombre para ver su perfil público.', $total) . "</p>";
+echo user_create_form('usuarios');   // solo admin: «+ Crear un usuario»
 foreach ($rows as $r) {
     echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u.php?u=' . rawurlencode($r['login']));
     echo "<div><b><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></b>";

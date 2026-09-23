@@ -377,6 +377,8 @@ if ($tab === 'usuarios') {
     $l = $pdo->prepare("SELECT user_id, login, email, level, aura, created, last_seen, verified FROM users $w ORDER BY created DESC, user_id DESC LIMIT $per OFFSET " . (($up - 1) * $per));
     $l->execute($args);
     echo "<h3 id=\"usuarios\">Usuarios ($nU)</h3>";
+    require_once __DIR__ . '/../lib/usuarios.php';
+    echo user_create_form('admin');   // «+ Crear un usuario» (lo guarda /crear-usuario.php)
     echo "<form method=\"get\" action=\"/admin.php\" style=\"display:flex;gap:6px;margin-bottom:8px\"><input type=\"hidden\" name=\"t\" value=\"usuarios\"><input type=\"text\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"usuario o correo\" style=\"flex:1\"><button class=\"btn\">Buscar</button>" . ($q !== '' ? " <a class=\"btn\" href=\"/admin.php\">todos</a>" : "") . "</form>";
     $rows = $l->fetchAll();
     echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"mods\"><input type=\"hidden\" name=\"ids\" value=\"" . implode(',', array_column($rows, 'user_id')) . "\">";
