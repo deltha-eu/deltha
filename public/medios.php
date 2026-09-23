@@ -5,6 +5,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/fuentes.php';
+require __DIR__ . '/../lib/propuestas.php';
 
 $u = user();
 $GRUPOS = ['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')];
@@ -17,6 +18,7 @@ page_header($titulo);
 echo "<h1>" . h($titulo) . "</h1>";
 echo "<p class=\"notice\">" . t('Medios con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en Nuevas. Elige hasta %d en <a href="/perfil.php#medios">tu perfil</a> y los tendrás en el menú lateral y en el pie.', medios_max('medio')) . ' ' . t('Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.', medios_max('newsletter')) . ($u ? '' : ' ' . t('<a href="/login.php">Entra</a> para elegir tus medios.')) . "</p>";
 echo fuentes_casilla_idioma();   // la misma casilla que en el perfil: marcarla aqui la marca alli
+if (fprop_puede($u) && $k !== 'agregador') echo "<p class=\"fprop-link\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
 foreach ($kinds as $kind) {
     $lista = fuentes_on() ? fuentes_visibles($pdo, $kind) : [];
     $mine = $kind === 'agregador' ? [] : array_column(mis_medios($pdo, $u, $kind), 'source_id');
