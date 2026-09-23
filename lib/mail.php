@@ -59,8 +59,9 @@ function email_domain(string $email): string { return mb_strtolower(substr(strrc
  *   1. banned_domains (lista negra: moderacion, desechables conocidos y los que no pasan la comprobacion) -> no se crea la cuenta.
  *   2. allowed_domains (lista blanca: proveedores reconocidos y revisiones manuales de moderacion) -> se admite sin mas.
  *   3. Sin registros MX ni A -> «ese dominio de correo no existe».
- *   4. email_web_check=1: la web del dominio (https://dominio/, https://www.dominio/, http://dominio/) tiene que responder 2xx tras
- *      seguir redirecciones. Si no, el dominio entra solo en la lista negra (motivo «auto: …») y no se crea la cuenta.
+ *   4. email_web_check=1: la web del dominio (https://dominio/, https://www.dominio/ y, salvo email_web_https=1, http://dominio/)
+ *      tiene que responder 2xx tras seguir redirecciones (www, https…). Ojo: los navegadores prueban primero https; un dominio que solo
+ *      contesta por http (iol.ie: webmail de Blacknight) lo da por caido el navegador, pero es valido. Si no, el dominio entra solo en la lista negra (motivo «auto: …») y no se crea la cuenta.
  * Las dos listas cubren tambien los subdominios (alumnos.us.es cae con us.es). Se gestionan en /moderacion.php#dominios.
  * Tablas y config: sql/migra-058-dominios-correo.sql. */
 
@@ -97,28 +98,33 @@ function email_web_check(string $d): array {
     if (!function_exists('curl_init')) return [true, 'sin curl: no se comprueba'];
     $timeout = max(2, min(15, (int)cfg('email_web_timeout', 6)));
     $trazas = [];
-    foreach (["https://$d/", "https://www.$d/", "http://$d/"] as $url) {
+    $urls = ["https://$d/", "https://www.$d/"];
+    if ((string)cfg('email_web_https', '0') !== '1') $urls[] = "http://$d/";   // por defecto tambien vale http
+    foreach ($urls as $url) {
         $host = (string)parse_url($url, PHP_URL_HOST);
         $ips = @gethostbynamel($host) ?: [];
         if (!$ips) { $trazas[] = "$host: no resuelve"; continue; }
         $priv = false;
         foreach ($ips as $ip) if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) $priv = true;
         if ($priv) { $trazas[] = "$host: IP privada"; continue; }
-        $n = 0;
+        $n = 0; $body = '';
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 5, CURLOPT_CONNECTTIMEOUT => min(4, $timeout), CURLOPT_TIMEOUT => $timeout,
             CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS, CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
             CURLOPT_HTTPHEADER => ['Accept: text/html,application/xhtml+xml,*/*;q=0.8', 'Accept-Language: es-ES,es;q=0.9,en;q=0.8'],
-            CURLOPT_WRITEFUNCTION => function ($c, $chunk) use (&$n) { $n += strlen($chunk); return $n > 65536 ? -1 : strlen($chunk); },
+            CURLOPT_WRITEFUNCTION => function ($c, $chunk) use (&$n, &$body) { $n += strlen($chunk); if (strlen($body) < 65536) $body .= $chunk; return $n > 65536 ? -1 : strlen($chunk); },
         ]);
         curl_exec($ch);
         $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $final = (string)curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        $title = preg_match('~<title[^>]*>(.*?)</title>~is', $body, $tm) ? mb_strimwidth(trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($tm[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8'))), 0, 60, '…') : '';
+        $donde = ($final !== '' && $final !== $url ? " → $final" : '') . ($title !== '' ? " «{$title}»" : '');
         $err = curl_errno($ch) && curl_errno($ch) !== CURLE_WRITE_ERROR ? curl_error($ch) : '';
         curl_close($ch);
-        if ($code >= 200 && $code < 300) return [true, "$url: HTTP $code"];
-        $trazas[] = "$host: " . ($code ? "HTTP $code" : ($err !== '' ? $err : 'sin respuesta'));
+        if ($code >= 200 && $code < 300) return [true, implode(' · ', array_merge($trazas, ["$url$donde: HTTP $code"]))];
+        $trazas[] = "$url$donde: " . ($code ? "HTTP $code" : ($err !== '' ? $err : 'sin respuesta'));
     }
     return [false, implode(' · ', $trazas)];
 }
