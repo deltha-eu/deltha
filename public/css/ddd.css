@@ -2768,6 +2768,15 @@ form.srclang button { margin-left: 10px; font: inherit; font-size: 13px; padding
 form.srclang button:hover { border-color: currentColor; }
 /* fuentes propuestas: enlace en /medios.php, lista propia en /proponer-fuente.php y revision en /moderacion.php#fuentes */
 p.fprop-link { padding: 0 16px 12px; font-size: 14px; color: var(--muted); }
+/* ficha de moderacion de un usuario (lib/usuarios.php): en /u.php#modedit y /editar-usuario.php */
+form.modedit .aurarow { display: flex; gap: 8px; flex-wrap: wrap; }
+form.modedit .aurarow input[type=number] { width: 120px; flex: 0 0 auto; }
+form.modedit .aurarow input[type=text] { flex: 1; min-width: 180px; }
+details.auralog { padding: 0 16px 12px; font-size: 13px; }
+details.auralog summary { cursor: pointer; color: var(--muted); }
+details.auralog table { border-collapse: collapse; margin-top: 6px; }
+details.auralog td { padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); }
+p.modedit-more { padding: 0 16px 12px; }
 ul.fprops { list-style: none; padding: 0 16px; margin: 0 0 16px; }
 ul.fprops li { padding: 8px 0; border-bottom: 1px solid var(--line); }
 ul.fprops .st-ok { color: var(--fg); font-weight: 600; }
