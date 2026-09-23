@@ -474,4 +474,6 @@ return [
 'último acceso %s' => 'último acceso %s',
 'Con aura %s o más puedes proponer medios y substacks nuevos.' => 'Con aura %s ou máis podes propoñer medios e substacks novos.',
 'Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.' => 'Con aura %s ou máis podes propoñer medios e substacks novos; a túa é %s.',
+'No se ha registrado la cuenta por el uso de un email temporal. Recuerda que no necesitas cuenta para enviar o comentar. Si crees que es un error, puedes <a href="/privacidad.php">escribirnos</a> para que te activemos la cuenta manualmente.' => 'Non se rexistrou a conta por usar un correo temporal. Lembra que non precisas conta para enviar ou comentar. Se cres que é un erro, podes <a href="/privacidad.php">escribirnos</a> para que che activemos a conta manualmente.',
+'Ese dominio de correo no existe.' => 'Ese dominio de correo non existe.',
 ];

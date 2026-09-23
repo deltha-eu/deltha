@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ((int)$n->fetchColumn() >= (int)cfg('reg_per_ip_hour', 3)) $err = t('Demasiados registros desde esta conexión. Prueba más tarde.');
     elseif (!preg_match('/^[a-z0-9_\-]{3,32}$/i', $login)) $err = t('Usuario: 3–32 caracteres, letras, números, guion o guion bajo.');
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $err = t('Correo no válido.');
-    elseif ($r = email_rejected($pdo, $email)) $err = $r;
+    elseif ($r = email_rejected($pdo, $email)) { $err = $r; $pdo->prepare("INSERT INTO reg_attempts (fp) VALUES (?)")->execute([$fp]); }   // cuenta para el tope por hora: cada intento hace peticiones a la web del dominio
     elseif (strlen($pass) < 8) $err = t('Contraseña de al menos 8 caracteres.');
     elseif ($pass !== (string)($_POST['pass2'] ?? '')) $err = t('Las dos contraseñas no coinciden.');
     else {
@@ -37,7 +37,7 @@ if ($done) {
     page_footer(); exit;
 }
 echo "<h1>" . t('Crear cuenta') . "</h1><p class=\"notice\">" . t('Con cuenta publicas en modo Ghost: cada envío o comentario sale con un alias y tu nombre aparece a los %d minutos. Puedes votar y tu aura crece con lo que aportas. Te enviaremos un correo para activar la cuenta.', (int)cfg('ghost_minutes', 30)) . "</p>";
-if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
+if ($err) echo "<p class=\"error\">" . $err . "</p>";   // sin h(): todos los $err son textos fijos del sitio (el de email temporal lleva un enlace)
 echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario</label>') . "<input type=\"text\" name=\"login\" required value=\"" . h(post('login')) . "\">";
 echo "" . t('<label>Correo</label>') . "<input type=\"email\" name=\"email\" required value=\"" . h(post('email')) . "\">";
 echo "" . t('<label>Contraseña (mínimo 8 caracteres)</label>') . "<input type=\"password\" name=\"pass\" data-pw required minlength=\"8\" autocomplete=\"new-password\">";
