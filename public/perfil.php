@@ -79,6 +79,6 @@ if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, $label, $field]) {
         echo "</select>";
     }
 }
-if (fuentes_on()) { require_once __DIR__ . '/../lib/propuestas.php'; if (fprop_puede($u)) echo "<small class=\"hint\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php') . "</small>"; }
+if (fuentes_on()) { require_once __DIR__ . '/../lib/propuestas.php'; if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php') . "</p>"; }
 echo "" . t('<button>Guardar</button>') . "</form>";
 page_footer();

@@ -471,4 +471,8 @@ return [
 'rechazada' => 'abgelehnt',
 'Tus propuestas' => 'Deine Vorschläge',
 '¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.' => 'Fehlt eins? <a href="%s">Schlag ein Medium oder einen Substack vor</a>.',
+'registro %s' => 'registriert %s',
+'último acceso %s' => 'letzter Zugriff %s',
+'Con aura %s o más puedes proponer medios y substacks nuevos.' => 'Ab einer Aura von %s kannst du neue Medien und Substacks vorschlagen.',
+'Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.' => 'Ab einer Aura von %s kannst du neue Medien und Substacks vorschlagen; deine liegt bei %s.',
 ];

@@ -470,4 +470,8 @@ return [
 'rechazada' => 'baztertua',
 'Tus propuestas' => 'Zure proposamenak',
 '¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.' => 'Bat falta da? <a href="%s">Proposatu hedabide edo substack bat</a>.',
+'registro %s' => 'erregistroa: %s',
+'último acceso %s' => 'azken sarbidea: %s',
+'Con aura %s o más puedes proponer medios y substacks nuevos.' => '%s aura edo gehiagorekin hedabide eta substack berriak proposa ditzakezu.',
+'Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.' => '%s aura edo gehiagorekin hedabide eta substack berriak proposa ditzakezu; zurea %s da.',
 ];

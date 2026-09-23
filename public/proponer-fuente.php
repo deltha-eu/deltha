@@ -42,7 +42,7 @@ if ($puede && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 page_header(t('Proponer un medio'));
-echo "<h1>" . t('Proponer un medio') . "</h1>";
+// sin <h1>: el titulo ya sale en la cabecera (page_header)
 if (!$puede) {
     echo "<p class=\"notice\">" . t('Pueden proponer medios y substacks las cuentas con aura %s o más. La tuya es %s: sigue enviando y comentando y podrás hacerlo.', num_pg(lang(), cfg('source_propose_aura', 6)), num_pg(lang(), round((float)$u['aura'], 1))) . "</p>";
 } else {
