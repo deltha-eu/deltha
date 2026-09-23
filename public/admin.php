@@ -90,8 +90,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (PDOException $e) { $out[] = 'Ese slug ya existe.'; }
         }
     } elseif ($act === 'fuente_leer_todas') {
-        foreach (fuentes_activas($pdo) as $src) { try { $out = array_merge($out, fuente_actualizar($pdo, $src)); } catch (Throwable $e) { $out[] = "fuente {$src['slug']}: ERROR " . $e->getMessage(); } }
+        // desde la web, como mucho ~25 s (Cloudflare corta a los 100 s con un 524): las mas atrasadas primero; el resto lo sigue el cron
+        @set_time_limit(90);
+        $out = fuentes_tick($pdo, true, 50, 25);
         if (!$out) $out[] = 'No hay fuentes activas.';
+        elseif (str_contains((string)end($out), 'pendientes')) $out[] = 'Las que faltan las lee el cron en los próximos minutos (o vuelve a pulsar el botón).';
     } elseif ($act === 'fuente_foto') {
         // diagnostico: por que no hay foto en la ultima noticia sin foto de esta fuente
         $q = $pdo->prepare("SELECT i.title, i.url FROM source_items i WHERE i.source_id = ? AND i.image IS NULL ORDER BY i.pub_date DESC LIMIT 1"); $q->execute([(int)post('source_id')]);
