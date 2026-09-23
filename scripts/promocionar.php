@@ -7,6 +7,7 @@
  *  Ademas lee las fuentes externas (lib/fuentes.php) cuando vence su intervalo (sources.interval_min). */
 declare(strict_types=1);
 $_SERVER['REQUEST_METHOD'] = 'CLI';
+if (function_exists('proc_nice')) @proc_nice(10);   // el cron cede la CPU a la web (php-fpm): leer feeds y convertir fotos puede esperar
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/ciclo.php';
 require __DIR__ . '/../lib/fuentes.php';

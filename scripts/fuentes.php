@@ -6,6 +6,7 @@
  *  El cron normal (promocionar.php) ya las lee cada sources.interval_min minutos; esto es para probar. */
 declare(strict_types=1);
 $_SERVER['REQUEST_METHOD'] = 'CLI';
+if (function_exists('proc_nice')) @proc_nice(10);   // el cron cede la CPU a la web (php-fpm): leer feeds y convertir fotos puede esperar
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/fuentes.php';
 $solo = $argv[1] ?? '';

@@ -114,12 +114,21 @@ function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'):
 /* ---- lectura de feeds (cron) ---------------------------------------- */
 
 /** Llamada cada minuto desde promocionar.php: lee las fuentes cuyo intervalo haya vencido. Devuelve lineas de log. */
-function fuentes_tick(PDO $pdo, bool $force = false): array {
+function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $maxSec = null): array {
     if (!fuentes_on()) return [];
     $log = [];
-    foreach (fuentes_activas($pdo) as $src) {
-        $due = $force || !$src['last_fetch'] || time() - strtotime($src['last_fetch']) >= max(1, (int)$src['interval_min']) * 60 - 5;
-        if (!$due) continue;
+    // Tope por pasada: con muchas fuentes vencidas a la vez (p. ej. 50 substacks recien dados de alta, cada una con 20 fotos que
+    // descargar y convertir) una sola pasada tardaba minutos, saturaba la CPU y la web daba 524 en Cloudflare. Ahora se leen como
+    // mucho sources_per_tick fuentes y, pasados sources_tick_seconds, no se empieza ninguna mas; las demas, en el minuto siguiente,
+    // primero las que llevan mas tiempo sin leerse (las nuevas, sin last_fetch, antes que nadie).
+    $maxN   = $maxN   ?? max(1, (int)cfg('sources_per_tick', 3));
+    $maxSec = $maxSec ?? max(5, (int)cfg('sources_tick_seconds', 40));
+    $t0 = time(); $n = 0;
+    $due = array_values(array_filter(fuentes_activas($pdo), fn($src) => $force || !$src['last_fetch'] || time() - strtotime($src['last_fetch']) >= max(1, (int)$src['interval_min']) * 60 - 5));
+    usort($due, fn($a, $b) => strcmp((string)$a['last_fetch'], (string)$b['last_fetch']));   // NULL ('') primero, luego la mas antigua
+    foreach ($due as $i => $src) {
+        if ($n >= $maxN || time() - $t0 >= $maxSec) { $log[] = "fuentes: " . (count($due) - $i) . " pendientes para la proxima pasada"; break; }
+        $n++;
         try { $log = array_merge($log, fuente_actualizar($pdo, $src)); }
         catch (Throwable $e) {
             $log[] = "fuente {$src['slug']}: ERROR " . $e->getMessage();
