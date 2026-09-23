@@ -176,10 +176,14 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
     return null;
 }
 
-/** Busca og:image / twitter:image en la pagina y la procesa. */
-function imagen_desde_og(string $url): ?string {
+/** Tope de bytes al leer el HTML de una noticia. Antes 400 KB fijos: las paginas grandes (medios con mucho JSON
+ *  incrustado) abortaban la descarga entera ('Callback aborted') y se perdia la og:image aunque este en el <head>. */
+function og_max_bytes(): int { return max(200000, (int)cfg('og_max_bytes', 2500000)); }
+
+/** Busca og:image / twitter:image en la pagina y la procesa. $html: la pagina ya leida (extraer_meta), para no pedirla dos veces. */
+function imagen_desde_og(string $url, ?string $html = null): ?string {
     $t = (int)cfg('og_timeout_sec', 3);
-    $html = http_get($url, $t, 400000);
+    if ($html === null) $html = http_get($url, $t, og_max_bytes());
     if (!$html) return null;
     $img = null;
     if (preg_match('/<meta[^>]+(?:property|name)=["\']og:image(?::secure_url|:url)?["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)
@@ -191,17 +195,19 @@ function imagen_desde_og(string $url): ?string {
     if (!$img) return null;
     if (str_starts_with($img, '//')) $img = 'https:' . $img;
     elseif (str_starts_with($img, '/')) {
-        $p = parse_url($url); $img = $p['scheme'] . '://' . $p['host'] . $img;
+        $p = parse_url($url); $img = $p['scheme'] . '://' . $p['host'] . (isset($p['port']) ? ':' . $p['port'] : '') . $img;
     }
     $bytes = http_get($img, $t);
     return $bytes ? imagen_desde_bytes($bytes) : null;
 }
 
-/** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null). */
-function extraer_meta(string $url): array {
+/** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null).
+ *  $conImagen = false: no descarga la og:image (el llamante ya tiene foto, p. ej. la del RSS de un medio). */
+function extraer_meta(string $url, bool $conImagen = true): array {
     $out = ['title' => '', 'description' => '', 'image' => null];
-    $html = http_get($url, (int)cfg('og_timeout_sec', 3), 400000);
+    $html = http_get($url, (int)cfg('og_timeout_sec', 3), og_max_bytes());
     if (!$html) return $out;
+    $raw = $html;   // para la og:image, el HTML tal cual (sin la conversion de charset)
     // charset: si no es utf-8, convertir
     if (preg_match('/charset=["\']?([\w-]+)/i', $html, $m) && strcasecmp($m[1], 'utf-8') !== 0) {
         $conv = @iconv($m[1], 'UTF-8//IGNORE', $html);
@@ -227,6 +233,6 @@ function extraer_meta(string $url): array {
     }
     $desc = $meta(['og:description', 'twitter:description', 'description']);
     if ($desc) $out['description'] = mb_substr(preg_replace('/\s+/', ' ', $desc), 0, 2000);
-    $out['image'] = imagen_desde_og($url);
+    if ($conImagen) $out['image'] = imagen_desde_og($url, $raw);
     return $out;
 }

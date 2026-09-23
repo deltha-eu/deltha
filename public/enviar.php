@@ -13,9 +13,13 @@ $f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 
 
 // Prerrelleno por GET (boton «enviar a Nuevas» de un medio en /fuente.php, o un marcador): ?url=…&title=…&content=…&topic=ID
 // equivale a haber pasado el paso 1 con esa URL; titular y entradilla del feed mandan sobre los de la pagina si vienen.
-$pre = null;
+$pre = null; $preX = 0;
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
-    $pre = ['title' => mb_substr(trim((string)($_GET['title'] ?? '')), 0, 200), 'content' => mb_substr(trim((string)($_GET['content'] ?? '')), 0, 2000), 'topic' => (int)($_GET['topic'] ?? 0)];
+    $pre = ['title' => mb_substr(trim((string)($_GET['title'] ?? '')), 0, 200), 'content' => mb_substr(trim((string)($_GET['content'] ?? '')), 0, 2000), 'topic' => (int)($_GET['topic'] ?? 0), 'image' => null];
+    // ?x=item_id: la foto que el lector ya saco del RSS del medio (la que se ve en /fuente.php). Muchos medios la dan en el feed
+    // pero la pagina no deja leer su og:image desde el servidor (CDN, tamaño…). Se copia con nombre nuevo: la del item
+    // se borra cuando el item caduca (sources_keep_days) y el envio no puede quedarse sin foto.
+    $preX = (int)($_GET['x'] ?? 0);
     $_POST = ['step' => '1', 'url' => trim((string)$_GET['url'])];
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $step = '1';
@@ -36,8 +40,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($f['url'] === '') redirect('/articulo.php');
         // paso 1 -> leer la pagina y pasar al paso 2 con todo prerrellenado
         if ($f['url'] !== '') {
-            $m = extraer_meta($f['url']);
-            $f['title'] = $m['title']; $f['content'] = $m['description']; $f['image'] = $m['image'];
+            if ($preX > 0) {
+                $q = $pdo->prepare("SELECT image FROM source_items WHERE item_id = ? AND url = ?");
+                $q->execute([$preX, $f['url']]);
+                $img = (string)$q->fetchColumn();
+                if (preg_match('/^[a-f0-9]{24}\.jpg$/', $img) && is_file(DDD_MEDIA_DIR . '/' . $img)) {
+                    $copia = bin2hex(random_bytes(12)) . '.jpg';
+                    if (@copy(DDD_MEDIA_DIR . '/' . $img, DDD_MEDIA_DIR . '/' . $copia)) $pre['image'] = $copia;
+                }
+            }
+            $m = extraer_meta($f['url'], empty($pre['image']));   // con foto del RSS no hace falta bajar la og:image
+            $f['title'] = $m['title']; $f['content'] = $m['description'];
+            $f['image'] = !empty($pre['image']) ? $pre['image'] : $m['image'];
             if ($pre) {
                 if ($pre['title'] !== '') $f['title'] = $pre['title'];
                 if ($pre['content'] !== '') $f['content'] = $pre['content'];

@@ -465,11 +465,12 @@ function fuentes_parse_atom(SimpleXMLElement $doc): array {
 function fuente_diag_imagen(string $url): array {
     $log = [];
     $t = (int)cfg('og_timeout_sec', 3);
-    $html = http_get($url, $t, 400000);
+    $max = og_max_bytes();
+    $html = http_get($url, $t, $max);
     $intentos = "intentos: " . implode(' · ', http_last()) . " · curl-impersonate " . (curl_impersonate_bin() ? 'si' : 'NO');
-    if (!$html) return ["pagina: SIN RESPUESTA (bloqueo, timeout de {$t}s o mas de 400 KB) -> $url", $intentos,
+    if (!$html) return ["pagina: SIN RESPUESTA (bloqueo, timeout de {$t}s o mas de " . round($max / 1000) . " KB) -> $url", $intentos,
         "pista: HTTP 403/503 en todos los intentos = el CDN (Cloudflare, Akamai) no deja pasar al servidor; si tambien falla curl-impersonate es un veto a la IP del servidor: pedir al medio que la ponga en su lista blanca; "
-      . "'timed out' = sube og_timeout_sec; 'Callback aborted' o 'exceeds' = pagina mayor de 400 KB"];
+      . "'timed out' = sube og_timeout_sec; 'Callback aborted' o 'exceeds' = pagina mayor que og_max_bytes (config, por defecto 2500000)"];
     $log[] = "pagina: " . strlen($html) . " bytes (" . implode(' · ', http_last()) . ")";
     $img = null;
     if (preg_match('/<meta[^>]+(?:property|name)=["\']og:image(?::secure_url|:url)?["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)
@@ -508,6 +509,7 @@ function fuente_vista_sql(string $view): array {
 function fuente_enviar_url(array $src, array $i): string {
     $q = ['url' => $i['url'], 'title' => $i['title'], 'content' => mb_substr((string)$i['content'], 0, 600)];
     if (!empty($src['topic_id'])) $q['topic'] = (int)$src['topic_id'];
+    if (!empty($i['image'])) $q['x'] = (int)$i['item_id'];   // enviar.php reutiliza la foto que ya se saco del RSS
     return '/enviar.php?' . http_build_query($q);
 }
 /** story_id de los envios ya hechos con estas URLs (para marcar «ya enviada» y enlazar al hilo). */
