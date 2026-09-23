@@ -2766,3 +2766,13 @@ form.srclang label { display: inline-flex; align-items: center; gap: 6px; cursor
 form.srclang small { opacity: .8; }
 form.srclang button { margin-left: 10px; font: inherit; font-size: 13px; padding: 2px 12px; border: 1px solid var(--line2); border-radius: 999px; background: transparent; color: var(--fg); cursor: pointer; vertical-align: middle; }
 form.srclang button:hover { border-color: currentColor; }
+/* fuentes propuestas: enlace en /medios.php, lista propia en /proponer-fuente.php y revision en /moderacion.php#fuentes */
+p.fprop-link { padding: 0 16px 12px; font-size: 14px; color: var(--muted); }
+ul.fprops { list-style: none; padding: 0 16px; margin: 0 0 16px; }
+ul.fprops li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+ul.fprops .st-ok { color: var(--fg); font-weight: 600; }
+ul.fprops .st-rejected { text-decoration: line-through; }
+.admin .fprop pre.ftest { white-space: pre-wrap; margin: 8px 0; }
+.admin .fprop pre.ftest.err { border-color: var(--neg); }
+.admin .fprop form.fprop-ok table { margin: 8px 0; }
+.admin .fprop form.fprop-ok input[type=text], .admin .fprop form.fprop-ok input[type=url] { width: 100%; max-width: 460px; }

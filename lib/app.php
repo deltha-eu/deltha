@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 102);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 103);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -327,6 +327,7 @@ function open_reports(): int {
     if ($n !== null) return $n;
     try { $n = (int)$pdo->query("SELECT COUNT(DISTINCT comment_id) FROM comment_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) { $n = 0; }
     try { $n += (int)$pdo->query("SELECT COUNT(DISTINCT msg_id) FROM chat_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) {}
+    try { $n += (int)$pdo->query("SELECT COUNT(*) FROM source_proposals WHERE status = 'pending'")->fetchColumn(); } catch (Throwable $e) {}   // fuentes propuestas (migra-057)
     return $n;
 }
 
