@@ -62,7 +62,7 @@ session_name(DDD_SESSION);
 if (isset($_COOKIE[DDD_SESSION])) {
     session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
     if (!empty($_SESSION['uid'])) {
-        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang FROM users WHERE user_id = ? AND verified = 1");
+        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang, src_mylang FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
         if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas.php)
@@ -735,7 +735,7 @@ function nav_tabs(string $tab, string $cls): void {
 function nav_fuentes(string $tab): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     $tabs = [];
-    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_activas($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo.php?k=$k", t(['newsletter' => 'Substacks', 'medio' => 'Medios', 'agregador' => 'Agregadores'][$k]), $ic];
+    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_visibles($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo.php?k=$k", t(['newsletter' => 'Substacks', 'medio' => 'Medios', 'agregador' => 'Agregadores'][$k]), $ic];
     $tabs['temas'] = ['/temas.php', t('Temas'), 'tag'];
     $tabs['comunidades'] = ['/comunidades.php', t('Comunidades'), 'comm'];
     echo "<nav class=\"tabs-fuentes\">";
@@ -758,7 +758,7 @@ function footer_links(): string {
     // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios.php?k=…), no uno por agregador
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
-        foreach (['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_activas($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
+        foreach (['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
     }
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";

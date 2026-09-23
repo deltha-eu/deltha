@@ -476,4 +476,7 @@ return [
 'Todavía no has guardado nada.' => 'Vous n’avez encore rien enregistré.',
 'Dejar que los buscadores indexen este artículo' => 'Laisser les moteurs de recherche indexer cet article',
 'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Par défaut, rien de %s n\'apparaît sur Google ni sur les autres moteurs de recherche. Si tu coches cette case, seul cet article pourra y apparaître ; les robots d\'IA restent bloqués.',
+'Mostrar fuentes solo en mi idioma' => 'Afficher uniquement les sources dans ma langue',
+'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Les médias, substacks et agrégateurs dans d\'autres langues n\'apparaissent plus dans le menu, dans les listes ni dans ton choix de médias. Ta langue est celle de l\'interface.',
+'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'Tu ne vois que les sources dans ta langue ; ça se change dans <a href="/perfil.php#fuentes-idioma">ton profil</a>.',
 ];

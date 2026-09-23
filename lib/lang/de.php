@@ -438,4 +438,7 @@ return [
 'Portada (pestaña)' => 'Start',   // rotulo corto de la pestaña de arriba (movil)
 'Dejar que los buscadores indexen este artículo' => 'Suchmaschinen dürfen diesen Artikel indexieren',
 'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Standardmäßig erscheint nichts von %s bei Google oder anderen Suchmaschinen. Wenn du das ankreuzt, kann nur dieser Artikel erscheinen; KI-Crawler bleiben ausgesperrt.',
+'Mostrar fuentes solo en mi idioma' => 'Nur Quellen in meiner Sprache anzeigen',
+'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Medien, Substacks und Aggregatoren in anderen Sprachen erscheinen nicht mehr im Menü, in den Listen und in deiner Medienauswahl. Deine Sprache ist die der Oberfläche.',
+'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'Du siehst nur Quellen in deiner Sprache; ändern kannst du das in <a href="/perfil.php#fuentes-idioma">deinem Profil</a>.',
 ];

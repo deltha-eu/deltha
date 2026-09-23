@@ -34,6 +34,35 @@ function fuentes_activas(PDO $pdo, string $kind = ''): array {
     if ($kind === '') return $rows;
     return array_values(array_filter($rows, fn($s) => ($s['kind'] ?? 'agregador') === $kind));
 }
+/* ---- idioma de las fuentes ------------------------------------------
+ * sources.lang: codigo de dos letras (es, en, pt…); '' = sin saber. Se elige en admin -> Fuentes o, si se deja en «detectar», se toma del
+ * propio RSS (<language>, dc:language o xml:lang del Atom) al darla de alta y en cada lectura mientras siga vacio.
+ * users.src_mylang = 1: el usuario quiere ver solo fuentes en su idioma (el de la interfaz, lang()). Las de idioma desconocido se ven.
+ * Filtra menus, listas y catalogo; la pagina de una fuente (/fuente.php) se sigue abriendo con su enlace. */
+function fuentes_solo_mi_idioma(): bool { $u = user(); return $u && !empty($u['src_mylang']); }
+function fuente_en_mi_idioma(array $src): bool {
+    if (!fuentes_solo_mi_idioma()) return true;
+    $l = (string)($src['lang'] ?? '');
+    return $l === '' || $l === lang();
+}
+/** fuentes_activas() menos las de otro idioma si el usuario lo ha pedido. */
+function fuentes_visibles(PDO $pdo, string $kind = ''): array {
+    return array_values(array_filter(fuentes_activas($pdo, $kind), 'fuente_en_mi_idioma'));
+}
+/** Idioma declarado por un feed (RSS <language>, dc:language, Atom xml:lang): «es-ES» -> «es». '' si no dice nada. */
+function fuentes_feed_lang(string $xml): string {
+    $prev = libxml_use_internal_errors(true);
+    $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+    libxml_clear_errors(); libxml_use_internal_errors($prev);
+    if (!$doc) return '';
+    $l = '';
+    if ($doc->getName() === 'feed') $l = (string)($doc->attributes('http://www.w3.org/XML/1998/namespace')->lang ?? '');
+    elseif (isset($doc->channel)) {
+        $l = (string)$doc->channel->language;
+        if ($l === '') $l = (string)(fuentes_ns($doc->channel, 'http://purl.org/dc/elements/1.1/')->language ?? '');
+    }
+    return preg_match('/^\s*([a-z]{2})\b/i', $l, $m) ? strtolower($m[1]) : '';
+}
 function fuente_by_slug(PDO $pdo, string $slug): ?array {
     foreach (fuentes_activas($pdo) as $s) if ($s['slug'] === $slug) return $s;
     return null;
@@ -76,9 +105,9 @@ function guardar_mis_medios(PDO $pdo, int $uid, array $ids, string $kind = 'medi
  *  las destacadas en admin (sources.featured); si no hay ninguna, las primeras del catalogo. Nunca mas del maximo del tipo. */
 function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
     $max = $max ?: medios_max($kind);
-    $list = mis_medios($pdo, $u, $kind);
-    if (!$list) $list = array_values(array_filter(fuentes_activas($pdo, $kind), fn($m) => !empty($m['featured'])));
-    if (!$list) $list = fuentes_activas($pdo, $kind);
+    $list = array_values(array_filter(mis_medios($pdo, $u, $kind), 'fuente_en_mi_idioma'));   // «solo en mi idioma» tambien quita las elegidas en otro
+    if (!$list) $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => !empty($m['featured'])));
+    if (!$list) $list = fuentes_visibles($pdo, $kind);
     return array_slice($list, 0, $max);
 }
 
@@ -114,6 +143,10 @@ function fuente_actualizar(PDO $pdo, array $src): array {
         if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
+        if ((string)($src['lang'] ?? '') === '' && ($fl = fuentes_feed_lang($xml)) !== '') {   // idioma aun sin fijar: el que declare el feed
+            $pdo->prepare("UPDATE sources SET lang = ? WHERE source_id = ? AND lang = ''")->execute([$fl, $src['source_id']]);
+            $src['lang'] = $fl; $log[] = "fuente {$src['slug']}: idioma del feed «{$fl}»";
+        }
         // antiguedad maxima: algunos feeds (El Pais / Babelia) cuelan articulos de hace anos entre los nuevos; fuera lo que pase de
         // sources_max_age_days (0 = sin limite). Lo ya guardado y que deje de verse caduca solo a los sources_keep_days.
         if (($maxAge = (int)cfg('sources_max_age_days', 45)) > 0) {
