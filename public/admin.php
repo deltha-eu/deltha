@@ -489,7 +489,7 @@ if ($tab === 'usuarios') {
         $h .= "</select></td></tr>";
         $h .= "<tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . (int)($f['interval_min'] ?? 60) . "\"> minutos</td></tr>";
         $h .= "<tr><td>estado</td><td><select name=\"status\" class=\"auto\"><option value=\"ok\">activa</option><option value=\"off\"" . (($f['status'] ?? 'ok') === 'off' ? ' selected' : '') . ">apagada</option></select></td></tr>";
-        $h .= "<tr><td>destacado</td><td><label><input type=\"checkbox\" name=\"featured\" value=\"1\"" . (!empty($f['featured']) ? ' checked' : '') . "> la ven en el menú y el pie los anónimos y quien no ha elegido medios</label></td></tr>";
+        $h .= "<tr><td>destacado</td><td><label><input type=\"checkbox\" name=\"featured\" value=\"1\"" . (!empty($f['featured']) ? ' checked' : '') . "> solo cuenta en <b>agregadores</b>: los ven en el menú los anónimos. En medios y substacks, a quien no ha elegido se le enseñan los que han publicado más recientemente</label></td></tr>";
         $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
         return $h . "</table></form>";
     };

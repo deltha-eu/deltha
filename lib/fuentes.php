@@ -39,7 +39,16 @@ function fuentes_activas(PDO $pdo, string $kind = ''): array {
  * propio RSS (<language>, dc:language o xml:lang del Atom) al darla de alta y en cada lectura mientras siga vacio.
  * users.src_mylang = 1: el usuario quiere ver solo fuentes en su idioma (el de la interfaz, lang()). Las de idioma desconocido se ven.
  * Filtra menus, listas y catalogo; la pagina de una fuente (/fuente.php) se sigue abriendo con su enlace. */
-function fuentes_solo_mi_idioma(): bool { $u = user(); return $u && !empty($u['src_mylang']); }
+/** ¿Solo fuentes en mi idioma? Con cuenta, users.src_mylang (perfil o casilla de /medios.php y /ultimo.php, es la misma);
+ *  sin cuenta, cookie ddd_srclang que solo existe si la persona marca la casilla. */
+function fuentes_solo_mi_idioma(): bool { $u = user(); return $u ? !empty($u['src_mylang']) : ($_COOKIE['ddd_srclang'] ?? '') === '1'; }
+/** Casilla «Solo fuentes en mi idioma» para las listas de fuentes: cambia la misma preferencia que el perfil (via /cambiar-skin.php?m=)
+ *  y vuelve a la pagina. Se envia sola al marcarla; sin JS, con el boton. */
+function fuentes_casilla_idioma(): string {
+    return "<form class=\"srclang\" method=\"get\" action=\"/cambiar-skin.php\"><input type=\"hidden\" name=\"m\" value=\"0\"><label><input type=\"checkbox\" name=\"m\" value=\"1\""
+         . (fuentes_solo_mi_idioma() ? ' checked' : '') . " onchange=\"this.form.submit()\"> " . t('Solo fuentes en mi idioma') . " <small>(" . h(DDD_LANGS[lang()] ?? lang()) . ")</small></label>"
+         . "<noscript><button class=\"btn sm\">" . t('Aplicar') . "</button></noscript></form>";
+}
 function fuente_en_mi_idioma(array $src): bool {
     if (!fuentes_solo_mi_idioma()) return true;
     $l = (string)($src['lang'] ?? '');
@@ -102,10 +111,25 @@ function guardar_mis_medios(PDO $pdo, int $uid, array $ids, string $kind = 'medi
     foreach ($ids as $i => $sid) $ins->execute([$uid, $sid, $i + 1]);
 }
 /** Fuentes de un tipo que se ofrecen en el menu, el pie y la columna: las elegidas por el usuario o, si no ha elegido (o no tiene cuenta),
- *  las destacadas en admin (sources.featured); si no hay ninguna, las primeras del catalogo. Nunca mas del maximo del tipo. */
+ *  en medios y substacks las que han publicado mas recientemente (siempre hay algo fresco, y van rotando solas); en agregadores las
+ *  destacadas en admin (sources.featured). Si no sale ninguna, las primeras del catalogo. Nunca mas del maximo del tipo. */
+/** Fecha de la noticia mas reciente de cada fuente: source_id => pub_date (una consulta por peticion). */
+function fuentes_ultima_noticia(PDO $pdo): array {
+    static $r = null;
+    if ($r === null) {
+        try { $r = $pdo->query("SELECT source_id, MAX(pub_date) FROM source_items GROUP BY source_id")->fetchAll(PDO::FETCH_KEY_PAIR); }
+        catch (Throwable $e) { $r = []; }
+    }
+    return $r;
+}
 function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
     $max = $max ?: medios_max($kind);
     $list = array_values(array_filter(mis_medios($pdo, $u, $kind), 'fuente_en_mi_idioma'));   // «solo en mi idioma» tambien quita las elegidas en otro
+    if (!$list && $kind !== 'agregador') {
+        $ult = fuentes_ultima_noticia($pdo);
+        $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => isset($ult[$m['source_id']])));
+        usort($list, fn($a, $b) => strcmp($ult[$b['source_id']], $ult[$a['source_id']]));
+    }
     if (!$list) $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => !empty($m['featured'])));
     if (!$list) $list = fuentes_visibles($pdo, $kind);
     return array_slice($list, 0, $max);

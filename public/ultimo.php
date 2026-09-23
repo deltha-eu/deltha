@@ -29,9 +29,10 @@ echo "</nav>";
 
 $nombres = implode(', ', array_map(fn($m) => "<a href=\"" . h(fuente_url($m)) . "\">" . h($m['name']) . "</a>", $fuentes));
 $intro = $fuentes ? t('Lo último de %s: las %d noticias más recientes, la última primero.', $nombres, 10) : t('Todavía no hay medios en el catálogo.');
-if ($k !== 'agregador') $intro .= ' ' . ($u ? (mis_medios($pdo, $u, $k) ? t('Puedes cambiarlos en <a href="/perfil.php#medios">tu perfil</a>.') : t('Son los destacados: elige los tuyos en <a href="/perfil.php#medios">tu perfil</a>.')) : t('<a href="/login.php">Entra</a> para elegir tus medios.'));
+if ($k !== 'agregador') $intro .= ' ' . ($u ? (mis_medios($pdo, $u, $k) ? t('Puedes cambiarlos en <a href="/perfil.php#medios">tu perfil</a>.') : t('Son los que han publicado más recientemente: elige los tuyos en <a href="/perfil.php#medios">tu perfil</a>.')) : t('<a href="/login.php">Entra</a> para elegir tus medios.'));
 $intro .= ' <a href="/medios.php?k=' . $k . '">' . t('todos') . '</a>.';
 echo "<p class=\"notice\">$intro</p>";
+echo fuentes_casilla_idioma();   // la misma casilla que en el perfil
 
 foreach ($rows as $i) fuente_post($porId[$i['source_id']], $i, 'full', $sent);
 if ($fuentes && !$rows) echo "<p class=\"end\">" . t('El lector aún no ha pasado por esta fuente.') . "</p>";
