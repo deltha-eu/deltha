@@ -140,6 +140,16 @@ function email_rejected(PDO $pdo, string $email): ?string {
     return null;
 }
 
+/** Borra las cuentas que nunca se activaron: sin validar, con token pendiente y cuyo enlace caduco hace mas de 24 h
+ *  (token_hours + 24). Liberan nombre de usuario y correo. No toca a quien el admin desvalido a mano (token NULL). Devuelve cuantas. */
+function users_purge_unverified(PDO $pdo): int {
+    try {
+        $st = $pdo->prepare("DELETE FROM users WHERE verified = 0 AND token IS NOT NULL AND token_sent IS NOT NULL AND token_sent < NOW() - INTERVAL ? HOUR AND level = 'normal'");
+        $st->execute([(int)cfg('token_hours', 48) + 24]);
+        return $st->rowCount();
+    } catch (Throwable $e) { return 0; }
+}
+
 /** Genera token, lo guarda y envia el correo de activacion. Texto fijo: nada del usuario viaja en el correo. */
 function send_activation(PDO $pdo, int $uid, string $email): bool {
     $token = bin2hex(random_bytes(16));
