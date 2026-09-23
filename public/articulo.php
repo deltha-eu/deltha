@@ -9,7 +9,8 @@ $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY topic_id")->fe
 $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
 $maxWords = (int)cfg('article_max_words', 500);
 $err = null;
-$f = ['title' => '', 'content' => '', 'topic' => 0, 'community' => 0];
+$f = ['title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'indexable' => 0];
+$canIndex = user() && cfg('index_articles', '1') === '1';   // solo registrados: el anonimo no elige salir en buscadores
 
 function contar_palabras(string $t): int {
     $t = trim(preg_replace('/\s+/u', ' ', $t));
@@ -21,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['content'] = mb_substr(post('content'), 0, 12000);
     $f['topic']   = (int)post('topic');
     $f['community'] = (int)post('community');
+    $f['indexable'] = $canIndex && post('indexable') === '1' ? 1 : 0;
     if ($f['community'] && !in_array($f['community'], array_column($comms, 'community_id'), false)) $f['community'] = 0;
     $words = contar_palabras($f['content']);
 
@@ -34,9 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $u = user();
         $status = cfg('mod_enabled') === '1' ? 'pending_mod' : 'nuevas';
         $pdo->beginTransaction();
-        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status)
-                       VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?)")
-            ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['content'], $image, $status]);
+        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status, indexable)
+                       VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)")
+            ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['content'], $image, $status, $f['indexable']]);
         $sid = (int)$pdo->lastInsertId();
         $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
         $pdo->prepare("UPDATE stories SET author_alias = ? WHERE story_id = ?")->execute([$alias, $sid]);
@@ -68,5 +70,6 @@ if ($comms) {
     echo "</select>";
 }
 echo "" . t('<label>Foto</label>') . "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
+if ($canIndex) echo "<label><input type=\"checkbox\" name=\"indexable\" value=\"1\"" . ($f['indexable'] ? ' checked' : '') . "> " . t('Dejar que los buscadores indexen este artículo') . "</label><p class=\"meta\" style=\"padding:0\">" . t('Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.', h(cfg('site_name', 'Deltha'))) . "</p>";
 echo "" . t('<button>Publicar artículo</button>') . "</form>";
 page_footer();

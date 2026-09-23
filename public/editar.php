@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     $title   = mb_substr(post('title'), 0, 200);
     $content = mb_substr(post('content'), 0, $maxLen);
     $topic   = (int)post('topic');
+    $idx     = $isArt && cfg('index_articles', '1') === '1' ? (post('indexable') === '1' ? 1 : 0) : (int)($s['indexable'] ?? 0);   // abrir el articulo a buscadores: no cuenta como edicion
     if (!$own) {   // la comunidad principal solo la cambia moderacion; las adoptadas se gestionan desde el hilo
         $comm = (int)post('community');
         if ($comm && !in_array($comm, array_column($comms, 'community_id'), false)) $comm = 0;
@@ -66,15 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
                 || (string)$image !== (string)($s['image'] ?? '') || (!$isArt && ($url ?: null) !== $s['url']);
         $mark = $changed ? ", edited_at = NOW()" : "";
         if ($isArt) {
-            $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?$mark WHERE story_id=?")
-                ->execute([$title, $content, $topic, $image, $id]);
+            $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, indexable=?$mark WHERE story_id=?")
+                ->execute([$title, $content, $topic, $image, $idx, $id]);
         } else {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, url=?, source=?$mark WHERE story_id=?")
                 ->execute([$title, $content ?: null, $topic, $image, $url ?: null, $url ? source_of($url) : null, $id]);
         }
         redirect("/hilo.php?id=$id");
     }
-    $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'url' => $url, 'image' => $image]);
+    $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'url' => $url, 'image' => $image, 'indexable' => $idx]);
 }
 
 page_header(t('Editar envío'));
@@ -108,6 +109,7 @@ if ($s['image']) {
 }
 echo "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
 if (!$isArt && $s['url']) echo "<label><input type=\"checkbox\" name=\"extraer\" value=\"1\"> " . t('extraer la foto de la página del enlace al guardar (og:image)') . "</label>";
+if ($isArt && cfg('index_articles', '1') === '1' && $s['user_id']) echo "<label><input type=\"checkbox\" name=\"indexable\" value=\"1\"" . ((int)($s['indexable'] ?? 0) === 1 ? ' checked' : '') . "> " . t('Dejar que los buscadores indexen este artículo') . "</label>";
 echo "<button>" . t('Guardar cambios') . "</button></form>";
 echo "<h3 style=\"padding:16px 16px 0\">" . ($own ? t('Retirar') : 'Eliminar') . "</h3>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"eliminar\">";
