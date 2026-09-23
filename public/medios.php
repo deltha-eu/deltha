@@ -15,10 +15,12 @@ $kinds = $k ? [$k] : array_keys($GRUPOS);
 $titulo = $k ? $GRUPOS[$k] : t('Medios');
 
 page_header($titulo);
-echo "<h1>" . h($titulo) . "</h1>";
-echo "<p class=\"notice\">" . t('Medios con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en Nuevas. Elige hasta %d en <a href="/perfil.php#medios">tu perfil</a> y los tendrás en el menú lateral y en el pie.', medios_max('medio')) . ' ' . t('Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.', medios_max('newsletter')) . ($u ? '' : ' ' . t('<a href="/login.php">Entra</a> para elegir tus medios.')) . "</p>";
+// sin <h1>: page_header() ya pinta el titulo en la cabecera (salia repetido)
+echo "<p class=\"notice\">" . t('Medios con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en Nuevas. Elige hasta %d en <a href="/perfil.php#medios">tu perfil</a> y los tendrás en el menú lateral y en el pie.', medios_max('medio')) . ' ' . t('Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.', medios_max('newsletter')) . ($u ? '' : ' ' . t('<a href="/login.php">Entra</a> para elegir tus medios.'))
+   . ($k !== 'agregador' ? ' ' . (fprop_puede($u) ? t('Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.', num_pg(lang(), cfg('source_propose_aura', 6)), num_pg(lang(), round((float)$u['aura'], 1)))
+                                                  : t('Con aura %s o más puedes proponer medios y substacks nuevos.', num_pg(lang(), cfg('source_propose_aura', 6)))) : '') . "</p>";
 echo fuentes_casilla_idioma();   // la misma casilla que en el perfil: marcarla aqui la marca alli
-if (fprop_puede($u) && $k !== 'agregador') echo "<p class=\"fprop-link\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
+if (fprop_puede($u) && $k !== 'agregador') echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
 foreach ($kinds as $kind) {
     $lista = fuentes_on() ? fuentes_visibles($pdo, $kind) : [];
     $mine = $kind === 'agregador' ? [] : array_column(mis_medios($pdo, $u, $kind), 'source_id');

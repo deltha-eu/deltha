@@ -470,4 +470,8 @@ return [
 'rechazada' => 'rebutjada',
 'Tus propuestas' => 'Les teves propostes',
 '¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.' => 'En falta algun? <a href="%s">Proposa un mitjà o un substack</a>.',
+'registro %s' => 'registre %s',
+'último acceso %s' => 'darrer accés %s',
+'Con aura %s o más puedes proponer medios y substacks nuevos.' => 'Amb aura %s o més pots proposar mitjans i substacks nous.',
+'Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.' => 'Amb aura %s o més pots proposar mitjans i substacks nous; la teva és %s.',
 ];

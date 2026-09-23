@@ -2767,7 +2767,12 @@ form.srclang small { opacity: .8; }
 form.srclang button { margin-left: 10px; font: inherit; font-size: 13px; padding: 2px 12px; border: 1px solid var(--line2); border-radius: 999px; background: transparent; color: var(--fg); cursor: pointer; vertical-align: middle; }
 form.srclang button:hover { border-color: currentColor; }
 /* fuentes propuestas: enlace en /medios.php, lista propia en /proponer-fuente.php y revision en /moderacion.php#fuentes */
-p.fprop-link { padding: 0 16px 12px; font-size: 14px; color: var(--muted); }
+/* llamada destacada a proponer una fuente (/medios.php y perfil): el enlace va como boton */
+p.fprop-cta { margin: 4px 16px 16px; padding: 12px 16px; border: 2px solid var(--accent); border-radius: 12px; font-size: 15px; color: var(--fg); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+p.fprop-cta a { display: inline-block; padding: 6px 16px; border-radius: 999px; background: var(--accent); color: var(--bg); font-weight: 700; text-decoration: none; }
+p.fprop-cta a::before { content: "+ "; }
+p.fprop-cta a:hover { opacity: .85; }
+form.plain p.fprop-cta { margin: 16px 0; }
 /* ficha de moderacion de un usuario (lib/usuarios.php): en /u.php#modedit y /editar-usuario.php */
 form.modedit .aurarow { display: flex; gap: 8px; flex-wrap: wrap; }
 form.modedit .aurarow input[type=number] { width: 120px; flex: 0 0 auto; }

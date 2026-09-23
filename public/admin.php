@@ -374,7 +374,7 @@ if ($tab === 'usuarios') {
     $w = $q !== '' ? "WHERE login LIKE ? OR email LIKE ?" : "";
     $args = $q !== '' ? ["%$q%", "%$q%"] : [];
     $c = $pdo->prepare("SELECT COUNT(*) FROM users $w"); $c->execute($args); $nU = (int)$c->fetchColumn();
-    $l = $pdo->prepare("SELECT user_id, login, email, level, aura, created, verified FROM users $w ORDER BY created DESC, user_id DESC LIMIT $per OFFSET " . (($up - 1) * $per));
+    $l = $pdo->prepare("SELECT user_id, login, email, level, aura, created, last_seen, verified FROM users $w ORDER BY created DESC, user_id DESC LIMIT $per OFFSET " . (($up - 1) * $per));
     $l->execute($args);
     echo "<h3 id=\"usuarios\">Usuarios ($nU)</h3>";
     echo "<form method=\"get\" action=\"/admin.php\" style=\"display:flex;gap:6px;margin-bottom:8px\"><input type=\"hidden\" name=\"t\" value=\"usuarios\"><input type=\"text\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"usuario o correo\" style=\"flex:1\"><button class=\"btn\">Buscar</button>" . ($q !== '' ? " <a class=\"btn\" href=\"/admin.php\">todos</a>" : "") . "</form>";
@@ -387,7 +387,7 @@ if ($tab === 'usuarios') {
         $acc = "<a class=\"btn sm\" href=\"/editar-usuario.php?id={$r['user_id']}\" title=\"editar nick, frase, foto y correo\">editar</a> ";
         $acc .= (int)$r['verified'] === 0 ? "<button class=\"btn sm\" form=\"ver{$r['user_id']}\" title=\"marcar el correo como validado\">validar</button> " : "";
         if ($r['level'] !== 'admin') $acc .= "<button class=\"btn sm\" form=\"del{$r['user_id']}\" title=\"borrar la cuenta y todo lo suyo\">borrar</button>";
-        $meta = h($r['email']) . ((int)$r['verified'] === 0 ? " (sin activar)" : "") . " · " . h(substr($r['created'], 0, 16));
+        $meta = h($r['email']) . ((int)$r['verified'] === 0 ? " (sin activar)" : "") . " · registro " . h(substr($r['created'], 0, 16)) . ($r['last_seen'] ? " · último acceso " . h(hace($r['last_seen'])) : "");
         echo "<tr><td class=\"num\">{$r['user_id']}</td><td class=\"who\"><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a><small>$meta</small></td><td>" . h($r['aura']) . "</td><td style=\"text-align:center\">$cell</td><td class=\"acc\">$acc</td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar moderadores</button></p></form>";

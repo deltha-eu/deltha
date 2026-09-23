@@ -32,8 +32,8 @@ echo "<h1>" . h($VIEWS[$v]) . "</h1><p class=\"notice\">" . t('%d en total. Puls
 foreach ($rows as $r) {
     echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u.php?u=' . rawurlencode($r['login']));
     echo "<div><b><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></b>";
-    // en «conectados» lo relevante es cuando se le vio por ultima vez; en las demas, cuando se registro
-    $when = $v === 'conectados' && $r['last_seen'] ? t('visto %s', hace($r['last_seen'])) : hace($r['created']);
+    // registro y ultimo acceso, para todo el mundo (users.last_seen: se actualiza como mucho una vez por minuto, lib/app.php)
+    $when = t('registro %s', hace($r['created'])) . ($r['last_seen'] ? ' · ' . t('último acceso %s', hace($r['last_seen'])) : '');
     echo "<span class=\"meta\"> · " . t('aura') . " " . number_format((float)$r['aura'], 1, ',', '') . " · " . h($when) . "</span>";
     if ($r['bio']) echo "<p class=\"bio\">" . h($r['bio']) . "</p>";
     echo "</div></div>";

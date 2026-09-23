@@ -510,4 +510,8 @@ return [
 'rechazada' => 'rejected',
 'Tus propuestas' => 'Your proposals',
 '¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.' => 'Missing one? <a href="%s">Suggest an outlet or a substack</a>.',
+'registro %s' => 'registered %s',
+'último acceso %s' => 'last access %s',
+'Con aura %s o más puedes proponer medios y substacks nuevos.' => 'Accounts with aura %s or more can suggest new outlets and substacks.',
+'Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.' => 'With aura %s or more you can suggest new outlets and substacks; yours is %s.',
 ];
