@@ -435,4 +435,6 @@ return [
 'Favoritos' => 'Favoritos',
 'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Aquí verás o que gardes con «gardar», xunto aos votos, dentro de calquera envío ou artigo. Só o ves ti.',
 'Todavía no has guardado nada.' => 'Aínda non gardaches nada.',
+'Dejar que los buscadores indexen este artículo' => 'Deixar que os buscadores indexen este artigo',
+'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Por defecto nada de %s sae en Google nin noutros buscadores. Se o marcas, só este artigo poderá aparecer; os rastrexadores de IA seguen vetados.',
 ];

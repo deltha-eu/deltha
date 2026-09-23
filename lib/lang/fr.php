@@ -474,4 +474,6 @@ return [
 'Favoritos' => 'Favoris',
 'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Ici apparaîtra ce que vous enregistrez avec « enregistrer », à côté des votes, dans n’importe quel envoi ou article. Vous seul le voyez.',
 'Todavía no has guardado nada.' => 'Vous n’avez encore rien enregistré.',
+'Dejar que los buscadores indexen este artículo' => 'Laisser les moteurs de recherche indexer cet article',
+'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Par défaut, rien de %s n\'apparaît sur Google ni sur les autres moteurs de recherche. Si tu coches cette case, seul cet article pourra y apparaître ; les robots d\'IA restent bloqués.',
 ];

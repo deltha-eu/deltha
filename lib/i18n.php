@@ -8,8 +8,9 @@
  *
  * Orden de preferencia del idioma: ?lang= en la URL (probar sin guardar) >
  * users.lang > cookie ddd_lang (solo anonimos que eligieron idioma en el menu) > cabecera Accept-Language del navegador > es.
- * Solo se traduce la interfaz publica; admin, moderacion y las paginas editables
- * (privacidad, normas, algoritmo) siguen en español.
+ * Se traduce la interfaz publica; admin y moderacion siguen en español. Las paginas editables
+ * (que-es, privacidad, normas, algoritmo) tienen una fila por idioma en pages (slug «normas.en»…,
+ * migra-050) y page_get() cae en la española si falta la traduccion.
  */
 declare(strict_types=1);
 
