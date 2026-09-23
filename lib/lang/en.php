@@ -474,4 +474,7 @@ return [
 'Favoritos' => 'Favourites',
 'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Here you will see what you save with “save”, next to the votes, inside any post or article. Only you can see it.',
 'Todavía no has guardado nada.' => 'You have not saved anything yet.',
+'Portada (pestaña)' => 'Home',   // rotulo corto de la pestaña de arriba (movil)
+'Dejar que los buscadores indexen este artículo' => 'Let search engines index this article',
+'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'By default nothing on %s shows up on Google or other search engines. If you tick this, only this article can appear; AI crawlers remain blocked.',
 ];

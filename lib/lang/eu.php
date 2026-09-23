@@ -435,4 +435,6 @@ return [
 'Favoritos' => 'Gogokoak',
 'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Hemen ikusiko duzu «gorde» botoiarekin gordetzen duzuna, botoen ondoan, edozein bidalketa edo artikuluren barruan. Zuk bakarrik ikusten duzu.',
 'Todavía no has guardado nada.' => 'Oraindik ez duzu ezer gorde.',
+'Dejar que los buscadores indexen este artículo' => 'Bilatzaileei artikulu hau indexatzen utzi',
+'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Berez, %s-ko ezer ez da Googlen ez beste bilatzaileetan agertzen. Markatzen baduzu, artikulu hau bakarrik ager daiteke; AAko arakatzaileek debekatuta jarraitzen dute.',
 ];

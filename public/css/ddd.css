@@ -2750,3 +2750,12 @@ form.plain select.medsel { margin-bottom: 6px; }
 [data-skin] body { font-family: var(--font); }
 [data-skin] h1, [data-skin] h2, [data-skin] h3, [data-skin] .legal h2, [data-skin] .side .mod h3, [data-skin] .ttl { font-family: var(--head); }
 [data-skin] input, [data-skin] select, [data-skin] textarea, [data-skin] button { font-family: inherit; }
+
+/* Pestañas de arriba en movil: con idiomas de palabras largas (Kandidaten, Nouveautés, Hautagaiak…) las cinco se juntaban
+ * o partian en dos lineas. Cada pestaña ocupa lo que mide su rotulo, en una linea, con aire a los lados; si aun asi no caben
+ * (movil muy estrecho) la barra se desliza de lado en vez de apelotonarse. Va al final para ganar a las skins. */
+@media (max-width: 640px) {
+  html[data-skin] nav.tabs-top { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  html[data-skin] nav.tabs-top::-webkit-scrollbar { display: none; }
+  html[data-skin] nav.tabs-top a { flex: 1 0 auto; white-space: nowrap; padding-left: 7px; padding-right: 7px; }
+}

@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 99);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 100);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -331,21 +331,51 @@ function open_reports(): int {
 }
 
 /* ---- paginas editables (tabla pages, admin) ------------------------- */
-function page_get(PDO $pdo, string $slug): array {
+/** Pagina editable en el idioma pedido ($lang; por defecto el de la interfaz). Las traducciones son filas propias con slug
+ *  «que-es.en», «normas.fr»…; si no hay traduccion se sirve la española. 'lang' dice en que idioma ha salido. */
+function page_get(PDO $pdo, string $slug, ?string $lang = null): array {
+    $lang ??= lang();
     $st = $pdo->prepare("SELECT slug, title, body, updated FROM pages WHERE slug = ?");
+    if ($lang !== 'es' && isset(DDD_LANGS[$lang])) {
+        $st->execute(["$slug.$lang"]);
+        if ($pg = $st->fetch()) return ['slug' => $slug, 'lang' => $lang] + $pg;
+    }
     $st->execute([$slug]);
-    return $st->fetch() ?: ['slug' => $slug, 'title' => ucfirst($slug), 'body' => '<p>Sin contenido todavía.</p>', 'updated' => null];
+    $pg = $st->fetch() ?: ['slug' => $slug, 'title' => ucfirst($slug), 'body' => '<p>Sin contenido todavía.</p>', 'updated' => null];
+    return ['lang' => 'es'] + $pg;
 }
 /** Cuerpo HTML con {site}, {ttl}, {gm}… sustituidos por la config actual (lista en admin -> Paginas) */
 /** Numero en formato español, sin ceros sobrantes (0.05 -> 0,05; 1.00 -> 1; 2.50 -> 2,5) */
 function num_es($v): string { $s = rtrim(rtrim(number_format((float)$v, 3, ',', '.'), '0'), ','); return $s === '' ? '0' : $s; }
-/** «31 de diciembre de 2026» a partir de una fecha Y-m-d (para {auradl}) */
-function fecha_larga(string $ymd): string {
+/** Numero de las paginas editables: coma decimal salvo en ingles (0,05 / 0.05) */
+function num_pg(string $lang, $v): string { $s = num_es($v); return $lang === 'en' ? strtr($s, [',' => '.', '.' => ',']) : $s; }
+/** Fecha larga de una Y-m-d en el idioma de la pagina (para {auradl}): «31 de diciembre de 2026», «31 December 2026»,
+ *  «31. Dezember 2026», «2026ko abenduaren 31»… */
+function fecha_larga(string $ymd, string $lang = 'es'): string {
     $t = strtotime($ymd) ?: time();
-    $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    return (int)date('j', $t) . ' de ' . $meses[(int)date('n', $t) - 1] . ' de ' . date('Y', $t);
+    $M = [
+        'es' => ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
+        'ca' => ['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'],
+        'gl' => ['xaneiro','febreiro','marzo','abril','maio','xuño','xullo','agosto','setembro','outubro','novembro','decembro'],
+        'eu' => ['urtarrilaren','otsailaren','martxoaren','apirilaren','maiatzaren','ekainaren','uztailaren','abuztuaren','irailaren','urriaren','azaroaren','abenduaren'],
+        'en' => ['January','February','March','April','May','June','July','August','September','October','November','December'],
+        'fr' => ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
+        'de' => ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+        'it' => ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'],
+    ];
+    $d = (int)date('j', $t); $y = date('Y', $t); $m = ($M[$lang] ?? $M['es'])[(int)date('n', $t) - 1];
+    // catalan: «d'abril», «d'agost», «d'octubre» (apostrofo ante vocal)
+    if ($lang === 'ca') return "$d " . (preg_match('/^[aeiou]/', $m) ? "d'$m" : "de $m") . " de $y";
+    return match ($lang) {
+        'gl'       => "$d de $m de $y",
+        'eu'       => "{$y}ko $m $d",
+        'de'       => "$d. $m $y",
+        'en', 'fr', 'it' => "$d $m $y",
+        default    => "$d de $m de $y",
+    };
 }
 function page_body(array $pg): string {
+    $L = $pg['lang'] ?? 'es';
     return strtr($pg['body'], [
         '{site}' => h(cfg('site_name', 'Deltha')),
         '{ttl}'  => (string)(int)cfg('thread_ttl_hours', 48),
@@ -353,26 +383,26 @@ function page_body(array $pg): string {
         // parametros del algoritmo (pagina «Como funciona el δ»)
         '{cycle}'    => (string)(int)cfg('cycle_minutes', 5),
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
-        '{minpub}'   => num_es(cfg('delta_min_publish', 1)),
-        '{mincand}'  => num_es(cfg('delta_min_candidate', 0.5)),
+        '{minpub}'   => num_pg($L, cfg('delta_min_publish', 1)),
+        '{mincand}'  => num_pg($L, cfg('delta_min_candidate', 0.5)),
         '{newttl}'   => (string)(int)cfg('nuevas_ttl_hours', 48),
-        '{decay}'    => num_es(cfg('decay_per_halfhour', 0.05)),
-        '{auraport}' => num_es(cfg('aura_portada', 0.5)),
-        '{auraenv}'  => num_es(cfg('aura_envio', 0.1)),
-        '{auracom}'  => num_es(cfg('aura_comentario', 0.02)),
-        '{auracap}'  => num_es(cfg('aura_daily_cap', 2)),
-        '{auradec}'  => num_es(cfg('aura_daily_decay', 0.5)),
-        '{aurastart}'=> num_es(cfg('aura_start', 5)),
-        '{auramax}'  => num_es(cfg('aura_max', 50)),
-        '{commaura}' => num_es(cfg('comm_min_aura', 10)),
+        '{decay}'    => num_pg($L, cfg('decay_per_halfhour', 0.05)),
+        '{auraport}' => num_pg($L, cfg('aura_portada', 0.5)),
+        '{auraenv}'  => num_pg($L, cfg('aura_envio', 0.1)),
+        '{auracom}'  => num_pg($L, cfg('aura_comentario', 0.02)),
+        '{auracap}'  => num_pg($L, cfg('aura_daily_cap', 2)),
+        '{auradec}'  => num_pg($L, cfg('aura_daily_decay', 0.5)),
+        '{aurastart}'=> num_pg($L, cfg('aura_start', 5)),
+        '{auramax}'  => num_pg($L, cfg('aura_max', 50)),
+        '{commaura}' => num_pg($L, cfg('comm_min_aura', 10)),
         '{commmax}'  => (string)(int)cfg('comm_max_per_user', 3),
-        '{editaura}' => num_es(cfg('comment_edit_min_aura', 10)),
+        '{editaura}' => num_pg($L, cfg('comment_edit_min_aura', 10)),
         '{editmin}'  => (string)(int)cfg('comment_edit_minutes', 10),
-        '{seditaura}'=> num_es(cfg('story_edit_min_aura', 10)),
+        '{seditaura}'=> num_pg($L, cfg('story_edit_min_aura', 10)),
         '{seditmin}' => (string)(int)cfg('story_edit_minutes', 15),
         // pagina «¿Que es Deltha?»
         '{skins}'    => (string)count(DDD_SKINS),
-        '{auradl}'   => fecha_larga(cfg('aura_deadline', '2026-12-31')),
+        '{auradl}'   => fecha_larga(cfg('aura_deadline', '2026-12-31'), $L),
     ]);
 }
 
@@ -649,6 +679,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<link rel=\"manifest\" href=\"/app/manifest.php\"><meta name=\"theme-color\" content=\"#ffffff\" media=\"(prefers-color-scheme: light)\"><meta name=\"theme-color\" content=\"#000000\" media=\"(prefers-color-scheme: dark)\">";
     echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
+    echo "<script src=\"/app/tabs.js?v=" . DDD_CSS_VER . "\" defer></script>";   // encaja las pestañas de arriba en movil
     echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
     echo $robots;   // noindex salvo paginas escaparate y articulos que el autor abre a buscadores
     // Open Graph: lo que enseñan los cuadros de «compartir» (Windows, WhatsApp, Telegram...). Por defecto el icono del sitio en vigor;
@@ -686,6 +717,10 @@ function nav_tabs(string $tab, string $cls): void {
     ];
     if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
+    // arriba en movil caben cinco rotulos a lo ancho: donde «Portada» traducida es larga (Front page, Prima pagina, Titelseite)
+    // el diccionario trae una forma corta, «Portada (pestaña)»
+    global $I18N;
+    if ($cls === 'tabs-top' && isset($tabs['portada'], $I18N['Portada (pestaña)'])) $tabs['portada'][1] = $I18N['Portada (pestaña)'];
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';

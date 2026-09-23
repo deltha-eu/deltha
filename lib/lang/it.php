@@ -435,4 +435,7 @@ return [
 'Favoritos' => 'Preferiti',
 'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Qui vedrai ciò che salvi con «salva», accanto ai voti, dentro qualsiasi invio o articolo. Lo vedi solo tu.',
 'Todavía no has guardado nada.' => 'Non hai ancora salvato nulla.',
+'Portada (pestaña)' => 'Home',   // rotulo corto de la pestaña de arriba (movil)
+'Dejar que los buscadores indexen este artículo' => 'Lascia che i motori di ricerca indicizzino questo articolo',
+'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Per impostazione predefinita niente di %s compare su Google o su altri motori di ricerca. Se lo spunti, potrà comparire solo questo articolo; i crawler di IA restano bloccati.',
 ];

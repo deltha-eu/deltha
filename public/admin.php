@@ -18,9 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $out[] = 'Config guardada.';
     } elseif ($act === 'pagina') {
-        $pdo->prepare("INSERT INTO pages (slug, title, body) VALUES (?,?,?) ON DUPLICATE KEY UPDATE title = VALUES(title), body = VALUES(body)")
-            ->execute([in_array(post('slug'), ['privacidad', 'normas', 'algoritmo', 'que-es'], true) ? post('slug') : 'privacidad', post('title', 'Página'), (string)($_POST['body'] ?? '')]);
-        $out[] = 'Página guardada.';
+        // slug base + idioma: la española es «que-es»; las traducciones, «que-es.en», «que-es.fr»…
+        $base = in_array(post('slug'), ['privacidad', 'normas', 'algoritmo', 'que-es'], true) ? post('slug') : 'privacidad';
+        $pl = (string)post('pl');
+        $pslug = ($pl !== 'es' && isset(DDD_LANGS[$pl])) ? "$base.$pl" : $base;
+        if (post('borrar') === '1' && $pslug !== $base) {
+            $pdo->prepare("DELETE FROM pages WHERE slug = ?")->execute([$pslug]);
+            $out[] = "Traducción $pslug borrada: en ese idioma se verá la española.";
+        } else {
+            $pdo->prepare("INSERT INTO pages (slug, title, body) VALUES (?,?,?) ON DUPLICATE KEY UPDATE title = VALUES(title), body = VALUES(body)")
+                ->execute([$pslug, post('title', 'Página'), (string)($_POST['body'] ?? '')]);
+            $out[] = "Página $pslug guardada.";
+        }
     } elseif ($act === 'topics') {
         $st = $pdo->prepare("UPDATE topics SET coef = ?, color = ? WHERE topic_id = ?");
         foreach (($_POST['coef'] ?? []) as $id => $c) {
@@ -534,13 +543,26 @@ if ($tab === 'usuarios') {
 
 } elseif ($tab === 'privacidad') {
     echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{mincand}</code> <code>{newttl}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code> <code>{seditaura}</code> <code>{seditmin}</code> <code>{skins}</code> (número de skins) <code>{auradl}</code> (fecha de <code>aura_deadline</code>, «31 de diciembre de 2026»).</small></p>";
+    // Idioma que se edita: el español es el original; cada traduccion es una fila propia (slug.idioma). Sin traduccion,
+    // el visitante de ese idioma ve la española, y aqui el editor sale relleno con ella para traducirla.
+    $pl = (string)($_GET['pl'] ?? 'es');
+    if (!isset(DDD_LANGS[$pl])) $pl = 'es';
+    echo "<p class=\"langsel\"><b>Idioma:</b> ";
+    foreach (DDD_LANGS as $lc => $ln) echo $lc === $pl ? " <b>" . h($ln) . "</b> ·" : " <a href=\"?t=privacidad&amp;pl=$lc\">" . h($ln) . "</a> ·";
+    echo "</p>";
+    if ($pl !== 'es') echo "<p><small>Estás editando la traducción al <b>" . h(DDD_LANGS[$pl]) . "</b>. Los marcadores (<code>{site}</code>, <code>{ttl}</code>…) se dejan tal cual. Si cambias el texto español, las traducciones no se actualizan solas: revísalas aquí.</small></p>";
     foreach (['que-es' => '¿Qué es Deltha?', 'privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso', 'algoritmo' => 'Cómo funciona el δ'] as $slug => $lbl) {
-        $pg = page_get($pdo, $slug);
-        echo "<h3>$lbl</h3><p><small>Se muestra en <a href=\"/$slug.php\">/$slug.php</a>" . ($pg['updated'] ? " · última edición " . h($pg['updated']) : "") . ".</small></p>";
-        echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"pagina\"><input type=\"hidden\" name=\"slug\" value=\"$slug\">";
+        $pg = page_get($pdo, $slug, $pl);
+        $falta = $pl !== 'es' && $pg['lang'] !== $pl;   // no hay traduccion: sale la española
+        $url = "/$slug.php" . ($pl !== 'es' ? "?lang=$pl" : "");
+        echo "<h3>$lbl" . ($pl !== 'es' ? " · " . h(DDD_LANGS[$pl]) : "") . "</h3><p><small>Se muestra en <a href=\"$url\">$url</a>"
+           . ($falta ? " · <b>sin traducir</b>: se ve la española (abajo, para traducirla)" : ($pg['updated'] ? " · última edición " . h($pg['updated']) : "")) . ".</small></p>";
+        echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"pagina\"><input type=\"hidden\" name=\"slug\" value=\"$slug\"><input type=\"hidden\" name=\"pl\" value=\"$pl\">";
         echo "<p><input type=\"text\" name=\"title\" value=\"" . h($pg['title']) . "\" placeholder=\"Título\"></p>";
         echo "<textarea name=\"body\" rows=\"20\">" . h($pg['body']) . "</textarea>";
-        echo "<p><button class=\"btn\">Guardar página</button></p></form>";
+        echo "<p><button class=\"btn\">Guardar página</button>";
+        if ($pl !== 'es' && !$falta) echo " <label><input type=\"checkbox\" name=\"borrar\" value=\"1\"> borrar esta traducción (se verá la española)</label>";
+        echo "</p></form>";
     }
 }
 echo "</div>";

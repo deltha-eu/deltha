@@ -435,4 +435,7 @@ return [
 'Favoritos' => 'Favoriten',
 'Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.' => 'Hier siehst du, was du mit „speichern“ neben den Stimmen in jedem Beitrag oder Artikel sicherst. Nur du siehst es.',
 'Todavía no has guardado nada.' => 'Du hast noch nichts gespeichert.',
+'Portada (pestaña)' => 'Start',   // rotulo corto de la pestaña de arriba (movil)
+'Dejar que los buscadores indexen este artículo' => 'Suchmaschinen dürfen diesen Artikel indexieren',
+'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Standardmäßig erscheint nichts von %s bei Google oder anderen Suchmaschinen. Wenn du das ankreuzt, kann nur dieser Artikel erscheinen; KI-Crawler bleiben ausgesperrt.',
 ];
