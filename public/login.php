@@ -13,6 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
         session_regenerate_id(true);
         $_SESSION['uid'] = (int)$row['user_id'];
+        if (($_COOKIE['ddd_srclang'] ?? '') === '1') {   // marco «Solo fuentes en mi idioma» antes de entrar: pasa a su cuenta
+            $pdo->prepare("UPDATE users SET src_mylang = 1 WHERE user_id = ?")->execute([(int)$row['user_id']]);
+            pref_cookie('ddd_srclang', '');
+        }
         $lu = $pdo->prepare("SELECT landing FROM users WHERE user_id = ?"); $lu->execute([(int)$row['user_id']]);
         redirect(landing_url($pdo, ['landing' => (string)$lu->fetchColumn()]));
     }

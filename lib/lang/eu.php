@@ -443,4 +443,5 @@ return [
 'Solo fuentes en mi idioma' => 'Nire hizkuntzako iturriak soilik',
 'recientes' => 'berrienak',
 'Son los que han publicado más recientemente: elige los tuyos en <a href="/perfil.php#medios">tu perfil</a>.' => 'Azkena argitaratu dutenak dira: aukeratu zureak <a href="/perfil.php#medios">zure profilean</a>.',
+'Guardar' => 'Gorde',
 ];

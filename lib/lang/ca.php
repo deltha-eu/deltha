@@ -443,4 +443,5 @@ return [
 'Solo fuentes en mi idioma' => 'Només fonts en la meva llengua',
 'recientes' => 'recents',
 'Son los que han publicado más recientemente: elige los tuyos en <a href="/perfil.php#medios">tu perfil</a>.' => 'Són els que han publicat més recentment: tria els teus al <a href="/perfil.php#medios">teu perfil</a>.',
+'Guardar' => 'Desa',
 ];
