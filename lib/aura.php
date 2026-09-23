@@ -7,7 +7,8 @@ function aura_add(PDO $pdo, int $user_id, float $amount, string $reason, ?int $r
     if ($amount <= 0) return 0.0;
     $cap = (float)cfg('aura_daily_cap', 2);
     $max = (float)cfg('aura_max', 50);
-    $st = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM aura_log WHERE user_id = ? AND amount > 0 AND created >= CURDATE()");
+    // lo que pone el admin a mano (reason «admin…», /editar-usuario.php) no cuenta para el tope diario
+    $st = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM aura_log WHERE user_id = ? AND amount > 0 AND created >= CURDATE() AND reason NOT LIKE 'admin%'");
     $st->execute([$user_id]);
     $today = (float)$st->fetchColumn();
     $room = max(0.0, $cap - $today);

@@ -1,9 +1,11 @@
 <?php
 /** /editar-usuario.php?id=N — edición del perfil de otro usuario por moderadores y admin:
- *  nick, frase y foto (mods y admin); correo, estado de activación y nueva contraseña (solo admin). */
+ *  nick, frase y foto (mods y admin); correo, estado de activación, nueva contraseña, nivel y aura (solo admin).
+ *  El formulario (lib/usuarios.php, modedit_form) es el mismo que sale en el perfil público (/u.php#modedit); con back=u se vuelve allí. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/imagen.php';
+require __DIR__ . '/../lib/usuarios.php';
 if (!user()) redirect('/login.php');
 if (!is_mod()) { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
@@ -12,8 +14,8 @@ $st = $pdo->prepare("SELECT user_id, login, email, level, aura, avatar, bio, ver
 $st->execute([$id]);
 $p = $st->fetch();
 if (!$p) { http_response_code(404); page_header('Editar usuario'); echo "<p class=\"end\">Ese usuario no existe.</p>"; page_footer(); exit; }
-// un moderador no toca a admins ni a otros moderadores; el admin puede con todos
-if (!is_admin() && $p['level'] !== 'normal') { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo el admin puede editar a moderadores y admins.</p>"; page_footer(); exit; }
+// un moderador no toca a admins ni a otros moderadores (ni a si mismo: eso va en /perfil.php); el admin puede con todos
+if (!modedit_puede($p)) { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo el admin puede editar a moderadores y admins.</p>"; page_footer(); exit; }
 
 $err = null; $ok = ($_GET['ok'] ?? '') === '2' ? 'Perfil guardado y contraseña cambiada.' : (isset($_GET['ok']) ? 'Perfil guardado.' : null);
 
@@ -47,10 +49,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newpass = (string)($_POST['pass'] ?? '');
         if ($newpass !== '' && strlen($newpass) < 8) $err = 'La contraseña nueva debe tener al menos 8 caracteres.';
         elseif ($newpass !== '' && $newpass !== (string)($_POST['pass2'] ?? '')) $err = 'Las dos contraseñas no coinciden.';
+        $aura = (float)$p['aura'];
+        if (isset($_POST['aura']) && trim((string)$_POST['aura']) !== '') {
+            $a = str_replace(',', '.', trim((string)$_POST['aura']));
+            if (!is_numeric($a) || (float)$a < 0 || (float)$a > (float)cfg('aura_max', 50)) $err = 'El aura debe ser un número entre 0 y ' . num_es(cfg('aura_max', 50)) . '.';
+            else $aura = round((float)$a, 3);
+        }
+        $level = $p['level'] === 'admin' ? 'admin' : (post('level') === 'mod' ? 'mod' : (post('level') === 'normal' ? 'normal' : $p['level']));
     }
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, email = ?, verified = ? WHERE user_id = ?")
             ->execute([$login, $bio ?: null, $avatar, $email, $verified, $id]);
+        if (is_admin()) {
+            if (abs($aura - (float)$p['aura']) >= 0.0005) {   // aura a mano: al historial, marcado como del admin (no cuenta para el tope diario)
+                $pdo->prepare("UPDATE users SET aura = ? WHERE user_id = ?")->execute([$aura, $id]);
+                $motivo = mb_substr(trim(post('aura_motivo')), 0, 50);
+                $pdo->prepare("INSERT INTO aura_log (user_id, amount, reason, ref_id) VALUES (?,?,?,?)")
+                    ->execute([$id, round($aura - (float)$p['aura'], 3), mb_substr('admin' . ($motivo !== '' ? ": $motivo" : ''), 0, 64), (int)user()['user_id']]);
+            }
+            if ($level !== $p['level']) $pdo->prepare("UPDATE users SET level = ? WHERE user_id = ? AND level <> 'admin'")->execute([$level, $id]);
+        }
         if (is_admin() && $newpass !== '') {
             $pdo->prepare("UPDATE users SET pass = ?, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([password_hash($newpass, PASSWORD_DEFAULT), $id]);
             if (post('back') === 'u') redirect('/u.php?u=' . rawurlencode($login) . '&ok=2#modedit');
@@ -60,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect("/editar-usuario.php?id=$id&ok=1");
     }
     if ($err && post('back') === 'u') redirect('/u.php?u=' . rawurlencode($p['login']) . '&err=' . rawurlencode($err) . '#modedit');
-    $p = array_merge($p, ['login' => $login, 'bio' => $bio, 'avatar' => $avatar, 'email' => $email, 'verified' => $verified]);
+    $p = array_merge($p, ['login' => $login, 'bio' => $bio, 'avatar' => $avatar, 'email' => $email, 'verified' => $verified] + (is_admin() ? ['aura' => $aura ?? $p['aura'], 'level' => $level ?? $p['level']] : []));
 }
 
 page_header('Editar usuario');
@@ -69,19 +87,5 @@ echo "<p class=\"meta\">#{$p['user_id']} · " . h($p['level']) . " · aura " . n
 echo "<p class=\"notice\">Edición de moderación del perfil de otro usuario. Los cambios se ven al momento; el usuario no recibe aviso.</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($ok)  echo "<p class=\"notice\">" . h($ok) . "</p>";
-echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-echo "<label>Nombre de usuario</label><input type=\"text\" name=\"login\" required pattern=\"[A-Za-z0-9_\\-]{3,32}\" value=\"" . h($p['login']) . "\" autocomplete=\"off\">";
-echo "<label>Frase (hasta 160 caracteres)</label><input type=\"text\" name=\"bio\" maxlength=\"160\" value=\"" . h($p['bio'] ?? '') . "\">";
-echo "<label>Foto</label><input type=\"file\" name=\"photo\" accept=\"image/*\">";
-if ($p['avatar']) echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"1\"> quitar la foto actual</label>";
-if (is_admin()) {
-    echo "<label>Correo</label><input type=\"email\" name=\"email\" required value=\"" . h($p['email']) . "\" autocomplete=\"off\">";
-    echo "<label><input type=\"checkbox\" name=\"verified\" value=\"1\"" . ((int)$p['verified'] ? ' checked' : '') . "> correo validado (sin marcar, no puede iniciar sesión)</label>";
-    echo "<label>Nueva contraseña (vacío = no cambiar)</label><input type=\"password\" name=\"pass\" data-pw minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";
-    echo "<label>Repite la nueva contraseña</label><input type=\"password\" name=\"pass2\" data-pw minlength=\"8\" autocomplete=\"new-password\">";
-    echo pw_toggle();
-} else {
-    echo "<label>Correo</label><p class=\"meta\" style=\"padding:0\">" . h($p['email']) . " <small>(solo lo cambia el admin)</small></p>";
-}
-echo "<button>Guardar</button></form>";
+echo modedit_form($pdo, $p);
 page_footer();
