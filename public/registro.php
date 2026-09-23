@@ -5,6 +5,7 @@ if (user()) redirect('/');
 $err = null; $done = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    users_purge_unverified($pdo);   // antes de comprobar si el usuario o el correo existen: las cuentas nunca activadas los liberan
     $login = post('login'); $email = mb_strtolower(post('email')); $pass = post('pass');
     // limite por IP (huella HMAC, sin guardar la IP)
     $fp = substr(hash_hmac('sha256', 'reg|' . client_ip(), $DDD_SECRET), 0, 16);

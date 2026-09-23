@@ -48,6 +48,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['blanca', 'd
         $out[] = "Dominio $d en la lista blanca: ya se puede registrar una cuenta con él (pídele a la persona que lo intente de nuevo).";
     }
 }
+// probar un dominio: lo que ve el servidor al comprobar su web (no cambia ninguna lista)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio_probar') {
+    $d = email_domain_normalize(post('domain'));
+    if ($d === null) $out[] = 'Dominio no válido.';
+    else {
+        $t0 = microtime(true);
+        [$okw, $info] = email_web_check($d);
+        $lista = email_domain_listed($pdo, 'banned_domains', $d) ? 'está en la lista negra' : (email_domain_listed($pdo, 'allowed_domains', $d) ? 'está en la lista blanca' : 'no está en ninguna lista');
+        $dns = function_exists('checkdnsrr') ? ((checkdnsrr($d . '.', 'MX') ? 'MX sí' : 'MX no') . ', ' . (checkdnsrr($d . '.', 'A') ? 'A sí' : 'A no')) : 'DNS sin comprobar';
+        $out[] = "$d: $lista · $dns · web " . ($okw ? 'RESPONDE' : 'NO RESPONDE') . " (" . round(microtime(true) - $t0, 1) . " s) — $info";
+    }
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'blanca_quitar') {
     $pdo->prepare("DELETE FROM allowed_domains WHERE domain = ?")->execute([post('domain')]);
     $out[] = 'Dominio retirado de la lista blanca (vuelve a pasar la comprobación normal).';
@@ -244,6 +256,7 @@ if ($bd) {
     echo "</table></details>";
 }
 try { $wd = $pdo->query("SELECT w.*, u.login FROM allowed_domains w LEFT JOIN users u ON u.user_id = w.added_by ORDER BY w.domain")->fetchAll(); } catch (Throwable $e) { $wd = []; }
+echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0\"><input type=\"hidden\" name=\"act\" value=\"dominio_probar\"><input type=\"text\" name=\"domain\" placeholder=\"probar un dominio: iol.ie\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\" title=\"ver qué contesta su web desde el servidor, sin tocar las listas\">Probar</button></form>";
 echo "<h3 id=\"dominios-ok\">Dominios de correo admitidos — lista blanca (" . count($wd) . ")</h3>";
 echo "<p><small>Proveedores reconocidos (Gmail, Outlook, Yahoo, iCloud, Proton…) y dominios revisados a mano: se admiten, con sus subdominios, sin comprobar su web. La lista negra manda sobre esta.</small></p>";
 echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px\"><input type=\"hidden\" name=\"act\" value=\"blanca\">";
