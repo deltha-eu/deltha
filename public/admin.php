@@ -71,18 +71,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = post('status') === 'off' ? 'off' : 'ok';
         $descr = mb_substr(trim(post('descr')), 0, 200) ?: null;
         $featured = post('featured') === '1' ? 1 : 0;
+        $slang = preg_match('/^[a-z]{2}$/', post('lang')) ? post('lang') : '';   // '' = detectar del RSS
+        if ($slang === '' && preg_match('#^https?://[^\s]+$#i', $fp) && ($x = http_get($fp, 8, 4000000)) !== null) $slang = fuentes_feed_lang($x);
         if (!preg_match('/^[a-z0-9\-]{2,24}$/', $slug)) $out[] = 'Slug no válido (2–24 letras minúsculas, números o guion).';
         elseif ($name === '') $out[] = 'Falta el nombre.';
         elseif (!preg_match('#^https?://[^\s]+$#i', $home) || !preg_match('#^https?://[^\s]+$#i', $fp) || ($fn !== '' && !preg_match('#^https?://[^\s]+$#i', $fn))) $out[] = 'Web y feeds deben ser URLs http(s).';
         else {
             try {
                 if ($act === 'fuente_nueva') {
-                    $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
-                        ->execute([$slug, $kind, $name, $home, $descr, $skin, $topic, $fp, $fn, $iv, $status, $featured]);
-                    $out[] = "Fuente «" . h($name) . "» creada. Se leerá en el próximo minuto del cron (o ahora con «leer»).";
+                    $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
+                        ->execute([$slug, $kind, $name, $home, $descr, $slang, $skin, $topic, $fp, $fn, $iv, $status, $featured]);
+                    $out[] = "Fuente «" . h($name) . "» creada, idioma: " . ($slang !== '' ? $slang : 'sin detectar (el feed no lo dice: elígelo a mano)') . ". Se leerá en el próximo minuto del cron (o ahora con «leer»).";
                 } else {
-                    $pdo->prepare("UPDATE sources SET slug = ?, kind = ?, name = ?, home = ?, descr = ?, skin = ?, topic_id = ?, feed_portada = ?, feed_nuevas = ?, interval_min = ?, status = ?, featured = ? WHERE source_id = ?")
-                        ->execute([$slug, $kind, $name, $home, $descr, $skin, $topic, $fp, $fn, $iv, $status, $featured, $id]);
+                    $pdo->prepare("UPDATE sources SET slug = ?, kind = ?, name = ?, home = ?, descr = ?, lang = ?, skin = ?, topic_id = ?, feed_portada = ?, feed_nuevas = ?, interval_min = ?, status = ?, featured = ? WHERE source_id = ?")
+                        ->execute([$slug, $kind, $name, $home, $descr, $slang, $skin, $topic, $fp, $fn, $iv, $status, $featured, $id]);
                     $out[] = "Fuente «" . h($name) . "» guardada.";
                 }
             } catch (PDOException $e) { $out[] = 'Ese slug ya existe.'; }
@@ -471,6 +473,11 @@ if ($tab === 'usuarios') {
         $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" required value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/\"></td></tr>";
         $h .= "<tr><td>RSS de la cola</td><td><input type=\"url\" name=\"feed_nuevas\" value=\"" . h($f['feed_nuevas'] ?? '') . "\" placeholder=\"solo agregadores (vacío en un medio)\"></td></tr>";
         $h .= "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h($f['descr'] ?? '') . "\"></td></tr>";
+        // idioma de la fuente, para «mostrar fuentes solo en mi idioma» del perfil. Vacio = se toma del RSS al guardar (y en cada lectura mientras falte)
+        $fl = (string)($f['lang'] ?? '');
+        $h .= "<tr><td>idioma</td><td><select name=\"lang\" class=\"auto\"><option value=\"\">— detectar del RSS —</option>";
+        foreach (DDD_LANGS + ($fl !== '' && !isset(DDD_LANGS[$fl]) ? [$fl => $fl] : []) as $lc => $ln) $h .= "<option value=\"$lc\"" . ($fl === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>";
+        $h .= "</select></td></tr>";
         $h .= "<tr><td>tema al enviar</td><td><select name=\"topic_id\"><option value=\"0\">— el que elija quien envía —</option>";
         foreach ($topics as $t) $h .= "<option value=\"{$t['topic_id']}\"" . ((int)($f['topic_id'] ?? 0) === (int)$t['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
         $h .= "</select></td></tr>";
@@ -494,7 +501,7 @@ if ($tab === 'usuarios') {
     if (!$rows) echo "<p class=\"end\">No hay fuentes de este tipo.</p>";
     foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
-        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
+        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · " . (($f['lang'] ?? '') !== '' ? h($f['lang']) : "<i>idioma ?</i>") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
         echo $fuente_form($f, 'fuente');
         echo "<p><form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
     }

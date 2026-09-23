@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $skin  = (string)($u['skin'] ?? '');   // la plantilla se elige en /plantilla.php
     $landing = preg_match('/^(t|c):\d{1,9}$/', post('landing')) ? post('landing') : '';
     $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
+    $mylang = post('src_mylang') === '1' ? 1 : 0;   // solo fuentes (medios, substacks, agregadores) en mi idioma
     $avatar = $u['avatar'];
     if (!empty($_FILES['photo']['name'])) {
         $new = avatar_desde_subida($_FILES['photo']);
@@ -29,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (post('quitar') === '1' && $avatar) { @unlink(DDD_MEDIA_DIR . '/avatars/' . $avatar); $avatar = null; }
     if (!$err) {
-        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $u['user_id']]);
+        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ?, src_mylang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $mylang, $u['user_id']]);
         if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, , $field]) { try { guardar_mis_medios($pdo, (int)$u['user_id'], (array)($_POST[$field] ?? []), $kind); } catch (Throwable $e) {} }
         redirect('/perfil.php?ok=1');
     }
@@ -52,6 +53,7 @@ if ($u['avatar']) echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"
 echo "<label>" . t('Idioma') . "</label><select name=\"ulang\"><option value=\"\">" . t('El del navegador') . "</option>";
 foreach (DDD_LANGS as $k => $v) echo "<option value=\"$k\"" . (($u['lang'] ?? '') === $k ? ' selected' : '') . ">$v</option>";
 echo "</select>";
+if (fuentes_on()) echo "<label id=\"fuentes-idioma\"><input type=\"checkbox\" name=\"src_mylang\" value=\"1\"" . (!empty($u['src_mylang']) ? ' checked' : '') . "> " . t('Mostrar fuentes solo en mi idioma') . "</label><small class=\"hint\">" . t('Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.') . "</small>";
 echo "" . t('<label>Tema</label>') . "<select name=\"theme\">";
 foreach (['auto' => t('Automático (como el sistema)'), 'light' => t('Claro'), 'dark' => t('Oscuro')] as $k => $v) {
     echo "<option value=\"$k\"" . (($u['theme'] ?? 'auto') === $k ? ' selected' : '') . ">" . h($v) . "</option>";
@@ -65,7 +67,7 @@ echo "</optgroup><optgroup label=\"" . t('Una comunidad') . "\">";
 foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) echo "<option value=\"c:{$co['community_id']}\"" . (($u['landing'] ?? '') === "c:{$co['community_id']}" ? ' selected' : '') . ">" . h($co['name']) . "</option>";
 echo "</optgroup></select><small class=\"hint\">" . t('Se aplica al entrar con tu cuenta y al abrir Deltha desde fuera (un marcador, la app); la pestaña Portada sigue llevando a la portada.') . "</small>";
 if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, $label, $field]) {
-    if (!($catalogo = fuentes_activas($pdo, $kind))) continue;
+    if (!($catalogo = fuentes_visibles($pdo, $kind))) continue;
     $max = medios_max($kind);
     $mine = array_column(mis_medios($pdo, $u, $kind), 'source_id');
     echo "<label id=\"" . ($kind === 'medio' ? 'medios' : 'substacks') . "\">" . t($label) . "</label><small class=\"hint\">" . ($kind === 'medio'

@@ -437,4 +437,7 @@ return [
 'Todavía no has guardado nada.' => 'Encara no has desat res.',
 'Dejar que los buscadores indexen este artículo' => 'Deixar que els cercadors indexin aquest article',
 'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Per defecte res de %s no surt a Google ni a altres cercadors. Si ho marques, només podrà aparèixer aquest article; els rastrejadors d\'IA continuen vetats.',
+'Mostrar fuentes solo en mi idioma' => 'Mostrar només fonts en la meva llengua',
+'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Els mitjans, substacks i agregadors en altres llengües deixen de sortir al menú, a les llistes i a la teva tria de mitjans. La teva llengua és la de la interfície.',
+'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'Només veus les fonts en la teva llengua; es canvia al <a href="/perfil.php#fuentes-idioma">teu perfil</a>.',
 ];

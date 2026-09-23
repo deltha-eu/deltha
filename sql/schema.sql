@@ -78,6 +78,7 @@ CREATE TABLE users (
     skin        VARCHAR(16) NOT NULL DEFAULT '',   -- plantilla visual ('' = la del sitio, config.skin_default)
     landing     VARCHAR(24) NOT NULL DEFAULT '',   -- aterrizaje: '' portada | t:ID tema | c:ID comunidad
     lang        VARCHAR(5) NOT NULL DEFAULT '',    -- idioma de la interfaz: '' navegador | es | en | fr
+    src_mylang  TINYINT(1) NOT NULL DEFAULT 0,     -- 1 = mostrar solo fuentes en mi idioma (migra-051)
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_login (login),
@@ -282,6 +283,7 @@ CREATE TABLE sources (
     name         VARCHAR(48) NOT NULL,
     home         VARCHAR(200) NOT NULL,                     -- web de la fuente
     descr        VARCHAR(200) DEFAULT NULL,
+    lang         VARCHAR(5) NOT NULL DEFAULT '',            -- idioma (es, en…; '' = sin saber, se detecta del RSS) (migra-051)
     skin         VARCHAR(16) NOT NULL DEFAULT '',           -- plantilla forzada al verla ('' = la de cada cual)
     topic_id     SMALLINT UNSIGNED DEFAULT NULL,            -- tema propuesto al enviar una noticia de este medio
     feed_portada VARCHAR(300) NOT NULL,                     -- RSS de lo publicado

@@ -438,4 +438,7 @@ return [
 'Portada (pestaña)' => 'Home',   // rotulo corto de la pestaña de arriba (movil)
 'Dejar que los buscadores indexen este artículo' => 'Lascia che i motori di ricerca indicizzino questo articolo',
 'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Per impostazione predefinita niente di %s compare su Google o su altri motori di ricerca. Se lo spunti, potrà comparire solo questo articolo; i crawler di IA restano bloccati.',
+'Mostrar fuentes solo en mi idioma' => 'Mostra solo fonti nella mia lingua',
+'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Media, substack e aggregatori in altre lingue non compaiono più nel menu, negli elenchi e nella tua scelta di media. La tua lingua è quella dell\'interfaccia.',
+'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'Vedi solo le fonti nella tua lingua; si cambia nel <a href="/perfil.php#fuentes-idioma">tuo profilo</a>.',
 ];

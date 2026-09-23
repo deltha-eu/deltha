@@ -437,4 +437,7 @@ return [
 'Todavía no has guardado nada.' => 'Oraindik ez duzu ezer gorde.',
 'Dejar que los buscadores indexen este artículo' => 'Bilatzaileei artikulu hau indexatzen utzi',
 'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'Berez, %s-ko ezer ez da Googlen ez beste bilatzaileetan agertzen. Markatzen baduzu, artikulu hau bakarrik ager daiteke; AAko arakatzaileek debekatuta jarraitzen dute.',
+'Mostrar fuentes solo en mi idioma' => 'Erakutsi nire hizkuntzako iturriak soilik',
+'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Beste hizkuntzetako hedabide, substack eta agregatzaileak ez dira gehiago agertuko menuan, zerrendetan eta zure hedabideen hautaketan. Zure hizkuntza interfazearena da.',
+'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'Zure hizkuntzako iturriak soilik ikusten dituzu; <a href="/perfil.php#fuentes-idioma">zure profilean</a> aldatzen da.',
 ];

@@ -477,4 +477,7 @@ return [
 'Portada (pestaña)' => 'Home',   // rotulo corto de la pestaña de arriba (movil)
 'Dejar que los buscadores indexen este artículo' => 'Let search engines index this article',
 'Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.' => 'By default nothing on %s shows up on Google or other search engines. If you tick this, only this article can appear; AI crawlers remain blocked.',
+'Mostrar fuentes solo en mi idioma' => 'Show sources only in my language',
+'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Media, substacks and aggregators in other languages stop appearing in the menu, in the lists and in your choice of media. Your language is the interface language.',
+'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'You only see sources in your language; change it in <a href="/perfil.php#fuentes-idioma">your profile</a>.',
 ];
