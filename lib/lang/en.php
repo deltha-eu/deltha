@@ -480,4 +480,7 @@ return [
 'Mostrar fuentes solo en mi idioma' => 'Show sources only in my language',
 'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Media, substacks and aggregators in other languages stop appearing in the menu, in the lists and in your choice of media. Your language is the interface language.',
 'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'You only see sources in your language; change it in <a href="/perfil.php#fuentes-idioma">your profile</a>.',
+'Solo fuentes en mi idioma' => 'Only sources in my language',
+'recientes' => 'recent',
+'Son los que han publicado más recientemente: elige los tuyos en <a href="/perfil.php#medios">tu perfil</a>.' => 'These are the ones that published most recently: choose yours in <a href="/perfil.php#medios">your profile</a>.',
 ];

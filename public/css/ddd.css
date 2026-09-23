@@ -2759,3 +2759,8 @@ form.plain select.medsel { margin-bottom: 6px; }
   html[data-skin] nav.tabs-top::-webkit-scrollbar { display: none; }
   html[data-skin] nav.tabs-top a { flex: 1 0 auto; white-space: nowrap; padding-left: 7px; padding-right: 7px; }
 }
+
+/* Casilla «Solo fuentes en mi idioma» en /medios.php y /ultimo.php (la misma preferencia que el perfil) */
+form.srclang { padding: 2px 16px 12px; font-size: 14px; color: var(--muted); }
+form.srclang label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+form.srclang small { opacity: .8; }

@@ -440,4 +440,7 @@ return [
 'Mostrar fuentes solo en mi idioma' => 'Erakutsi nire hizkuntzako iturriak soilik',
 'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios. Tu idioma es el de la interfaz.' => 'Beste hizkuntzetako hedabide, substack eta agregatzaileak ez dira gehiago agertuko menuan, zerrendetan eta zure hedabideen hautaketan. Zure hizkuntza interfazearena da.',
 'Solo ves las fuentes en tu idioma; se cambia en <a href="/perfil.php#fuentes-idioma">tu perfil</a>.' => 'Zure hizkuntzako iturriak soilik ikusten dituzu; <a href="/perfil.php#fuentes-idioma">zure profilean</a> aldatzen da.',
+'Solo fuentes en mi idioma' => 'Nire hizkuntzako iturriak soilik',
+'recientes' => 'berrienak',
+'Son los que han publicado más recientemente: elige los tuyos en <a href="/perfil.php#medios">tu perfil</a>.' => 'Azkena argitaratu dutenak dira: aukeratu zureak <a href="/perfil.php#medios">zure profilean</a>.',
 ];
