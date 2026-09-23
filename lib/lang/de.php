@@ -475,4 +475,6 @@ return [
 'último acceso %s' => 'letzter Zugriff %s',
 'Con aura %s o más puedes proponer medios y substacks nuevos.' => 'Ab einer Aura von %s kannst du neue Medien und Substacks vorschlagen.',
 'Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.' => 'Ab einer Aura von %s kannst du neue Medien und Substacks vorschlagen; deine liegt bei %s.',
+'No se ha registrado la cuenta por el uso de un email temporal. Recuerda que no necesitas cuenta para enviar o comentar. Si crees que es un error, puedes <a href="/privacidad.php">escribirnos</a> para que te activemos la cuenta manualmente.' => 'Das Konto wurde nicht angelegt, weil eine Wegwerf-E-Mail-Adresse verwendet wurde. Denk daran: Zum Einreichen oder Kommentieren brauchst du kein Konto. Wenn du glaubst, dass das ein Fehler ist, kannst du <a href="/privacidad.php">uns schreiben</a>, dann aktivieren wir das Konto von Hand.',
+'Ese dominio de correo no existe.' => 'Diese E-Mail-Domain existiert nicht.',
 ];

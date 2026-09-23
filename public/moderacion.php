@@ -3,6 +3,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/chat.php';
 require __DIR__ . '/../lib/propuestas.php';
+require_once __DIR__ . '/../lib/mail.php';   // listas de dominios de correo (email_domain_normalize)
 if (!user()) redirect('/login.php');
 if (!is_mod()) { http_response_code(403); page_header('Moderación'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
@@ -28,13 +29,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema_borrar') {
     else { $e = topic_delete($pdo, (int)post('topic_id'), (int)post('to')); $out[] = $e ?: 'Tema borrado; sus envíos han pasado al tema elegido.'; }
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio') {
-    $d = mb_strtolower(trim(post('domain')));
-    $d = preg_replace('~^.*@~', '', $d);   // admite pegar un correo entero
-    if (!preg_match('/^[a-z0-9.-]+\\.[a-z]{2,}$/', $d)) $out[] = 'Dominio no válido.';
+    $d = email_domain_normalize(post('domain'));   // admite pegar un correo entero
+    if ($d === null) $out[] = 'Dominio no válido.';
     else {
         $pdo->prepare("INSERT IGNORE INTO banned_domains (domain, reason, added_by) VALUES (?,?,?)")->execute([$d, mb_substr(post('reason'), 0, 120) ?: null, user()['user_id']]);
-        $out[] = "Dominio $d vetado.";
+        try { $pdo->prepare("DELETE FROM allowed_domains WHERE domain = ?")->execute([$d]); } catch (Throwable $e) {}
+        $out[] = "Dominio $d vetado (y quitado de la lista blanca si estaba).";
     }
+}
+// lista blanca de dominios de correo: proveedores reconocidos y revisiones manuales (se admiten sin comprobar su web)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['blanca', 'dominio_a_blanca'], true)) {
+    $d = email_domain_normalize(post('domain'));
+    if ($d === null) $out[] = 'Dominio no válido.';
+    else {
+        $motivo = mb_substr(post('reason'), 0, 120) ?: (post('act') === 'dominio_a_blanca' ? 'revisado a mano' : null);
+        $pdo->prepare("INSERT INTO allowed_domains (domain, reason, added_by) VALUES (?,?,?) ON DUPLICATE KEY UPDATE reason = VALUES(reason), added_by = VALUES(added_by)")->execute([$d, $motivo, user()['user_id']]);
+        $pdo->prepare("DELETE FROM banned_domains WHERE domain = ?")->execute([$d]);
+        $out[] = "Dominio $d en la lista blanca: ya se puede registrar una cuenta con él (pídele a la persona que lo intente de nuevo).";
+    }
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'blanca_quitar') {
+    $pdo->prepare("DELETE FROM allowed_domains WHERE domain = ?")->execute([post('domain')]);
+    $out[] = 'Dominio retirado de la lista blanca (vuelve a pasar la comprobación normal).';
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio_quitar') {
     $pdo->prepare("DELETE FROM banned_domains WHERE domain = ?")->execute([post('domain')]);
@@ -213,15 +229,30 @@ echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex
 echo "<input type=\"text\" name=\"name\" placeholder=\"nuevo tema\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\">Añadir tema</button></form>";
 echo "<p><small>Renombrar cambia el nombre en todos sus envíos. Borrar un tema mueve sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) al tema elegido; no se pierde nada. El tema de cada envío se cambia desde su hilo (desplegable bajo los votos). El coeficiente lo ajusta el admin.</small></p>";
 $bd = $pdo->query("SELECT b.*, u.login FROM banned_domains b LEFT JOIN users u ON u.user_id = b.added_by ORDER BY b.domain")->fetchAll();
-echo "<h3 id=\"dominios\">Dominios de correo no válidos (" . count($bd) . ")</h3>";
-echo "<p><small>No se aceptan registros con correos de estos dominios (desechables, de spam…). Además se rechazan los dominios sin registros MX.</small></p>";
+$nauto = count(array_filter($bd, fn($b) => str_starts_with((string)$b['reason'], 'auto:')));
+echo "<h3 id=\"dominios\">Dominios de correo no válidos — lista negra (" . count($bd) . ($nauto ? ", $nauto automáticos" : "") . ")</h3>";
+echo "<p><small>No se aceptan registros con correos de estos dominios ni de sus subdominios (desechables, de spam…). Al registrarse, si el dominio no está en la lista blanca, se comprueba que su web responde (" . ((string)cfg('email_web_check', '1') === '1' ? 'activado' : '<b>desactivado</b>') . ": <code>email_web_check</code>); si no responde, entra aquí solo con el motivo «auto: …» y la persona ve el aviso de email temporal. Si alguien escribe diciendo que es un error, pasa su dominio a la lista blanca y que se registre de nuevo. Además se rechazan los dominios sin registros MX.</small></p>";
 echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px\"><input type=\"hidden\" name=\"act\" value=\"dominio\">";
 echo "<input type=\"text\" name=\"domain\" placeholder=\"dominio.com\" required style=\"flex:1;min-width:140px\"> <input type=\"text\" name=\"reason\" placeholder=\"motivo (opcional)\" style=\"flex:1;min-width:140px\"> <button class=\"btn\">Vetar dominio</button></form>";
 if ($bd) {
     echo "<details><summary>Ver lista</summary><table>";
     foreach ($bd as $b) {
         echo "<tr><td><code>" . h($b['domain']) . "</code></td><td>" . h((string)$b['reason']) . "</td><td><small>" . h($b['login'] ?: 'sistema') . " · " . h(hace($b['created'])) . "</small></td>";
-        echo "<td><form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"dominio_quitar\"><input type=\"hidden\" name=\"domain\" value=\"" . h($b['domain']) . "\"><button class=\"btn\">quitar</button></form></td></tr>";
+        echo "<td style=\"white-space:nowrap\"><form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"dominio_quitar\"><input type=\"hidden\" name=\"domain\" value=\"" . h($b['domain']) . "\"><button class=\"btn\">quitar</button></form> ";
+        echo "<form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"dominio_a_blanca\"><input type=\"hidden\" name=\"domain\" value=\"" . h($b['domain']) . "\"><button class=\"btn\" title=\"quitar de aquí y admitirlo siempre\">a la lista blanca</button></form></td></tr>";
+    }
+    echo "</table></details>";
+}
+try { $wd = $pdo->query("SELECT w.*, u.login FROM allowed_domains w LEFT JOIN users u ON u.user_id = w.added_by ORDER BY w.domain")->fetchAll(); } catch (Throwable $e) { $wd = []; }
+echo "<h3 id=\"dominios-ok\">Dominios de correo admitidos — lista blanca (" . count($wd) . ")</h3>";
+echo "<p><small>Proveedores reconocidos (Gmail, Outlook, Yahoo, iCloud, Proton…) y dominios revisados a mano: se admiten, con sus subdominios, sin comprobar su web. La lista negra manda sobre esta.</small></p>";
+echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px\"><input type=\"hidden\" name=\"act\" value=\"blanca\">";
+echo "<input type=\"text\" name=\"domain\" placeholder=\"dominio.com o correo entero\" required style=\"flex:1;min-width:140px\"> <input type=\"text\" name=\"reason\" placeholder=\"motivo (opcional)\" maxlength=\"120\" style=\"flex:1;min-width:140px\"> <button class=\"btn\">Admitir dominio</button></form>";
+if ($wd) {
+    echo "<details><summary>Ver lista</summary><table>";
+    foreach ($wd as $w) {
+        echo "<tr><td><code>" . h($w['domain']) . "</code></td><td>" . h((string)$w['reason']) . "</td><td><small>" . h($w['login'] ?: 'sistema') . " · " . h(hace($w['created'])) . "</small></td>";
+        echo "<td><form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"blanca_quitar\"><input type=\"hidden\" name=\"domain\" value=\"" . h($w['domain']) . "\"><button class=\"btn\">quitar</button></form></td></tr>";
     }
     echo "</table></details>";
 }

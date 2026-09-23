@@ -387,3 +387,11 @@ CREATE TABLE source_proposals (
     KEY idx_fp_user (user_id, created),
     CONSTRAINT fk_fp_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Lista blanca de dominios de correo (migra-058; la negra es banned_domains, migra-012)
+CREATE TABLE IF NOT EXISTS allowed_domains (
+    domain   VARCHAR(120) NOT NULL PRIMARY KEY,
+    reason   VARCHAR(120) DEFAULT NULL,
+    added_by INT UNSIGNED DEFAULT NULL,
+    created  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;

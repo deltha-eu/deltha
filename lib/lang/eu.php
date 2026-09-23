@@ -474,4 +474,6 @@ return [
 'último acceso %s' => 'azken sarbidea: %s',
 'Con aura %s o más puedes proponer medios y substacks nuevos.' => '%s aura edo gehiagorekin hedabide eta substack berriak proposa ditzakezu.',
 'Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.' => '%s aura edo gehiagorekin hedabide eta substack berriak proposa ditzakezu; zurea %s da.',
+'No se ha registrado la cuenta por el uso de un email temporal. Recuerda que no necesitas cuenta para enviar o comentar. Si crees que es un error, puedes <a href="/privacidad.php">escribirnos</a> para que te activemos la cuenta manualmente.' => 'Ez da kontua erregistratu aldi baterako posta helbide bat erabili delako. Gogoratu ez duzula konturik behar bidaltzeko edo iruzkintzeko. Akats bat dela uste baduzu, <a href="/privacidad.php">idatzi iezaguzu</a> eta eskuz aktibatuko dizugu kontua.',
+'Ese dominio de correo no existe.' => 'Posta domeinu hori ez da existitzen.',
 ];
