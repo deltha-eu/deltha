@@ -170,7 +170,7 @@ function community_by_slug(PDO $pdo, string $slug): ?array {
 function community_quota(PDO $pdo, ?array $u): int {
     if (!$u) return 0;
     $max = max(0, (int)cfg('comm_max_per_user', 3));
-    if (!is_mod() && (float)$u['aura'] <= (float)cfg('comm_min_aura', 10)) return 0;   // mods y admin: sin requisito de aura
+    if (!is_mod() && (float)$u['aura'] <= (float)cfg('comm_min_aura', 6)) return 0;   // mods y admin: sin requisito de aura
     $st = $pdo->prepare("SELECT COUNT(*) FROM communities WHERE owner_id = ?"); $st->execute([$u['user_id']]);
     return is_admin() ? 99 : max(0, $max - (int)$st->fetchColumn());
 }
@@ -309,7 +309,7 @@ function comment_delete(PDO $pdo, int $id): bool {
 function can_edit_own_comment(array $c): bool {
     $u = user();
     if (!$u || empty($c['user_id']) || (int)$c['user_id'] !== (int)$u['user_id'] || !empty($c['deleted'])) return false;
-    if ((float)$u['aura'] <= (float)cfg('comment_edit_min_aura', 10)) return false;
+    if ((float)$u['aura'] <= (float)cfg('comment_edit_min_aura', 6)) return false;
     return time() - strtotime($c['created']) < (int)cfg('comment_edit_minutes', 10) * 60;
 }
 /** El usuario actual puede editar (o retirar) este envio suyo? Aura > story_edit_min_aura, menos de
@@ -318,7 +318,7 @@ function can_edit_own_story(array $s): bool {
     $u = user();
     if (!$u || empty($s['user_id']) || (int)$s['user_id'] !== (int)$u['user_id']) return false;
     if (!in_array($s['status'], ['pending_mod', 'nuevas', 'candidatas'], true)) return false;   // en portada (o archivado) ya no
-    if ((float)$u['aura'] <= (float)cfg('story_edit_min_aura', 10)) return false;
+    if ((float)$u['aura'] <= (float)cfg('story_edit_min_aura', 6)) return false;
     return time() - strtotime($s['sent_date']) < (int)cfg('story_edit_minutes', 15) * 60;
 }
 /** Reportes de comentarios pendientes (para el enlace de moderacion) */
@@ -395,12 +395,16 @@ function page_body(array $pg): string {
         '{auradec}'  => num_pg($L, cfg('aura_daily_decay', 0.5)),
         '{aurastart}'=> num_pg($L, cfg('aura_start', 5)),
         '{auramax}'  => num_pg($L, cfg('aura_max', 50)),
-        '{commaura}' => num_pg($L, cfg('comm_min_aura', 10)),
+        '{commaura}' => num_pg($L, cfg('comm_min_aura', 6)),
         '{commmax}'  => (string)(int)cfg('comm_max_per_user', 3),
-        '{editaura}' => num_pg($L, cfg('comment_edit_min_aura', 10)),
+        '{editaura}' => num_pg($L, cfg('comment_edit_min_aura', 6)),
         '{editmin}'  => (string)(int)cfg('comment_edit_minutes', 10),
-        '{seditaura}'=> num_pg($L, cfg('story_edit_min_aura', 10)),
+        '{seditaura}'=> num_pg($L, cfg('story_edit_min_aura', 6)),
         '{seditmin}' => (string)(int)cfg('story_edit_minutes', 15),
+        // fuentes RSS (medios y newsletters elegibles en el perfil, aura para proponer)
+        '{mediamax}' => (string)(int)cfg('media_max_per_user', 3),
+        '{newsmax}'  => (string)(int)cfg('news_max_per_user', 3),
+        '{propaura}' => num_pg($L, cfg('source_propose_aura', 6)),
         // pagina «¿Que es Deltha?»
         '{skins}'    => (string)count(DDD_SKINS),
         '{auradl}'   => fecha_larga(cfg('aura_deadline', '2026-12-31'), $L),
