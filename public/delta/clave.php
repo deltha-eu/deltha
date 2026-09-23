@@ -27,7 +27,7 @@ if ($clave !== '') {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex">
-<link rel="icon" href="/img/favicon.png">
+<link rel="icon" href="<?= h(icon_src(64)) ?>">
 <title><?= t('Clave de acceso') ?> · <?= h(cfg('site_name')) ?></title>
 <link rel="stylesheet" href="/css/ddd.css?v=<?= DDD_CSS_VER ?>">
 <style>
@@ -46,7 +46,7 @@ html, body { height: 100%; }
 .gate .back { font-size: 14px; margin-top: 8px; }
 </style></head><body>
 <div class="gate">
-  <img class="logo l" src="/img/logo.png" alt=""><img class="logo d" src="/img/logo-dark.png" alt="">
+  <img class="logo l" src="<?= h(logo_src('light')) ?>" alt=""><img class="logo d" src="<?= h(logo_src('dark')) ?>" alt="">   <?php /* el de Admin > Logo (logo_src), no el de serie */ ?>
   <h1><?= t('Deltha aún es privada') ?></h1>
   <p><?= t('Si te han dado una clave de acceso, escríbela aquí. Se guarda en una única cookie técnica mientras dure el acceso privado; cuando abramos Deltha dejará de existir.') ?></p>
   <?php if ($err) echo "<p class=\"error\">" . h($err) . "</p>"; ?>
