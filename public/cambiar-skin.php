@@ -23,4 +23,5 @@ $back = (string)($_SERVER['HTTP_REFERER'] ?? '');
 $host = $_SERVER['HTTP_HOST'] ?? '';
 if ($back === '' || !$host || parse_url($back, PHP_URL_HOST) !== $host || str_contains($back, 'cambiar-skin.php')) $back = '/';
 $back = preg_replace('/([?&])(skin|lang)=[^&]*&?/', '$1', $back); $back = rtrim($back, '?&');   // fuera los ?skin= / ?lang= de prueba
+header('Cache-Control: no-store');   // ni el navegador ni Cloudflare deben guardar esta redireccion
 redirect($back);

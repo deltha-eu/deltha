@@ -2764,3 +2764,5 @@ form.plain select.medsel { margin-bottom: 6px; }
 form.srclang { padding: 2px 16px 12px; font-size: 14px; color: var(--muted); }
 form.srclang label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 form.srclang small { opacity: .8; }
+form.srclang button { margin-left: 10px; font: inherit; font-size: 13px; padding: 2px 12px; border: 1px solid var(--line2); border-radius: 999px; background: transparent; color: var(--fg); cursor: pointer; vertical-align: middle; }
+form.srclang button:hover { border-color: currentColor; }

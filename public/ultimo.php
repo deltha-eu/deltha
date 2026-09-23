@@ -21,7 +21,7 @@ if ($porId) {
 }
 $sent = $k === 'agregador' ? [] : fuente_ya_enviadas($pdo, array_column($rows, 'url'));
 
-if ($u) header('Cache-Control: private, no-cache'); else { header('Cache-Control: public, max-age=60'); header('Vary: Cookie'); }
+header('Cache-Control: private, no-cache');   // depende de cookies (sesion, ddd_srclang): sin cache compartida ni de 60 s, o la casilla de idioma parece no hacer nada
 page_header($label, "ultimo:$k");
 echo "<nav class=\"sub\">";
 foreach (DDD_ULTIMO_KINDS as $kk => [$lbl]) echo "<a href=\"/ultimo.php?k=$kk\"" . ($kk === $k ? ' class="on"' : '') . ">" . h(t($lbl)) . "</a>";
