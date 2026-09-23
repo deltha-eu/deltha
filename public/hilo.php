@@ -32,6 +32,7 @@ foreach ($all as $c) { $k = $c['root_id'] ?: $c['comment_id']; $threads[$k][] = 
 $replyTo = (int)($_GET['r'] ?? 0);
 $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo] : null;
 
+robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por su autor; lo demas, noindex
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
 page_header(t('Hilo'), $tab, og_tags($s['title'], (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo.php?id=' . $id)), $s['title']);
 echo "<div class=\"hilo\">";

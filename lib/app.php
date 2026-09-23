@@ -613,10 +613,32 @@ function og_tags(string $title, string $descr = '', string $image = '', string $
     $h .= "<meta name=\"twitter:card\" content=\"" . ($image !== '' ? 'summary_large_image' : 'summary') . "\">";
     return $h;
 }
+/* ---- buscadores e IA (robots) -----------------------------------------
+ * Deltha no se indexa por defecto: cada pagina sale con <meta name="robots" content="noindex, nofollow, noarchive">
+ * y la cabecera X-Robots-Tag equivalente. Solo se indexan las paginas escaparate (que-es, algoritmo, normas,
+ * privacidad: definen DDD_INDEX) y los articulos cuyo autor lo ha pedido (stories.indexable, si config.index_articles = 1),
+ * que llaman a robots_index(true) antes de page_header(). Los rastreadores de IA se vetan aparte en /robots.txt.
+ * ------------------------------------------------------------------ */
+function robots_index(?bool $set = null): bool {
+    static $v = null;
+    if ($set !== null) $v = $set;
+    return $v ?? defined('DDD_INDEX');
+}
+function robots_meta(): string {
+    $c = robots_index() ? 'index, follow, noai, noimageai' : 'noindex, nofollow, noarchive, noai, noimageai';
+    if (!headers_sent()) header('X-Robots-Tag: ' . $c);
+    return "<meta name=\"robots\" content=\"$c\">";
+}
+/** ¿Puede este articulo entrar en los buscadores? Tiene que ser articulo, estar visible, marcado por el autor y permitido en config. */
+function story_indexable(array $s): bool {
+    return cfg('index_articles', '1') === '1' && ($s['content_type'] ?? '') === 'article' && (int)($s['indexable'] ?? 0) === 1
+        && in_array($s['status'] ?? '', ['nuevas', 'candidatas', 'destacadas', 'archived'], true);
+}
 /** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
  *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
+    $robots = robots_meta();   // antes del primer echo: tambien manda la cabecera X-Robots-Tag
     $u = user();
     $theme = theme();   // null = sigue al sistema
     echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
@@ -628,6 +650,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
     echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
+    echo $robots;   // noindex salvo paginas escaparate y articulos que el autor abre a buscadores
     // Open Graph: lo que enseñan los cuadros de «compartir» (Windows, WhatsApp, Telegram...). Por defecto el icono del sitio en vigor;
     // una pagina (el hilo) puede mandar los suyos en $head y entonces no se repiten.
     if (!str_contains($head, 'og:image')) $head = og_tags($doc ?: $title) . $head;
