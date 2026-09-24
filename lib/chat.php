@@ -9,6 +9,15 @@ declare(strict_types=1);
 
 const DDD_CHAT_DELETED_TXT = 'Mensaje eliminado por incumplir las normas de uso';
 
+/** Condicion SQL de «mensaje visible en el flujo»: status ok y, si lo retiro moderacion, solo durante chat_deleted_minutes
+ *  (30 por defecto; 0 = el aviso se queda para siempre). Pasado ese plazo el aviso deja de pintarse; el original sigue en content_orig.
+ *  $a = alias de la tabla chat en la consulta ('' si no hay). sql/migra-065-chat-aviso-borrado.sql */
+function chat_visible_sql(string $a = ''): string {
+    $p = $a !== '' ? "$a." : '';
+    $min = (int)cfg('chat_deleted_minutes', 30);
+    return "{$p}status = 'ok'" . ($min > 0 ? " AND ({$p}deleted = 0 OR {$p}deleted_at IS NULL OR {$p}deleted_at > NOW() - INTERVAL $min MINUTE)" : '');
+}
+
 /** Alias estable + huella del anonimo en el Chat. Va por IP **y navegador** (User-Agent): dos personas en la misma
  *  conexion (casa, oficina, movil y PC por wifi) no comparten alias; la misma persona en el mismo navegador lo conserva. */
 function chat_anon(): array {
@@ -38,7 +47,7 @@ function chat_can_delete_own(array $m, ?array $u, ?string $key): bool {
 }
 /** Borrado de moderacion: el mensaje sigue en el flujo con el texto sustituido; cierra sus reportes. */
 function chat_delete_mod(PDO $pdo, int $id): bool {
-    $st = $pdo->prepare("UPDATE chat SET content_orig = IF(deleted = 1, content_orig, content), deleted = 1, content = ? WHERE msg_id = ? AND status = 'ok'");
+    $st = $pdo->prepare("UPDATE chat SET content_orig = IF(deleted = 1, content_orig, content), deleted_at = IF(deleted = 1, deleted_at, NOW()), deleted = 1, content = ? WHERE msg_id = ? AND status = 'ok'");
     $st->execute([DDD_CHAT_DELETED_TXT, $id]);
     try { $pdo->prepare("UPDATE chat_reports SET status = 'deleted' WHERE msg_id = ? AND status = 'open'")->execute([$id]); } catch (Throwable $e) {}
     return $st->rowCount() > 0;
@@ -80,6 +89,6 @@ function chat_format(string $text, array $logins, array $ids): string {
 /** Pagina (1..n) en la que esta el mensaje N, con los mensajes ordenados del mas nuevo al mas viejo. */
 function chat_page_of(PDO $pdo, int $id): int {
     $per = max(10, (int)cfg('chat_per_page', 50));
-    $st = $pdo->prepare("SELECT COUNT(*) FROM chat WHERE status = 'ok' AND msg_id > ?"); $st->execute([$id]);
+    $st = $pdo->prepare("SELECT COUNT(*) FROM chat WHERE " . chat_visible_sql() . " AND msg_id > ?"); $st->execute([$id]);
     return intdiv((int)$st->fetchColumn(), $per) + 1;
 }

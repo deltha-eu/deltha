@@ -45,10 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $per = max(10, (int)cfg('chat_per_page', 50));
 $page = page_num();
 if (($goto = (int)($_GET['m'] ?? 0)) > 0) $page = chat_page_of($pdo, $goto);
-$total = (int)$pdo->query("SELECT COUNT(*) FROM chat WHERE status = 'ok'")->fetchColumn();
+$total = (int)$pdo->query("SELECT COUNT(*) FROM chat WHERE " . chat_visible_sql())->fetchColumn();   // los avisos de borrado caducan (chat_deleted_minutes)
 $pages = max(1, (int)ceil($total / $per));
 $page = min($page, $pages);
-$st = $pdo->prepare("SELECT c.*, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.status = 'ok' ORDER BY c.msg_id DESC LIMIT ? OFFSET ?");
+$st = $pdo->prepare("SELECT c.*, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT ? OFFSET ?");
 $st->bindValue(1, $per, PDO::PARAM_INT); $st->bindValue(2, ($page - 1) * $per, PDO::PARAM_INT); $st->execute();
 $rows = $st->fetchAll();
 $ids = []; $mentions = [];
