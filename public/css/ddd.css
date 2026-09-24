@@ -2795,3 +2795,8 @@ ul.fprops .st-rejected { text-decoration: line-through; }
 .admin .fprop pre.ftest.err { border-color: var(--neg); }
 .admin .fprop form.fprop-ok table { margin: 8px 0; }
 .admin .fprop form.fprop-ok input[type=text], .admin .fprop form.fprop-ok input[type=url] { width: 100%; max-width: 460px; }
+
+/* ---- paginas fijas (¿Que es Deltha?, Como funciona el δ, Normas, Privacidad): parrafos justificados, en todas las skins.
+   Con guiones automaticos (segun el lang del <html>) para que la justificacion no abra rios en movil. La formula del δ
+   (p con style en linea) se queda como esta. ---- */
+.legal p:not([style]), [data-skin] .legal p:not([style]) { text-align: justify; -webkit-hyphens: auto; hyphens: auto; }
