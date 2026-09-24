@@ -414,18 +414,17 @@ if ($tab === 'usuarios') {
     echo "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"reloj\">Adelantar reloj <input type=\"text\" name=\"min\" value=\"30\" size=\"5\" style=\"width:60px\"> min <button class=\"btn\">Ir</button></form></p>";
     echo "<h3>Tiempos</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"config\"><p>";
     echo "Un ciclo cada <input type=\"text\" name=\"cfg[cycle_minutes]\" value=\"" . h(cfg('cycle_minutes', 5)) . "\" style=\"width:60px\"> min &nbsp;·&nbsp; ";
-    echo "una nueva puede ser candidata a los <input type=\"text\" name=\"cfg[delta_min_age_min]\" value=\"" . h(cfg('delta_min_age_min', 30)) . "\" style=\"width:60px\"> min &nbsp;·&nbsp; ";
+    echo "un envío puede llegar a portada a los <input type=\"text\" name=\"cfg[delta_min_age_min]\" value=\"" . h(cfg('delta_min_age_min', 30)) . "\" style=\"width:60px\"> min &nbsp;·&nbsp; ";
     echo "vida en portada <input type=\"text\" name=\"cfg[thread_ttl_hours]\" value=\"" . h(cfg('thread_ttl_hours', 48)) . "\" style=\"width:60px\"> h</p><p>";
-    echo "δ mínimo para ascender a candidata <input type=\"text\" name=\"cfg[delta_min_candidate]\" value=\"" . h(cfg('delta_min_candidate', 0.5)) . "\" style=\"width:60px\"> &nbsp;·&nbsp; ";
     echo "δ mínimo para portada <input type=\"text\" name=\"cfg[delta_min_publish]\" value=\"" . h(cfg('delta_min_publish', 1)) . "\" style=\"width:60px\"> &nbsp;·&nbsp; ";
     echo "caducan sin llegar a portada a las <input type=\"text\" name=\"cfg[nuevas_ttl_hours]\" value=\"" . h(cfg('nuevas_ttl_hours', 48)) . "\" style=\"width:60px\"> h (0 = nunca) ";
     echo "<button class=\"btn\">Guardar</button></p>";
-    echo "<p><small>El cron llama al script cada minuto y el ciclo se ejecuta en los minutos múltiplos del intervalo; en cada ciclo sube una nueva a candidatas (la de mayor δ, si llega al mínimo: sin votos no se asciende) y se publica la mejor candidata si llega al suyo. Lo que pasa las horas indicadas sin llegar a portada se archiva. El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
+    echo "<p><small>El cron llama al script cada minuto y el ciclo se ejecuta en los minutos múltiplos del intervalo; los ciclos se turnan entre Medios y Substacks (el de ahora le toca a <b>" . h(DDD_PORTADAS[portada_turno(time() - time() % 60)]) . "</b>, si se ejecuta a mano) y cada uno publica en su portada el enlace del radar de mayor δ de esa portada, si lleva los minutos indicados y llega al δ mínimo. Así cada portada recibe como mucho una cada dos ciclos. Los originales no van a portada. Lo que pasa las horas indicadas sin llegar a portada se archiva. El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
     $nq = (int)$pdo->query("SELECT COUNT(*) FROM mod_queue WHERE status IN ('needs_human','queued','processing')")->fetchColumn();
     echo "<h3>Cola de moderación</h3><p>$nq pendientes de la IA · " . open_reports() . " comentarios reportados · <a href=\"/moderacion.php\">ir a moderación</a> (la ven también los moderadores)</p>";
     echo "<h3>Últimas promociones</h3><table>";
     foreach ($pdo->query("SELECT p.*, s.title FROM promo_log p JOIN stories s ON s.story_id = p.story_id ORDER BY p.id DESC LIMIT 15") as $p) {
-        echo "<tr><td>" . h($p['created']) . "</td><td>" . h(mb_strimwidth($p['title'], 0, 60, '…')) . "</td><td>δ " . h($p['delta']) . "</td><td>{$p['candidates']} cand · {$p['commenters']} hablando</td></tr>";
+        echo "<tr><td>" . h($p['created']) . "</td><td>" . h((string)($p['portada'] ?? '')) . "</td><td>" . h(mb_strimwidth($p['title'], 0, 60, '…')) . "</td><td>δ " . h($p['delta']) . "</td><td>{$p['candidates']} en su radar · {$p['commenters']} hablando</td></tr>";
     }
     echo "</table>";
 

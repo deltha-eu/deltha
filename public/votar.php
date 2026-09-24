@@ -10,7 +10,7 @@ try {
     $st = $pdo->prepare("SELECT status, user_id FROM stories WHERE story_id = ? FOR UPDATE");
     $st->execute([$id]);
     $s = $st->fetch();
-    if ($s && in_array($s['status'], ['nuevas','candidatas','destacadas'], true) && (int)$s['user_id'] !== (int)$u['user_id']) {
+    if ($s && in_array($s['status'], ['nuevas','destacadas'], true) && (int)$s['user_id'] !== (int)$u['user_id']) {
         $prev = $pdo->prepare("SELECT value FROM votes WHERE story_id=? AND user_id=?");
         $prev->execute([$id, $u['user_id']]);
         $old = $prev->fetchColumn();

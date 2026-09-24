@@ -17,9 +17,9 @@ if (!empty($s['comm_skin'])) community_skin($s['comm_skin']);   // el hilo se ve
 $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
 $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
 $aura = $s['user_id'] ? (float)($s['author_aura'] ?? 5) : (float)cfg('aura_anon', 5);
-$open = in_array($s['status'], ['nuevas', 'candidatas', 'destacadas'], true);
+$open = in_array($s['status'], ['nuevas', 'destacadas'], true);
 $can_comment = $open && (user() || cfg('anon_can_comment') === '1');
-$tab = ['destacadas' => 'portada', 'candidatas' => 'candidatas', 'nuevas' => 'nuevas'][$s['status']] ?? '';
+$tab = $s['content_type'] === 'article' ? 'originales' : (['destacadas' => (string)$s['portada'], 'nuevas' => 'radar'][$s['status']] ?? '');
 
 $cs = $pdo->prepare("SELECT c.*, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
                      WHERE c.story_id = ? AND c.status='ok' ORDER BY c.created ASC");
@@ -50,7 +50,7 @@ if ($s['content_type'] === 'article') {
 }
 if ($s['url']) echo "<a class=\"source\" href=\"" . h($s['url']) . "\" rel=\"noopener nofollow\">" . icon('link') . h($s['source']) . "</a>";
 if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
-if ($s['status'] === 'candidatas') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . "</div>";
+if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h(t('en el radar, hacia %s', t(DDD_PORTADAS[portada_de($pdo, $s)]))) . "</div>";
 echo "</div></article>";
 
 echo "<div class=\"stats\" id=\"comentarios\"><span><b>" . count($all) . "</b> " . t('comentarios') . "</span>";
@@ -68,10 +68,10 @@ if (is_mod()) {   // moderadores y admin: cambiar el tema y la comunidad princip
     }
     echo "</select><button class=\"btn\">Cambiar</button> <a href=\"/editar.php?id=$id\">editar · eliminar</a></form>";
 }
-// comunidades del envio: cualquier dueño de comunidad puede añadir aqui un envio publico (nuevas, candidatas, portada o archivado)
+// comunidades del envio: cualquier dueño de comunidad puede añadir aqui un envio publico (radar, portada o archivado)
 // a la suya y quitarlo; los moderadores arbitran (añaden y quitan en cualquiera). El autor no interviene.
 $u = user();
-if ($u && in_array($s['status'], ['nuevas', 'candidatas', 'destacadas', 'archived'], true)) {
+if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
     $inComms = story_communities($pdo, $id);
     $mine = my_communities($pdo, $u);
     $inIds = array_map('intval', array_column($inComms, 'community_id'));

@@ -50,9 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-page_header('Escribir artículo', 'articulos');
+page_header('Escribir artículo', 'originales');
 echo "" . t('<h1>Escribir un artículo</h1>') . "";
-echo "<p class=\"notice\">" . t('Texto propio de hasta %d palabras, con foto si quieres. Entra en Nuevas como cualquier envío y puede llegar a portada igual.', $maxWords) . "</p>";
+echo "<p class=\"notice\">" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', $maxWords) . "</p>";
 if (!user()) echo "<p class=\"notice\">" . t('Escribes como anónimo. Si <a href="/login.php">entras</a>, firmarás con un alias y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">";

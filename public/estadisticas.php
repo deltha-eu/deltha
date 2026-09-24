@@ -1,7 +1,7 @@
 <?php
 /** /estadisticas.php — cifras publicas del sitio: registrados, conectados ahora, actividad.
  *  Cada cifra que tiene detras una lista enlaza a ella: usuarios (/usuarios.php pide
- *  login si no lo hay), portada/candidatas/nuevas, y el flujo de /procesos.php filtrado
+ *  login si no lo hay), las dos portadas y el radar, y el flujo de /procesos.php filtrado
  *  por dia (d=hoy) o sin ventana (d=todo). Las huellas anonimas no tienen lista. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -12,7 +12,8 @@ $u = $pdo->query("SELECT COUNT(*) total,
                          SUM(created  >= CURDATE()) hoy,
                          SUM(created  >= NOW() - INTERVAL 7 DAY) semana
                     FROM users WHERE verified = 1")->fetch();
-$s = $pdo->query("SELECT SUM(status='destacadas') portada, SUM(status='candidatas') candidatas, SUM(status='nuevas') nuevas,
+$s = $pdo->query("SELECT SUM(status='destacadas' AND portada='medios') medios, SUM(status='destacadas' AND portada='substacks') substacks,
+                         SUM(status='nuevas' AND content_type='link') radar,
                          SUM(published_date >= CURDATE()) publicadas_hoy,
                          SUM(status IN ('destacadas','archived')) publicadas_total
                     FROM stories")->fetch();
@@ -36,9 +37,9 @@ echo $tile($anon, t('sin cuenta, leyendo'));
 echo $tile($u['total'], t('usuarios registrados'), '/usuarios.php');
 echo $tile($u['hoy'], t('registros hoy'), '/usuarios.php?v=hoy');
 echo $tile($u['semana'], t('registros últimos 7 días'), '/usuarios.php?v=7d');
-echo $tile($s['portada'], t('en portada'), '/');
-echo $tile($s['candidatas'], t('candidatas'), '/candidatas.php');
-echo $tile($s['nuevas'], t('nuevas'), '/nuevas.php');
+echo $tile($s['medios'], t('en Medios'), '/?portada=medios');
+echo $tile($s['substacks'], t('en Substacks'), '/?portada=substacks');
+echo $tile($s['radar'], t('en el radar'), '/radar.php');
 echo $tile($s['publicadas_hoy'], t('publicadas hoy'), '/procesos.php?v=portadas&d=hoy');
 echo $tile($s['publicadas_total'], t('publicadas en total'), '/procesos.php?v=portadas&d=todo');
 echo $tile($c['hoy'], t('comentarios hoy'), '/procesos.php?v=comentarios&d=hoy');

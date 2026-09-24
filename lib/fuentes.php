@@ -4,9 +4,9 @@
  *
  * Una fuente (tabla sources) es otro sitio con RSS. Dos tipos (sources.kind):
  *  - agregador (Menéame): feed de portada y feed de cola, fases nuevas -> portada, votos y comentarios de la
- *    fuente; se ve en /fuente.php?f=slug con Portada / Candidatas / Nuevas.
+ *    fuente; se ve en /fuente.php?f=slug con Portada / Populares / Nuevas.
  *  - medio (Jot Down, Revista Mercurio...): un solo feed, sin fases ni votos; cada noticia lleva un boton
- *    «enviar a Nuevas» que abre /enviar.php prerrellenado. Cada usuario elige hasta media_max_per_user medios
+ *    «enviar al radar» que abre /enviar.php prerrellenado. Cada usuario elige hasta media_max_per_user medios
  *    en su perfil («Mis medios», tabla user_media) y los tiene en el rail bajo Idioma y en el pie.
  *
  * El cron (promocionar.php, cada minuto) llama a fuentes_tick(): lee los feeds de cada fuente cuando vence su
@@ -79,7 +79,7 @@ function fuente_by_slug(PDO $pdo, string $slug): ?array {
 function fuente_url(array $src, string $view = ''): string {
     return '/fuente.php?f=' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
 }
-function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar a Nuevas»
+function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar al radar»
 /** Grupos elegibles por el usuario: tipo => [clave de config del maximo, etiqueta del grupo, campo del formulario del perfil] */
 const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios', 'media'], 'newsletter' => ['news_max_per_user', 'Mis substacks', 'news']];
 /** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen en el perfil (DDD_MEDIA_KINDS). */
@@ -496,9 +496,9 @@ function fuente_diag_imagen(string $url): array {
 
 /* ---- vista ------------------------------------------------------------ */
 
-/** Consulta de una vista: portada | candidatas | nuevas. Devuelve [sql_where_order, params] sobre source_items i. */
+/** Consulta de una vista: portada | populares | nuevas. Devuelve [sql_where_order, params] sobre source_items i. */
 function fuente_vista_sql(string $view): array {
-    if ($view === 'candidatas') {
+    if ($view === 'populares') {
         return ["i.phase = 'nuevas' AND i.pub_date > NOW() - INTERVAL ? HOUR AND i.votes >= ? ORDER BY i.votes DESC, i.pub_date DESC",
                 [max(1, (int)cfg('sources_popular_hours', 24)), max(0, (int)cfg('sources_popular_min_votes', 5))]];
     }
@@ -544,7 +544,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     echo "<div class=\"actions\">";
     if ($medio) {
         if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo.php?id=" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
-        elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia a Nuevas')) . "\">" . icon('plus') . "<span>" . t('enviar a Nuevas') . "</span></a>";
+        elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia al radar')) . "\">" . icon('plus') . "<span>" . t('enviar al radar') . "</span></a>";
         echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h(t('leer en %s', $src['name'])) . "</span></a>";
     } else {
         echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
