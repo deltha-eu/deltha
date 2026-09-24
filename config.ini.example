@@ -16,3 +16,8 @@ smtp_host = ""
 smtp_port = 587
 smtp_user = ""
 smtp_pass = ""
+
+[mod]
+; token del worker de IA local (local/moderador/moderador.ini lleva el mismo). Vacio = /api/moderacion.php cerrada.
+; generar con:  openssl rand -hex 32
+token = ""

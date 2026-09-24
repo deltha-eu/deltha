@@ -1,6 +1,7 @@
 <?php
 /** /editar-comentario.php?id=N — moderadores y admin: editar el texto de un comentario o eliminarlo. */
 require __DIR__ . '/../lib/app.php';
+require __DIR__ . '/../lib/moderacion.php';
 if (!user()) redirect('/login.php');
 $id = (int)($_GET['id'] ?? post('id'));
 $st = $pdo->prepare("SELECT * FROM comments WHERE comment_id = ?");
@@ -27,7 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $txt = mb_substr(trim(post('content')), 0, 4000);
         if (mb_strlen($txt) < 1) $err = t('El comentario no puede quedar vacío.');
-        else { $pdo->prepare("UPDATE comments SET content = ?, edited_at = NOW() WHERE comment_id = ? AND content <> ?")->execute([$txt, $id, $txt]); redirect($back); }
+        else {
+            $st = $pdo->prepare("UPDATE comments SET content = ?, edited_at = NOW() WHERE comment_id = ? AND content <> ?"); $st->execute([$txt, $id, $txt]);
+            if ($own && $st->rowCount()) mod_requeue($pdo, 'comment', $id);   // lo edita su autor: la IA lo vuelve a mirar
+            redirect($back);
+        }
         $c['content'] = $txt;
     }
 }

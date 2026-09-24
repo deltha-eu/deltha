@@ -3,6 +3,7 @@
  *  un reporte por persona y comentario (registrados por user_id; anonimos por huella HMAC ip+comentario, no reversible). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
+require __DIR__ . '/../lib/moderacion.php';
 
 // un mensaje del Chat (?chat=N) o un comentario de un hilo (?id=N)
 $chat = (int)($_GET['chat'] ?? post('chat'));
@@ -35,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->prepare("INSERT INTO $table ($col, user_id, fp, reason) VALUES (?,?,?,?)")->execute([$id, $u ? $u['user_id'] : null, $fp, $reason]);
     } catch (PDOException $e) { /* ya lo habia reportado: silencio, mismo resultado */ }
+    mod_enqueue($pdo, $chat ? 'chat' : 'comment', $id, 1);   // si la IA aun no lo ha visto, pasa delante (su opinion sale en moderacion)
     redirect($back . (str_contains($back, '?') ? '&' : '?') . 'reportado=1');
 }
 

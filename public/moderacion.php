@@ -1,8 +1,9 @@
 <?php
-/** /moderacion.php — cola de revision humana: lo que la IA no ha sabido decidir. Para moderadores y admin. */
+/** /moderacion.php — moderadores y admin: lo que ha señalado la IA local (posmoderacion, lib/moderacion.php), reportes, dominios, medios, temas y fuentes. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/chat.php';
 require __DIR__ . '/../lib/propuestas.php';
+require __DIR__ . '/../lib/moderacion.php';
 require_once __DIR__ . '/../lib/mail.php';   // listas de dominios de correo (email_domain_normalize)
 if (!user()) redirect('/login.php');
 if (!is_mod()) { http_response_code(403); page_header('Moderación'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
@@ -87,19 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['chat_borrar
     else { $pdo->prepare("UPDATE chat_reports SET status = 'dismissed' WHERE msg_id = ? AND status = 'open'")->execute([$mid]); $out[] = "Reportes del mensaje #$mid descartados."; }
     if (post('back') === '1') redirect("/chat.php?m=$mid#m$mid");   // «eliminar» desde el propio chat
 }
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'humano') {
-    $item = (int)post('item'); $dec = post('dec') === 'ok' ? 'ok' : 'reject';
-    $q = $pdo->prepare("SELECT item_type, ref_id FROM mod_queue WHERE item_id = ? AND status IN ('needs_human','queued','processing')"); $q->execute([$item]);
-    if ($it = $q->fetch()) {
-        if ($it['item_type'] === 'story') {
-            $pdo->prepare("UPDATE stories SET status = ? WHERE story_id = ?")->execute([$dec === 'ok' ? 'nuevas' : 'rejected', $it['ref_id']]);
-        } else {
-            $pdo->prepare("UPDATE comments SET status = ? WHERE comment_id = ?")->execute([$dec === 'ok' ? 'ok' : 'rejected', $it['ref_id']]);
-            if ($dec === 'ok') $pdo->prepare("UPDATE stories s JOIN comments c ON c.story_id = s.story_id SET s.comments = s.comments + 1 WHERE c.comment_id = ?")->execute([$it['ref_id']]);
-        }
-        $pdo->prepare("UPDATE mod_queue SET status = ?, processed = NOW() WHERE item_id = ?")->execute([$dec, $item]);
-        $out[] = "#$item: " . ($dec === 'ok' ? 'aprobado' : 'rechazado') . '.';
-    }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'ia') {   // decision humana sobre lo que ha señalado u ocultado la IA
+    $item = (int)post('item');
+    $r = mod_human($pdo, $item, post('dec') === 'remove' ? 'remove' : 'keep', (int)user()['user_id']);
+    $out[] = $r ? "#$item: $r." : "#$item ya estaba resuelto.";
 }
 
 /* ---- fuentes propuestas por los usuarios (lib/propuestas.php) ---- */
@@ -142,17 +134,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
     }
 }
 
-$q = $pdo->query("SELECT m.*, IF(m.item_type='story', s.title, c.content) AS txt, IF(m.item_type='story', s.story_id, c.story_id) AS sid
-                  FROM mod_queue m
-                  LEFT JOIN stories s ON m.item_type='story' AND s.story_id = m.ref_id
-                  LEFT JOIN comments c ON m.item_type='comment' AND c.comment_id = m.ref_id
-                  WHERE m.status IN ('needs_human','queued','processing') ORDER BY m.created LIMIT 50")->fetchAll();
+try {
+    $q = $pdo->query("SELECT m.*, u.login AS decider,
+                             CASE m.item_type WHEN 'story' THEN s.title WHEN 'comment' THEN c.content ELSE ch.content END AS txt,
+                             CASE m.item_type WHEN 'story' THEN s.story_id WHEN 'comment' THEN c.story_id ELSE NULL END AS sid
+                        FROM mod_queue m
+                        LEFT JOIN stories s  ON m.item_type = 'story'   AND s.story_id  = m.ref_id
+                        LEFT JOIN comments c ON m.item_type = 'comment' AND c.comment_id = m.ref_id
+                        LEFT JOIN chat ch    ON m.item_type = 'chat'    AND ch.msg_id   = m.ref_id
+                        LEFT JOIN users u    ON u.user_id = m.decided_by
+                       WHERE m.status IN ('hidden','flag','needs_human')
+                       ORDER BY FIELD(m.status, 'hidden', 'flag', 'needs_human'), m.score DESC, m.item_id LIMIT 100")->fetchAll();
+    $qstats = $pdo->query("SELECT SUM(status IN ('queued','processing')) cola, SUM(status = 'ok' AND processed > NOW() - INTERVAL 1 DAY) ok24,
+                                  SUM(category IS NOT NULL AND processed > NOW() - INTERVAL 1 DAY) sen24 FROM mod_queue")->fetch();
+} catch (Throwable $e) { $q = []; $qstats = null; }   // sin la migracion 062
 
 page_header('Moderación');
 echo "<div class=\"admin\"><h1>Moderación</h1>";
-if ((int)cfg('mod_enabled', 0) === 0) echo "<p class=\"notice\">La IA moderadora aún no está activa: de momento todo se publica directamente. Cuando esté en marcha, aquí aparecerá lo que no sepa decidir.</p>";
-else echo "<p class=\"notice\">Aquí llega lo que la IA no ha sabido decidir. El criterio es la ley: insultos, delitos de odio, amenazas y cualquier conducta delictiva se rechazan; el resto se aprueba.</p>";
+if (!mod_on()) echo "<p class=\"notice\">La IA moderadora está apagada (<code>mod_enabled = 0</code>): todo se publica y nada pasa por ella. Los reportes siguen llegando aquí.</p>";
+else echo "<p class=\"notice\">Todo se publica al momento. La IA local (en el PC de la redacción) lo revisa después con el criterio de las <a href=\"/normas.php\">normas de uso</a> y señala aquí lo dudoso" . (cfg('mod_auto_hide') === '1' ? "; lo muy claro lo oculta hasta que lo veáis" : "; no oculta nada (<code>mod_auto_hide = 0</code>)") . ". Decidís vosotros. " . h(mod_worker_line()) . "</p>";
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
+
+/* ---- revision de la IA local ---- */
+$TY = ['story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat'];
+echo "<h3 id=\"ia\">Señalado por la IA (" . count($q) . ")</h3>";
+if ($qstats) echo "<p><small>En cola: " . (int)$qstats['cola'] . " · últimas 24 h: " . (int)$qstats['ok24'] . " sin problemas, " . (int)$qstats['sen24'] . " señalados.</small></p>";
+if (!$q) echo "<p>Nada pendiente.</p>";
+foreach ($q as $m) {
+    $link = $m['item_type'] === 'chat' ? "/chat.php?m={$m['ref_id']}#m{$m['ref_id']}" : ($m['item_type'] === 'comment' ? "/hilo.php?id={$m['sid']}#c{$m['ref_id']}" : "/hilo.php?id={$m['ref_id']}");
+    $v = json_decode((string)$m['verdict'], true) ?: [];
+    $estado = ['hidden' => '<b>oculto provisionalmente</b>', 'flag' => 'visible, señalado', 'needs_human' => 'la IA no ha podido decidir'][$m['status']];
+    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . $TY[$m['item_type']] . " #{$m['ref_id']}</b> " . ($m['status'] !== 'hidden' ? "<a href=\"$link\">ver</a>" : "") . "<span class=\"meta\"> · $estado · " . h(hace($m['created'])) . ($m['priority'] ? " · reportado" : "") . "</span></div>";
+    echo "<p class=\"meta\">" . h(mod_note_line($m)) . "</p>";
+    echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth((string)$m['txt'], 0, 600, '…'))) . "</blockquote>";
+    if (!empty($v['cita'])) echo "<p class=\"meta\">Fragmento: «" . h($v['cita']) . "»</p>";
+    echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"ia\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
+    echo "<button class=\"btn danger\" name=\"dec\" value=\"remove\" title=\"" . ($m['item_type'] === 'story' ? 'el envío se rechaza' : 'se queda con el texto sustituido por el aviso') . "\">Retirar</button> ";
+    echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está') . "\">" . ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda') . "</button></form></div></div>";
+}
 
 /* ---- comentarios reportados ---- */
 $reps = $pdo->query("SELECT c.comment_id, c.story_id, c.content, c.alias, c.created, c.user_id, u.login, s.title,
@@ -162,6 +181,7 @@ $reps = $pdo->query("SELECT c.comment_id, c.story_id, c.content, c.alias, c.crea
                       WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0
                       GROUP BY c.comment_id ORDER BY n DESC, first_rep ASC LIMIT 100")->fetchAll();
 $RZ = report_reasons();
+$notes = mod_notes($pdo, 'comment', array_column($reps, 'comment_id'));
 echo "<h3 id=\"reportes\">Comentarios reportados (" . count($reps) . ")</h3>";
 if (!$reps) echo "<p>No hay reportes pendientes.</p>";
 foreach ($reps as $r) {
@@ -170,6 +190,7 @@ foreach ($reps as $r) {
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($who) . "</b> en <a href=\"/hilo.php?id={$r['story_id']}#c{$r['comment_id']}\">" . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</a>";
     echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
     echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
+    if ($nl = mod_note_line($notes[(int)$r['comment_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_borrar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar comentario</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_descartar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn\" title=\"el comentario se queda; los reportes se cierran\">Descartar reporte</button></form>";
     echo "<a class=\"btn\" href=\"/editar-comentario.php?id={$r['comment_id']}\">editar</a></div></div>";
@@ -182,6 +203,7 @@ try {
                            WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0
                            GROUP BY c.msg_id ORDER BY n DESC, first_rep ASC LIMIT 100")->fetchAll();
 } catch (Throwable $e) { $creps = []; }
+$cnotes = mod_notes($pdo, 'chat', array_column($creps, 'msg_id'));
 echo "<h3 id=\"chat\">Mensajes del chat reportados (" . count($creps) . ")</h3>";
 if (!$creps) echo "<p>No hay reportes pendientes.</p>";
 foreach ($creps as $r) {
@@ -189,6 +211,7 @@ foreach ($creps as $r) {
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h(chat_who($r)) . "</b> <a href=\"/chat.php?m={$r['msg_id']}#m{$r['msg_id']}\">#{$r['msg_id']}</a>";
     echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
     echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
+    if ($nl = mod_note_line($cnotes[(int)$r['msg_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar mensaje</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_descartar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn\" title=\"el mensaje se queda; los reportes se cierran\">Descartar reporte</button></form></div></div>";
 }
@@ -282,18 +305,6 @@ if ($bs) {
         echo "<td><form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"medio_quitar\"><input type=\"hidden\" name=\"domain\" value=\"" . h($b['domain']) . "\"><button class=\"btn\">quitar</button></form></td></tr>";
     }
     echo "</table></details>";
-}
-echo "<h3>Pendientes (" . count($q) . ")</h3>";
-if (!$q) echo "<p class=\"end\">Nada pendiente.</p>";
-else {
-    echo "<table>";
-    foreach ($q as $m) {
-        $v = $m['verdict'] ? "<br><small>IA: " . h(mb_strimwidth((string)$m['verdict'], 0, 200, '…')) . "</small>" : '';
-        echo "<tr><td>#{$m['item_id']} " . ($m['item_type'] === 'story' ? 'envío' : 'comentario') . " · " . h(hace($m['created'])) . ($m['sid'] ? " · <a href=\"/hilo.php?id={$m['sid']}\">hilo</a>" : '') . "<br>" . h(mb_strimwidth((string)$m['txt'], 0, 300, '…')) . $v . "</td><td style=\"white-space:nowrap\">";
-        echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"humano\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
-        echo "<button name=\"dec\" value=\"ok\">aprobar</button> <button name=\"dec\" value=\"reject\">rechazar</button></form></td></tr>";
-    }
-    echo "</table>";
 }
 echo "</div>";
 page_footer();
