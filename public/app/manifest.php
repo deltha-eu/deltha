@@ -17,8 +17,8 @@ echo json_encode([
         ['src' => icon_src('512m'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
     ],
     'shortcuts' => [
-        ['name' => t('Candidatas'), 'url' => '/candidatas.php?src=app', 'icons' => [['src' => $i192, 'sizes' => '192x192']]],
-        ['name' => t('Nuevas'),     'url' => '/nuevas.php?src=app',     'icons' => [['src' => $i192, 'sizes' => '192x192']]],
+        ['name' => t('Substacks'),  'url' => '/?portada=substacks&src=app', 'icons' => [['src' => $i192, 'sizes' => '192x192']]],
+        ['name' => t('Radar'),      'url' => '/radar.php?src=app',      'icons' => [['src' => $i192, 'sizes' => '192x192']]],
         ['name' => t('Enviar'),     'url' => '/enviar.php?src=app',     'icons' => [['src' => $i192, 'sizes' => '192x192']]],
     ],
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

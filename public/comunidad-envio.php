@@ -1,7 +1,7 @@
 <?php
 /** POST id, community, act=añadir|quitar — añade un envío a una comunidad o lo quita de ella.
  *  Pueden hacerlo el dueño de esa comunidad, los moderadores y el admin (los mods arbitran; el autor no interviene).
- *  Se adoptan envíos en cualquier fase pública: nuevas, candidatas, portada o archivados. Tope comm_max_per_story. Vuelve al hilo. */
+ *  Se adoptan envíos en cualquier fase pública: radar, portada o archivados. Tope comm_max_per_story. Vuelve al hilo. */
 require __DIR__ . '/../lib/app.php';
 if (!user()) redirect('/login.php');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/');

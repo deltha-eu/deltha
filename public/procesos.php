@@ -2,9 +2,10 @@
 /**
  * /procesos.php — la «fisgona» de Deltha.
  *
- *  ?v=cola          nuevas ordenadas por delta en vivo, con la estimacion de cuando
- *                   asciende cada una a candidatas (simulando el ciclo: una por ciclo,
- *                   la de mayor delta entre las que ya cumplen delta_min_age_min)
+ *  ?v=cola          el radar ordenado por delta en vivo, con la estimacion de cuando
+ *                   llega cada enlace a su portada (simulando el ciclo: una por ciclo,
+ *                   alternando Medios y Substacks, la de mayor delta de la portada del
+ *                   turno entre las que cumplen delta_min_age_min y delta_min_publish)
  *  ?v=todo          flujo cronologico de toda la actividad
  *  ?v=envios | comentarios | votos | portadas   flujo filtrado
  *  &d=hoy | todo    solo lo de hoy / sin ventana de dias (desde /estadisticas.php). «todo»
@@ -19,12 +20,12 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
-$VIEWS = ['cola' => t('En cola'), 'todo' => t('Todo'), 'envios' => t('Envíos'), 'comentarios' => t('Comentarios'), 'votos' => t('Votos'), 'portadas' => t('Portadas')];
+$VIEWS = ['cola' => t('Radar'), 'todo' => t('Todo'), 'envios' => t('Envíos'), 'comentarios' => t('Comentarios'), 'votos' => t('Votos'), 'portadas' => t('Portadas')];
 $v = (string)($_GET['v'] ?? 'cola');
 if (!isset($VIEWS[$v])) $v = 'cola';
 $page = page_num();
 $per  = (int)cfg('per_page', 20);
-$VIVAS = "('nuevas','candidatas','destacadas','archived')";   // lo que es publico
+$VIVAS = "('nuevas','destacadas','archived')";   // lo que es publico
 $DIAS  = max(1, (int)cfg('procesos_days', 7));                    // ventana del flujo: lo demas ya esta en los hilos
 $d = (string)($_GET['d'] ?? '');
 if (!in_array($d, ['hoy', 'todo'], true) || $v === 'cola' || ($d === 'todo' && $v === 'todo')) $d = '';
@@ -55,20 +56,22 @@ if ($v !== 'cola') {   // filtro de fecha: ventana normal / solo hoy / todo (est
 }
 
 if ($v === 'cola') {
-    $next  = max(1, (int)ceil((proximo_ciclo() - time()) / 60));
-    $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' ORDER BY delta_live DESC, s.sent_date ASC");
+    $prox  = proximo_ciclo();
+    $next  = max(1, (int)ceil(($prox - time()) / 60));
+    $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' AND s.content_type='link' ORDER BY delta_live DESC, s.sent_date ASC");
     $rows = $st->fetchAll();
     $total = count($rows);
     $eta = cola_eta($rows);
-    echo "<p class=\"notice\">" . t('%d en cola · próximo ciclo en %d min · cada ciclo asciende <b>una</b> a candidatas: la de mayor δ entre las que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.', $total, $next, (int)cfg('delta_min_age_min'), num_es(cfg('delta_min_candidate', 0.5))) . "</p>";
+    echo "<p class=\"notice\">" . t('%d en el radar · próximo ciclo en %d min, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada: el de mayor δ entre los suyos que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.', $total, $next, t(DDD_PORTADAS[portada_turno($prox)]), (int)cfg('delta_min_age_min', 30), num_es(cfg('delta_min_publish', 1))) . "</p>";
     $n = 0;
-    // una linea por noticia: puesto, titular, quien/tema/cuando, delta y estimacion; sin avatar ni foto
+    // una linea por noticia: puesto, titular, quien/tema/cuando, delta, portada de destino y estimacion; sin avatar ni foto
     foreach (array_slice($rows, page_offset($page), $per) as $i => $s) {
         $pos = page_offset($page) + $i + 1;
         $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
         $who = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
         $sid = (int)$s['story_id'];
-        $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid]) : ((float)$s['delta_live'] < (float)cfg('delta_min_candidate', 0.5) ? t('necesita δ ≥ %s para ascender', num_es(cfg('delta_min_candidate', 0.5))) : t('sin estimación'));
+        $pd = portada_de($pdo, $s);
+        $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid], $pd) : t('hacia %s', t(DDD_PORTADAS[$pd])) . ' · ' . radar_falta($s);
         echo "<div class=\"fz cola\" id=\"s$sid\"><span class=\"n\">$pos</span><div class=\"fzt\">";
         echo "<a class=\"t\" href=\"/hilo.php?id=$sid\">" . h($s['title']) . "</a>";
         echo "<span class=\"meta\">" . h($who) . " · " . topic_link($s) . " · " . h(hace($s['sent_date'])) . "</span>";
@@ -76,7 +79,7 @@ if ($v === 'cola') {
         echo "<span class=\"vt\">" . icon('up') . (int)$s['votes_pos'] . " " . icon('down') . (int)$s['votes_neg'] . " " . icon('reply') . (int)$s['comments'] . "</span></div>";
         $n++;
     }
-    if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en cola. <a href="/enviar.php">Envía algo</a>.') . "</p>";
+    if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en el radar. <a href="/enviar.php">Envía algo</a>.') . "</p>";
     paginate('/procesos.php', $page, $total);
     page_footer();
     exit;
@@ -100,7 +103,7 @@ if (in_array($v, ['todo', 'votos'], true))
              LEFT JOIN thread_aliases ta ON ta.story_id = vt.story_id AND ta.user_id = vt.user_id
                  WHERE $dV AND s.status IN $VIVAS";
 if (in_array($v, ['todo', 'portadas'], true))
-    $parts[] = "SELECT 'portada' AS kind, p.story_id, p.id AS ref, p.created AS ts, NULL AS user_id, NULL AS alias, NULL AS value,
+    $parts[] = "SELECT 'portada' AS kind, p.story_id, p.id AS ref, p.created AS ts, NULL AS user_id, NULL AS alias, p.portada AS value,
                        s.title, s.status, s.revealed, s.sent_date, p.delta
                   FROM promo_log p JOIN stories s ON s.story_id = p.story_id
                  WHERE $dP AND s.status IN $VIVAS";
@@ -154,7 +157,7 @@ foreach ($ev as $e) {
             $ic = $pos ? 'up' : 'down'; break;
         default: // portada
             $lead = "<span class=\"av sys\">" . icon('home') . "</span>";
-            $txt = "$title " . t('llega a <b>portada</b>') . " <span class=\"delta\">δ " . number_format((float)$e['delta'], 1, ',', '') . "</span>";
+            $txt = "$title " . (isset(DDD_PORTADAS[(string)$e['value']]) ? t('llega a <b>%s</b>', t(DDD_PORTADAS[$e['value']])) : t('llega a <b>portada</b>')) . " <span class=\"delta\">δ " . number_format((float)$e['delta'], 1, ',', '') . "</span>";
             $ic = 'home';
     }
     echo "<div class=\"fz k-{$e['kind']}\">$lead<div class=\"fzt\">$txt<span class=\"meta\"> · " . h(hace($e['ts'])) . "</span></div>" . icon($ic) . "</div>";

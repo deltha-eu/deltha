@@ -71,7 +71,7 @@ if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, $label, $field]) {
     $max = medios_max($kind);
     $mine = array_column(mis_medios($pdo, $u, $kind), 'source_id');
     echo "<label id=\"" . ($kind === 'medio' ? 'medios' : 'substacks') . "\">" . t($label) . "</label><small class=\"hint\">" . ($kind === 'medio'
-        ? t('Hasta %d medios con RSS que verás con el aspecto de Deltha, en el menú lateral y en el pie; desde cada noticia puedes proponerla en Nuevas. El catálogo lo mantiene el sitio: <a href="/medios.php">ver todos</a>.', $max)
+        ? t('Hasta %d medios con RSS que verás con el aspecto de Deltha, en el menú lateral y en el pie; desde cada noticia puedes proponerla en el radar. El catálogo lo mantiene el sitio: <a href="/medios.php">ver todos</a>.', $max)
         : t('Hasta %d newsletters (Substack) que verás igual que los medios, en su propio grupo del menú.', $max)) . "</small>";
     for ($k = 0; $k < $max; $k++) {
         echo "<select name=\"{$field}[]\" class=\"medsel\"><option value=\"\">" . t('— ninguno —') . "</option>";

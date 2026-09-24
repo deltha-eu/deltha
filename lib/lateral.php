@@ -1,7 +1,7 @@
 <?php
 /** lib/lateral.php — las dos columnas de escritorio (>= 1100 px): a la izquierda la navegacion en vertical
  *  (las dos barras de pestañas, «Publicar», el perfil y el pie con los enlaces del sitio); a la derecha, lo que esta pasando, igual para todo el mundo
- *  y sin nada «para ti»: el proximo ciclo con la cola, las comunidades con actividad y el pie.
+ *  y sin nada «para ti»: el proximo ciclo con el radar, las comunidades con actividad y el pie.
  *  En movil las dos van ocultas por CSS (display: none) y todo sigue como estaba. Sin JS. */
 declare(strict_types=1);
 require_once __DIR__ . '/cola.php';
@@ -97,30 +97,31 @@ function side(): void {
     echo "</aside>";
 }
 
-/** Proximo ciclo + las primeras de la cola (mini fisgona). */
+/** Proximo ciclo (y a que portada le toca) + las primeras del radar con estimacion (mini fisgona). */
 function side_ciclo(PDO $pdo): void {
-    $next = max(1, (int)ceil((proximo_ciclo() - time()) / 60));
-    $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' ORDER BY delta_live DESC, s.sent_date ASC LIMIT 40");
+    $prox = proximo_ciclo();
+    $next = max(1, (int)ceil(($prox - time()) / 60));
+    $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' AND s.content_type='link' ORDER BY delta_live DESC, s.sent_date ASC LIMIT 60");
     $rows = $st->fetchAll();
-    $total = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE status='nuevas'")->fetchColumn();
+    $total = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE status='nuevas' AND content_type='link'")->fetchColumn();
     $eta = cola_eta($rows);
-    echo "<section class=\"mod ciclo\"><h3>" . t('Próximo ciclo') . "<span>" . t('en %d min', $next) . "</span></h3>";
-    echo "<p class=\"meta\">" . t('%d en cola · sube la de mayor δ', $total) . "</p>";
+    echo "<section class=\"mod ciclo\"><h3>" . t('Próximo ciclo') . "<span>" . h(t(DDD_PORTADAS[portada_turno($prox)])) . " · " . t('en %d min', $next) . "</span></h3>";
+    echo "<p class=\"meta\">" . t('%d en el radar · cada ciclo, una portada', $total) . "</p>";
     $n = 0;
     foreach ($rows as $s) {
         if (!isset($eta[(int)$s['story_id']])) continue;   // solo las que llegan al δ minimo
         $sid = (int)$s['story_id'];
-        echo "<a class=\"row\" href=\"/hilo.php?id=$sid\"><b>δ " . number_format((float)$s['delta_live'], 1, ',', '') . "</b><span class=\"t\">" . h(mb_strimwidth($s['title'], 0, 70, '…')) . "</span><small>" . h(eta_txt($eta[$sid])) . "</small></a>";
+        echo "<a class=\"row\" href=\"/hilo.php?id=$sid\"><b>δ " . number_format((float)$s['delta_live'], 1, ',', '') . "</b><span class=\"t\">" . h(mb_strimwidth($s['title'], 0, 70, '…')) . "</span><small>" . h(eta_txt($eta[$sid], portada_de($pdo, $s))) . "</small></a>";
         if (++$n >= 3) break;
     }
     if ($n === 0) echo "<p class=\"meta\">" . t('Nada llega aún al δ mínimo.') . "</p>";
-    echo "<p class=\"more\"><a href=\"/procesos.php\">" . t('ver la cola entera') . "</a></p></section>";
+    echo "<p class=\"more\"><a href=\"/procesos.php\">" . t('ver el radar entero') . "</a></p></section>";
 }
 
 /** Temas (las categorias que pone Deltha): pastillas con el color del tema y los envios de la ultima semana; el coeficiente, si no es 1. */
 function side_temas(PDO $pdo): void {
     $rows = $pdo->query("SELECT t.topic_id, t.name, t.color, t.coef,
-                                (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','candidatas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL 7 DAY) n
+                                (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL 7 DAY) n
                            FROM topics t ORDER BY n DESC, t.name")->fetchAll();
     if (!$rows) return;
     echo "<section class=\"mod temas\"><h3>" . t('Temas') . "<span>" . t('esta semana') . "</span></h3><div class=\"chips\">";
@@ -135,7 +136,7 @@ function side_temas(PDO $pdo): void {
 function side_votadas(PDO $pdo): void {
     $h = (int)cfg('thread_ttl_hours', 48);
     $st = $pdo->prepare("SELECT s.story_id, s.title, s.votes_pos, s.votes_neg, s.comments, s.status
-                           FROM stories s WHERE s.status IN ('nuevas','candidatas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL ? HOUR AND s.votes_pos > 0
+                           FROM stories s WHERE s.status IN ('nuevas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL ? HOUR AND s.votes_pos > 0
                           ORDER BY s.votes_pos DESC, s.comments DESC, s.sent_date DESC LIMIT 6");
     $st->execute([$h]);
     $rows = $st->fetchAll();
@@ -153,7 +154,7 @@ function side_votadas(PDO $pdo): void {
 function side_comunidades(PDO $pdo): void {
     $rows = $pdo->query("SELECT c.name, c.slug, c.color, s.story_id, s.title, s.comments, s.sent_date
                            FROM communities c
-                           JOIN stories s ON s.story_id = (SELECT sc.story_id FROM story_communities sc JOIN stories x ON x.story_id = sc.story_id WHERE sc.community_id = c.community_id AND x.status IN ('nuevas','candidatas','destacadas','archived') ORDER BY sc.created DESC LIMIT 1)
+                           JOIN stories s ON s.story_id = (SELECT sc.story_id FROM story_communities sc JOIN stories x ON x.story_id = sc.story_id WHERE sc.community_id = c.community_id AND x.status IN ('nuevas','destacadas','archived') ORDER BY sc.created DESC LIMIT 1)
                           WHERE c.status = 'ok' ORDER BY s.sent_date DESC LIMIT 8")->fetchAll();
     if (!$rows) return;
     // «todas» en la cabecera, como en los modulos de substacks y medios

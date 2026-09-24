@@ -122,7 +122,8 @@ a.hint { text-decoration: none; }
     <li><b><?= t('Es efímera.') ?></b> <?= t('Los envíos y los comentarios desaparecen a las %d horas. Lo que importa es lo que pasa ahora, no lo que se acumula.', (int)cfg('thread_ttl_hours', 48)) ?></li>
     <li><b><?= t('No deja huella.') ?></b> <?= t('Sin cookies, sin rastreo, sin publicidad programática. Puedes comprobarlo abriendo las herramientas de tu navegador.') ?></li>
     <li><b><?= t('Es horizontal.') ?></b> <?= t('Todo se publica bajo un alias y el nombre del autor solo aparece a los %d minutos, para que se juzguen las palabras antes que a quien las dice.', $gm) ?></li>
-    <li><b><?= t('Se ve por dentro.') ?></b> <?= t('La sección Procesos enseña en directo la cola, el δ de cada envío y cada voto, comentario y portada según ocurren.') ?></li>
+    <li><b><?= t('Dos portadas y un radar.') ?></b> <?= t('Lo que envía la gente espera en el radar hasta que sus votos lo llevan a una de las dos portadas: Medios o Substacks. Los originales de la comunidad tienen su propia pestaña.') ?></li>
+    <li><b><?= t('Se ve por dentro.') ?></b> <?= t('La sección Procesos enseña en directo el radar, el δ de cada envío y cada voto, comentario y portada según ocurren.') ?></li>
   </ul>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>
 </a>
@@ -174,7 +175,7 @@ a.hint { text-decoration: none; }
 <?php endforeach; ?>
   </div>
   <ul>
-    <li><b><?= t('%d skins.', count($SK)) ?></b> <?= t('Misma portada, mismos números, distinta piel: de revista, de tarjetas, de terminal, de manga, de fanzine… Se elige en el perfil, y cada una tiene versión clara y oscura.') ?></li>
+    <li><b><?= t('%d skins.', count($SK)) ?></b> <?= t('Mismas portadas, mismos números, distinta piel: de revista, de tarjetas, de terminal, de manga, de fanzine… Se elige en el perfil, y cada una tiene versión clara y oscura.') ?></li>
     <li><b><?= t('En tu idioma y en tu bolsillo.') ?></b> <?= t('Ocho idiomas: español, catalán, euskera, gallego, inglés, francés, alemán e italiano. Se instala como app en el móvil, con mensajes privados entre registrados. Nada de esto cambia lo que ves: solo cómo lo ves.') ?></li>
   </ul>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>
@@ -186,7 +187,7 @@ a.hint { text-decoration: none; }
   <p><?= t('Deltha es un proyecto abierto a todo el mundo. Para ser copropietario no te pedimos dinero: solo que uses la plataforma.') ?></p>
   <p><b><?= t('El 50 %% de la propiedad de Deltha se repartirá entre todos los usuarios registrados que tengan aura %s el %s.', $max, $dlTxt) ?></b></p>
   <ul>
-    <li><b><?= t('Así sube el aura.') ?></b> <?= t('+%s por cada envío tuyo que llega a portada, +%s por cada envío o artículo, +%s por cada comentario. Como mucho +%s al día.', $aPort, $aEnv, $aCom, $aCap) ?></li>
+    <li><b><?= t('Así sube el aura.') ?></b> <?= t('+%s por cada envío tuyo que llega a portada, +%s por cada envío u original, +%s por cada comentario. Como mucho +%s al día.', $aPort, $aEnv, $aCom, $aCap) ?></li>
     <li><b><?= t('Así baja.') ?></b> <?= t('Cada día pierdes %s, hasta el mínimo de 5. El aura no se acumula: se sostiene. Mide quién está, no quién estuvo.', $aDec) ?></li>
   </ul>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>

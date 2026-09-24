@@ -15,10 +15,10 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('site_name',           'Deltha', 'Nombre del sitio'),
 ('access_key',          'CAMBIAR', 'Clave temporal de acceso: mientras no este vacia, quien no la tenga ve /delta/ en vez de la portada. Cambiarla expulsa a todos.'),
 ('mod_enabled',         '0',    '1 = la IA local revisa lo nuevo DESPUES de publicarse (posmoderacion); 0 = no se encola nada'),
-('delta_min_age_min',   '30',   'Minutos desde el envio antes de ser candidata'),
+('delta_min_age_min',   '30',   'Minutos desde el envio antes de poder llegar a portada'),
 ('decay_per_halfhour',  '0.05', 'Decremento de delta por cada media hora desde el envio'),
 ('decay_mode',          'additive', 'additive | multiplicative'),
-('delta_min_publish',   '1',    'Delta minimo para publicarse'),
+('delta_min_publish',   '1',    'Delta minimo para publicar en portada (Medios o Substacks, segun el turno del ciclo)'),
 ('aura_portada',        '0.5',  'Aura por envio que llega a portada'),
 ('aura_envio',          '0.1',  'Aura por envio o articulo publicado en nuevas'),
 ('aura_comentario',     '0.02', 'Aura por comentario'),
@@ -31,7 +31,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('thread_ttl_hours',    '48',   'Vida del hilo (destacadas -> archivo)'),
 ('ghost_minutes',       '30',   'Minutos que dura el alias Ghost de cada envio/comentario antes de mostrar el nombre real'),
 ('per_page',            '20',   'Envios por pagina'),
-('cycle_minutes',       '5',    'Minutos entre ciclos del cron (para estimar en /procesos.php cuando asciende cada nueva)'),
+('cycle_minutes',       '5',    'Minutos entre ciclos del cron; los ciclos alternan portada (Medios, Substacks)'),
 ('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
 ('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
 ('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
@@ -53,8 +53,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('og_timeout_sec',      '3',    'Timeout para extraer og:image'),
 ('curl_impersonate',    '/opt/curl-impersonate/curl_chrome116', 'Ruta a curl-impersonate (vacio = usar curl de PHP)'),
 ('sources_enabled',      '1',    '1 = fuentes externas visibles (/fuente.php) y lectura de sus RSS en el cron'),
-('sources_popular_hours','24',   'Fuentes: «candidatas» = nuevas de las ultimas N horas ordenadas por votos'),
-('sources_popular_min_votes','5','Fuentes: votos minimos de una nueva para salir en «candidatas»'),
+('sources_popular_hours','24',   'Fuentes: «populares» = nuevas de las ultimas N horas ordenadas por votos'),
+('sources_popular_min_votes','5','Fuentes: votos minimos de una nueva para salir en «populares»'),
 ('sources_keep_days',    '7',    'Fuentes: dias que se guardan los items que ya no aparecen en los feeds'),
 ('sources_timeout_sec',  '8',    'Fuentes: timeout al leer cada feed'),
 ('media_max_per_user',   '3',    'Medios que puede elegir cada usuario en su perfil («Mis medios»)'),
@@ -105,7 +105,7 @@ INSERT INTO topics (name, coef, color) VALUES
 ('ocio',       1.00, '#993556'),
 ('relatos',    1.10, '#6B3FA0');
 
--- content_type: link = enlace externo | article = articulo propio (pestaña Articulos, futuro)
+-- content_type: link = enlace externo | article = original (texto propio, pestaña Originales; no va a portada)
 CREATE TABLE stories (
     story_id        INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     content_type    ENUM('link','article') NOT NULL DEFAULT 'link',
@@ -119,8 +119,9 @@ CREATE TABLE stories (
     source          VARCHAR(100) DEFAULT NULL,       -- dominio de la fuente (eldiario.es)
     content         TEXT,
     image           VARCHAR(64) DEFAULT NULL,        -- nombre de fichero en /media
-    status          ENUM('pending_mod','rejected','nuevas','candidatas','destacadas','archived','discard')
-                    NOT NULL DEFAULT 'nuevas',
+    status          ENUM('pending_mod','rejected','nuevas','destacadas','archived','discard')
+                    NOT NULL DEFAULT 'nuevas',        -- nuevas = en el radar; destacadas = en una portada
+    portada         ENUM('medios','substacks') DEFAULT NULL,   -- portada de destino de un enlace; NULL = original (articulo)
     sent_date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at       DATETIME DEFAULT NULL,           -- ultima edicion (autor en plazo o moderacion)
     indexable       TINYINT(1) NOT NULL DEFAULT 0,   -- articulo abierto a buscadores por su autor (migra-049)
@@ -133,6 +134,7 @@ CREATE TABLE stories (
     KEY idx_status_sent (status, sent_date),
     KEY idx_status_delta (status, delta),
     KEY idx_status_pub (status, published_date),
+    KEY idx_portada (portada, status, published_date),
     KEY idx_source (source),
     KEY idx_comm (community_id, sent_date),
     CONSTRAINT fk_st_user  FOREIGN KEY (user_id)  REFERENCES users(user_id),
@@ -208,8 +210,9 @@ CREATE TABLE mod_queue (
 CREATE TABLE promo_log (
     id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     story_id    INT UNSIGNED NOT NULL,
+    portada     ENUM('medios','substacks') DEFAULT NULL,  -- portada en la que se publico
     delta       DECIMAL(8,3) NOT NULL,
-    candidates  SMALLINT UNSIGNED NOT NULL,
+    candidates  SMALLINT UNSIGNED NOT NULL,              -- enlaces que habia en el radar de esa portada
     commenters  SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- comentaristas unicos en el momento de publicar (instrumentacion)
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_story (story_id)

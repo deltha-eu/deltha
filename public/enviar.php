@@ -12,7 +12,7 @@ $err = null;
 $step = post('step') ?: '1';
 $f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null];
 
-// Prerrelleno por GET (boton «enviar a Nuevas» de un medio en /fuente.php, o un marcador): ?url=…&title=…&content=…&topic=ID
+// Prerrelleno por GET (boton «enviar al radar» de un medio en /fuente.php, o un marcador): ?url=…&title=…&content=…&topic=ID
 // equivale a haber pasado el paso 1 con esa URL; titular y entradilla del feed mandan sobre los de la pagina si vienen.
 $pre = null; $preX = 0;
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), $f['content'] ?: null, $f['image'], $status]);
             $sid = (int)$pdo->lastInsertId();
+            $pdo->prepare("UPDATE stories SET portada = ? WHERE story_id = ?")->execute([portada_de($pdo, ['url' => $f['url'], 'source' => source_of($f['url'])]), $sid]);   // Medios o Substacks (el ciclo lo recalcula)
             if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
             $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
             $pdo->prepare("UPDATE stories SET author_alias = ? WHERE story_id = ?")->execute([$alias, $sid]);
@@ -104,7 +105,7 @@ if ($step === '1') {
     echo "" . t('<label>Enlace a una noticia</label>') . "<input type=\"url\" name=\"url\" value=\"" . h($f['url']) . "\" placeholder=\"https://…\" autofocus>";
     echo "" . t('<button>Continuar</button>') . "</form>";
     echo "<p class=\"or\">" . t('— o —') . "</p>";
-    echo "<a class=\"choice\" href=\"/articulo.php\">" . icon('art') . "<div>" . t('<b>Escribe un artículo</b>') . "<span>" . t('Texto propio de hasta %d palabras, con foto si quieres. Entra en Nuevas como cualquier envío y puede llegar a portada igual.', (int)cfg('article_max_words', 500)) . "</span></div></a>";
+    echo "<a class=\"choice\" href=\"/articulo.php\">" . icon('art') . "<div>" . t('<b>Escribe un artículo</b>') . "<span>" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', (int)cfg('article_max_words', 500)) . "</span></div></a>";
 } else {
     echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"step\" value=\"2\">";
     echo "<input type=\"hidden\" name=\"url\" value=\"" . h($f['url']) . "\">";

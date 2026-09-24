@@ -1,7 +1,7 @@
 <?php
-/** /fuente.php?f=slug[&v=portada|candidatas|nuevas] — una fuente externa pintada con Deltha, solo lectura.
+/** /fuente.php?f=slug[&v=portada|populares|nuevas] — una fuente externa pintada con Deltha, solo lectura.
  *  Agregador (Meneame): tres vistas, votos y comentarios de la fuente. Medio (Jot Down...): sus ultimas noticias,
- *  con boton «enviar a Nuevas» que abre /enviar.php prerrellenado. Los items los lee el cron (lib/fuentes.php). */
+ *  con boton «enviar al radar» que abre /enviar.php prerrellenado. Los items los lee el cron (lib/fuentes.php). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/fuentes.php';
@@ -10,7 +10,8 @@ $src = fuentes_on() ? fuente_by_slug($pdo, (string)($_GET['f'] ?? '')) : null;
 if (!$src) { http_response_code(404); page_header(t('Fuentes')); echo "<p class=\"end\">" . t('Esa fuente no existe.') . "</p>"; page_footer(); exit; }
 $medio = fuente_es_medio($src);
 
-$views = ['portada' => t('Portada'), 'candidatas' => t('Candidatas'), 'nuevas' => t('Nuevas')];
+$views = ['portada' => t('Portada'), 'populares' => t('Populares'), 'nuevas' => t('Nuevas')];
+if (($_GET['v'] ?? '') === 'candidatas') $_GET['v'] = 'populares';   // enlaces antiguos
 if ($medio || trim((string)$src['feed_nuevas']) === '') $views = ['portada' => $views['portada']];
 $view = isset($views[(string)($_GET['v'] ?? '')]) ? (string)$_GET['v'] : 'portada';
 
@@ -42,14 +43,14 @@ $last = $src['last_fetch'] ? hace($src['last_fetch']) : t('todavía no');
 if ($medio) {
     $intro = t('Las últimas noticias de <a href="%s" rel="noopener">%s</a> por RSS, vistas desde Deltha.', h($src['home']), h($src['name']));
     if ($src['descr']) $intro .= ' ' . h($src['descr']) . '.';
-    $intro .= ' ' . t('Cada titular lleva a la noticia; con «enviar a Nuevas» la propones en Deltha como cualquier envío.');
+    $intro .= ' ' . t('Cada titular lleva a la noticia; con «enviar al radar» la propones en Deltha como cualquier envío.');
     $u = user();
     $intro .= ' ' . ($u ? (mis_medios($pdo, $u) ? t('Es uno de <a href="/perfil.php#medios">tus medios</a>.') : t('Puedes elegir <a href="/perfil.php#medios">tus medios</a> en el perfil.')) : t('<a href="/login.php">Entra</a> para elegir tus medios.'));
 } else {
     $intro = fuente_sin_votos($src)
         ? t('Solo lectura: los últimos mensajes de <a href="%s" rel="noopener">%s</a>, vistos desde Deltha. Aquí no se responde: cada mensaje lleva a su sitio en el hilo original; el número es el del mensaje dentro del hilo.', h($src['home']), h($src['name']))
         : t('Solo lectura: lo que pasa en <a href="%s" rel="noopener">%s</a>, visto desde Deltha. Aquí no se vota ni se comenta: el titular lleva al artículo y los comentarios, al hilo original.', h($src['home']), h($src['name']));
-    if ($view === 'candidatas') $intro .= ' ' . t('Candidatas: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.', (int)cfg('sources_popular_hours', 24), (int)cfg('sources_popular_min_votes', 5));
+    if ($view === 'populares') $intro .= ' ' . t('Populares: las nuevas de las últimas %d h con al menos %d votos, ordenadas por votos.', (int)cfg('sources_popular_hours', 24), (int)cfg('sources_popular_min_votes', 5));
 }
 $intro .= ' ' . t('Se lee cada %d min · última lectura: %s.', (int)$src['interval_min'], h($last));
 if ($src['last_error'] && is_admin()) $intro .= " <b>" . h($src['last_error']) . "</b>";

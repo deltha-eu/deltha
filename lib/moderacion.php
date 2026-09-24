@@ -88,7 +88,7 @@ function mod_hide(PDO $pdo, string $type, int $id): ?string {
     }
     $q = $pdo->prepare("SELECT status FROM stories WHERE story_id = ?"); $q->execute([$id]);
     $prev = $q->fetchColumn();
-    if (!in_array($prev, ['nuevas', 'candidatas', 'destacadas'], true)) return null;   // archivado o ya retirado: solo se señala
+    if (!in_array($prev, ['nuevas', 'destacadas'], true)) return null;   // archivado o ya retirado: solo se señala
     $pdo->prepare("UPDATE stories SET status = 'pending_mod' WHERE story_id = ? AND status = ?")->execute([$id, $prev]);
     return (string)$prev;
 }
@@ -101,7 +101,7 @@ function mod_unhide(PDO $pdo, string $type, int $id, ?string $prev): void {
     } elseif ($type === 'chat') {
         $pdo->prepare("UPDATE chat SET status = 'ok' WHERE msg_id = ? AND status = 'pending_mod'")->execute([$id]);
     } else {
-        $to = in_array($prev, ['nuevas', 'candidatas', 'destacadas'], true) ? $prev : 'nuevas';
+        $to = in_array($prev, ['nuevas', 'destacadas'], true) ? $prev : 'nuevas';
         $pdo->prepare("UPDATE stories SET status = ? WHERE story_id = ? AND status = 'pending_mod'")->execute([$to, $id]);
     }
 }

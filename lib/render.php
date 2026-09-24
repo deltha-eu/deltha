@@ -55,7 +55,7 @@ function source_link(array $s): string {
     return "<a href=\"/medio.php?m=" . rawurlencode((string)$s['source']) . "\">" . h($s['source']) . "</a>";
 }
 
-/** Post de timeline. $mode: full (portada) | compact (candidatas/nuevas) */
+/** Post de timeline. $mode: full (portadas, originales) | compact (radar) */
 function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
     $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
@@ -67,7 +67,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<article class=\"post $mode\" id=\"s{$s['story_id']}\">";
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
-    $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? " · " . source_link($s) : '');
+    $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('original') : ($s['source'] ? " · " . source_link($s) : '');
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span></div>";
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
@@ -92,13 +92,12 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
         }
     }
     if ($mode === 'compact') {
-        if ($s['status'] === 'candidatas') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . "</div>";
-        elseif ($s['status'] === 'nuevas') {
-            $age = (int)cfg('delta_min_age_min') - intdiv(time() - strtotime($s['sent_date']), 60);
-            $minCand = (float)cfg('delta_min_candidate', 0.5);
-            if (delta_live($s) < $minCand) $st = t('necesita δ ≥ %s para ascender', num_es($minCand)) . ($age > 0 ? " · " . t('elegible en %d min', $age) : '');
-            else $st = $age > 0 ? t('elegible en %d min', $age) : t('elegible: sube la de mayor delta cada ciclo');
-            echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · $st</div>";
+        if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') {   // en el radar: formula, portada de destino y estimacion
+            require_once __DIR__ . '/cola.php';
+            global $DDD_ETA;   // la pagina puede dejar calculadas las estimaciones (cola_eta) para no repetirlas por envio
+            $p = portada_de($pdo, $s);
+            $st = isset($DDD_ETA[(int)$s['story_id']]) ? eta_txt($DDD_ETA[(int)$s['story_id']], $p) : t('hacia %s', t(DDD_PORTADAS[$p])) . ' · ' . radar_falta($s);
+            echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h($st) . "</div>";
         }
     }
     echo "<div class=\"actions\">";
@@ -113,7 +112,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
 
 function vote_widget(array $s): void {
     $id = (int)$s['story_id'];
-    $can = user() && in_array($s['status'], ['nuevas','candidatas','destacadas'], true) && (int)$s['user_id'] !== (int)user()['user_id'];
+    $can = user() && in_array($s['status'], ['nuevas','destacadas'], true) && (int)$s['user_id'] !== (int)user()['user_id'];
     if ($can) {
         echo "<form class=\"vote\" method=\"post\" action=\"/votar.php\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
         echo "<button name=\"v\" value=\"1\" title=\"" . t('positivo') . "\">" . icon('up') . "<span>{$s['votes_pos']}</span></button>";

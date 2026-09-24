@@ -107,7 +107,7 @@ function gate_open(): bool {
 }
 // En CLI (cron: promocionar.php, moderar.php) no hay cookie ni sesion: sin esta
 // excepcion, con la clave activa redirect() hacia exit y el ciclo moria en silencio
-// (las nuevas no subian a candidatas, ni revelado, ni archivo, ni decaimiento de aura).
+// (nada salia del radar a las portadas, ni revelado, ni archivo, ni decaimiento de aura).
 if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/clave.php');   // /que-es.php, privacidad, normas y algoritmo son publicas (DDD_PUBLIC)
 
 /* ---- helpers ------------------------------------------------------- */
@@ -189,7 +189,7 @@ function community_links(array $s): string {
     } elseif (!empty($s['comm_slug'])) $out[] = community_link($s);
     return $out ? ' · ' . implode(', ', $out) : '';
 }
-const DDD_COMM_PUBLIC = "('nuevas','candidatas','destacadas','archived')";   // fases en las que un envio se puede adoptar y se ve en la comunidad
+const DDD_COMM_PUBLIC = "('nuevas','destacadas','archived')";   // fases en las que un envio se puede adoptar y se ve en la comunidad
 /** Comunidades en las que esta un envio (principal primero), con quien la añadio. */
 function story_communities(PDO $pdo, int $story_id): array {
     $st = $pdo->prepare("SELECT c.community_id, c.name, c.slug, c.color, c.owner_id, c.status, sc.added_by, sc.created, (c.community_id = s.community_id) AS main
@@ -217,7 +217,7 @@ function community_can_manage(PDO $pdo, ?array $u, int $community_id): bool {
 function community_add_story(PDO $pdo, int $story_id, int $community_id, ?int $by): ?string {
     $st = $pdo->prepare("SELECT status FROM stories WHERE story_id = ?"); $st->execute([$story_id]);
     $status = $st->fetchColumn();
-    if (!$status || !in_array($status, ['nuevas', 'candidatas', 'destacadas', 'archived'], true)) return t('Ese envío no se puede añadir a una comunidad.');
+    if (!$status || !in_array($status, ['nuevas', 'destacadas', 'archived'], true)) return t('Ese envío no se puede añadir a una comunidad.');
     $st = $pdo->prepare("SELECT 1 FROM communities WHERE community_id = ? AND status = 'ok'"); $st->execute([$community_id]);
     if (!$st->fetchColumn()) return t('Esa comunidad no existe.');
     $st = $pdo->prepare("SELECT COUNT(*) FROM story_communities WHERE story_id = ?"); $st->execute([$story_id]);
@@ -313,11 +313,11 @@ function can_edit_own_comment(array $c): bool {
     return time() - strtotime($c['created']) < (int)cfg('comment_edit_minutes', 10) * 60;
 }
 /** El usuario actual puede editar (o retirar) este envio suyo? Aura > story_edit_min_aura, menos de
- *  story_edit_minutes desde el envio y el envio aun sin llegar a portada (nuevas o candidatas). */
+ *  story_edit_minutes desde el envio y el envio aun sin llegar a portada (en el radar). */
 function can_edit_own_story(array $s): bool {
     $u = user();
     if (!$u || empty($s['user_id']) || (int)$s['user_id'] !== (int)$u['user_id']) return false;
-    if (!in_array($s['status'], ['pending_mod', 'nuevas', 'candidatas'], true)) return false;   // en portada (o archivado) ya no
+    if (!in_array($s['status'], ['pending_mod', 'nuevas'], true)) return false;   // en portada (o archivado) ya no
     if ((float)$u['aura'] <= (float)cfg('story_edit_min_aura', 6)) return false;
     return time() - strtotime($s['sent_date']) < (int)cfg('story_edit_minutes', 15) * 60;
 }
@@ -387,7 +387,6 @@ function page_body(array $pg): string {
         '{cycle}'    => (string)(int)cfg('cycle_minutes', 5),
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
         '{minpub}'   => num_pg($L, cfg('delta_min_publish', 1)),
-        '{mincand}'  => num_pg($L, cfg('delta_min_candidate', 0.5)),
         '{newttl}'   => (string)(int)cfg('nuevas_ttl_hours', 48),
         '{decay}'    => num_pg($L, cfg('decay_per_halfhour', 0.05)),
         '{auraport}' => num_pg($L, cfg('aura_portada', 0.5)),
@@ -482,6 +481,47 @@ function delta_sql(): string {
     return cfg('decay_mode') === 'multiplicative'
         ? "((s.votes_pos - s.votes_neg) * t.coef * POW(1 - $decay, $hh))"
         : "((s.votes_pos - s.votes_neg) * t.coef - $decay * $hh)";
+}
+/* ---- las dos portadas: Medios y Substacks -------------------------------
+ * Un enlace va a Substacks si su dominio es *.substack.com o el de una fuente del catalogo marcada como newsletter
+ * (asi entran los Substacks con dominio propio); todo lo demas va a Medios. Los originales (content_type = article)
+ * no van a ninguna portada: se quedan en su pestaña. El ciclo alterna: cada cycle_minutes publica en una portada,
+ * y la otra espera al siguiente, asi que cada portada recibe como mucho una cada 2 × cycle_minutes. */
+const DDD_PORTADAS = ['medios' => 'Medios', 'substacks' => 'Substacks'];
+const DDD_PORTADA_COOKIE = 'ddd_portada';
+/** Dominios (sin www.) de las fuentes del catalogo de tipo newsletter. */
+function newsletter_hosts(PDO $pdo): array {
+    static $h = null;
+    if ($h !== null) return $h;
+    $h = [];
+    try { foreach ($pdo->query("SELECT home FROM sources WHERE kind = 'newsletter'") as $r) if ($d = source_of((string)$r['home'])) $h[$d] = true; }
+    catch (Throwable $e) { /* tabla aun sin crear */ }
+    return $h;
+}
+/** Portada a la que va un envio: 'medios' | 'substacks'; null para los originales. */
+function portada_de(PDO $pdo, array $s): ?string {
+    if (($s['content_type'] ?? 'link') === 'article') return null;
+    $d = strtolower((string)($s['source'] ?? '')) ?: (string)source_of((string)($s['url'] ?? ''));
+    if ($d === '') return 'medios';
+    return ($d === 'substack.com' || str_ends_with($d, '.substack.com') || isset(newsletter_hosts($pdo)[$d])) ? 'substacks' : 'medios';
+}
+/** Portada que publica en el ciclo que empieza en $ts (minuto multiplo de cycle_minutes): alternan medios, substacks, medios... */
+function portada_turno(int $ts): string {
+    $cycle = max(1, (int)cfg('cycle_minutes', 5));
+    return intdiv(intdiv($ts, 60), $cycle) % 2 === 0 ? 'medios' : 'substacks';
+}
+/** Portada que se esta viendo: ?portada= en la URL (y entonces se recuerda en la cookie ddd_portada) o la ultima elegida; si no, Medios.
+ *  (No ?p=: ese es el numero de pagina de paginate().) */
+function portada_actual(): string {
+    static $p = null;
+    if ($p !== null) return $p;
+    $q = (string)($_GET['portada'] ?? '');
+    if (isset(DDD_PORTADAS[$q])) {
+        if (($_COOKIE[DDD_PORTADA_COOKIE] ?? '') !== $q && !headers_sent()) pref_cookie(DDD_PORTADA_COOKIE, $q);
+        return $p = $q;
+    }
+    $c = (string)($_COOKIE[DDD_PORTADA_COOKIE] ?? '');
+    return $p = isset(DDD_PORTADAS[$c]) ? $c : 'medios';
 }
 function delta_explica(array $s): string {
     $net = (int)$s['votes_pos'] - (int)$s['votes_neg'];
@@ -597,6 +637,7 @@ function icon(string $n): string {
         'home'   => '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/>',
         'cand'   => '<path d="M12 20V6"/><path d="m6 12 6-6 6 6"/>',
         'new'    => '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5l3 2"/>',
+        'radar'  => '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/><circle cx="15.5" cy="9.2" r="1" fill="currentColor"/>',
         'art'    => '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h6"/>',
         'stats'  => '<path d="M4 20h16"/><path d="M7 16V10"/><path d="M12 16V5"/><path d="M17 16v-3"/>',
         'proc'   => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
@@ -669,7 +710,7 @@ function robots_meta(): string {
 /** ¿Puede este articulo entrar en los buscadores? Tiene que ser articulo, estar visible, marcado por el autor y permitido en config. */
 function story_indexable(array $s): bool {
     return cfg('index_articles', '1') === '1' && ($s['content_type'] ?? '') === 'article' && (int)($s['indexable'] ?? 0) === 1
-        && in_array($s['status'] ?? '', ['nuevas', 'candidatas', 'destacadas', 'archived'], true);
+        && in_array($s['status'] ?? '', ['nuevas', 'destacadas', 'archived'], true);
 }
 /** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
  *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
@@ -706,14 +747,14 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     nav_fuentes($tab);
     echo "<main>";
 }
-/* Dos menus: arriba el contenido (las fases del ciclo), abajo la comunidad y las
+/* Dos menus: arriba el contenido (las dos portadas, el radar del que se nutren y los originales), abajo la comunidad y las
  * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
 function nav_tabs(string $tab, string $cls): void {
     $tabs = in_array($cls, ['tabs-top', 'rail-top'], true) ? [
-        'portada'      => ['/', t('Portada'), 'home'],
-        'candidatas'   => ['/candidatas.php', t('Candidatas'), 'cand'],
-        'nuevas'       => ['/nuevas.php', t('Nuevas'), 'new'],
-        'articulos'    => ['/articulos.php', t('Artículos'), 'art'],
+        'medios'       => ['/?portada=medios', t('Medios'), 'news'],
+        'substacks'    => ['/?portada=substacks', t('Substacks'), 'letter'],
+        'radar'        => ['/radar.php', t('Radar'), 'radar'],
+        'originales'   => ['/originales.php', t('Originales'), 'art'],
         'chat'         => ['/chat.php', t('Chat'), 'chat'],
     ] : [
         'usuarios'     => ['/usuarios.php', t('Usuarios'), 'users'],
@@ -724,10 +765,6 @@ function nav_tabs(string $tab, string $cls): void {
     ];
     if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
-    // arriba en movil caben cinco rotulos a lo ancho: donde «Portada» traducida es larga (Front page, Prima pagina, Titelseite)
-    // el diccionario trae una forma corta, «Portada (pestaña)»
-    global $I18N;
-    if ($cls === 'tabs-top' && isset($tabs['portada'], $I18N['Portada (pestaña)'])) $tabs['portada'][1] = $I18N['Portada (pestaña)'];
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';
@@ -738,11 +775,11 @@ function nav_tabs(string $tab, string $cls): void {
     echo "</nav>";
 }
 /** Franja bajo las pestañas, solo cuando no hay rail (movil y tablet, < 1100 px): lo que en escritorio esta en el rail y en la columna
- *  derecha — Substacks, Medios y Agregadores (/ultimo.php), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
+ *  derecha — Mis substacks, Mis medios y Mis agregadores (/ultimo.php), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
 function nav_fuentes(string $tab): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     $tabs = [];
-    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_visibles($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo.php?k=$k", t(['newsletter' => 'Substacks', 'medio' => 'Medios', 'agregador' => 'Agregadores'][$k]), $ic];
+    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_visibles($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo.php?k=$k", t(DDD_ULTIMO_KINDS[$k][0]), $ic];   // «Mis substacks», «Mis medios»: como en el rail, para no confundirlos con las portadas
     $tabs['temas'] = ['/temas.php', t('Temas'), 'tag'];
     $tabs['comunidades'] = ['/comunidades.php', t('Comunidades'), 'comm'];
     echo "<nav class=\"tabs-fuentes\">";
@@ -767,7 +804,7 @@ function footer_links(): string {
     if (fuentes_on()) {
         foreach (['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
     }
-    $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema e idioma, si los eliges) · sin rastreo · sin algoritmo oculto');
+    $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema, idioma y portada, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
     if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
     return $h;
