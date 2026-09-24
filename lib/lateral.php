@@ -150,7 +150,8 @@ function side_votadas(PDO $pdo): void {
     echo "</section>";
 }
 
-/** Comunidades con actividad: la ultima noticia de cada una, mas reciente primero. */
+/** Comunidades con actividad: la ultima noticia de cada una, mas reciente primero. Dos enlaces por fila: el nombre de la
+ *  comunidad lleva a la comunidad (todas sus noticias) y el titular, al hilo de esa noticia. */
 function side_comunidades(PDO $pdo): void {
     $rows = $pdo->query("SELECT c.name, c.slug, c.color, s.story_id, s.title, s.comments, s.sent_date
                            FROM communities c
@@ -160,7 +161,7 @@ function side_comunidades(PDO $pdo): void {
     // «todas» en la cabecera, como en los modulos de substacks y medios
     echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "<span><a href=\"/comunidades.php\">" . t('todas') . "</a></span></h3>";
     foreach ($rows as $r) {
-        echo "<a class=\"row\" href=\"/hilo.php?id=" . (int)$r['story_id'] . "\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
+        echo "<div class=\"row\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><a class=\"cm\" href=\"/comunidad.php?c=" . rawurlencode((string)$r['slug']) . "\"><b>" . h($r['name']) . "</b></a> <a href=\"/hilo.php?id=" . (int)$r['story_id'] . "\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</a></span></div>";
     }
     echo "</section>";
 }

@@ -8,7 +8,7 @@ if (user() && (user()['landing'] ?? '') !== '' && empty($_GET) && !preg_match('~
     $to = landing_url($pdo, user());
     if ($to !== '/') redirect($to);
 }
-// Dos portadas, Medios y Substacks: /?portada=medios | /?portada=substacks. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o Medios.
+// Dos portadas, Medios y Substacks: /?portada=medios | /?portada=substacks. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o Substacks.
 $p = portada_actual();
 $page = page_num();
 $cnt = $pdo->prepare("SELECT COUNT(*) FROM stories WHERE status='destacadas' AND portada = ?");

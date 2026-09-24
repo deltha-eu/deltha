@@ -2800,3 +2800,9 @@ ul.fprops .st-rejected { text-decoration: line-through; }
    Con guiones automaticos (segun el lang del <html>) para que la justificacion no abra rios en movil. La formula del δ
    (p con style en linea) se queda como esta. ---- */
 .legal p:not([style]), [data-skin] .legal p:not([style]) { text-align: justify; -webkit-hyphens: auto; hyphens: auto; }
+
+/* ---- columna derecha, «En comunidades»: la fila ya no es un solo enlace. El nombre lleva a la comunidad y el titular, al hilo;
+   cada uno se subraya por su cuenta al pasar por encima. ---- */
+.side .mod.comm .row a { color: inherit; text-decoration: none; }
+.side .mod.comm .row:hover .t { text-decoration: none; }
+.side .mod.comm .row .t > a:not(.cm):hover, .side .mod.comm .row a.cm:hover b { text-decoration: underline; text-underline-offset: 2px; }
