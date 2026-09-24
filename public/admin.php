@@ -467,7 +467,10 @@ if ($tab === 'usuarios') {
     $fk = (string)($_GET['k'] ?? $_POST['k'] ?? 'newsletter');
     if (in_array($_POST['act'] ?? '', ['fuente', 'fuente_nueva'], true) && isset($FK[$_POST['kind'] ?? ''])) $fk = $_POST['kind'];   // al guardar, a la subpestaña del tipo elegido
     if (!isset($FK[$fk])) $fk = 'newsletter';
-    $T .= "<input type=\"hidden\" name=\"k\" value=\"$fk\">";
+    // filtro por idioma dentro de la subpestaña: il = codigo (es, en, pt…), '?' = sin idioma, '' = todos; los formularios lo conservan
+    $il = (string)($_GET['il'] ?? $_POST['il'] ?? '');
+    if ($il !== '?' && !preg_match('/^[a-z]{2,5}$/', $il)) $il = '';
+    $T .= "<input type=\"hidden\" name=\"k\" value=\"$fk\"><input type=\"hidden\" name=\"il\" value=\"" . h($il) . "\">";
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
@@ -501,9 +504,24 @@ if ($tab === 'usuarios') {
     echo "<nav class=\"sub\">";
     foreach ($FK as $k => $v) echo "<a href=\"/admin.php?t=fuentes&amp;k=$k\"" . ($k === $fk ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
     echo "</nav>";
-    $rows = $pdo->prepare("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s WHERE s.kind = ? ORDER BY s.name");
-    $rows->execute([$fk]); $rows = $rows->fetchAll();
-    if (!$rows) echo "<p class=\"end\">No hay fuentes de este tipo.</p>";
+    // idiomas de este tipo con su numero de fuentes: primero los de la interfaz (en su orden), luego otros codigos y al final «sin idioma»
+    $nl = $pdo->prepare("SELECT COALESCE(lang, '') l, COUNT(*) FROM sources WHERE kind = ? GROUP BY COALESCE(lang, '')");
+    $nl->execute([$fk]); $nl = $nl->fetchAll(PDO::FETCH_KEY_PAIR);
+    $ord = array_merge(array_intersect(array_keys(DDD_LANGS), array_keys($nl)), array_diff(array_keys($nl), array_keys(DDD_LANGS), ['']));
+    if (isset($nl[''])) $ord[] = '';
+    if (count($nl) > 1 || $il !== '') {
+        echo "<nav class=\"sub\"><a href=\"/admin.php?t=fuentes&amp;k=$fk\"" . ($il === '' ? ' class="on"' : '') . ">todos <small>" . array_sum($nl) . "</small></a>";
+        foreach ($ord as $l) {
+            $code = $l === '' ? '?' : $l;
+            $lbl = $l === '' ? 'sin idioma' : (DDD_LANGS[$l] ?? $l);
+            echo "<a href=\"/admin.php?t=fuentes&amp;k=$fk&amp;il=" . urlencode($code) . "\"" . ($il === $code ? ' class="on"' : '') . " title=\"" . h($code) . "\">" . h($lbl) . " <small>" . (int)$nl[$l] . "</small></a>";
+        }
+        echo "</nav>";
+    }
+    $wl = $il === '' ? '' : ($il === '?' ? " AND COALESCE(s.lang, '') = ''" : " AND s.lang = ?");
+    $rows = $pdo->prepare("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s WHERE s.kind = ?$wl ORDER BY s.name");
+    $rows->execute($il === '' || $il === '?' ? [$fk] : [$fk, $il]); $rows = $rows->fetchAll();
+    if (!$rows) echo "<p class=\"end\">" . ($il === '' ? "No hay fuentes de este tipo." : "No hay fuentes de este tipo en ese idioma.") . "</p>";
     foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
         echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . " · " . (($f['lang'] ?? '') !== '' ? h($f['lang']) : "<i>idioma ?</i>") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
