@@ -1,0 +1,29 @@
+-- Fuentes en portugues (lista de Angel del 24/09/2026): 10 newsletters y 10 medios, sources.lang = 'pt', sin destacar.
+-- Newsletters como en migra-054: leidas cada 24 h, sin tema propuesto, nombre = titulo, descripcion = autor si la lista lo da.
+-- Medios como en migra-056: tipo «medio», descripcion en portugues, tema propuesto actualidad / cultura / tecnologia
+-- (no hay tema de economia ni de deportes para medios; Jornal Economico va a actualidad), intervalo segun el ritmo de cada uno.
+-- Aviso: el feed de Cibertulia declara <language>en</language>; aqui se fija 'pt' a mano, asi que la deteccion no lo pisa.
+-- Publico: el RSS de la lista es un feedburner antiguo; si falla en admin > Fuentes, cambiarlo por el de publico.pt.
+-- INSERT IGNORE: si un slug ya existiera, no se toca. Los feeds que fallen salen con su error en admin > Fuentes.
+SET NAMES utf8mb4;
+INSERT IGNORE INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES
+('certas-palavras', 'newsletter', 'Certas Palavras', 'https://www.certaspalavras.pt/', 'Marco Neves', 'pt', '', NULL, 'https://www.certaspalavras.pt/feed', '', 1440, 'ok', 0),
+('diga-se-de-passagem', 'newsletter', 'Diga-se de Passagem', 'https://digasedepassagem.substack.com/', 'João Lameira', 'pt', '', NULL, 'https://digasedepassagem.substack.com/feed', '', 1440, 'ok', 0),
+('republica-dos-pijamas', 'newsletter', 'República dos Pijamas', 'https://republicadospijamas.substack.com/', NULL, 'pt', '', NULL, 'https://republicadospijamas.substack.com/feed', '', 1440, 'ok', 0),
+('reverso-da-moeda', 'newsletter', 'Reverso da Moeda', 'https://reversodamoeda.substack.com/', 'Vicente Ferreira', 'pt', '', NULL, 'https://reversodamoeda.substack.com/feed', '', 1440, 'ok', 0),
+('antonio-tadeia', 'newsletter', 'António Tadeia', 'https://tadeia.substack.com/', NULL, 'pt', '', NULL, 'https://tadeia.substack.com/feed', '', 1440, 'ok', 0),
+('amador-financeiro', 'newsletter', 'O Amador Financeiro', 'https://www.oamadorfinanceiro.pt/', NULL, 'pt', '', NULL, 'https://www.oamadorfinanceiro.pt/feed', '', 1440, 'ok', 0),
+('futebol-de-tostoes', 'newsletter', 'Futebol de Tostões', 'https://futeboldetostoes.substack.com/', 'Marta Lima', 'pt', '', NULL, 'https://futeboldetostoes.substack.com/feed', '', 1440, 'ok', 0),
+('boletim-bedeteca', 'newsletter', 'Boletim Bedeteca', 'https://bedeteca.substack.com/', NULL, 'pt', '', NULL, 'https://bedeteca.substack.com/feed', '', 1440, 'ok', 0),
+('capicua', 'newsletter', 'O Substack de Capicua', 'https://acapicua.substack.com/', NULL, 'pt', '', NULL, 'https://acapicua.substack.com/feed', '', 1440, 'ok', 0),
+('cibertulia', 'newsletter', 'Cibertúlia', 'https://mmarujo.substack.com/', 'Miguel Marujo', 'pt', '', NULL, 'https://mmarujo.substack.com/feed', '', 1440, 'ok', 0),
+('publico-pt', 'medio', 'Público', 'https://www.publico.pt/', 'Generalista: cultura, ciência e internacional', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'actualidad'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://feeds.feedburner.com/PublicoRSS', '', 15, 'ok', 0),
+('observador', 'medio', 'Observador', 'https://observador.pt/', 'Atualidade, economia, cultura e tecnologia', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'actualidad'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://observador.pt/feed/', '', 15, 'ok', 0),
+('rtp-noticias', 'medio', 'RTP Notícias', 'https://www.rtp.pt/noticias/', 'Generalista: Portugal, mundo e cultura', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'actualidad'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://www.rtp.pt/noticias/rss', '', 15, 'ok', 0),
+('renascenca', 'medio', 'Renascença', 'https://rr.pt/', 'Atualidade, reportagens, sociedade e internacional', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'actualidad'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://rr.pt/rssfeed-ultimas', '', 30, 'ok', 0),
+('jornal-economico', 'medio', 'Jornal Económico', 'https://jornaleconomico.sapo.pt/', 'Economia, empresas, mercados e tecnologia', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'actualidad'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://jornaleconomico.sapo.pt/feed/', '', 30, 'ok', 0),
+('pplware', 'medio', 'Pplware', 'https://pplware.sapo.pt/', 'Tecnologia, software, IA e ciência', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'tecnologia'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://pplware.sapo.pt/feed/', '', 30, 'ok', 0),
+('fumaca', 'medio', 'Fumaça', 'https://fumaca.pt/', 'Jornalismo de investigação, sociedade e reportagens', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'actualidad'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://fumaca.pt/feed', '', 240, 'ok', 0),
+('mensagem-lisboa', 'medio', 'Mensagem de Lisboa', 'https://amensagem.pt/', 'Lisboa: sociedade, cultura e cidade', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'cultura'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://amensagem.pt/feed/', '', 120, 'ok', 0),
+('shifter', 'medio', 'Shifter', 'https://shifter.pt/', 'Tecnologia, sociedade, internet e cultura', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'tecnologia'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://shifter.pt/feed/', '', 60, 'ok', 0),
+('noticias-ao-minuto', 'medio', 'Notícias ao Minuto', 'https://www.noticiasaominuto.com/', 'Última hora: mundo, tecnologia e cultura', 'pt', '', COALESCE((SELECT topic_id FROM topics WHERE name = 'actualidad'), (SELECT topic_id FROM topics WHERE name = 'actualidad')), 'https://www.noticiasaominuto.com/rss/ultima-hora', '', 15, 'ok', 0);
