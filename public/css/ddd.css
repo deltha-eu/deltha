@@ -236,6 +236,10 @@ main > p { padding: 0 16px; }
 .statspage a.tile span::after { content: " ›"; }
 nav.sub.fecha { border-bottom: 0; padding-top: 0; }
 nav.sub.fecha a { font-size: 13px; padding: 6px 9px; }
+nav.sub.langs { border-bottom: 0; padding-top: 0; margin: 0 0 4px; }   /* /medios.php: filtro por idioma */
+nav.sub.langs a { font-size: 13px; padding: 6px 9px; }
+nav.sub.langs small { opacity: .7; }
+@media (max-width: 420px) { nav.sub.langs { justify-content: flex-start; } }
 .admin textarea { width: 100%; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 8px; border: 1px solid var(--line2); border-radius: 6px; background: var(--bg); color: var(--fg); resize: vertical; }
 .modbar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); font-family: var(--sans); font-size: 14px; color: var(--muted); }
 .modbar label { font-size: 13px; white-space: nowrap; }
