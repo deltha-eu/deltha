@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 108);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 109);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -510,7 +510,7 @@ function portada_turno(int $ts): string {
     $cycle = max(1, (int)cfg('cycle_minutes', 5));
     return intdiv(intdiv($ts, 60), $cycle) % 2 === 0 ? 'medios' : 'substacks';
 }
-/** Portada que se esta viendo: ?portada= en la URL (y entonces se recuerda en la cookie ddd_portada) o la ultima elegida; si no, Medios.
+/** Portada que se esta viendo: ?portada= en la URL (y entonces se recuerda en la cookie ddd_portada) o la ultima elegida; si no, Substacks.
  *  (No ?p=: ese es el numero de pagina de paginate().) */
 function portada_actual(): string {
     static $p = null;
@@ -521,7 +521,7 @@ function portada_actual(): string {
         return $p = $q;
     }
     $c = (string)($_COOKIE[DDD_PORTADA_COOKIE] ?? '');
-    return $p = isset(DDD_PORTADAS[$c]) ? $c : 'medios';
+    return $p = isset(DDD_PORTADAS[$c]) ? $c : 'substacks';   // quien llega por primera vez ve Substacks, lo propio de Deltha
 }
 function delta_explica(array $s): string {
     $net = (int)$s['votes_pos'] - (int)$s['votes_neg'];
