@@ -802,7 +802,7 @@ function footer_links(): string {
     // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios.php?k=…), no uno por agregador
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
-        foreach (['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
+        foreach (['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
     }
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema, idioma y portada, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";

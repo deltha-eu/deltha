@@ -8,7 +8,7 @@ require __DIR__ . '/../lib/fuentes.php';
 require __DIR__ . '/../lib/propuestas.php';
 
 $u = user();
-$GRUPOS = ['newsletter' => t('Substacks'), 'medio' => t('Medios'), 'agregador' => t('Agregadores')];
+$GRUPOS = ['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'agregador' => t('Agregadores')];
 $k = (string)($_GET['k'] ?? '');
 if (!isset($GRUPOS[$k])) $k = '';
 $kinds = $k ? [$k] : array_keys($GRUPOS);
