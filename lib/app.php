@@ -328,6 +328,7 @@ function open_reports(): int {
     try { $n = (int)$pdo->query("SELECT COUNT(DISTINCT comment_id) FROM comment_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) { $n = 0; }
     try { $n += (int)$pdo->query("SELECT COUNT(DISTINCT msg_id) FROM chat_reports WHERE status = 'open'")->fetchColumn(); } catch (Throwable $e) {}
     try { $n += (int)$pdo->query("SELECT COUNT(*) FROM source_proposals WHERE status = 'pending'")->fetchColumn(); } catch (Throwable $e) {}   // fuentes propuestas (migra-057)
+    try { $n += (int)$pdo->query("SELECT COUNT(*) FROM mod_queue WHERE status IN ('flag','hidden','needs_human')")->fetchColumn(); } catch (Throwable $e) {}   // señalado por la IA local (migra-062)
     return $n;
 }
 

@@ -14,7 +14,7 @@ CREATE TABLE config (
 INSERT INTO config (ckey, cvalue, descr) VALUES
 ('site_name',           'Deltha', 'Nombre del sitio'),
 ('access_key',          'CAMBIAR', 'Clave temporal de acceso: mientras no este vacia, quien no la tenga ve /delta/ en vez de la portada. Cambiarla expulsa a todos.'),
-('mod_enabled',         '0',    '1 = los envios pasan por el portero; 0 = directos a nuevas'),
+('mod_enabled',         '0',    '1 = la IA local revisa lo nuevo DESPUES de publicarse (posmoderacion); 0 = no se encola nada'),
 ('delta_min_age_min',   '30',   'Minutos desde el envio antes de ser candidata'),
 ('decay_per_halfhour',  '0.05', 'Decremento de delta por cada media hora desde el envio'),
 ('decay_mode',          'additive', 'additive | multiplicative'),
@@ -61,10 +61,12 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('news_max_per_user',    '3',    'Newsletters (Substack) que puede elegir cada usuario en su perfil («Mis substacks»)'),
 ('sources_og_image',     '1',    '1 = para los medios sin imagen en el RSS se busca la og:image de la noticia'),
 ('sources_og_per_run',   '10',   'Fuentes: og:image maximas que se descargan en cada pasada del cron'),
-('mod_model',           'qwen2.5:7b-instruct', 'Modelo Ollama (cuando mod_enabled=1)'),
-('mod_ollama_url',      'http://127.0.0.1:11434/api/chat', 'Endpoint Ollama'),
-('mod_timeout_sec',     '30',   'Timeout modelo'),
-('mod_max_retries',     '3',    'Reintentos antes de needs_human');
+('mod_max_retries',     '3',    'Fallos del modelo con un mismo elemento antes de pasarlo a revision humana'),
+('mod_auto_hide',       '0',    '1 = la IA oculta provisionalmente lo muy claro (confianza >= mod_hide_score) hasta que lo vea un moderador; 0 = solo señala'),
+('mod_hide_score',      '0.90', 'Confianza minima para ocultar provisionalmente (con mod_auto_hide = 1)'),
+('mod_flag_score',      '0.60', 'Confianza minima para señalar a los moderadores; por debajo se da por bueno'),
+('mod_lease_sec',       '300',  'Segundos que el worker tiene reservado un elemento antes de que vuelva a la cola'),
+('mod_worker_seen',     '',     'Ultima conexion del worker de IA local (lo escribe /api/moderacion.php)');
 
 CREATE TABLE users (
     user_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -183,16 +185,24 @@ CREATE TABLE votes (
 
 CREATE TABLE mod_queue (
     item_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    item_type   ENUM('story','comment') NOT NULL DEFAULT 'story',
+    item_type   ENUM('story','comment','chat') NOT NULL DEFAULT 'story',
     ref_id      INT UNSIGNED NOT NULL,
-    status      ENUM('queued','processing','ok','reject','needs_human') NOT NULL DEFAULT 'queued',
+    status      ENUM('queued','processing','ok','flag','hidden','needs_human','human_ok','human_removed','reject') NOT NULL DEFAULT 'queued',
+    priority    TINYINT UNSIGNED NOT NULL DEFAULT 0,
     attempts    TINYINT UNSIGNED NOT NULL DEFAULT 0,
     verdict     TEXT DEFAULT NULL,
     reason      VARCHAR(64) DEFAULT NULL,
+    category    VARCHAR(16) DEFAULT NULL,
+    score       DECIMAL(4,3) DEFAULT NULL,
+    prev_status VARCHAR(16) DEFAULT NULL,
+    leased_until DATETIME DEFAULT NULL,
+    model       VARCHAR(80) DEFAULT NULL,
+    decided_by  INT UNSIGNED DEFAULT NULL,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     processed   DATETIME DEFAULT NULL,
     KEY idx_status (status, created),
-    KEY idx_ref (item_type, ref_id)
+    KEY idx_ref (item_type, ref_id),
+    KEY idx_lease (status, priority, item_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE promo_log (

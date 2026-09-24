@@ -9,6 +9,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/chat.php';
+require __DIR__ . '/../lib/moderacion.php';
 if ((string)cfg('chat_enabled', '1') !== '1') redirect('/');
 
 $u = user();
@@ -35,7 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($ref) { $q = $pdo->prepare("SELECT 1 FROM chat WHERE msg_id = ? AND status = 'ok'"); $q->execute([$ref]); if (!$q->fetchColumn()) $ref = null; }
         $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content) VALUES (?,?,?,?,?)")
             ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content]);
-        redirect('/chat.php?ok=1#m' . (int)$pdo->lastInsertId());
+        $mid = (int)$pdo->lastInsertId();
+        mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
+        redirect('/chat.php?ok=1#m' . $mid);
     }
 }
 

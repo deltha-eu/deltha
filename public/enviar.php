@@ -2,6 +2,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/imagen.php';
 require __DIR__ . '/../lib/aura.php';
+require __DIR__ . '/../lib/moderacion.php';
 
 if (!user() && cfg('anon_can_submit') !== '1') redirect('/login.php');
 
@@ -76,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$err) {
             $u = user();
-            $status = cfg('mod_enabled') === '1' ? 'pending_mod' : 'nuevas';
+            $status = 'nuevas';   // posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
             $pdo->beginTransaction();
             $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status)
                            VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -85,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
             $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
             $pdo->prepare("UPDATE stories SET author_alias = ? WHERE story_id = ?")->execute([$alias, $sid]);
-            if ($status === 'pending_mod') $pdo->prepare("INSERT INTO mod_queue (item_type, ref_id) VALUES ('story', ?)")->execute([$sid]);
-            if ($u && $status === 'nuevas') aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
+            mod_enqueue($pdo, 'story', $sid);
+            if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
             $pdo->commit();
             redirect("/hilo.php?id=$sid");
         }

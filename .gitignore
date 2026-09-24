@@ -6,6 +6,9 @@ public/media/
 .vscode/
 Thumbs.db
 desktop.ini
+local/moderador/moderador.ini
+local/moderador/*.log
+local/moderador/__pycache__/
 
 # trabajo ajeno a Deltha
 Entrevista_*

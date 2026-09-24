@@ -1,0 +1,24 @@
+; Copiar a moderador.ini (no va al repositorio: lleva el token).
+[deltha]
+url   = https://deltha.eu
+; el mismo valor que [mod] token en /etc/deltha/config.ini del droplet
+token =
+
+[modelo]
+url     = http://127.0.0.1:8080
+; si se rellena, arrancar-modelo.ps1 arranca llama-server con --api-key y el worker lo usa
+api_key =
+timeout = 180
+nombre  = Ternary-Bonsai-2-27B-PQ2_0
+
+[worker]
+; elementos que pide en cada pasada, segundos de espera con la cola vacia y tras un error
+lote         = 4
+espera       = 20
+espera_error = 60
+
+[bonsai]
+; carpeta de Bonsai-demo (binarios del fork de PrismML y modelos)
+dir  = C:\Users\Angel\Bonsai-demo
+; contexto del modelo; 8192 sobra para comentarios y articulos (el texto se recorta a 6000 caracteres)
+ctx  = 8192
