@@ -542,4 +542,16 @@ return [
 '%d en el radar · próximo ciclo en %d min, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada: el de mayor δ entre los suyos que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.' => '%d al radar · proper cicle d\'aquí a %d min, per a %s · els cicles s\'alternen entre Mitjans i Substacks i cadascun publica <b>un</b> enviament a la seva portada: el de més δ entre els seus que porten més de %d min i tenen δ ≥ %s. L\'estimació suposa que no canvien els vots; es recalcula sola cada minut.',
 'llega a <b>%s</b>' => 'arriba a <b>%s</b>',
 'Todo lo enviado en este tema, noticias y originales, estén donde estén: en una portada, en el radar o ya archivado. %d en total.' => 'Tot el que s\'ha enviat en aquest tema, notícies i originals, siguin on siguin: en una portada, al radar o ja arxivat. %d en total.',
+// avisos (campanita)
+'Avisos' => 'Avisos',
+'Los avisos están desactivados.' => 'Els avisos estan desactivats.',
+'%d sin leer' => '%d sense llegir',
+'Todo leído' => 'Tot llegit',
+'marcar todo como leído' => 'marcar-ho tot com a llegit',
+'Todavía no tienes avisos. Te avisaremos cuando alguien te mencione con @%s, responda a un comentario tuyo o te escriba.' => 'Encara no tens avisos. T\'avisarem quan algú et mencioni amb @%s, respongui a un comentari teu o t\'escrigui.',
+'<b>%s</b> te ha mencionado en un comentario' => '<b>%s</b> t\'ha mencionat en un comentari',
+'<b>%s</b> ha respondido a tu comentario' => '<b>%s</b> ha respost al teu comentari',
+'<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b> t\'ha mencionat al Xat',
+'<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b> ha citat el teu missatge del Xat',
+'<b>%s</b> te ha enviado un mensaje' => '<b>%s</b> t\'ha enviat un missatge',
 ];

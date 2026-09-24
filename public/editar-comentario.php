@@ -30,7 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mb_strlen($txt) < 1) $err = t('El comentario no puede quedar vacío.');
         else {
             $st = $pdo->prepare("UPDATE comments SET content = ?, edited_at = NOW() WHERE comment_id = ? AND content <> ?"); $st->execute([$txt, $id, $txt]);
-            if ($own && $st->rowCount()) mod_requeue($pdo, 'comment', $id);   // lo edita su autor: la IA lo vuelve a mirar
+            if ($own && $st->rowCount()) {
+                mod_requeue($pdo, 'comment', $id);   // lo edita su autor: la IA lo vuelve a mirar
+                avisos_comment($pdo, array_merge($c, ['content' => $txt]), null, avisos_nicks((string)$c['content']));   // solo los @nick nuevos
+            }
             redirect($back);
         }
         $c['content'] = $txt;
