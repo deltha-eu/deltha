@@ -135,7 +135,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
         echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";
     }
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
-    else      echo "<p>" . nl2br(h($c['content'])) . "</p>";
+    else      echo "<p>" . nl2br(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content'])) . "</p>";
     $acts = [];
     if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
     if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";

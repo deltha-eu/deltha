@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 109);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 110);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -74,6 +74,7 @@ if (isset($_COOKIE[DDD_SESSION])) {
 require_once __DIR__ . '/i18n.php';
 i18n_load();
 require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
+require_once __DIR__ . '/avisos.php';     // campanita: menciones, respuestas y privados
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
  * guardada unos minutos, solo para contar visitantes en /estadisticas.php.
@@ -661,6 +662,7 @@ function icon(string $n): string {
         'tag'    => '<path d="M3 11V4h7l10 10-7 7z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',   // temas
         'comm'   => '<circle cx="12" cy="8" r="3.2"/><circle cx="5" cy="11" r="2.2"/><circle cx="19" cy="11" r="2.2"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0"/><path d="M2 17.5a3.5 3.5 0 0 1 3-2.3M22 17.5a3.5 3.5 0 0 0-3-2.3"/>',   // comunidades
         'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
+        'bell'   => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/>',   // avisos (campanita)
     ][$n] ?? '';
     return "<svg class=\"i\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">$p</svg>";
 }
@@ -728,6 +730,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
     echo "<script src=\"/app/tabs.js?v=" . DDD_CSS_VER . "\" defer></script>";   // encaja las pestañas de arriba en movil
+    if ($u && avisos_on() && (int)cfg('notif_poll_sec', 60) > 0) echo "<script src=\"/app/avisos.js?v=" . DDD_CSS_VER . "\" data-every=\"" . (int)cfg('notif_poll_sec', 60) . "\" defer></script>";   // refresca la burbuja de avisos sin recargar
     echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
     echo $robots;   // noindex salvo paginas escaparate y articulos que el autor abre a buscadores
     // Open Graph: lo que enseñan los cuadros de «compartir» (Windows, WhatsApp, Telegram...). Por defecto el icono del sitio en vigor;
@@ -740,7 +743,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<div class=\"shell\">";
     echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
     echo "<span class=\"ttl\">" . h($title) . "</span>";
-    if ($u) echo "<a class=\"me\" href=\"/perfil.php\" title=\"" . t('perfil') . "\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
+    if ($u) echo avisos_bell('top') . "<a class=\"me\" href=\"/perfil.php\" title=\"" . t('perfil') . "\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
     echo "</header>";
     nav_tabs($tab, 'tabs-top');

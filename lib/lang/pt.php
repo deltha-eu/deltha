@@ -579,4 +579,16 @@ return [
 '%d en el radar · próximo ciclo en %d min, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada: el de mayor δ entre los suyos que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.' => '%d no radar · próximo ciclo em %d min, para %s · os ciclos alternam entre Meios e Newsletters e cada um publica <b>um</b> na sua capa: o de maior δ entre os seus que estão há mais de %d min e têm δ ≥ %s. A estimativa supõe que os votos não mudam; é recalculada sozinha a cada minuto.',
 'llega a <b>%s</b>' => 'chega a <b>%s</b>',
 'Todo lo enviado en este tema, noticias y originales, estén donde estén: en una portada, en el radar o ya archivado. %d en total.' => 'Tudo o que foi enviado neste tema, notícias e originais, esteja onde estiver: numa capa, no radar ou já arquivado. %d no total.',
+// avisos (campanita)
+'Avisos' => 'Notificações',
+'Los avisos están desactivados.' => 'As notificações estão desativadas.',
+'%d sin leer' => '%d por ler',
+'Todo leído' => 'Tudo lido',
+'marcar todo como leído' => 'marcar tudo como lido',
+'Todavía no tienes avisos. Te avisaremos cuando alguien te mencione con @%s, responda a un comentario tuyo o te escriba.' => 'Ainda não tens notificações. Avisamos-te quando alguém te mencionar com @%s, responder a um comentário teu ou te escrever.',
+'<b>%s</b> te ha mencionado en un comentario' => '<b>%s</b> mencionou-te num comentário',
+'<b>%s</b> ha respondido a tu comentario' => '<b>%s</b> respondeu ao teu comentário',
+'<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b> mencionou-te no Chat',
+'<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b> citou a tua mensagem do Chat',
+'<b>%s</b> te ha enviado un mensaje' => '<b>%s</b> enviou-te uma mensagem',
 ];

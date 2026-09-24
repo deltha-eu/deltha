@@ -35,6 +35,9 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
 ('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
 ('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
+('notif_enabled',       '1',    '1 = avisos (campanita): menciones @nick, respuestas y privados'),
+('notif_per_page',      '30',   'Avisos por pagina en /avisos.php'),
+('notif_poll_sec',      '60',   'Segundos entre consultas del contador de avisos desde el navegador (0 = solo al cargar la pagina)'),
 ('skin_default',        'editorial', 'Skin por defecto (anonimos y quien no elija): cualquiera de DDD_SKINS'),
 ('comm_min_aura',       '6',    'Aura minima (estricta: mayor que) para poder crear comunidades'),
 ('comm_max_per_user',   '3',    'Comunidades que puede crear cada usuario'),
@@ -407,4 +410,23 @@ CREATE TABLE IF NOT EXISTS allowed_domains (
     reason   VARCHAR(120) DEFAULT NULL,
     added_by INT UNSIGNED DEFAULT NULL,
     created  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Avisos (campanita): menciones @nick, respuestas y privados (migra-068; lib/avisos.php)
+CREATE TABLE IF NOT EXISTS notifications (
+    notif_id    INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT UNSIGNED NOT NULL,                    -- a quien avisa
+    from_id     INT UNSIGNED DEFAULT NULL,                -- quien lo provoca (NULL = anonimo del Chat o cuenta borrada)
+    from_name   VARCHAR(64) NOT NULL DEFAULT '',          -- como firmaba entonces: alias del hilo (comentarios), alias anonimo (Chat) o nick
+    kind        ENUM('mention_comment','reply_comment','mention_chat','reply_chat','dm') NOT NULL,
+    ref_id      INT UNSIGNED NOT NULL DEFAULT 0,          -- comment_id | chat.msg_id | messages.msg_id (el ultimo de la racha)
+    story_id    INT UNSIGNED DEFAULT NULL,                -- hilo del comentario (para construir el enlace)
+    snippet     VARCHAR(120) NOT NULL DEFAULT '',         -- trozo del texto en el momento de crearlo (si luego se edita o borra, el aviso sigue teniendo sentido)
+    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at     DATETIME DEFAULT NULL,
+    KEY idx_user_unread (user_id, read_at),
+    KEY idx_user_list (user_id, created),                -- la lista va por fecha: un aviso de privado agrupado sube al recibir otro mensaje
+    KEY idx_dm_open (user_id, from_id, kind, read_at),   -- los privados seguidos de la misma persona se agrupan en un aviso mientras no se lea
+    CONSTRAINT fk_n_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_n_from FOREIGN KEY (from_id) REFERENCES users(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;

@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content]);
         $mid = (int)$pdo->lastInsertId();
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
+        avisos_chat($pdo, $mid, $u ? (int)$u['user_id'] : null, $u ? (string)$u['login'] : $anonAlias, $content, $ref);   // @mencionados y autor del #N citado
         redirect('/chat.php?ok=1#m' . $mid);
     }
 }

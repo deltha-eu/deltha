@@ -19,10 +19,10 @@ else    { [$alias, $key] = alias_anon($id); $aura = (float)cfg('aura_anon', 5); 
 
 $parent = (int)post('parent'); $root = null;
 if ($parent > 0) {
-    $q = $pdo->prepare("SELECT comment_id, root_id FROM comments WHERE comment_id = ? AND story_id = ? AND status = 'ok'");
+    $q = $pdo->prepare("SELECT comment_id, root_id, user_id FROM comments WHERE comment_id = ? AND story_id = ? AND status = 'ok'");
     $q->execute([$parent, $id]);
     if ($pr = $q->fetch()) $root = $pr['root_id'] ?: (int)$pr['comment_id'];
-    else $parent = 0;
+    else { $parent = 0; $pr = null; }
 }
 $cstatus = 'ok';   // posmoderacion: se publica ya y la IA local lo revisa despues (lib/moderacion.php)
 $pdo->beginTransaction();
@@ -33,4 +33,6 @@ $pdo->prepare("UPDATE stories SET comments = comments + 1 WHERE story_id = ?")->
 mod_enqueue($pdo, 'comment', $cid);
 if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_comentario', 0.02), 'comentario', $cid);
 $pdo->commit();
+// avisos: @mencionados y autor del comentario respondido (lib/avisos.php)
+avisos_comment($pdo, ['comment_id' => $cid, 'story_id' => $id, 'user_id' => $uid, 'alias' => $alias, 'content' => $content], $parent ? $pr : null);
 redirect("/hilo.php?id=$id#c$cid");

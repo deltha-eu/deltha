@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ((int)$n->fetchColumn() >= $lim) $err = t('Has enviado muchos mensajes en poco tiempo; espera un rato.');
         else {
             $pdo->prepare("INSERT INTO messages (from_id, to_id, content) VALUES (?,?,?)")->execute([$myId, $to['user_id'], $content]);
+            aviso_dm($pdo, $myId, (string)$me['login'], (int)$to['user_id'], (int)$pdo->lastInsertId(), $content);   // campanita del destinatario
             redirect('/mensajes.php?u=' . rawurlencode($to['login']) . '#fin');
         }
     }
@@ -58,6 +59,7 @@ if ($u !== '') {
 
     // lo que me ha escrito queda leido al abrir la conversacion
     $pdo->prepare("UPDATE messages SET read_at = NOW() WHERE to_id = ? AND from_id = ? AND read_at IS NULL")->execute([$myId, $oid]);
+    avisos_dm_read($pdo, $myId, $oid);
 
     $st = $pdo->prepare("SELECT * FROM (SELECT msg_id, from_id, content, created FROM messages
                           WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)

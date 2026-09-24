@@ -26,6 +26,7 @@ $cs = $pdo->prepare("SELECT c.*, u.login, u.avatar FROM comments c LEFT JOIN use
 $cs->execute([$id]);
 $all = []; $byId = [];
 foreach ($cs as $c) { $all[] = $c; $byId[$c['comment_id']] = $c; }
+avisos_preload_nicks($pdo, array_column($all, 'content'));   // @nick → enlace al perfil en comment_block()
 // conversaciones: raiz + sus respuestas, en orden cronologico
 $threads = [];
 foreach ($all as $c) { $k = $c['root_id'] ?: $c['comment_id']; $threads[$k][] = $c; }

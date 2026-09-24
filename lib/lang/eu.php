@@ -542,4 +542,16 @@ return [
 '%d en el radar · próximo ciclo en %d min, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada: el de mayor δ entre los suyos que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.' => '%d radarrean · hurrengo zikloa %d min barru, %s atalerako · zikloak Hedabideen eta Substacken artean txandakatzen dira eta bakoitzak <b>bat</b> argitaratzen du bere azalean: %d min baino gehiago daramaten eta δ ≥ %s duten bereen arteko δ handienekoa. Kalkuluak botoak aldatzen ez direla suposatzen du; minutuero berritzen da bere kabuz.',
 'llega a <b>%s</b>' => '<b>%s</b> atalera iritsi da',
 'Todo lo enviado en este tema, noticias y originales, estén donde estén: en una portada, en el radar o ya archivado. %d en total.' => 'Gai honetan bidalitako guztia, albisteak eta originalak, dauden tokian daudela: azal batean, radarrean edo artxibatuta jada. %d guztira.',
+// avisos (campanita)
+'Avisos' => 'Abisuak',
+'Los avisos están desactivados.' => 'Abisuak desaktibatuta daude.',
+'%d sin leer' => '%d irakurri gabe',
+'Todo leído' => 'Dena irakurrita',
+'marcar todo como leído' => 'dena irakurritzat markatu',
+'Todavía no tienes avisos. Te avisaremos cuando alguien te mencione con @%s, responda a un comentario tuyo o te escriba.' => 'Oraindik ez duzu abisurik. Norbaitek @%s aipatzen zaituenean, zure iruzkin bati erantzuten dionean edo idazten dizunean abisatuko dizugu.',
+'<b>%s</b> te ha mencionado en un comentario' => '<b>%s</b>(e)k iruzkin batean aipatu zaitu',
+'<b>%s</b> ha respondido a tu comentario' => '<b>%s</b>(e)k zure iruzkinari erantzun dio',
+'<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b>(e)k Txatean aipatu zaitu',
+'<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b>(e)k zure Txateko mezua aipatu du',
+'<b>%s</b> te ha enviado un mensaje' => '<b>%s</b>(e)k mezu bat bidali dizu',
 ];
