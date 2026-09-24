@@ -29,7 +29,7 @@ echo "<nav class=\"sub\">";
 foreach ($VIEWS as $k => $label) echo "<a href=\"/usuarios.php" . ($k === '' ? '' : "?v=$k") . "\"" . ($k === $v ? ' class="on"' : '') . ">" . h($label) . "</a>";
 echo "</nav>";
 echo "<p class=\"notice\">" . t('La gente de %s y sus <a href="/comunidades.php"><b>comunidades</b></a>', h(cfg('site_name'))) . (community_quota($pdo, user()) > 0 ? " · <a href=\"/comunidades.php#crear\">" . t('crear una comunidad') . "</a>" : "") . ".</p>";
-echo "<h1>" . h($VIEWS[$v]) . "</h1><p class=\"notice\">" . t('%d en total. Pulsa en un nombre para ver su perfil público.', $total) . "</p>";
+echo "<p class=\"notice\">" . t('%d en total. Pulsa en un nombre para ver su perfil público.', $total) . "</p>";
 echo user_create_form('usuarios');   // solo admin: «+ Crear un usuario»
 foreach ($rows as $r) {
     echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u.php?u=' . rawurlencode($r['login']));

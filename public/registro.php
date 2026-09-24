@@ -37,7 +37,7 @@ if ($done) {
     echo "<p class=\"end\">" . t('¿No llega? <a href="/reenviar.php">Pedir otro enlace</a>.') . "</p>";
     page_footer(); exit;
 }
-echo "<h1>" . t('Crear cuenta') . "</h1><p class=\"notice\">" . t('Con cuenta publicas en modo Ghost: cada envío o comentario sale con un alias y tu nombre aparece a los %d minutos. Puedes votar y tu aura crece con lo que aportas. Te enviaremos un correo para activar la cuenta.', (int)cfg('ghost_minutes', 30)) . "</p>";
+echo "<p class=\"notice\">" . t('Con cuenta publicas en modo Ghost: cada envío o comentario sale con un alias y tu nombre aparece a los %d minutos. Puedes votar y tu aura crece con lo que aportas. Te enviaremos un correo para activar la cuenta.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . $err . "</p>";   // sin h(): todos los $err son textos fijos del sitio (el de email temporal lleva un enlace)
 echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario</label>') . "<input type=\"text\" name=\"login\" required value=\"" . h(post('login')) . "\">";
 echo "" . t('<label>Correo</label>') . "<input type=\"email\" name=\"email\" required value=\"" . h(post('email')) . "\">";

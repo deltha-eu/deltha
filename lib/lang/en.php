@@ -594,4 +594,7 @@ return [
 '<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b> mentioned you in the Chat',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b> quoted your Chat message',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b> sent you a message',
+// paginas sin <h1> repetido
+'Escribir un artículo' => 'Write an article',
+'<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Logging in sets a single technical session cookie. Without an account, none at all.</p>',
 ];

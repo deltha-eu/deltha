@@ -78,8 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'url' => $url, 'image' => $image, 'indexable' => $idx]);
 }
 
-page_header(t('Editar envío'));
-echo "<h1>" . ($isArt ? t('Editar artículo') : t('Editar envío')) . " #$id</h1>";
+page_header(($isArt ? t('Editar artículo') : t('Editar envío')) . " #$id");   // sin <h1>: el titulo ya va en la cabecera
 if ($own) {
     $q = (int)cfg('story_edit_minutes', 15) * 60 - (time() - strtotime($s['sent_date']));
     echo "<p class=\"notice\">" . t('Puedes corregir tu envío durante %d minutos tras enviarlo, mientras no llegue a portada (te quedan %d min). Quedará marcado como editado.', (int)cfg('story_edit_minutes', 15), max(1, intdiv($q, 60))) . " <a href=\"/hilo.php?id=$id\">" . t('Volver al hilo') . "</a>.</p>";

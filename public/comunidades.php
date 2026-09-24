@@ -30,7 +30,6 @@ $rows = $pdo->query("SELECT c.*, u.login AS owner, (SELECT COUNT(*) FROM story_c
                        FROM communities c JOIN users u ON u.user_id = c.owner_id WHERE c.status = 'ok' ORDER BY last DESC, c.created DESC")->fetchAll();
 
 page_header(t('Comunidades'), 'comunidades');
-echo "" . t('<h1>Comunidades</h1>') . "";
 echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad; además, quien creó una comunidad puede añadir a ella cualquier envío ya publicado desde su hilo (hasta %d comunidades por envío). Puede crear comunidades quien tenga aura mayor que %s (los moderadores, sin requisito de aura), hasta %d cada uno. Puedes elegir una como página de entrada en <a href="/perfil.php">tu perfil</a>.', h(cfg('site_name')), (int)cfg('comm_max_per_story', 3), h(num_es(cfg('comm_min_aura', 10))), (int)cfg('comm_max_per_user', 3)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($u && $quota > 0) {

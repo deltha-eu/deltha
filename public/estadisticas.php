@@ -28,7 +28,7 @@ $tile = function ($num, string $label, ?string $href = null) use ($n) {
 };
 
 page_header(t('Estadísticas'), 'estadisticas');
-echo "<div class=\"statspage\">" . t('<h1>Estadísticas</h1>') . "";
+echo "<div class=\"statspage\">";   // sin <h1>: el titulo ya va en la cabecera
 echo "<p class=\"notice\">" . t('Cifras en el momento de cargar la página. Cuenta a quien ha hecho algo en los últimos %d minutos. A quien lee sin cuenta lo contamos con una huella no reversible que se borra a los pocos minutos: ni cookies ni direcciones IP guardadas.', $onlineMin) . "</p>";
 echo "<div class=\"grid\">";
 echo $tile((int)$u['online'] + $anon, t('personas ahora'), '/usuarios.php?v=conectados');

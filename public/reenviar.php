@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 page_header(t('Reenviar activación'));
-echo "" . t('<h1>Reenviar activación</h1>') . "";
 if ($msg) echo "<p class=\"notice\">" . h($msg) . "</p>";
 echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario o correo</label>') . "<input type=\"text\" name=\"who\" required>" . t('<button>Enviar de nuevo</button>') . "</form>";
 echo "<p class=\"end\">" . t('Se puede pedir un nuevo enlace cada 10 minutos.') . "</p>";
