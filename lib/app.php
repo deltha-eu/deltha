@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 105);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 106);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -364,12 +364,13 @@ function fecha_larga(string $ymd, string $lang = 'es'): string {
         'fr' => ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
         'de' => ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
         'it' => ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'],
+        'pt' => ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],
     ];
     $d = (int)date('j', $t); $y = date('Y', $t); $m = ($M[$lang] ?? $M['es'])[(int)date('n', $t) - 1];
     // catalan: «d'abril», «d'agost», «d'octubre» (apostrofo ante vocal)
     if ($lang === 'ca') return "$d " . (preg_match('/^[aeiou]/', $m) ? "d'$m" : "de $m") . " de $y";
     return match ($lang) {
-        'gl'       => "$d de $m de $y",
+        'gl', 'pt' => "$d de $m de $y",
         'eu'       => "{$y}ko $m $d",
         'de'       => "$d. $m $y",
         'en', 'fr', 'it' => "$d $m $y",

@@ -498,6 +498,7 @@ form.plain.skinform { gap: 6px; }
 [data-skin="comunidad"]:lang(eu) :is(.post.full, .post.compact):not(.medio) .actions > a:first-child::after { content: "erantzunak"; }
 [data-skin="comunidad"]:lang(de) :is(.post.full, .post.compact):not(.medio) .actions > a:first-child::after { content: "Antworten"; }
 [data-skin="comunidad"]:lang(it) :is(.post.full, .post.compact):not(.medio) .actions > a:first-child::after { content: "risposte"; }
+[data-skin="comunidad"]:lang(pt) :is(.post.full, .post.compact):not(.medio) .actions > a:first-child::after { content: "respostas"; }
 [data-skin="comunidad"] .actions .share { margin-left: 0; }
 /* el hilo: el envio como primer mensaje, la barra azul de «N comentarios» y cada comentario como un mensaje de foro */
 [data-skin="comunidad"] .hilo .post.main { margin: 10px 8px 0; background: var(--card); border: 1px solid var(--line2); border-radius: 6px 6px 0 0; padding: 12px 14px 10px; }

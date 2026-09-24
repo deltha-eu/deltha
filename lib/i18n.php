@@ -1,6 +1,6 @@
 <?php
 /**
- * lib/i18n.php — idioma de la interfaz: es (fuente), ca, eu, gl, en, fr, de, it.
+ * lib/i18n.php — idioma de la interfaz: es (fuente), ca, eu, gl, en, fr, de, it, pt.
  *
  * Las cadenas del codigo estan en español y son la clave: t('Portada') devuelve la
  * traduccion del idioma activo o la propia clave si no la hay. Con argumentos usa
@@ -14,7 +14,7 @@
  */
 declare(strict_types=1);
 
-const DDD_LANGS = ['es' => 'Español', 'ca' => 'Català', 'eu' => 'Euskara', 'gl' => 'Galego', 'en' => 'English', 'fr' => 'Français', 'de' => 'Deutsch', 'it' => 'Italiano'];
+const DDD_LANGS = ['es' => 'Español', 'ca' => 'Català', 'eu' => 'Euskara', 'gl' => 'Galego', 'en' => 'English', 'fr' => 'Français', 'de' => 'Deutsch', 'it' => 'Italiano', 'pt' => 'Português'];
 $I18N = [];
 
 function lang(): string {

@@ -43,11 +43,14 @@ Categorías (usa exactamente estas claves):
 - insulto: insulta, veja o humilla a una persona concreta, sea otro usuario o un tercero identificable.
 - odio: incita al odio, la hostilidad o la discriminación contra un grupo por origen, etnia, religión, sexo,
   orientación sexual, identidad de género, discapacidad o similar. Criticar una religión o una ideología no es odio.
-- acoso: amenaza a alguien, lo intimida o lo persigue de forma reiterada.
+- acoso: amenaza a alguien, lo intimida o lo persigue de forma reiterada, o le desea la muerte o daños graves.
 - datos: publica datos personales de un particular que no los ha hecho públicos (dirección, teléfono, DNI,
   datos médicos, lugar de trabajo para señalarlo). Los datos profesionales de cargos públicos no cuentan.
-- ilegal: contenido claramente delictivo (abuso sexual de menores, apología del terrorismo, instrucciones para
-  cometer delitos graves, venta de cosas ilegales, fraudes).
+- ilegal: contenido claramente delictivo: abuso sexual de menores; apología o enaltecimiento del terrorismo, es decir,
+  aprobar, celebrar o justificar un atentado o a sus autores, o desear que se repita («estuvo bien hecho», «ojalá
+  hubiera más», «héroes»), aunque el atentado sea antiguo o se mencione de pasada; celebrar o desear asesinatos o
+  violencia grave contra personas o colectivos; instrucciones para cometer delitos graves; venta de cosas ilegales; fraudes.
+  Informar de un atentado, analizarlo o condenarlo NO es apología.
 - spam: publicidad encubierta, enlaces de afiliación, texto repetido o automático, captación comercial.
 - otro: incumple las normas de otra manera clara (suplantar a alguien, trampas con los votos).
 - ninguna: no incumple nada. Es la respuesta más habitual.
