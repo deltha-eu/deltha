@@ -2504,13 +2504,12 @@ details.editbox form.plain { padding-top: 0; }
   .rail .pub { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 6px 0 0; padding: 13px 18px; border-radius: 999px; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 16px; }
   .rail .pub .i { width: 20px; height: 20px; stroke-width: 2.4; }
   header.top .bell { display: none; }
-  .rail .bell { display: flex; align-items: center; gap: 14px; margin: auto 0 0; padding: 10px 14px; border-radius: 999px; font-size: 17px; color: var(--fg); position: relative; }
+  .rail .bell { display: flex; align-items: center; gap: 14px; margin: 0; padding: 10px 14px; border-radius: 999px; font-size: 17px; color: var(--fg); position: relative; }
   .rail .bell:hover { background: var(--hover); }
   .rail .bell .i { width: 24px; height: 24px; flex: none; }
   .rail .bell > span { display: inline; }
   .rail .bell .badge { position: static; order: 3; margin-left: auto; font-size: 10px; }   /* icono · rótulo · burbuja a la derecha */
   .rail .bell > span { order: 2; }
-  .rail .bell + .me { margin-top: 0; }
   .rail .me { margin: auto 0 0; padding: 10px 12px; border-radius: 999px; display: flex; align-items: center; gap: 10px; color: var(--fg); font-size: 15px; }
   .rail .me:hover { background: var(--hover); }
   .rail .me .av { width: 38px; height: 38px; font-size: 16px; }
