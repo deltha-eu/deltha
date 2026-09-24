@@ -40,8 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-page_header(t('Editar comentario'));
-echo "<h1>" . t('Editar comentario') . " #$id</h1>";
+page_header(t('Editar comentario') . " #$id");   // sin <h1>: el titulo ya va en la cabecera
 if ($own) { $q = (int)cfg('comment_edit_minutes', 10) * 60 - (time() - strtotime($c['created'])); echo "<p class=\"notice\">" . t('Puedes corregir tu comentario durante %d minutos tras publicarlo (te quedan %d min). Quedará marcado como editado.', (int)cfg('comment_edit_minutes', 10), max(1, intdiv($q, 60))) . " <a href=\"$back\">" . t('Volver al hilo') . "</a>.</p>"; }
 else echo "<p class=\"notice\">Edición de moderación. <a href=\"$back\">Volver al hilo</a>.</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";

@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$err) $err = t('Usuario o contraseña incorrectos.');
 }
 page_header(t('Entrar'));
-echo "" . t('<h1>Entrar</h1><p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>') . "";
+echo "" . t('<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>') . "";   // sin <h1>: el titulo ya va en la cabecera
 if ($err) echo "<p class=\"error\">$err</p>";
 echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario</label>') . "<input type=\"text\" name=\"login\" required autocomplete=\"username\">";
 echo "" . t('<label>Contraseña</label>') . "<input type=\"password\" name=\"pass\" required autocomplete=\"current-password\">" . t('<button>Entrar</button>') . "</form>";

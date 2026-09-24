@@ -22,7 +22,6 @@ if (!in_array($th, ['light', 'dark'], true)) $th = 'auto';
 $descs = skin_descs();
 
 page_header(t('Skin'), 'plantilla');
-echo "<h1>" . t('Skin') . "</h1>";
 echo "<p class=\"notice\">" . t('Misma portada, mismos números, distinta piel. Elige una y pulsa «Aplicar»; el enlace «ver» la enseña en la portada antes de decidir.') . ($u ? "" : " " . t('Sin cuenta se recuerda con una cookie en este navegador, solo porque tú la pides.')) . "</p>";
 if ($ok) echo "<p class=\"notice\">" . h($ok) . "</p>";
 echo "<form class=\"plain skinform\" method=\"post\">";

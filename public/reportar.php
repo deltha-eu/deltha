@@ -41,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 page_header($chat ? t('Reportar mensaje') : t('Reportar comentario'));
-echo $chat ? "<h1>" . t('Reportar un mensaje del chat') . "</h1>" : t('<h1>Reportar un comentario</h1>');
 echo "<p class=\"notice\">" . t('Lo revisará una persona. Si incumple las <a href="/normas.php">normas de uso</a>, se retirará. ') . "<a href=\"$back\">" . h($backTxt) . "</a>.</p>";
 echo "<blockquote class=\"quote\"><b>" . h($n) . "</b> " . h(mb_strimwidth($c['content'], 0, 400, '…')) . "</blockquote>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"" . ($chat ? 'chat' : 'id') . "\" value=\"$id\">";

@@ -554,4 +554,7 @@ return [
 '<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b>(e)k Txatean aipatu zaitu',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b>(e)k zure Txateko mezua aipatu du',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b>(e)k mezu bat bidali dizu',
+// paginas sin <h1> repetido
+'Escribir un artículo' => 'Artikulu bat idatzi',
+'<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Sartzean saioko cookie tekniko bakarra sortzen da. Konturik gabe, bat ere ez.</p>',
 ];

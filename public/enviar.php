@@ -96,7 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 page_header(t('Enviar'));
-echo "" . t('<h1>Enviar</h1>') . "";
 if (!user()) echo "<p class=\"notice\">" . t('Envías como anónimo. Si <a href="/login.php">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">$err</p>";
 
