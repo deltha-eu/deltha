@@ -598,4 +598,10 @@ return [
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">La connexion crée un seul cookie technique de session. Sans compte, aucun.</p>',
 'me gusta' => 'j\'aime',
 'no me gusta' => 'je n\'aime pas',
+'ordenar por' => 'trier par',
+'fecha de registro' => 'date d\'inscription',
+'última conexión' => 'dernière connexion',
+'más envíos' => 'plus d\'envois',
+'más comentarios' => 'plus de commentaires',
+'%d comentarios' => '%d commentaires',
 ];

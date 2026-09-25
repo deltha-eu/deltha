@@ -599,4 +599,10 @@ return [
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Logging in sets a single technical session cookie. Without an account, none at all.</p>',
 'me gusta' => 'like',
 'no me gusta' => 'dislike',
+'ordenar por' => 'sort by',
+'fecha de registro' => 'sign-up date',
+'última conexión' => 'last seen',
+'más envíos' => 'most submissions',
+'más comentarios' => 'most comments',
+'%d comentarios' => '%d comments',
 ];
