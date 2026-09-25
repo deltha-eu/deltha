@@ -256,6 +256,19 @@ main > p { padding: 0 16px; }
 .statspage a.tile { color: inherit; text-decoration: none; }
 .statspage a.tile:hover { border-color: var(--accent); }
 .statspage a.tile span::after { content: " ›"; }
+/* analitica: rotulos de grupo en /analitica.php; en admin, barras, minutos y dos columnas */
+.statspage h3.anah { margin: 18px 0 0; font-size: 15px; }
+.statspage .meta { color: var(--muted); font-size: 13px; }
+.admin td.num, .admin th.num { text-align: right; white-space: nowrap; }
+.anabar { display: block; height: 8px; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); border-radius: 4px; overflow: hidden; }
+.anabar i { display: block; height: 100%; background: var(--accent); }
+.anamin { display: flex; align-items: flex-end; gap: 2px; height: 48px; margin: 6px 0 10px; }
+.anamin i { flex: 1; background: var(--accent); opacity: .8; border-radius: 2px 2px 0 0; min-height: 2px; }
+.anacols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .anacols { grid-template-columns: 1fr; } }
+.anaform { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 14px; }
+.anaform input[type=date] { font: inherit; padding: 4px 6px; border: 1px solid var(--line2); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.anaform a { text-decoration: underline; text-underline-offset: 2px; }
 nav.sub.fecha { border-bottom: 0; padding-top: 0; }
 nav.sub.fecha a { font-size: 13px; padding: 6px 9px; }
 nav.sub.fecha > span.meta { font-size: 13px; padding: 6px 9px; color: var(--muted); white-space: nowrap; }   /* «ordenar por» en /usuarios.php: a la altura de los enlaces */

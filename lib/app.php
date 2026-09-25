@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 121);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 122);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -75,6 +75,7 @@ require_once __DIR__ . '/i18n.php';
 i18n_load();
 require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
 require_once __DIR__ . '/avisos.php';     // campanita: menciones, respuestas y privados
+require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
  * guardada unos minutos, solo para contar visitantes en /estadisticas.php.
@@ -721,6 +722,7 @@ function story_indexable(array $s): bool {
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $robots = robots_meta();   // antes del primer echo: tambien manda la cabecera X-Robots-Tag
+    ana_hit();                 // analitica propia: una fila por pagina vista (GET, sin bots, sin admin)
     $u = user();
     $theme = theme();   // null = sigue al sistema
     echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
@@ -767,9 +769,11 @@ function nav_tabs(string $tab, string $cls): void {
         'plantilla'    => ['/plantilla.php', t('Skin'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
         'procesos'     => ['/procesos.php', t('Procesos'), 'proc'],
         'estadisticas' => ['/estadisticas.php', t('Estadísticas'), 'stats'],
+        'analitica'    => ['/analitica.php', t('Analítica'), 'stats'],   // solo registrados y solo en el rail (en movil, desde Estadisticas)
         'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
     ];
     if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
+    if (isset($tabs['analitica']) && ($cls === 'tabs-bottom' || !user() || !ana_on())) unset($tabs['analitica']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
     echo "<nav class=\"$cls\">";
     foreach ($tabs as $k => [$href, $label, $ic]) {
