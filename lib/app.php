@@ -719,6 +719,14 @@ function story_indexable(array $s): bool {
 }
 /** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
  *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
+/** <meta refresh> a la misma URL con auto=1, para que la analitica no cuente las recargas automaticas como paginas vistas (ana_hit) */
+function refresh_meta(int $seconds): string {
+    $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
+    $path = (string)(parse_url($uri, PHP_URL_PATH) ?: '/');
+    parse_str((string)(parse_url($uri, PHP_URL_QUERY) ?? ''), $q);
+    $q['auto'] = '1';
+    return '<meta http-equiv="refresh" content="' . $seconds . ';url=' . h($path . '?' . http_build_query($q)) . '">';
+}
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $robots = robots_meta();   // antes del primer echo: tambien manda la cabecera X-Robots-Tag

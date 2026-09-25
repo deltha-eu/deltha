@@ -24,6 +24,7 @@ function ana_hit(): void {
     $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
     if ($ua === '' || preg_match('~bot|crawl|spider|slurp|fetch|monitor|curl|wget|python|headless|lighthouse|preview~i', $ua)) return;
     if (($_SERVER['HTTP_SEC_PURPOSE'] ?? $_SERVER['HTTP_PURPOSE'] ?? '') !== '') return;   // prefetch/prerender: no es una lectura
+    if (($_GET['auto'] ?? '') === '1') return;   // recarga automatica (meta refresh del chat y de procesos, refresh_meta()): no es una lectura nueva
     $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
     $path = (string)(parse_url($uri, PHP_URL_PATH) ?: '/');
     if (preg_match('~^/(admin|moderacion|api/|app/|css/|img/|media/)~', $path)) return;
