@@ -13,7 +13,7 @@ $st->bindValue(2, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 
 page_header(t('Originales'), 'originales');
-echo "<p class=\"notice\">" . t('Textos propios de la comunidad, hasta %d palabras, del más reciente al más antiguo. No van a las portadas: se leen, se votan y se comentan aquí. <a href="/articulo.php">Escribe el tuyo</a>.', (int)cfg('article_max_words', 500)) . "</p>";
+echo "<p class=\"notice\">" . t('Textos propios de la comunidad, hasta %d palabras, del más reciente al más antiguo. No van a las portadas: se leen, se votan y se comentan aquí. <a href="/articulo.php">Escribe el tuyo</a>.', (int)cfg('article_max_words', 1000)) . "</p>";
 $n = 0;
 foreach ($st as $s) { story_post($pdo, $s, 'full'); $n++; }
 if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay originales. <a href="/articulo.php">Escribe el primero</a>.') . "</p>";

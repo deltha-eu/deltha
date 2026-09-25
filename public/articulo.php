@@ -8,7 +8,8 @@ if (!user() && cfg('anon_can_submit') !== '1') redirect('/login.php');
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY topic_id")->fetchAll();
 $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
-$maxWords = (int)cfg('article_max_words', 500);
+$maxWords = (int)cfg('article_max_words', 1000);   // tope de palabras: Admin → Config
+$maxChars = max(2000, $maxWords * 12);                // tope de caracteres derivado (holgura para palabras largas), por si llega mas de la cuenta
 $err = null;
 $f = ['title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'indexable' => 0];
 $canIndex = user() && cfg('index_articles', '1') === '1';   // solo registrados: el anonimo no elige salir en buscadores
@@ -20,7 +21,7 @@ function contar_palabras(string $t): int {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['title']   = mb_substr(post('title'), 0, 200);
-    $f['content'] = mb_substr(post('content'), 0, 12000);
+    $f['content'] = mb_substr(post('content'), 0, $maxChars);
     $f['topic']   = (int)post('topic');
     $f['community'] = (int)post('community');
     $f['indexable'] = $canIndex && post('indexable') === '1' ? 1 : 0;

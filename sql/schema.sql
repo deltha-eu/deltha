@@ -46,7 +46,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('sources_smf_per_run', '12',   'Foros SMF (Areopago): paginas de mensaje que se leen por pasada para sacar autor y numero del mensaje'),
 ('comment_edit_minutes','10',   'Minutos tras publicar en los que el autor puede editar su comentario'),
 ('comment_edit_min_aura','6',   'Aura minima (estricta: mayor que) para poder editar los comentarios propios'),
-('article_max_words',   '500',  'Palabras maximas de un articulo'),
+('article_max_words',   '1000', 'Palabras maximas de un articulo'),
 ('anon_alias_mode',     'ip_hash', 'ip_hash = alias estable por hilo sin cookie | random = alias nuevo por comentario'),
 ('anon_can_comment',    '1',    '1 = los anonimos pueden comentar'),
 ('anon_can_submit',     '1',    '1 = los anonimos pueden enviar'),
