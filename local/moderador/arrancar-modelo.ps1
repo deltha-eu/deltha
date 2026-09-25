@@ -15,7 +15,10 @@ function IniValue($section, $key, $default) {
     return $default
 }
 $bonsai = IniValue "bonsai" "dir" (Join-Path $env:USERPROFILE "Bonsai-demo")
-$ctx    = IniValue "bonsai" "ctx" "8192"
+$ctx    = IniValue "bonsai" "ctx" "32768"
+$slots  = IniValue "bonsai" "slots" "2"
+$kv     = IniValue "bonsai" "kv" "q8_0"
+$unif   = IniValue "bonsai" "unificada" "1"
 $apiKey = IniValue "modelo" "api_key" ""
 
 $bin   = Join-Path $bonsai "bin\cuda\llama-server.exe"
@@ -34,10 +37,15 @@ $srvArgs = @(
     "-m", $model.FullName,
     "--host", "127.0.0.1", "--port", "8080",
     "-ngl", "99", "-fa", "on",
-    "-c", $ctx, "-np", "1",
+    "-c", $ctx, "-np", $slots,
     "--jinja", "--chat-template-kwargs", $kw,
     "--temp", "0"
 )
+if ($unif -eq "1") { $srvArgs += "--kv-unified" }
+if ($kv -and $kv -ne "f16") { $srvArgs += @("--cache-type-k", $kv, "--cache-type-v", $kv) }
+# servidores MCP preconfigurados en el chat web (Brave Search); se activan por conversación
+$webui = Join-Path $here "webui-config.json"
+if (Test-Path $webui) { $srvArgs += @("--webui-config-file", $webui) }
 if ($apiKey) { $srvArgs += @("--api-key", $apiKey) }
 
 Write-Host ""
@@ -45,7 +53,8 @@ Write-Host "=== Moderador de Deltha: modelo ===" -ForegroundColor Cyan
 Write-Host "  Modelo:   $($model.Name)"
 Write-Host "  Binario:  $bin"
 $extra = if ($apiKey) { " · con api_key" } else { "" }
-Write-Host "  Contexto: $ctx · solo 127.0.0.1:8080$extra"
+$reparto = if ($unif -eq "1") { "compartido" } else { "a partes iguales" }
+Write-Host "  Contexto: $ctx en $slots ranuras ($reparto) · caché $kv · solo 127.0.0.1:8080$extra"
 Write-Host "  Ctrl+C para parar."
 Write-Host ""
 & $bin @srvArgs

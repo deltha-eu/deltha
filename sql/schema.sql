@@ -164,6 +164,8 @@ CREATE TABLE comments (
     alias       VARCHAR(48) NOT NULL,                -- lo que se muestra mientras no hay revelado
     anon_key    CHAR(16) DEFAULT NULL,               -- hash truncado (ip+hilo+secreto) para agrupar anonimos; no reversible
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,  -- aura del autor en el momento de comentar (para el halo)
+    likes       INT UNSIGNED NOT NULL DEFAULT 0,      -- soles (me gusta): contador de comment_votes (migra-073)
+    dislikes    INT UNSIGNED NOT NULL DEFAULT 0,      -- lagrimas (no me gusta)
     content     TEXT NOT NULL,
     content_orig TEXT DEFAULT NULL,                  -- texto original si fue borrado por moderacion
     status      ENUM('pending_mod','rejected','ok') NOT NULL DEFAULT 'ok',
@@ -187,6 +189,18 @@ CREATE TABLE votes (
     KEY idx_created (created),
     CONSTRAINT fk_v_story FOREIGN KEY (story_id) REFERENCES stories(story_id),
     CONSTRAINT fk_v_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)
+) ENGINE=InnoDB;
+
+-- Reacciones a comentarios: sol (1) o lagrima (-1), una por persona y comentario; se puede cambiar o retirar (migra-073)
+CREATE TABLE comment_votes (
+    comment_id  INT UNSIGNED NOT NULL,
+    user_id     INT UNSIGNED NOT NULL,
+    value       TINYINT NOT NULL,
+    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (comment_id, user_id),
+    KEY idx_user (user_id, created),
+    CONSTRAINT fk_cv_comment FOREIGN KEY (comment_id) REFERENCES comments(comment_id) ON DELETE CASCADE,
+    CONSTRAINT fk_cv_user    FOREIGN KEY (user_id)    REFERENCES users(user_id)       ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE mod_queue (

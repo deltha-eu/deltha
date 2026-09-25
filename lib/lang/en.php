@@ -597,4 +597,6 @@ return [
 // paginas sin <h1> repetido
 'Escribir un artículo' => 'Write an article',
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Logging in sets a single technical session cookie. Without an account, none at all.</p>',
+'me gusta' => 'like',
+'no me gusta' => 'dislike',
 ];
