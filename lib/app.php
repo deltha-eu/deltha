@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 118);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 120);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -732,6 +732,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-title\" content=\"" . h(cfg('site_name', 'Deltha')) . "\"><meta name=\"mobile-web-app-capable\" content=\"yes\">";
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
     echo "<script src=\"/app/tabs.js?v=" . DDD_CSS_VER . "\" defer></script>";   // encaja las pestañas de arriba en movil
+    echo "<script src=\"/app/scroll.js?v=" . DDD_CSS_VER . "\" defer></script>";   // votar/guardar/comentar: vuelve al punto de scroll en que estabas (sin JS, manda el ancla)
     if ($u && avisos_on() && (int)cfg('notif_poll_sec', 60) > 0) echo "<script src=\"/app/avisos.js?v=" . DDD_CSS_VER . "\" data-every=\"" . (int)cfg('notif_poll_sec', 60) . "\" defer></script>";   // refresca la burbuja de avisos sin recargar
     echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
     echo $robots;   // noindex salvo paginas escaparate y articulos que el autor abre a buscadores
