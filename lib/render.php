@@ -76,19 +76,16 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     if ($s['status'] === 'destacadas' && $s['published_date']) {
         echo "<div class=\"life\" title=\"" . h(queda($s['published_date'])) . "\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
     }
-    if ($mode === 'full') {
-        $st = $pdo->prepare("SELECT c.alias, c.aura, c.content, c.created, c.deleted, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
-                             WHERE c.story_id = ? AND c.status='ok' ORDER BY c.created DESC LIMIT 2");
+    if ((int)$s['comments'] > 0) {   // en todos los feeds (portadas, originales y radar)
+        // asomo: el comentario mas puntuado del hilo (mas soles; a igualdad, el mas antiguo), solo uno; los borrados no cuentan
+        $st = $pdo->prepare("SELECT c.comment_id, c.alias, c.aura, c.content, c.created, c.likes, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
+                             WHERE c.story_id = ? AND c.status = 'ok' AND c.deleted = 0 ORDER BY c.likes DESC, c.created ASC LIMIT 1");
         $st->execute([$s['story_id']]);
-        $last = array_reverse($st->fetchAll());
-        if ($last) {
-            echo "<div class=\"peek\">";
-            foreach ($last as $c) {
-                $rc = ghost_over($c['created']);
-                $n = display_name($c, $rc);
-                echo "<div class=\"pk\">" . who_avatar($c, $rc, (float)$c['aura'], $n) . "<div><b>" . h($n) . "</b> " . (!empty($c['deleted']) ? "<i>" . h(t(DDD_DELETED_TXT)) . "</i>" : h(mb_strimwidth($c['content'], 0, 150, '…'))) . "</div></div>";
-            }
-            echo "</div>";
+        if ($c = $st->fetch()) {
+            $rc = ghost_over($c['created']);
+            $n = display_name($c, $rc);
+            $suns = (int)$c['likes'] > 0 ? " <a class=\"suns\" href=\"$href#c{$c['comment_id']}\" title=\"" . h(t('me gusta') . " · " . (int)$c['likes']) . "\">" . icon('sun') . "<span>" . (int)$c['likes'] . "</span></a>" : '';
+            echo "<div class=\"peek\"><div class=\"pk\">" . who_avatar($c, $rc, (float)$c['aura'], $n) . "<div><b>" . h($n) . "</b> " . h(mb_strimwidth($c['content'], 0, 150, '…')) . $suns . "</div></div></div>";
         }
     }
     if ($mode === 'compact') {
@@ -129,14 +126,14 @@ function comment_vote_widget(array $c, bool $can_vote, string $action = '/votar-
     $id = (int)$c[$idKey];
     $my = (int)($c['my_vote'] ?? 0);
     $nl = (int)($c['likes'] ?? 0); $nd = (int)($c['dislikes'] ?? 0);
-    // solo el icono; el numero va en el title (al pasar el raton) y en aria-label
-    $tl = t('me gusta') . ($nl ? " · $nl" : ''); $td = t('no me gusta') . ($nd ? " · $nd" : '');
+    // icono y, si hay alguna, el numero como texto pequeño al lado (sin caja)
+    $sl = $nl ? "<span>$nl</span>" : ''; $sd = $nd ? "<span>$nd</span>" : '';
     if ($can_vote) {
         echo "<form class=\"cvote\" method=\"post\" action=\"$action\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-        echo "<button name=\"v\" value=\"1\" class=\"sun" . ($my === 1 ? ' on' : '') . "\" title=\"" . h($tl) . "\" aria-label=\"" . h($tl) . "\">" . icon('sun') . "</button>";
-        echo "<button name=\"v\" value=\"-1\" class=\"tear" . ($my === -1 ? ' on' : '') . "\" title=\"" . h($td) . "\" aria-label=\"" . h($td) . "\">" . icon('tear') . "</button></form>";
+        echo "<button name=\"v\" value=\"1\" class=\"sun" . ($my === 1 ? ' on' : '') . "\" title=\"" . t('me gusta') . "\" aria-label=\"" . t('me gusta') . "\">" . icon('sun') . $sl . "</button>";
+        echo "<button name=\"v\" value=\"-1\" class=\"tear" . ($my === -1 ? ' on' : '') . "\" title=\"" . t('no me gusta') . "\" aria-label=\"" . t('no me gusta') . "\">" . icon('tear') . $sd . "</button></form>";
     } else {
-        echo "<span class=\"cvote\"><span class=\"sun" . ($nl ? ' has' : '') . "\" title=\"" . h($tl) . "\">" . icon('sun') . "</span><span class=\"tear" . ($nd ? ' has' : '') . "\" title=\"" . h($td) . "\">" . icon('tear') . "</span></span>";
+        echo "<span class=\"cvote\"><span class=\"sun\" title=\"" . t('me gusta') . "\">" . icon('sun') . $sl . "</span><span class=\"tear\" title=\"" . t('no me gusta') . "\">" . icon('tear') . $sd . "</span></span>";
     }
 }
 
