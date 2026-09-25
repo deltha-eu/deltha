@@ -45,6 +45,6 @@ echo $tile($s['publicadas_total'], t('publicadas en total'), '/procesos.php?v=po
 echo $tile($c['hoy'], t('comentarios hoy'), '/procesos.php?v=comentarios&d=hoy');
 echo $tile($c['total'], t('comentarios en total'), '/procesos.php?v=comentarios&d=todo');
 echo "</div>";
-if (user()) echo "<p class=\"end\"><a href=\"/usuarios.php\">" . t('Ver los últimos registrados') . "</a></p>";
+if (user()) echo "<p class=\"end\"><a href=\"/usuarios.php\">" . t('Ver los últimos registrados') . "</a>" . (ana_on() ? " · <a href=\"/analitica.php\">" . t('Analítica: visitantes, sesiones y páginas vistas') . "</a>" : '') . "</p>";
 echo "</div>";
 page_footer();

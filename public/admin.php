@@ -347,12 +347,12 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
 
-page_header('Admin');
+page_header('Admin', '', $tab === 'analitica' ? '<meta http-equiv="refresh" content="60">' : '');
 echo "<div class=\"admin\">";
 echo "<nav class=\"tabs\">";
 foreach ($TABS as $k => $v) echo "<a href=\"/admin.php?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v</a>";
@@ -441,6 +441,10 @@ if ($tab === 'usuarios') {
         echo "<tr><td><code>" . h($c['ckey']) . "</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><input type=\"text\" name=\"cfg[" . h($c['ckey']) . "]\" value=\"" . h($c['cvalue']) . "\"></td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar config</button></p></form>";
+
+} elseif ($tab === 'analitica') {
+    require __DIR__ . '/../lib/analitica-admin.php';
+    ana_admin($pdo);
 
 } elseif ($tab === 'temas') {
     echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>envíos</th><th style=\"width:90px\">coef</th><th style=\"width:70px\">color</th></tr>";

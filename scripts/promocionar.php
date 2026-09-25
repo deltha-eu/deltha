@@ -20,4 +20,5 @@ if ($force || (int)date('i') % $cycle === 0) {
 }
 try { foreach (fuentes_tick($pdo, $force) as $l) echo date('c') . "  $l\n"; }
 catch (Throwable $e) { echo date('c') . "  fuentes: ERROR " . $e->getMessage() . "\n"; }
+foreach (ana_tick($pdo) as $l) echo date('c') . "  $l\n";   // analitica: cierra los dias completos en ana_daily y poda hits
 flock($lock, LOCK_UN);
