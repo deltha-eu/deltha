@@ -254,6 +254,7 @@ main > p { padding: 0 16px; }
 .statspage a.tile span::after { content: " ›"; }
 nav.sub.fecha { border-bottom: 0; padding-top: 0; }
 nav.sub.fecha a { font-size: 13px; padding: 6px 9px; }
+nav.sub.fecha > span.meta { font-size: 13px; padding: 6px 9px 6px 0; color: var(--muted); white-space: nowrap; }   /* «ordenar por» en /usuarios.php: a la altura de los enlaces */
 nav.sub.langs { border-bottom: 0; padding-top: 0; margin: 0 0 4px; }   /* /medios.php: filtro por idioma */
 nav.sub.langs a { font-size: 13px; padding: 6px 9px; }
 nav.sub.langs small { opacity: .7; }
