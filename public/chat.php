@@ -49,8 +49,11 @@ if (($goto = (int)($_GET['m'] ?? 0)) > 0) $page = chat_page_of($pdo, $goto);
 $total = (int)$pdo->query("SELECT COUNT(*) FROM chat WHERE " . chat_visible_sql())->fetchColumn();   // los avisos de borrado caducan (chat_deleted_minutes)
 $pages = max(1, (int)ceil($total / $per));
 $page = min($page, $pages);
-$st = $pdo->prepare("SELECT c.*, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT ? OFFSET ?");
-$st->bindValue(1, $per, PDO::PARAM_INT); $st->bindValue(2, ($page - 1) * $per, PDO::PARAM_INT); $st->execute();
+// my_vote: sol (1) o lagrima (-1) que el usuario actual ya puso a cada mensaje (NULL si ninguno o anonimo); migra-074
+$st = $pdo->prepare("SELECT c.*, u.login, cv.value AS my_vote FROM chat c LEFT JOIN users u ON u.user_id = c.user_id
+                     LEFT JOIN chat_votes cv ON cv.msg_id = c.msg_id AND cv.user_id = ?
+                     WHERE " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT ? OFFSET ?");
+$st->bindValue(1, (int)($u['user_id'] ?? 0), PDO::PARAM_INT); $st->bindValue(2, $per, PDO::PARAM_INT); $st->bindValue(3, ($page - 1) * $per, PDO::PARAM_INT); $st->execute();
 $rows = $st->fetchAll();
 $ids = []; $mentions = [];
 foreach ($rows as $m) { $ids[(int)$m['msg_id']] = true; foreach (chat_mentions($m['content']) as $n) $mentions[$n] = true; }
@@ -98,7 +101,12 @@ foreach ($rows as $m) {
     if (!$del && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link\" title=\"" . h(t('solo durante %d min', (int)cfg('chat_delete_minutes', 5))) . "\">" . t('borrar') . "</button></form>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?chat=$id\">" . t('reportar') . "</a>";
     if (is_mod() && !$del) $acts[] = "<form method=\"post\" action=\"/moderacion.php\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"$id\"><input type=\"hidden\" name=\"back\" value=\"1\"><button class=\"link modlink\">" . t('eliminar') . "</button></form>";
-    if ($acts) echo "<div class=\"actions\">" . implode('', $acts) . "</div>";
+    if ($acts || !$del) {
+        echo "<div class=\"actions\">" . implode('', $acts);
+        // sol / lagrima: registrados sobre mensajes ajenos; el resto (y el autor) ve solo los contadores
+        if (!$del) comment_vote_widget($m, $u && (int)$m['user_id'] !== (int)$u['user_id'], '/votar-chat.php', 'msg_id');
+        echo "</div>";
+    }
     echo "</article>";
 }
 echo "</div>";
