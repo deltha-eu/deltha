@@ -128,13 +128,15 @@ function vote_widget(array $s): void {
 function comment_vote_widget(array $c, bool $can_vote, string $action = '/votar-comentario.php', string $idKey = 'comment_id'): void {
     $id = (int)$c[$idKey];
     $my = (int)($c['my_vote'] ?? 0);
-    $up = "<span>" . (int)($c['likes'] ?? 0) . "</span>"; $dn = "<span>" . (int)($c['dislikes'] ?? 0) . "</span>";
+    $nl = (int)($c['likes'] ?? 0); $nd = (int)($c['dislikes'] ?? 0);
+    // solo el icono; el numero va en el title (al pasar el raton) y en aria-label
+    $tl = t('me gusta') . ($nl ? " · $nl" : ''); $td = t('no me gusta') . ($nd ? " · $nd" : '');
     if ($can_vote) {
         echo "<form class=\"cvote\" method=\"post\" action=\"$action\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-        echo "<button name=\"v\" value=\"1\" class=\"sun" . ($my === 1 ? ' on' : '') . "\" title=\"" . t('me gusta') . "\">" . icon('sun') . $up . "</button>";
-        echo "<button name=\"v\" value=\"-1\" class=\"tear" . ($my === -1 ? ' on' : '') . "\" title=\"" . t('no me gusta') . "\">" . icon('tear') . $dn . "</button></form>";
+        echo "<button name=\"v\" value=\"1\" class=\"sun" . ($my === 1 ? ' on' : '') . "\" title=\"" . h($tl) . "\" aria-label=\"" . h($tl) . "\">" . icon('sun') . "</button>";
+        echo "<button name=\"v\" value=\"-1\" class=\"tear" . ($my === -1 ? ' on' : '') . "\" title=\"" . h($td) . "\" aria-label=\"" . h($td) . "\">" . icon('tear') . "</button></form>";
     } else {
-        echo "<span class=\"cvote\"><span class=\"sun\" title=\"" . t('me gusta') . "\">" . icon('sun') . $up . "</span><span class=\"tear\" title=\"" . t('no me gusta') . "\">" . icon('tear') . $dn . "</span></span>";
+        echo "<span class=\"cvote\"><span class=\"sun" . ($nl ? ' has' : '') . "\" title=\"" . h($tl) . "\">" . icon('sun') . "</span><span class=\"tear" . ($nd ? ' has' : '') . "\" title=\"" . h($td) . "\">" . icon('tear') . "</span></span>";
     }
 }
 
