@@ -122,14 +122,15 @@ function vote_widget(array $s): void {
     }
 }
 
-/** Sol (me gusta) y lagrima (no me gusta) de un comentario. $c trae likes, dislikes y my_vote (1|-1|null, del usuario actual).
- *  Botones solo para registrados en hilo abierto y comentario ajeno; si no, contadores. Repetir el propio voto lo retira. */
-function comment_vote_widget(array $c, bool $can_vote): void {
-    $id = (int)$c['comment_id'];
+/** Sol (me gusta) y lagrima (no me gusta) de un comentario (o de un mensaje del Chat: $action = '/votar-chat.php', $idKey = 'msg_id').
+ *  $c trae likes, dislikes y my_vote (1|-1|null, del usuario actual). Botones solo para registrados sobre lo ajeno y no borrado;
+ *  si no, contadores. Repetir la propia reaccion la retira; la contraria la cambia. */
+function comment_vote_widget(array $c, bool $can_vote, string $action = '/votar-comentario.php', string $idKey = 'comment_id'): void {
+    $id = (int)$c[$idKey];
     $my = (int)($c['my_vote'] ?? 0);
     $up = "<span>" . (int)($c['likes'] ?? 0) . "</span>"; $dn = "<span>" . (int)($c['dislikes'] ?? 0) . "</span>";
     if ($can_vote) {
-        echo "<form class=\"cvote\" method=\"post\" action=\"/votar-comentario.php\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
+        echo "<form class=\"cvote\" method=\"post\" action=\"$action\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
         echo "<button name=\"v\" value=\"1\" class=\"sun" . ($my === 1 ? ' on' : '') . "\" title=\"" . t('me gusta') . "\">" . icon('sun') . $up . "</button>";
         echo "<button name=\"v\" value=\"-1\" class=\"tear" . ($my === -1 ? ' on' : '') . "\" title=\"" . t('no me gusta') . "\">" . icon('tear') . $dn . "</button></form>";
     } else {

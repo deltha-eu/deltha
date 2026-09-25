@@ -165,16 +165,16 @@ form.fav.on .i { fill: currentColor; }
 .reto { font-size: 13px; margin-top: 2px; }
 .reply .actions { margin-top: 4px; }
 .reply .actions a { font-size: 13px; }
-/* sol / lagrima en comentarios (migra-073): botones para registrados, contadores para el resto; .on = tu reaccion (icono relleno) */
-.reply .actions .cvote { display: inline-flex; gap: 14px; margin: 0 0 0 auto; }
-.reply .actions .cvote button, .reply .actions span.cvote > span { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); }
-.reply .actions span.cvote > span { cursor: default; }
-.reply .actions .cvote .i { width: 17px; height: 17px; }
-.reply .actions .cvote button.sun:hover { color: var(--fg); }
-.reply .actions .cvote button.tear:hover { color: var(--line2); }
-.reply .actions .cvote .on { color: var(--accent); }
-.reply .actions .cvote .on .i { fill: currentColor; }
-.reply .actions .cvote .tear.on { color: var(--neg); }
+/* sol / lagrima en comentarios (migra-073) y Chat (migra-074): botones para registrados, contadores para el resto; .on = tu reaccion (icono relleno) */
+.actions .cvote { display: inline-flex; gap: 14px; margin: 0 0 0 auto; }
+.actions .cvote button, .actions span.cvote > span { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); }
+.actions span.cvote > span { cursor: default; }
+.actions .cvote .i { width: 17px; height: 17px; }
+.actions .cvote button.sun:hover { color: var(--fg); }
+.actions .cvote button.tear:hover { color: var(--line2); }
+.actions .cvote .on { color: var(--accent); }
+.actions .cvote .on .i { fill: currentColor; }
+.actions .cvote .tear.on { color: var(--neg); }
 .hilo > .composer { border-bottom: 0; }   /* la caja de comentar cierra el hilo, debajo de los comentarios */
 .composer { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
 .composer textarea { flex: 1; width: 100%; font: inherit; font-size: 16px; border: 0; background: none; color: var(--fg); resize: vertical; min-height: 60px; outline: none; }
@@ -394,6 +394,9 @@ header.top .bell > span { display: none; }
 .chat .cm .actions form.inline { display: inline; margin: 0; }
 .chat .cm .actions button.link { font: inherit; font-size: 12px; background: none; border: 0; padding: 0; color: var(--muted); cursor: pointer; }
 .chat .cm .actions button.link:hover, .chat .cm .actions a:hover { text-decoration: underline; }
+.chat .cm .actions .cvote button, .chat .cm .actions span.cvote > span { font-size: 12px; }
+.chat .cm .actions .cvote .i { width: 15px; height: 15px; }
+.chat .cm .actions .cvote button:hover { text-decoration: none; }
 
 /* =====================================================================
    PLANTILLAS VISUALES  (html[data-skin=...])  — elegibles en /perfil.php
