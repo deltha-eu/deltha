@@ -4,8 +4,9 @@
  *  mensaje N y este enseña sus respuestas. @nick enlaza al perfil. Sin avatares: solo el nombre.
  *  Registrados con su nick; anonimos con alias estable por IP si chat_anon = 1. Borrado propio durante
  *  chat_delete_minutes; reportar → /reportar.php?chat=N; borrado de moderacion desde /moderacion.php.
- *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada 60 s (meta refresh, sin JS)
- *  salvo cuando se esta escribiendo (?r=N) o se acaba de publicar. */
+ *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca)
+ *  salvo cuando se esta escribiendo (?r=N) o se acaba de publicar. Con JS lo lleva /app/escribir.js, que cancela el
+ *  refresco en cuanto hay algo escrito (antes se perdia el mensaje a medias); sin JS, el <noscript><meta refresh> de siempre. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/chat.php';
@@ -72,8 +73,9 @@ if ($mentions) {
 $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 
-page_header(t('Chat'), 'chat', $writing ? '' : refresh_meta(60));
-echo "<div class=\"chat\">";
+$refresco = $writing ? 0 : max(0, (int)cfg('chat_refresh_sec', 60));   // 0 = no se recarga sola
+page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
+echo "<div class=\"chat\"" . ($refresco ? " data-refresh=\"$refresco\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
 $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo) {
     echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\">";
