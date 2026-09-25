@@ -9,6 +9,13 @@
     if (!f.querySelector('input[name="js"]')) { var i = document.createElement('input'); i.type = 'hidden'; i.name = 'js'; i.value = '1'; f.appendChild(i); }
     try { sessionStorage.setItem(K, JSON.stringify({ u: url, y: window.scrollY, t: Date.now() })); } catch (_) {}
   }, true);
+  // «responder» en el chat es un enlace (?r=N): el cuadro se pinta bajo el mensaje, asi que se guarda el sitio y se va sin ancla
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a.replylink');
+    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    try { sessionStorage.setItem(K, JSON.stringify({ u: url, y: window.scrollY, t: Date.now() })); } catch (_) {}
+    e.preventDefault(); location.href = a.href.split('#')[0];
+  });
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   var s = null;
   try { s = JSON.parse(sessionStorage.getItem(K) || 'null'); sessionStorage.removeItem(K); } catch (_) {}
