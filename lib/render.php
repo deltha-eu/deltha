@@ -122,7 +122,22 @@ function vote_widget(array $s): void {
     }
 }
 
-function comment_block(array $c, bool $has_next = false, ?array $parent = null, bool $can_reply = false): void {
+/** Sol (me gusta) y lagrima (no me gusta) de un comentario. $c trae likes, dislikes y my_vote (1|-1|null, del usuario actual).
+ *  Botones solo para registrados en hilo abierto y comentario ajeno; si no, contadores. Repetir el propio voto lo retira. */
+function comment_vote_widget(array $c, bool $can_vote): void {
+    $id = (int)$c['comment_id'];
+    $my = (int)($c['my_vote'] ?? 0);
+    $up = "<span>" . (int)($c['likes'] ?? 0) . "</span>"; $dn = "<span>" . (int)($c['dislikes'] ?? 0) . "</span>";
+    if ($can_vote) {
+        echo "<form class=\"cvote\" method=\"post\" action=\"/votar-comentario.php\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
+        echo "<button name=\"v\" value=\"1\" class=\"sun" . ($my === 1 ? ' on' : '') . "\" title=\"" . t('me gusta') . "\">" . icon('sun') . $up . "</button>";
+        echo "<button name=\"v\" value=\"-1\" class=\"tear" . ($my === -1 ? ' on' : '') . "\" title=\"" . t('no me gusta') . "\">" . icon('tear') . $dn . "</button></form>";
+    } else {
+        echo "<span class=\"cvote\"><span class=\"sun\" title=\"" . t('me gusta') . "\">" . icon('sun') . $up . "</span><span class=\"tear\" title=\"" . t('no me gusta') . "\">" . icon('tear') . $dn . "</span></span>";
+    }
+}
+
+function comment_block(array $c, bool $has_next = false, ?array $parent = null, bool $can_reply = false, bool $can_vote = false): void {
     $revealed = ghost_over($c['created']);
     $n = display_name($c, $revealed);
     $del = !empty($c['deleted']);
@@ -141,7 +156,12 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
     if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\">" . t('editar · eliminar') . "</a>";
-    if ($acts) echo "<div class=\"actions\">" . implode('', $acts) . "</div>";
+    if ($acts || !$del) {
+        echo "<div class=\"actions\">" . implode('', $acts);
+        // sol / lagrima: el propio autor (y quien no puede votar) ve solo los contadores
+        if (!$del) comment_vote_widget($c, $can_vote && user() && (int)$c['user_id'] !== (int)user()['user_id']);
+        echo "</div>";
+    }
     echo "</div></article>";
 }
 

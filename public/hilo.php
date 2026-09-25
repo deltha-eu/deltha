@@ -21,9 +21,12 @@ $open = in_array($s['status'], ['nuevas', 'destacadas'], true);
 $can_comment = $open && (user() || cfg('anon_can_comment') === '1');
 $tab = $s['content_type'] === 'article' ? 'originales' : (['destacadas' => (string)$s['portada'], 'nuevas' => 'radar'][$s['status']] ?? '');
 
-$cs = $pdo->prepare("SELECT c.*, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
+// my_vote: sol (1) o lagrima (-1) que el usuario actual ya puso a cada comentario (NULL si ninguno o anonimo)
+$cs = $pdo->prepare("SELECT c.*, u.login, u.avatar, cv.value AS my_vote FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
+                     LEFT JOIN comment_votes cv ON cv.comment_id = c.comment_id AND cv.user_id = ?
                      WHERE c.story_id = ? AND c.status='ok' ORDER BY c.created ASC");
-$cs->execute([$id]);
+$cs->execute([(int)(user()['user_id'] ?? 0), $id]);
+$can_vote = $open && (bool)user();   // sol / lagrima: registrados, hilo abierto (el comentario propio se excluye en comment_block)
 $all = []; $byId = [];
 foreach ($cs as $c) { $all[] = $c; $byId[$c['comment_id']] = $c; }
 avisos_preload_nicks($pdo, array_column($all, 'content'));   // @nick → enlace al perfil en comment_block()
@@ -100,9 +103,6 @@ if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
 if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice' : 'error') . "\">" . h((string)$_GET['comm'] === 'ok' ? t('Guardado.') : (string)$_GET['comm']) . "</p>";
 
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
-if ($can_comment && !$replyTo) composer($id);
-elseif (!$open) echo "<p class=\"end\">" . t('Hilo cerrado.') . "</p>";
-elseif (!$can_comment) echo "<p class=\"end\">" . t('<a href="/login.php">Entra</a> para comentar.') . "</p>";
 
 foreach ($threads as $list) {
     echo "<div class=\"thread\">";
@@ -110,10 +110,14 @@ foreach ($threads as $list) {
     foreach ($list as $i => $c) {
         $isTarget = $replyTo && (int)$replyTo['comment_id'] === (int)$c['comment_id'];
         $hasNext = $i < $n - 1 || $isTarget;
-        comment_block($c, $hasNext, $c['parent_id'] ? ($byId[$c['parent_id']] ?? null) : null, $can_comment);
+        comment_block($c, $hasNext, $c['parent_id'] ? ($byId[$c['parent_id']] ?? null) : null, $can_comment, $can_vote);
         if ($isTarget) composer($id, $c, $i < $n - 1);
     }
     echo "</div>";
 }
+// la caja de comentar va al final, debajo de los comentarios (al responder a uno, sale bajo ese comentario)
+if ($can_comment && !$replyTo) composer($id);
+elseif (!$open) echo "<p class=\"end\">" . t('Hilo cerrado.') . "</p>";
+elseif (!$can_comment) echo "<p class=\"end\">" . t('<a href="/login.php">Entra</a> para comentar.') . "</p>";
 echo "</div>";
 page_footer();

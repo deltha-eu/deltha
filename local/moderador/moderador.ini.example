@@ -20,5 +20,12 @@ espera_error = 60
 [bonsai]
 ; carpeta de Bonsai-demo (binarios del fork de PrismML y modelos)
 dir  = C:\Users\Angel\Bonsai-demo
-; contexto del modelo; 8192 sobra para comentarios y articulos (el texto se recorta a 6000 caracteres)
-ctx  = 8192
+; contexto total del modelo (tokens)
+ctx   = 32768
+; ranuras en paralelo: 2 = el moderador y el chat web (http://127.0.0.1:8080) no se esperan el uno al otro
+slots = 2
+; cache de contexto: f16 (sin comprimir, ~64 KiB/token), q8_0 (la mitad, calidad practicamente igual), q4_0 (un cuarto)
+kv    = q8_0
+; 1 = cache unificada: las ranuras comparten todo el contexto (el chat web puede usar casi los 32k y el moderador
+; solo lo que necesita); 0 = cada ranura tiene su parte fija (ctx / slots)
+unificada = 1
