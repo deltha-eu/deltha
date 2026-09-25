@@ -19,4 +19,4 @@ try {
 // volver a la misma pagina, al post (ancla s{id}); desde /favoritos.php, sin ancla (el post quitado ya no esta)
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
 if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = "/hilo.php?id=$id";
-redirect($back . (str_contains($back, '/favoritos.php') ? '' : "#s$id"));
+redirect($back . (str_contains($back, '/favoritos.php') || isset($_POST['js']) ? '' : "#s$id"));   // con JS (app/scroll.js) sin ancla

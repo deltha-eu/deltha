@@ -32,4 +32,4 @@ try {
 // volver a la misma pagina, al post votado (ancla s{id}) en vez de arriba del todo
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
 if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = "/hilo.php?id=$id";
-redirect($back . "#s$id");
+redirect($back . (isset($_POST['js']) ? '' : "#s$id"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll

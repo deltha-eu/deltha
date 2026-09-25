@@ -45,4 +45,4 @@ try {
 // volver al hilo, al comentario votado (ancla c{id})
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
 if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = $story ? "/hilo.php?id=$story" : '/';
-redirect($back . "#c$id");
+redirect($back . (isset($_POST['js']) ? '' : "#c$id"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll
