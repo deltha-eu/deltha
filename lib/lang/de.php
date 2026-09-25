@@ -560,4 +560,10 @@ return [
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Beim Anmelden wird ein einziges technisches Sitzungs-Cookie gesetzt. Ohne Konto keines.</p>',
 'me gusta' => 'gefällt mir',
 'no me gusta' => 'gefällt mir nicht',
+'ordenar por' => 'sortieren nach',
+'fecha de registro' => 'Registrierungsdatum',
+'última conexión' => 'letzte Verbindung',
+'más envíos' => 'meiste Beiträge',
+'más comentarios' => 'meiste Kommentare',
+'%d comentarios' => '%d Kommentare',
 ];

@@ -559,4 +559,10 @@ return [
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Ao entrar créase unha única cookie técnica de sesión. Sen conta, ningunha.</p>',
 'me gusta' => 'gústame',
 'no me gusta' => 'non me gusta',
+'ordenar por' => 'ordenar por',
+'fecha de registro' => 'data de rexistro',
+'última conexión' => 'última conexión',
+'más envíos' => 'máis envíos',
+'más comentarios' => 'máis comentarios',
+'%d comentarios' => '%d comentarios',
 ];

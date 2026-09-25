@@ -559,4 +559,10 @@ return [
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Sartzean saioko cookie tekniko bakarra sortzen da. Konturik gabe, bat ere ez.</p>',
 'me gusta' => 'gustatzen zait',
 'no me gusta' => 'ez zait gustatzen',
+'ordenar por' => 'ordenatu honen arabera',
+'fecha de registro' => 'erregistro-data',
+'última conexión' => 'azken konexioa',
+'más envíos' => 'bidalketa gehien',
+'más comentarios' => 'iruzkin gehien',
+'%d comentarios' => '%d iruzkin',
 ];
