@@ -41,4 +41,4 @@ try {
 // volver a la misma pagina del Chat, al mensaje votado (ancla m{id})
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
 if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/chat\.php~i', $back)) $back = "/chat.php?m=$id";
-redirect($back . "#m$id");
+redirect($back . (isset($_POST['js']) ? '' : "#m$id"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll
