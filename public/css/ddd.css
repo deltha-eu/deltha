@@ -663,6 +663,8 @@ form.plain.skinform { gap: 6px; }
 [data-skin="flujo"] .post.compact h2 { font-size: 17px; }
 [data-skin="flujo"] .post .lead { grid-area: lead; font-size: 14px; line-height: 1.38; color: var(--muted); margin: 0 0 4px;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+/* en el hilo, el post principal se lee entero: sin recorte a tres lineas (los articulos van parrafo a parrafo en .lead.para) */
+[data-skin="flujo"] .hilo .main .lead { display: block; -webkit-line-clamp: unset; overflow: visible; color: var(--fg); font-size: 15px; line-height: 1.5; }
 [data-skin="flujo"] .post .media, [data-skin="flujo"] .post .media.sm { grid-area: media; width: 120px; aspect-ratio: 4 / 3; margin: 6px 0 0; border-radius: 10px; align-self: start; }
 [data-skin="flujo"] .post .media .tag { left: 6px; bottom: 6px; font-size: 10px; padding: 2px 7px; max-width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-skin="flujo"] .post .delta { grid-area: delta; }

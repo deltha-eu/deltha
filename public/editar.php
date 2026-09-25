@@ -25,7 +25,7 @@ if (!is_mod() && !$own) {
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
 $comms  = $pdo->query("SELECT community_id, name FROM communities ORDER BY name")->fetchAll();
 $isArt = $s['content_type'] === 'article';
-$maxLen = $isArt ? 12000 : 2000;
+$maxLen = $isArt ? max(2000, (int)cfg('article_max_words', 1000) * 12) : 2000;   // articulos: tope de caracteres derivado del de palabras (config)
 $err = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'eliminar') {
