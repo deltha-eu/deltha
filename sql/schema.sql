@@ -56,6 +56,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('og_timeout_sec',      '3',    'Timeout para extraer og:image'),
 ('curl_impersonate',    '/opt/curl-impersonate/curl_chrome116', 'Ruta a curl-impersonate (vacio = usar curl de PHP)'),
 ('sources_enabled',      '1',    '1 = fuentes externas visibles (/fuente.php) y lectura de sus RSS en el cron'),
+('sources_agregadores',  '0',    '1 = los agregadores (Meneame, Mediatize, Renegados...) se ven y se leen; 0 = fuera de todo salvo admin > Fuentes'),
 ('sources_popular_hours','24',   'Fuentes: «populares» = nuevas de las ultimas N horas ordenadas por votos'),
 ('sources_popular_min_votes','5','Fuentes: votos minimos de una nueva para salir en «populares»'),
 ('sources_keep_days',    '7',    'Fuentes: dias que se guardan los items que ya no aparecen en los feeds'),

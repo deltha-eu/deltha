@@ -23,6 +23,10 @@ require_once __DIR__ . '/imagen.php';   // http_get(), imagen_desde_bytes(), ima
 const DDD_FUENTES_DIR = DDD_MEDIA_DIR . '/fuentes';
 
 function fuentes_on(): bool { return (string)cfg('sources_enabled', '1') === '1'; }
+/** Agregadores (Meneame, Mediatize, Renegados, Burbuja, Areopago) activos? config.sources_agregadores, apagados por defecto (migra-070):
+ *  fuentes_activas() no los devuelve, asi que desaparecen del catalogo, el rail, la franja, la columna derecha, el pie, /ultimo.php y /fuente.php,
+ *  y el cron no lee sus RSS. Siguen en admin > Fuentes. */
+function agregadores_on(): bool { return (string)cfg('sources_agregadores', '0') === '1'; }
 
 /** Fuentes activas (cacheado por peticion). $kind: '' todas | agregador | medio */
 function fuentes_activas(PDO $pdo, string $kind = ''): array {
@@ -30,6 +34,7 @@ function fuentes_activas(PDO $pdo, string $kind = ''): array {
     if ($rows === null) {
         try { $rows = $pdo->query("SELECT * FROM sources WHERE status = 'ok' ORDER BY kind, name")->fetchAll(); }
         catch (Throwable $e) { $rows = []; }   // tabla aun sin crear
+        if (!agregadores_on()) $rows = array_values(array_filter($rows, fn($s) => ($s['kind'] ?? 'agregador') !== 'agregador'));   // agregadores apagados
     }
     if ($kind === '') return $rows;
     return array_values(array_filter($rows, fn($s) => ($s['kind'] ?? 'agregador') === $kind));

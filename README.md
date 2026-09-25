@@ -99,6 +99,8 @@ Por defecto sigue al sistema (`prefers-color-scheme`). Un registrado puede fijar
 - `scripts/promocionar.php` cron · `scripts/moderar.php` retirado (era el portero de premoderación con Ollama; ver «Moderación con IA local»)
 
 ## Fuentes externas: Menéame y «Mis medios»
+**Agregadores apagados por defecto** (`config.sources_agregadores = 0`, `sql/migra-070-digg-y-agregadores-off.sql`, 25/09/2026): `fuentes_activas()` no devuelve las fuentes de tipo `agregador`, así que no salen en el catálogo, el rail, la franja de fuentes, la columna derecha, el pie ni `/ultimo.php`, `/fuente.php` responde 404 y el cron no lee sus RSS; siguen en admin → Fuentes por si se reactivan (`agregadores_on()`). En «¿Qué es Deltha?» la idea del agregador se atribuye a Digg (antes Menéame), en los nueve idiomas.
+
 Sitios con RSS «pintados» con Deltha, solo lectura (`/fuente.php?f=slug`, catálogo en `/medios.php`, alta y edición en admin → Fuentes). Dos tipos (`sources.kind`):
 
 - **Agregador** (Menéame): Portada (`/rss`), Populares (las nuevas de las últimas `sources_popular_hours` h con ≥ `sources_popular_min_votes` votos, por votos: lo que Menéame llama Populares, que su RSS no sirve aparte) y Nuevas (`/rss?status=queued`). Titular al artículo (`/go?id=N`), comentarios y votos de la fuente, sin votar ni comentar. Plantilla forzada Orange.
