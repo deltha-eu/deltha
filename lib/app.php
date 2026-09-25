@@ -56,16 +56,40 @@ function icon_src($size): string {
     return ['64' => '/img/favicon.png', '180' => '/img/icon-180.png', '192' => '/app/icon-192.png', '512' => '/app/icon-512.png', '512m' => '/app/icon-512-maskable.png'][(string)$size] ?? '/img/favicon.png';
 }
 
-/* ---- sesion solo si ya hay cookie (nunca para anonimos) ------------ */
+/* ---- sesion solo si ya hay cookie (nunca para anonimos) ------------
+ * De serie PHP cierra la sesion sola: la cookie muere al cerrar el navegador (session.cookie_lifetime = 0) y el
+ * servidor borra el fichero de sesion a los 24 min de inactividad (session.gc_maxlifetime = 1440). Por eso «se
+ * cerraban las sesiones de vez en cuando». Aqui dura config.session_days (30) y el plazo cuenta desde la ultima
+ * visita, no desde que se entro. En el droplet hace falta ademas una linea en el pool de php-fpm: el limpiador de
+ * sesiones de Debian/Ubuntu lee gc_maxlifetime de ahi, no de aqui (ver README, «Sesiones»). */
+/** Dias que dura la sesion iniciada. */
+function session_dias(): int { return max(1, (int)cfg('session_days', 30)); }
+/** ¿La peticion llega por HTTPS? (con Cloudflare delante, Apache puede verla como HTTP: entonces la cabecera lo dice). */
+function es_https(): bool {
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+}
+/** Arranca la sesion con la duracion de session_days (la usan app.php y login.php: los mismos parametros en los dos sitios). */
+function session_arranca(): void {
+    if (session_status() === PHP_SESSION_ACTIVE) return;
+    $ttl = session_dias() * 86400;
+    ini_set('session.gc_maxlifetime', (string)$ttl);
+    session_start(['cookie_lifetime' => $ttl, 'cookie_httponly' => true, 'cookie_secure' => es_https(), 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
+}
+/** Vuelve a mandar la cookie en cada visita: asi el plazo corre desde la ultima vez y no desde que se entro. */
+function session_refresca(): void {
+    if (session_status() !== PHP_SESSION_ACTIVE || headers_sent()) return;
+    setcookie(session_name(), session_id(), ['expires' => time() + session_dias() * 86400, 'path' => '/', 'httponly' => true, 'secure' => es_https(), 'samesite' => 'Lax']);
+}
 $USER = null;
 session_name(DDD_SESSION);
 if (isset($_COOKIE[DDD_SESSION])) {
-    session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
+    session_arranca();
     if (!empty($_SESSION['uid'])) {
         $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang, src_mylang FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
         if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas.php)
+            session_refresca();   // ventana deslizante: mientras entre, no se le cierra la sesion
             $pdo->prepare("UPDATE users SET last_seen = NOW() WHERE user_id = ? AND (last_seen IS NULL OR last_seen < NOW() - INTERVAL 1 MINUTE)")
                 ->execute([$USER['user_id']]);
         }

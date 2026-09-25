@@ -18,6 +18,16 @@ La zona horaria la fija `lib/app.php` (`[app] timezone` en config.ini, por defec
 ## Acceso privado (clave temporal)
 `config.access_key` (admin → Config; `sql/migra-006-clave.sql`). Mientras no esté vacía, quien no tenga la clave es redirigido a `/delta/clave.php` (la antigua presentación de diapositivas `/delta/` se eliminó el 21/09/2026: su contenido es ahora la página `/que-es.php`, ver «Qué hay»); `clave.php` que deja una cookie técnica `ddd_k` (HMAC de la clave, 30 días). Los usuarios logueados pasan sin clave (`/login.php` queda exento). Cambiar la clave invalida todas las cookies; vaciarla abre la web.
 
+## Sesiones (por qué se cerraban solas)
+PHP trae de serie una cookie de sesión que muere al cerrar el navegador (`session.cookie_lifetime = 0`) y borra la sesión del servidor a los **24 minutos** de inactividad (`session.gc_maxlifetime = 1440`): de ahí que a la gente «se le cerrara la sesión de vez en cuando». Ahora la sesión dura `config.session_days` (30) y el plazo cuenta **desde la última visita**, no desde que se entró: `session_arranca()` fija la duración y `session_refresca()` vuelve a mandar la cookie en cada página (`lib/app.php`; `login.php` usa la misma función). La cookie sigue siendo **una sola** (`ddd_s`, HttpOnly, SameSite=Lax, y `Secure` cuando la petición llega por HTTPS, también si Cloudflare lo dice en `X-Forwarded-Proto`), y los anónimos siguen sin recibir ninguna. `sql/migra-078-sesion-larga.sql`.
+
+**En el servidor hace falta una línea más, una sola vez.** El limpiador de sesiones de Debian/Ubuntu (el cron de `php-fpm`) lee `gc_maxlifetime` del *pool*, no de lo que ponga la web en tiempo de ejecución, así que sin esto seguiría borrando las sesiones a los 24 minutos:
+```bash
+echo 'php_admin_value[session.gc_maxlifetime] = 2592000' >> /etc/php/8.3/fpm/pool.d/www.conf
+systemctl restart php8.3-fpm
+```
+`scripts/install-droplet.sh` ya lo deja puesto en las instalaciones nuevas. Si se sube `session_days` por encima de 30 días, hay que subir también ese número del pool.
+
 ## Dominios de correo al registrarse (lista negra, lista blanca y web del dominio)
 `email_rejected()` (lib/mail.php): 1) dominio (o uno superior) en `banned_domains` → no se crea la cuenta y sale el aviso de email temporal («no necesitas cuenta para enviar o comentar; si es un error, escríbenos»); 2) en `allowed_domains` (proveedores reconocidos y revisiones manuales) → se admite; 3) sin MX ni A → «ese dominio no existe»; 4) con `email_web_check=1`, la web del dominio (`https://d/`, `https://www.d/`, `http://d/`, siguiendo redirecciones, solo IPs públicas, `email_web_timeout` s por intento) debe responder 2xx; si no, el dominio entra solo en la lista negra con motivo «auto: …» y sale el mismo aviso. Cada intento rechazado cuenta para `reg_per_ip_hour`. En `/moderacion.php#dominios` se ven las dos listas; un dominio de la negra se pasa a la blanca con un botón (después la persona se registra de nuevo). Tablas y semillas: `sql/migra-058-dominios-correo.sql`.
 

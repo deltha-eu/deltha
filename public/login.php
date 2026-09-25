@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($row && password_verify(post('pass'), $row['pass']) && (int)$row['verified'] === 0) {
         $err = t('Esa cuenta aún no está activada: abre el enlace del correo que te enviamos o <a href="/reenviar.php">pide otro</a>.');
     } elseif ($row && password_verify(post('pass'), $row['pass'])) {
-        session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
+        session_arranca();   // dura session_days (lib/app.php), no hasta cerrar el navegador
         session_regenerate_id(true);
         $_SESSION['uid'] = (int)$row['user_id'];
         if (($_COOKIE['ddd_srclang'] ?? '') === '1') {   // marco «Solo fuentes en mi idioma» antes de entrar: pasa a su cuenta
