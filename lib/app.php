@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 123);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 124);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -720,12 +720,16 @@ function story_indexable(array $s): bool {
 /** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
  *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
 /** <meta refresh> a la misma URL con auto=1, para que la analitica no cuente las recargas automaticas como paginas vistas (ana_hit) */
-function refresh_meta(int $seconds): string {
+/** La propia pagina con auto=1: la recarga automatica no cuenta como visita nueva en la analitica. */
+function refresh_url(): string {
     $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
     $path = (string)(parse_url($uri, PHP_URL_PATH) ?: '/');
     parse_str((string)(parse_url($uri, PHP_URL_QUERY) ?? ''), $q);
     $q['auto'] = '1';
-    return '<meta http-equiv="refresh" content="' . $seconds . ';url=' . h($path . '?' . http_build_query($q)) . '">';
+    return $path . '?' . http_build_query($q);
+}
+function refresh_meta(int $seconds): string {
+    return '<meta http-equiv="refresh" content="' . $seconds . ';url=' . h(refresh_url()) . '">';
 }
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
@@ -743,6 +747,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
     echo "<script src=\"/app/tabs.js?v=" . DDD_CSS_VER . "\" defer></script>";   // encaja las pestañas de arriba en movil
     echo "<script src=\"/app/scroll.js?v=" . DDD_CSS_VER . "\" defer></script>";   // votar/guardar/comentar: vuelve al punto de scroll en que estabas (sin JS, manda el ancla)
+    echo "<script src=\"/app/escribir.js?v=" . DDD_CSS_VER . "\" defer></script>";   // cursor detras del «#N» y refresco del Chat que no se lleva lo escrito
     if ($u && avisos_on() && (int)cfg('notif_poll_sec', 60) > 0) echo "<script src=\"/app/avisos.js?v=" . DDD_CSS_VER . "\" data-every=\"" . (int)cfg('notif_poll_sec', 60) . "\" defer></script>";   // refresca la burbuja de avisos sin recargar
     echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
     echo $robots;   // noindex salvo paginas escaparate y articulos que el autor abre a buscadores
