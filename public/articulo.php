@@ -58,6 +58,7 @@ if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">";
 echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
 echo "<label>" . t('Texto (máximo %d palabras)', $maxWords) . "</label><textarea name=\"content\" rows=\"14\" required>" . h($f['content']) . "</textarea>";
+echo "<p class=\"meta mdhelp\">" . t('Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.') . "</p>";
 echo "" . t('<label>Tema</label>') . "<select name=\"topic\">";
 foreach ($topics as $t) {
     $sel = ((int)$f['topic'] === (int)$t['topic_id']) ? ' selected' : '';
