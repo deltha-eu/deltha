@@ -9,6 +9,7 @@ require __DIR__ . '/../lib/propuestas.php';
 
 $u = user();
 $GRUPOS = ['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'agregador' => t('Agregadores')];
+if (!agregadores_on()) unset($GRUPOS['agregador']);   // agregadores apagados (config.sources_agregadores)
 $k = (string)($_GET['k'] ?? '');
 if (!isset($GRUPOS[$k])) $k = '';
 $kinds = $k ? [$k] : array_keys($GRUPOS);

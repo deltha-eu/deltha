@@ -108,7 +108,7 @@ a.hint { text-decoration: none; }
   <ul>
     <li><b><?= t('El manifiesto contralgorítmico') ?></b> <?= t('La idea de fondo: recuperar el criterio humano frente a la hegemonía del algoritmo.') ?></li>
     <li><b>RSS</b> <?= t('La manera de leer: cada web publica en abierto y se la sigue sin intermediarios, en orden y sin filtros.') ?></li>
-    <li><b>Menéame</b> <?= t('El agregador de noticias: la comunidad decide qué llega a portada.') ?></li>
+    <li><b>Digg</b> <?= t('El agregador de noticias: la comunidad decide qué llega a portada.') ?></li>
     <li><b>Reddit</b> <?= t('Las comunidades: cualquiera puede abrir una y cuidarla en torno a lo que le importa.') ?></li>
     <li><b>X</b> <?= t('El diseño y la usabilidad: una línea de tiempo limpia y rápida.') ?></li>
     <li><b>4chan</b> <?= t('La efimeridad: los hilos nacen, se discuten y desaparecen.') ?></li>

@@ -174,7 +174,7 @@ function side_medios(PDO $pdo): void { side_ultimo($pdo, 'medio', t('Último en 
 function side_substacks(PDO $pdo): void { side_ultimo($pdo, 'newsletter', t('Último en substacks')); }
 function side_ultimo(PDO $pdo, string $kind, string $title): void {
     require_once __DIR__ . '/fuentes.php';
-    if (!fuentes_on()) return;
+    if (!fuentes_on() || ($kind === 'agregador' && !agregadores_on())) return;
     foreach ([$kind => $title] as $kind => $title) {
         $mylang = fuentes_solo_mi_idioma();   // «solo fuentes en mi idioma»: fuera las de otro idioma (las de idioma desconocido se ven)
         $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug FROM source_items i JOIN sources s ON s.source_id = i.source_id
