@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mid = (int)$pdo->lastInsertId();
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
         avisos_chat($pdo, $mid, $u ? (int)$u['user_id'] : null, $u ? (string)$u['login'] : $anonAlias, $content, $ref);   // @mencionados y autor del #N citado
-        redirect('/chat.php?ok=1#m' . $mid);
+        redirect('/chat.php?ok=1' . (isset($_POST['js']) ? '' : '#m' . $mid));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll
     }
 }
 
