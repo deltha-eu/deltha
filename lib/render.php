@@ -71,7 +71,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span></div>";
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
-    if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content'], 0, 240, '…')) . "</p>";
+    if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content_type'] === 'article' ? md_plano($s['content']) : $s['content'], 0, 240, '…')) . "</p>";
     media_block($s, $mode === 'full' ? 'media' : 'media sm');
     if ($s['status'] === 'destacadas' && $s['published_date']) {
         echo "<div class=\"life\" title=\"" . h(queda($s['published_date'])) . "\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
@@ -254,3 +254,32 @@ function profile_tabs(string $on): void {
     foreach ($tabs as $k => [$href, $label]) echo "<a href=\"$href\"" . ($k === $on ? ' class="on"' : '') . ">" . h($label) . "</a>";
     echo "</nav>";
 }
+
+// ---- marcas de los articulos (Originales): un Markdown minimo, sin HTML ----
+// **negrita**  *cursiva*  > cita (parrafo que empieza por >)  [texto](https://enlace)
+// Se aplica sobre el texto ya escapado con h(), asi que ninguna etiqueta del autor llega al HTML.
+function md_inline(string $t): string {   // $t ya escapado
+    $t = preg_replace_callback('~\[([^\[\]]{1,200})\]\((https?://[^\s()<>]+)\)~u', fn($m) => '<a href="' . $m[2] . '" rel="noopener nofollow">' . $m[1] . '</a>', $t);
+    $t = preg_replace('~\*\*(?=\S)(.+?)(?<=\S)\*\*~su', '<b>$1</b>', $t);
+    $t = preg_replace('~(?<![\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])~u', '<i>$1</i>', $t);
+    return $t;
+}
+function md_articulo(string $content): string {   // parrafos separados por linea en blanco; cada uno .lead.para (o cita)
+    $out = '';
+    foreach (preg_split('/\R{2,}/', trim($content)) as $para) {
+        $para = trim($para);
+        if ($para === '') continue;
+        if (preg_match('/^>\s?/u', $para)) {
+            $para = preg_replace('/^>\s?/mu', '', $para);
+            $out .= "<blockquote class=\"lead para cita\">" . nl2br(md_inline(h(trim($para)))) . "</blockquote>";
+        } else $out .= "<p class=\"lead para\">" . nl2br(md_inline(h($para))) . "</p>";
+    }
+    return $out;
+}
+function md_plano(string $content): string {   // texto sin marcas: extractos de listas, Open Graph, RSS
+    $t = preg_replace('~\[([^\[\]]{1,200})\]\((https?://[^\s()<>]+)\)~u', '$1', $content);
+    $t = preg_replace('~\*\*(?=\S)(.+?)(?<=\S)\*\*~su', '$1', $t);
+    $t = preg_replace('~(?<![\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])~u', '$1', $t);
+    return preg_replace('/^>\s?/mu', '', $t);
+}
+
