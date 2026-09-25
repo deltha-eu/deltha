@@ -44,7 +44,7 @@ header('Vary: Cookie');
 // La estimacion de la cola (proximo_ciclo, cola_eta, eta_txt) vive en lib/cola.php: la usa tambien la columna lateral.
 require_once __DIR__ . '/../lib/cola.php';
 
-page_header(t('Procesos'), 'procesos', '<meta http-equiv="refresh" content="60">');
+page_header(t('Procesos'), 'procesos', refresh_meta(60));
 echo "<nav class=\"sub\">";
 foreach ($VIEWS as $k => $label) echo "<a href=\"/procesos.php" . ($k === 'cola' ? '' : "?v=$k") . "\"" . ($k === $v ? ' class="on"' : '') . ">" . h($label) . "</a>";
 echo "</nav>";

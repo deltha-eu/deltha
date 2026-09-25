@@ -72,13 +72,18 @@ if ($mentions) {
 $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 
-page_header(t('Chat'), 'chat', $writing ? '' : '<meta http-equiv="refresh" content="60">');
+page_header(t('Chat'), 'chat', $writing ? '' : refresh_meta(60));
 echo "<div class=\"chat\">";
-if ($canWrite) {
-    echo "<form class=\"chatbox\" method=\"post\" id=\"escribir\">";
+// el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
+$box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo) {
+    echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\">";
     $ph = $u ? t('Escribe como %s', $u['login']) : t('Escribes como %s (anónimo). Con cuenta, con tu nombre.', $anonAlias);
-    echo "<textarea name=\"content\" maxlength=\"$maxLen\" rows=\"2\" placeholder=\"" . h($ph) . "\" required" . ($replyTo ? " autofocus" : "") . ">" . ($replyTo ? "#$replyTo " : "") . "</textarea>";
-    echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($replyTo ? " · <a href=\"/chat.php\">" . t('cancelar') . "</a>" : "") . "</small><button>" . t('Enviar') . "</button></div></form>";
+    echo "<textarea name=\"content\" maxlength=\"$maxLen\" rows=\"2\" placeholder=\"" . h($ph) . "\" required" . ($reply ? " autofocus" : "") . ">" . ($reply ? "#$replyTo " : "") . "</textarea>";
+    echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($reply ? " · <a href=\"/chat.php\">" . t('cancelar') . "</a>" : "") . "</small><button>" . t('Enviar') . "</button></div></form>";
+};
+$replyHere = $replyTo > 0 && isset($ids[$replyTo]);   // el mensaje respondido esta en esta pagina: el cuadro va debajo de el
+if ($canWrite) {
+    if (!$replyHere) $box($replyTo > 0);
 } else {
     echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login.php\">" . t('entrar') . "</a></p>";
 }
@@ -96,7 +101,7 @@ foreach ($rows as $m) {
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
     else      echo "<p>" . chat_format($m['content'], $logins, $ids) . "</p>";
     $acts = [];
-    if (!$del && $canWrite) $acts[] = "<a href=\"/chat.php?r=$id#escribir\">" . icon('reply') . "<span>" . t('responder') . "</span></a>";
+    if (!$del && $canWrite) $acts[] = "<a class=\"replylink\" href=\"/chat.php?r=$id#m$id\">" . icon('reply') . "<span>" . t('responder') . "</span></a>";
     if (!empty($replies[$id])) $acts[] = "<span class=\"reps\">" . t('respuestas:') . " " . implode(' ', array_map(fn($r) => "<a class=\"ref\" href=\"" . (isset($ids[$r]) ? "#m$r" : "/chat.php?m=$r#m$r") . "\">#$r</a>", $replies[$id])) . "</span>";
     if (!$del && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link\" title=\"" . h(t('solo durante %d min', (int)cfg('chat_delete_minutes', 5))) . "\">" . t('borrar') . "</button></form>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?chat=$id\">" . t('reportar') . "</a>";
@@ -108,6 +113,7 @@ foreach ($rows as $m) {
         echo "</div>";
     }
     echo "</article>";
+    if ($canWrite && $replyHere && $id === $replyTo) $box(true);
 }
 echo "</div>";
 paginate('/chat.php', $page, $total, $per);
