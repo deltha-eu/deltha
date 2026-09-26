@@ -594,4 +594,5 @@ return [
 'tu voto' => 'zure botoa',
 'reportado por %d personas' => '%d pertsonak salatuta',
 'Motivos: %s' => 'Arrazoiak: %s',
+'necesita %d votos que cuenten' => 'kontatzen duten %d boto behar ditu',
 ];

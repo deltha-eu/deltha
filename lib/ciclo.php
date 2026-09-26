@@ -3,7 +3,7 @@
  *
  *  Todo lo que se envia entra en el radar (status 'nuevas'). Hay dos portadas, Medios y Substacks, y el ciclo las alterna
  *  (portada_turno de la ventana). En cada ciclo publica UNO en la portada del turno, elegido entre los enlaces de su radar que
- *  llevan al menos delta_min_age_min y tienen δ >= delta_min_publish_<portada>:
+ *  llevan al menos delta_min_age_min, tienen al menos delta_min_votes votos netos que cuentan y δ >= delta_min_publish_<portada>:
  *    - cycle_lottery = 1 (por defecto): sorteo ponderado por δ (el doble de δ, el doble de probabilidad). No gana siempre el
  *      maximo: afinar el ultimo voto no garantiza nada y las segundas y terceras tambien respiran.
  *    - cycle_lottery = 0: el de mayor δ (empate: el mas antiguo).
@@ -61,16 +61,16 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
                                        FROM comments WHERE story_id = s.story_id AND status='ok') AS commenters
                                FROM stories s
                               WHERE s.status = 'nuevas' AND s.portada = ? AND s.content_type = 'link'
-                                AND s.sent_date <= NOW() - INTERVAL ? MINUTE AND s.delta >= ?
+                                AND s.sent_date <= NOW() - INTERVAL ? MINUTE AND (s.eff_pos - s.eff_neg) >= ? AND s.delta >= ?
                               ORDER BY s.delta DESC, s.sent_date ASC LIMIT 200 FOR UPDATE");
         $orden = [$turno];
         if (cfg('cycle_cede_turno', '1') === '1') $orden[] = $turno === 'medios' ? 'substacks' : 'medios';
         $best = null; $donde = $turno; $cands = [];
         foreach ($orden as $p) {
-            $st->execute([$p, $p, $minAge, delta_minpub($p)]);
+            $st->execute([$p, $p, $minAge, delta_min_votes(), delta_minpub($p)]);
             $cands = $st->fetchAll();
             if ($cands) { $best = ciclo_elige($cands); $donde = $p; break; }
-            $log[] = "turno de $p: nada publicable (ninguna con >= $minAge min y delta >= " . num_es(delta_minpub($p)) . ")" . ($p === $turno && count($orden) > 1 ? " → se cede el turno" : "");
+            $log[] = "turno de $p: nada publicable (ninguna con >= $minAge min, >= " . delta_min_votes() . " votos que cuenten y delta >= " . num_es(delta_minpub($p)) . ")" . ($p === $turno && count($orden) > 1 ? " → se cede el turno" : "");
         }
         if ($best) {
             $pdo->prepare("UPDATE stories SET status='destacadas', published_date=NOW() WHERE story_id=? AND status='nuevas'")

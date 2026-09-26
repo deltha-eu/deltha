@@ -118,7 +118,7 @@ envío → radar (`nuevas`; `stories.portada` = `medios` | `substacks`, NULL en 
 
 - **n** = votos que cuentan (`stories.eff_pos − eff_neg`, `eff_votes_update()`): un voto por conexión y envío (`votes.fp` = HMAC(ip + envío) truncado, sin guardar la IP; lo pone `votar.php`) y solo de cuentas con más de `vote_quarantine_hours` (24). Los votos se ven todos desde el primer momento; en el δ entran cuando cuentan. Se recalculan en cada ciclo para el radar y al votar para ese envío.
 - Quien ha votado ve su flecha y su número **en negrita** (`my_vote` en `story_query_base()`, clase `.on` en `vote_widget()`; `form.vote button.on` en ddd.css).
-- **La raíz** comprime: 4 votos valen 2, 16 valen 4. Una camarilla necesita el cuadrado de lo que necesitaba con la fórmula lineal.
+- **La raíz** comprime: 4 votos valen 2, 16 valen 4. Una camarilla necesita el cuadrado de lo que necesitaba con la fórmula lineal. Como √1 = 1 alcanzaba el umbral con un solo voto, la puerta a candidato está en votos: `delta_min_votes` (2) votos netos que cuentan (`sql/migra-083-minimo-votos.sql`); el bonus no sustituye a ninguno.
 - **bonus_tema** (`topics.bonus`, admin → Temas; antes `coef` multiplicador, que amplificaba también negativos y decaimiento): se suma solo si hay apoyo neto. Cultura, ciencia y relatos +0,3.
 - **decay_portada**: `decay_medios` 0,05 · `decay_substacks` 0,02 por media hora, contando desde que el envío es elegible (antes descontaba desde el envío: −0,05 «de serie» a los 30 min). Substacks decae más lento porque lo suyo no caduca con la actualidad.
 - Fórmula única en `delta_sql()` (SQL) y `delta_live()` / `delta_explica()` (PHP), `lib/app.php`. Antes (migra-066): `(pos − neg) × coef − 0,05 × medias_horas`.

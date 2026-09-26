@@ -20,6 +20,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('decay_substacks',     '0.02', 'Decremento de delta por media hora de espera en Substacks (mas lento: lo suyo no caduca con la actualidad)'),
 ('delta_min_publish_medios',    '1', 'Delta minimo para publicar en Medios'),
 ('delta_min_publish_substacks', '1', 'Delta minimo para publicar en Substacks'),
+('delta_min_votes',      '2',    'Votos netos que cuentan necesarios para ser candidato a portada; el bonus del tema no sustituye a ninguno'),
 ('vote_quarantine_hours', '24', 'Horas desde que se crea una cuenta hasta que sus votos cuentan en el delta (se ven desde el principio)'),
 ('cycle_lottery',       '1',    '1 = entre las que superan el minimo se sortea con probabilidad proporcional al delta; 0 = gana la de mayor delta'),
 ('cycle_cede_turno',    '1',    '1 = si a la portada del turno no le llega nada, publica en la otra'),

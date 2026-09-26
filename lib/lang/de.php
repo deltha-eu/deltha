@@ -595,4 +595,5 @@ return [
 'tu voto' => 'deine Stimme',
 'reportado por %d personas' => 'von %d Personen gemeldet',
 'Motivos: %s' => 'Gründe: %s',
+'necesita %d votos que cuenten' => 'braucht %d zählende Stimmen',
 ];

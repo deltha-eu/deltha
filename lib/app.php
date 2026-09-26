@@ -426,6 +426,7 @@ function page_body(array $pg): string {
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
         '{minpub}'   => num_pg($L, delta_minpub('medios')),
         '{minpubs}'  => num_pg($L, delta_minpub('substacks')),
+        '{minvotos}' => (string)delta_min_votes(),
         '{newttl}'   => (string)(int)cfg('nuevas_ttl_hours', 168),
         '{newttltxt}'=> dur_pg($L, (int)cfg('nuevas_ttl_hours', 168)),
         '{ttltxt}'   => dur_pg($L, (int)cfg('thread_ttl_hours', 48)),
@@ -521,6 +522,9 @@ function delta_decay(?string $portada): float {
 function delta_minpub(?string $portada): float {
     return (float)cfg($portada === 'substacks' ? 'delta_min_publish_substacks' : 'delta_min_publish_medios', 1);
 }
+/** Votos netos que cuentan necesarios para ser candidato (migra-083). Con la raiz, un voto da δ = 1 y alcanzaba el umbral: la puerta
+ *  se pone en votos, no en δ, y el bonus del tema no sustituye a ninguno. */
+function delta_min_votes(): int { return max(0, (int)cfg('delta_min_votes', 2)); }
 /** Medias horas minimas antes de que empiece a descontar la antigüedad (= delta_min_age_min / 30). */
 function delta_hh_min(): int { return intdiv(max(0, (int)cfg('delta_min_age_min', 30)), 30); }
 /** Medias horas que descuentan a un envio enviado en $sent (0 mientras no es elegible). */

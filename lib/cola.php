@@ -23,7 +23,7 @@ function cola_eta(array $rows): array {
     foreach ($rows as $r) {
         if (($r['content_type'] ?? 'link') === 'article') continue;
         $p = portada_de($pdo, $r);
-        if ((float)$r['delta_live'] < delta_minpub($p)) continue;
+        if ((int)$r['eff_pos'] - (int)$r['eff_neg'] < delta_min_votes() || (float)$r['delta_live'] < delta_minpub($p)) continue;
         $pend[$p][] = $r;
     }
     $eta = []; $guard = 0;
@@ -54,6 +54,9 @@ function radar_falta(array $s): string {
     global $pdo;
     $minPub = delta_minpub(portada_de($pdo, $s));
     $age = (int)cfg('delta_min_age_min', 30) - intdiv(time() - strtotime($s['sent_date']), 60);
-    if (delta_live($s) < $minPub) return t('necesita δ ≥ %s para llegar a portada', num_es($minPub)) . ($age > 0 ? ' · ' . t('elegible en %d min', $age) : '');
+    $falta = [];
+    if ((int)$s['eff_pos'] - (int)$s['eff_neg'] < delta_min_votes()) $falta[] = t('necesita %d votos que cuenten', delta_min_votes());
+    if (delta_live($s) < $minPub) $falta[] = t('necesita δ ≥ %s para llegar a portada', num_es($minPub));
+    if ($falta) return implode(' · ', $falta) . ($age > 0 ? ' · ' . t('elegible en %d min', $age) : '');
     return $age > 0 ? t('elegible en %d min', $age) : t('sin estimación');
 }
