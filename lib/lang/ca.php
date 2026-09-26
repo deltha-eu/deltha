@@ -583,4 +583,12 @@ return [
 'decide %s' => 'decideix %s',
 'decide un moderador' => 'decideix un moderador',
 'reportado' => 'reportat',
+// algoritmo 2026-09-26 (migra-080): sorteo por δ, «antes de las», bonus del tema
+'antes de las %s' => 'abans de les %s',
+'%s en el próximo ciclo, antes de las %s' => '%s al proper cicle, abans de les %s',
+'%s antes de las %s (~%d min)' => '%s abans de les %s (~%d min)',
+'%d en el radar · cada ciclo, una portada, a suertes según el δ' => '%d al radar · cada cicle, una portada, a sorts segons el δ',
+'bonus %s en el δ' => 'bonus %s en el δ',
+'%d en el radar · próximo ciclo %s, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada, a suertes según el δ entre los suyos que llevan más de %d min y tienen δ ≥ %s (Medios) o %s (Substacks); si a una portada no le llega nada, el turno pasa a la otra. La estimación es orientativa: supone que sale la de mayor δ y que no cambian los votos; se recalcula sola cada minuto.' => '%d al radar · proper cicle %s, per a %s · els cicles es tornen entre Mitjans i Substacks i cadascun publica <b>un</b> a la seva portada, a sorts segons el δ entre els seus que fa més de %d min que hi són i tenen δ ≥ %s (Mitjans) o %s (Substacks); si a una portada no li arriba res, el torn passa a l’altra. L’estimació és orientativa: suposa que surt el de major δ i que no canvien els vots; es recalcula sola cada minut.',
+'Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos.php">Procesos</a> está ordenado por δ, con la estimación de cada uno.' => 'El que s’ha enviat i encara no és a portada, per ordre d’arribada. Cada %d min un cicle publica a Mitjans o a Substacks, per torns, un enviament d’aquesta portada que faci més de %d min que és al radar i el δ del qual arribi a %s (Mitjans) o %s (Substacks): a sorts, amb més probabilitat quant més gran és el δ. A <a href="/procesos.php">Processos</a> està ordenat per δ, amb l’estimació de cadascun.',
 ];

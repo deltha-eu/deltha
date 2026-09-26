@@ -100,13 +100,12 @@ function side(): void {
 /** Proximo ciclo (y a que portada le toca) + las primeras del radar con estimacion (mini fisgona). */
 function side_ciclo(PDO $pdo): void {
     $prox = proximo_ciclo();
-    $next = max(1, (int)ceil(($prox - time()) / 60));
     $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' AND s.content_type='link' ORDER BY delta_live DESC, s.sent_date ASC LIMIT 60");
     $rows = $st->fetchAll();
     $total = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE status='nuevas' AND content_type='link'")->fetchColumn();
     $eta = cola_eta($rows);
-    echo "<section class=\"mod ciclo\"><h3>" . t('Próximo ciclo') . "<span>" . h(t(DDD_PORTADAS[portada_turno($prox)])) . " · " . t('en %d min', $next) . "</span></h3>";
-    echo "<p class=\"meta\">" . t('%d en el radar · cada ciclo, una portada', $total) . "</p>";
+    echo "<section class=\"mod ciclo\"><h3>" . t('Próximo ciclo') . "<span>" . h(t(DDD_PORTADAS[portada_turno($prox)])) . " · " . h(proximo_ciclo_txt()) . "</span></h3>";
+    echo "<p class=\"meta\">" . t('%d en el radar · cada ciclo, una portada, a suertes según el δ', $total) . "</p>";
     $n = 0;
     foreach ($rows as $s) {
         if (!isset($eta[(int)$s['story_id']])) continue;   // solo las que llegan al δ minimo
@@ -118,16 +117,16 @@ function side_ciclo(PDO $pdo): void {
     echo "<p class=\"more\"><a href=\"/procesos.php\">" . t('ver el radar entero') . "</a></p></section>";
 }
 
-/** Temas (las categorias que pone Deltha): pastillas con el color del tema y los envios de la ultima semana; el coeficiente, si no es 1. */
+/** Temas (las categorias que pone Deltha): pastillas con el color del tema y los envios de la ultima semana; el bonus, si lo hay. */
 function side_temas(PDO $pdo): void {
-    $rows = $pdo->query("SELECT t.topic_id, t.name, t.color, t.coef,
+    $rows = $pdo->query("SELECT t.topic_id, t.name, t.color, t.bonus,
                                 (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL 7 DAY) n
                            FROM topics t ORDER BY n DESC, t.name")->fetchAll();
     if (!$rows) return;
     echo "<section class=\"mod temas\"><h3>" . t('Temas') . "<span>" . t('esta semana') . "</span></h3><div class=\"chips\">";
     foreach ($rows as $r) {
-        $coef = (float)$r['coef'];
-        echo "<a class=\"chip\" href=\"/tema.php?t=" . (int)$r['topic_id'] . "\" style=\"--cc:" . h($r['color']) . "\" title=\"" . ($coef != 1.0 ? h(t('coeficiente %s', number_format($coef, 2, ',', ''))) : '') . "\">" . h($r['name']) . "<b>" . (int)$r['n'] . "</b>" . ($coef != 1.0 ? "<small>×" . number_format($coef, 2, ',', '') . "</small>" : '') . "</a>";
+        $bonus = (float)$r['bonus'];
+        echo "<a class=\"chip\" href=\"/tema.php?t=" . (int)$r['topic_id'] . "\" style=\"--cc:" . h($r['color']) . "\" title=\"" . ($bonus > 0 ? h(t('bonus %s en el δ', num_es($bonus))) : '') . "\">" . h($r['name']) . "<b>" . (int)$r['n'] . "</b>" . ($bonus > 0 ? "<small>+" . num_es($bonus) . "</small>" : '') . "</a>";
     }
     echo "</div></section>";
 }

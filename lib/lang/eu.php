@@ -583,4 +583,12 @@ return [
 'decide %s' => '%s(e)k erabakia',
 'decide un moderador' => 'moderatzaile batek erabakia',
 'reportado' => 'salatuta',
+// algoritmo 2026-09-26 (migra-080): sorteo por δ, «antes de las», bonus del tema
+'antes de las %s' => '%s baino lehen',
+'%s en el próximo ciclo, antes de las %s' => '%s: hurrengo zikloan, %s baino lehen',
+'%s antes de las %s (~%d min)' => '%s: %s baino lehen (~%d min)',
+'%d en el radar · cada ciclo, una portada, a suertes según el δ' => '%d radarrean · ziklo bakoitzean, azal bat, zozketaz δ-ren arabera',
+'bonus %s en el δ' => '%s bonusa δ-n',
+'%d en el radar · próximo ciclo %s, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada, a suertes según el δ entre los suyos que llevan más de %d min y tienen δ ≥ %s (Medios) o %s (Substacks); si a una portada no le llega nada, el turno pasa a la otra. La estimación es orientativa: supone que sale la de mayor δ y que no cambian los votos; se recalcula sola cada minuto.' => '%d radarrean · hurrengo zikloa %s, %s azalerako · zikloak Hedabideak eta Substackak txandakatzen dituzte eta bakoitzak <b>bat</b> argitaratzen du bere azalean, zozketaz δ-ren arabera, %d min baino gehiago daramatzaten eta δ ≥ %s (Hedabideak) edo %s (Substackak) dutenen artean; azal bati ezer iristen ez bazaio, txanda besteari pasatzen zaio. Estimazioa orientagarria da: δ handienekoa ateratzen dela eta botoak aldatzen ez direla suposatzen du; minutu bakoitzean berriz kalkulatzen da.',
+'Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos.php">Procesos</a> está ordenado por δ, con la estimación de cada uno.' => 'Bidalitakoa eta oraindik azalean ez dagoena, iritsiera-ordenan. %d minuturo ziklo batek Hedabideetan edo Substacketan argitaratzen du, txandaka, azal horretako bidalketa bat, radarrean %d min baino gehiago daramana eta δ-a %s (Hedabideak) edo %s (Substackak) balioetara iristen dena: zozketaz, δ handiagoa izan ahala probabilitate handiagoarekin. <a href="/procesos.php">Prozesuak</a> atalean δ-ren arabera ordenatuta dago, bakoitzaren estimazioarekin.',
 ];

@@ -161,7 +161,7 @@ a.hint { text-decoration: none; }
   <?= $dots(7) ?>
   <h1><?= t('Temas y comunidades') ?></h1>
   <ul>
-    <li><b><?= t('Los temas los pone %s.', h(cfg('site_name', 'Deltha'))) ?></b> <?= t('Pocos y estables: actualidad, ciencia, cultura… Cada envío lleva uno, y el tema puede dar un pequeño empujón al δ (un coeficiente público).') ?></li>
+    <li><b><?= t('Los temas los pone %s.', h(cfg('site_name', 'Deltha'))) ?></b> <?= t('Pocos y estables: actualidad, ciencia, cultura… Cada envío lleva uno, y el tema puede dar un pequeño empujón al δ (un bonus público que se suma).') ?></li>
     <li><b><?= t('Las comunidades las crea la gente.') ?></b> <?= t('Con más de %s de aura puedes abrir hasta %d: un nombre, un color y de qué va. Un envío puede sumarse a una, y quien la creó (o un moderador) la cuida.', $commAura, $commMax) ?></li>
     <li><b><?= t('Cada comunidad tiene su aire.') ?></b> <?= t('Puede elegir una skin propia, que se aplica a su página y a sus hilos. Y tú puedes elegir una comunidad o un tema como página de entrada.') ?></li>
   </ul>

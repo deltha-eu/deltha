@@ -15,10 +15,15 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('site_name',           'Deltha', 'Nombre del sitio'),
 ('access_key',          'CAMBIAR', 'Clave temporal de acceso: mientras no este vacia, quien no la tenga ve /delta/ en vez de la portada. Cambiarla expulsa a todos.'),
 ('mod_enabled',         '0',    '1 = la IA local revisa lo nuevo DESPUES de publicarse (posmoderacion); 0 = no se encola nada'),
-('delta_min_age_min',   '30',   'Minutos desde el envio antes de poder llegar a portada'),
-('decay_per_halfhour',  '0.05', 'Decremento de delta por cada media hora desde el envio'),
-('decay_mode',          'additive', 'additive | multiplicative'),
-('delta_min_publish',   '1',    'Delta minimo para publicar en portada (Medios o Substacks, segun el turno del ciclo)'),
+('delta_min_age_min',   '30',   'Minutos desde el envio antes de poder llegar a portada (y desde los que descuenta la antigüedad)'),
+('decay_medios',        '0.05', 'Decremento de delta por media hora de espera en Medios (desde que es elegible)'),
+('decay_substacks',     '0.02', 'Decremento de delta por media hora de espera en Substacks (mas lento: lo suyo no caduca con la actualidad)'),
+('delta_min_publish_medios',    '1', 'Delta minimo para publicar en Medios'),
+('delta_min_publish_substacks', '1', 'Delta minimo para publicar en Substacks'),
+('vote_quarantine_hours', '24', 'Horas desde que se crea una cuenta hasta que sus votos cuentan en el delta (se ven desde el principio)'),
+('cycle_lottery',       '1',    '1 = entre las que superan el minimo se sortea con probabilidad proporcional al delta; 0 = gana la de mayor delta'),
+('cycle_cede_turno',    '1',    '1 = si a la portada del turno no le llega nada, publica en la otra'),
+('cycle_jitter',        '1',    '1 = el minuto de ejecucion dentro de cada ventana de cycle_minutes depende del secreto del sitio (contra el sniping); 0 = minuto 0'),
 ('aura_portada',        '0.5',  'Aura por envio que llega a portada'),
 ('aura_envio',          '0.1',  'Aura por envio o articulo publicado en nuevas'),
 ('aura_comentario',     '0.02', 'Aura por comentario'),
@@ -29,9 +34,10 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('aura_start',          '5',    'Aura inicial del registrado'),
 ('aura_max',            '50',   'Tope de aura'),
 ('thread_ttl_hours',    '48',   'Vida del hilo (destacadas -> archivo)'),
+('nuevas_ttl_hours',    '168',  'Horas que puede pasar un envio en el radar sin llegar a portada antes de archivarse (168 = una semana; 0 = nunca)'),
 ('ghost_minutes',       '30',   'Minutos que dura el alias Ghost de cada envio/comentario antes de mostrar el nombre real'),
 ('per_page',            '20',   'Envios por pagina'),
-('cycle_minutes',       '5',    'Minutos entre ciclos del cron; los ciclos alternan portada (Medios, Substacks)'),
+('cycle_minutes',       '5',    'Minutos entre ciclos del cron; los ciclos alternan portada (Medios, Substacks) y corren en un minuto imprevisible de cada ventana'),
 ('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
 ('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
 ('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
@@ -94,20 +100,20 @@ CREATE TABLE users (
 CREATE TABLE topics (
     topic_id    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name        VARCHAR(32) NOT NULL,
-    coef        DECIMAL(4,2) NOT NULL DEFAULT 1.00,
+    bonus       DECIMAL(4,2) NOT NULL DEFAULT 0.00,   -- se SUMA al delta de los envios del tema con apoyo neto (antes coef multiplicador; migra-080)
     color       CHAR(7) NOT NULL DEFAULT '#534AB7',   -- velo de la foto
     UNIQUE KEY uq_name (name)
 ) ENGINE=InnoDB;
 
-INSERT INTO topics (name, coef, color) VALUES
-('actualidad', 1.00, '#534AB7'),
-('politica',   1.00, '#993C1D'),
-('cultura',    1.10, '#0F6E56'),
-('ciencia',    1.10, '#185FA5'),
-('deportes',   1.00, '#3B6D11'),
-('tecnologia', 1.00, '#5F5E5A'),
-('ocio',       1.00, '#993556'),
-('relatos',    1.10, '#6B3FA0');
+INSERT INTO topics (name, bonus, color) VALUES
+('actualidad', 0.00, '#534AB7'),
+('politica',   0.00, '#993C1D'),
+('cultura',    0.30, '#0F6E56'),
+('ciencia',    0.30, '#185FA5'),
+('deportes',   0.00, '#3B6D11'),
+('tecnologia', 0.00, '#5F5E5A'),
+('ocio',       0.00, '#993556'),
+('relatos',    0.30, '#6B3FA0');
 
 -- content_type: link = enlace externo | article = original (texto propio, pestaña Originales; no va a portada)
 CREATE TABLE stories (
@@ -132,6 +138,8 @@ CREATE TABLE stories (
     published_date  DATETIME DEFAULT NULL,
     votes_pos       INT NOT NULL DEFAULT 0,
     votes_neg       INT NOT NULL DEFAULT 0,
+    eff_pos         INT NOT NULL DEFAULT 0,          -- votos que cuentan en el delta: uno por conexion (votes.fp) y solo de cuentas maduras (migra-080)
+    eff_neg         INT NOT NULL DEFAULT 0,
     comments        INT NOT NULL DEFAULT 0,
     delta           DECIMAL(8,3) NOT NULL DEFAULT 0.000,
     delta_calc      DATETIME DEFAULT NULL,
@@ -184,9 +192,11 @@ CREATE TABLE votes (
     story_id    INT UNSIGNED NOT NULL,
     user_id     INT UNSIGNED NOT NULL,
     value       TINYINT NOT NULL,
+    fp          CHAR(16) DEFAULT NULL,               -- huella HMAC(ip + envio) truncada, nunca la IP: varias cuentas desde la misma conexion cuentan como un voto (migra-080)
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (story_id, user_id),
     KEY idx_created (created),
+    KEY idx_story_fp (story_id, fp),
     CONSTRAINT fk_v_story FOREIGN KEY (story_id) REFERENCES stories(story_id),
     CONSTRAINT fk_v_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)
 ) ENGINE=InnoDB;

@@ -403,6 +403,18 @@ function fecha_larga(string $ymd, string $lang = 'es'): string {
         default    => "$d de $m de $y",
     };
 }
+/** Temas con bonus, para la pagina del algoritmo: «cultura, ciencia y relatos (+0,3)» o, con bonus distintos, «cultura (+0,3), ciencia (+0,2)». */
+function bonus_temas_txt(string $L): string {
+    global $pdo;
+    try { $rows = $pdo->query("SELECT name, bonus FROM topics WHERE bonus > 0 ORDER BY bonus DESC, name")->fetchAll(); } catch (Throwable $e) { $rows = []; }
+    if (!$rows) return '—';
+    $and = ['es' => 'y', 'ca' => 'i', 'gl' => 'e', 'eu' => 'eta', 'en' => 'and', 'fr' => 'et', 'de' => 'und', 'it' => 'e', 'pt' => 'e'][$L] ?? 'y';
+    $vals = array_unique(array_map(fn($r) => (float)$r['bonus'], $rows));
+    $names = array_map(fn($r) => h($r['name']), $rows);
+    $join = fn(array $a) => count($a) > 1 ? implode(', ', array_slice($a, 0, -1)) . " $and " . end($a) : ($a[0] ?? '');
+    if (count($vals) === 1) return $join($names) . ' (+' . num_pg($L, $rows[0]['bonus']) . ')';
+    return $join(array_map(fn($r) => h($r['name']) . ' (+' . num_pg($L, $r['bonus']) . ')', $rows));
+}
 function page_body(array $pg): string {
     $L = $pg['lang'] ?? 'es';
     return strtr($pg['body'], [
@@ -412,9 +424,16 @@ function page_body(array $pg): string {
         // parametros del algoritmo (pagina «Como funciona el δ»)
         '{cycle}'    => (string)(int)cfg('cycle_minutes', 5),
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
-        '{minpub}'   => num_pg($L, cfg('delta_min_publish', 1)),
-        '{newttl}'   => (string)(int)cfg('nuevas_ttl_hours', 48),
-        '{decay}'    => num_pg($L, cfg('decay_per_halfhour', 0.05)),
+        '{minpub}'   => num_pg($L, delta_minpub('medios')),
+        '{minpubs}'  => num_pg($L, delta_minpub('substacks')),
+        '{newttl}'   => (string)(int)cfg('nuevas_ttl_hours', 168),
+        '{newttltxt}'=> dur_pg($L, (int)cfg('nuevas_ttl_hours', 168)),
+        '{ttltxt}'   => dur_pg($L, (int)cfg('thread_ttl_hours', 48)),
+        '{decay}'    => num_pg($L, delta_decay('medios')),
+        '{decays}'   => num_pg($L, delta_decay('substacks')),
+        '{quar}'     => (string)(int)cfg('vote_quarantine_hours', 24),
+        '{quartxt}'  => dur_pg($L, (int)cfg('vote_quarantine_hours', 24)),
+        '{bonustemas}' => bonus_temas_txt($L),
         '{auraport}' => num_pg($L, cfg('aura_portada', 0.5)),
         '{auraenv}'  => num_pg($L, cfg('aura_envio', 0.1)),
         '{auracom}'  => num_pg($L, cfg('aura_comentario', 0.02)),
@@ -489,25 +508,78 @@ function skin(): string {
     }
     return $s = 'editorial';
 }
-/** Valor del delta en vivo de una noticia (misma formula que delta_sql) */
+/* ---- delta: la formula publica (2026-09-26, migra-080) -------------------
+ *   δ = signo(n) × √|n| + bonus del tema (solo si n > 0) − decaimiento de la portada × max(0, medias horas − medias horas minimas)
+ * n = votos netos QUE CUENTAN (stories.eff_pos − eff_neg): un voto por conexion y envio (votes.fp, HMAC de ip+envio, sin guardar la IP)
+ * y solo de cuentas con mas de vote_quarantine_hours. La raiz comprime: cuatro votos valen dos, dieciseis valen cuatro, asi una
+ * camarilla necesita el cuadrado de lo de antes. El bonus suma, no multiplica (un coeficiente amplificaba tambien los negativos y el
+ * decaimiento). El decaimiento empieza a contar cuando el envio es elegible (delta_min_age_min), no al enviarse, y es distinto por
+ * portada (Substacks mas lento: lo suyo no caduca con la actualidad). Misma formula en SQL (delta_sql) y en PHP (delta_live). */
+function delta_decay(?string $portada): float {
+    return (float)cfg($portada === 'substacks' ? 'decay_substacks' : 'decay_medios', $portada === 'substacks' ? 0.02 : 0.05);
+}
+function delta_minpub(?string $portada): float {
+    return (float)cfg($portada === 'substacks' ? 'delta_min_publish_substacks' : 'delta_min_publish_medios', 1);
+}
+/** Medias horas minimas antes de que empiece a descontar la antigüedad (= delta_min_age_min / 30). */
+function delta_hh_min(): int { return intdiv(max(0, (int)cfg('delta_min_age_min', 30)), 30); }
+/** Medias horas que descuentan a un envio enviado en $sent (0 mientras no es elegible). */
+function delta_hh(string $sent): int { return max(0, intdiv(max(0, time() - strtotime($sent)), 1800) - delta_hh_min()); }
+/** Valor del delta en vivo de una noticia (misma formula que delta_sql). $s: eff_pos, eff_neg, bonus, portada, sent_date. */
 function delta_live(array $s): float {
-    $net = (int)$s['votes_pos'] - (int)$s['votes_neg'];
-    $hh  = intdiv(max(0, time() - strtotime($s['sent_date'])), 1800);
-    $decay = (float)cfg('decay_per_halfhour', 0.05);
-    $coef = (float)($s['coef'] ?? 1);
-    return cfg('decay_mode') === 'multiplicative' ? $net * $coef * pow(1 - $decay, $hh) : $net * $coef - $decay * $hh;
+    $n = (int)($s['eff_pos'] ?? 0) - (int)($s['eff_neg'] ?? 0);
+    $bonus = $n > 0 ? (float)($s['bonus'] ?? 0) : 0.0;
+    return ($n <=> 0) * sqrt(abs($n)) + $bonus - delta_decay($s['portada'] ?? null) * delta_hh((string)$s['sent_date']);
 }
-
-/* ---- delta (misma formula que el cron, para mostrarla) ------------- */
-/** Expresion SQL del delta en vivo (tablas: stories s, topics t). La usan
- *  el ciclo (para guardarlo) y las listas (para ordenar/mostrar al cargar). */
+/** Expresion SQL del delta en vivo (tablas: stories s, topics t). La usan el ciclo (para guardarlo) y las listas (para ordenar/mostrar). */
 function delta_sql(): string {
-    $decay = (float)cfg('decay_per_halfhour', 0.05);
-    $hh = "FLOOR(TIMESTAMPDIFF(MINUTE, s.sent_date, NOW()) / 30)";
-    return cfg('decay_mode') === 'multiplicative'
-        ? "((s.votes_pos - s.votes_neg) * t.coef * POW(1 - $decay, $hh))"
-        : "((s.votes_pos - s.votes_neg) * t.coef - $decay * $hh)";
+    $dm = number_format(delta_decay('medios'), 4, '.', ''); $ds = number_format(delta_decay('substacks'), 4, '.', '');
+    $n  = "(s.eff_pos - s.eff_neg)";
+    $hh = "GREATEST(0, FLOOR(TIMESTAMPDIFF(MINUTE, s.sent_date, NOW()) / 30) - " . delta_hh_min() . ")";
+    return "(SIGN($n) * SQRT(ABS($n)) + IF($n > 0, t.bonus, 0) - (CASE WHEN s.portada = 'substacks' THEN $ds ELSE $dm END) * $hh)";
 }
+/** Huella de un voto: la misma para todas las cuentas que voten el mismo envio desde la misma conexion. HMAC truncado con el secreto
+ *  del sitio y el id del envio dentro: no se guarda la IP y la huella de un envio no sirve para enlazar votos en otro. */
+function vote_fp(int $story_id): string { global $DDD_SECRET; return substr(hash_hmac('sha256', "voto|$story_id|" . client_ip(), $DDD_SECRET), 0, 16); }
+/** Recalcula los votos que cuentan (eff_pos / eff_neg) de un envio o de todo el radar: un voto por huella y sentido, solo de cuentas
+ *  con mas de vote_quarantine_hours. Los votos de una cuenta recien creada se guardan y se ven, pero entran en el δ cuando madura. */
+function eff_votes_update(PDO $pdo, ?int $story_id = null): void {
+    $q = max(0, (int)cfg('vote_quarantine_hours', 24));
+    $where = $story_id !== null ? "s.story_id = ?" : "s.status = 'nuevas'";
+    $sql = "UPDATE stories s LEFT JOIN (
+                SELECT v.story_id,
+                       COUNT(DISTINCT CASE WHEN v.value = 1  THEN COALESCE(v.fp, CONCAT('u', v.user_id)) END) AS pos,
+                       COUNT(DISTINCT CASE WHEN v.value = -1 THEN COALESCE(v.fp, CONCAT('u', v.user_id)) END) AS neg
+                  FROM votes v JOIN users u ON u.user_id = v.user_id
+                 WHERE u.created <= NOW() - INTERVAL $q HOUR" . ($story_id !== null ? " AND v.story_id = ?" : "") . "
+                 GROUP BY v.story_id) e ON e.story_id = s.story_id
+               SET s.eff_pos = COALESCE(e.pos, 0), s.eff_neg = COALESCE(e.neg, 0)
+             WHERE $where";
+    $pdo->prepare($sql)->execute($story_id !== null ? [$story_id, $story_id] : []);
+}
+/* ---- el ciclo: ventanas de cycle_minutes con un minuto de ejecucion imprevisible ------------------
+ * El cron llama cada minuto. Antes el ciclo corria en los minutos multiplos de cycle_minutes, y como el radar muestra el δ de todos,
+ * bastaba votar un minuto antes para adelantar a quien fuera (sniping). Ahora cada ventana de cycle_minutes tiene un minuto de
+ * ejecucion derivado del secreto del sitio (ciclo_desfase): dentro de la ventana, nadie de fuera sabe cuando. La web dice
+ * «antes de las hh:mm» (final de la ventana) en vez de la cuenta atras. cycle_jitter = 0 vuelve al minuto 0 de la ventana. */
+function ciclo_ventana(int $ts): int { $c = max(1, (int)cfg('cycle_minutes', 5)); $m = intdiv($ts, 60); return ($m - $m % $c) * 60; }
+function ciclo_desfase(int $ventana): int {
+    global $DDD_SECRET;
+    $c = max(1, (int)cfg('cycle_minutes', 5));
+    if ($c < 2 || cfg('cycle_jitter', '1') !== '1') return 0;
+    return (int)(hexdec(substr(hash_hmac('sha256', "ciclo|$ventana", $DDD_SECRET), 0, 8)) % $c);
+}
+/** ¿Toca ejecutar el ciclo en el minuto de $ts? */
+function ciclo_toca(int $ts): bool { $v = ciclo_ventana($ts); return intdiv($ts - $v, 60) === ciclo_desfase($v); }
+/** Inicio de la ventana cuyo ciclo aun no se ha ejecutado (si el minuto de esta ya paso, la siguiente). */
+function ciclo_pendiente(?int $now = null): int {
+    $now ??= time(); $c = max(1, (int)cfg('cycle_minutes', 5)) * 60;
+    $v = ciclo_ventana($now);
+    return intdiv($now, 60) > intdiv($v + ciclo_desfase($v) * 60, 60) ? $v + $c : $v;
+}
+/** Final de la ventana: «antes de las hh:mm». */
+function ciclo_antes_de(int $ventana): int { return $ventana + max(1, (int)cfg('cycle_minutes', 5)) * 60; }
+
 /* ---- las dos portadas: Medios y Substacks -------------------------------
  * Un enlace va a Substacks si su dominio es *.substack.com o el de una fuente del catalogo marcada como newsletter
  * (asi entran los Substacks con dominio propio); todo lo demas va a Medios. Los originales (content_type = article)
@@ -550,17 +622,45 @@ function portada_actual(): string {
     return $p = isset(DDD_PORTADAS[$c]) ? $c : 'substacks';   // quien llega por primera vez ve Substacks, lo propio de Deltha
 }
 function delta_explica(array $s): string {
-    $net = (int)$s['votes_pos'] - (int)$s['votes_neg'];
-    $hh  = intdiv(max(0, time() - strtotime($s['sent_date'])), 1800);
-    $decay = (float)cfg('decay_per_halfhour', 0.05);
-    $coef = (float)$s['coef'];
-    $coefTxt = $coef != 1.0 ? " × {$s['topic']} " . number_format($coef, 2, ',', '') : '';
-    if (cfg('decay_mode') === 'multiplicative') {
-        $val = $net * $coef * pow(1 - $decay, $hh);
-        return "{$net} " . t('votos') . "{$coefTxt} × (1−{$decay})^{$hh} = " . number_format($val, 1, ',', '');
-    }
-    $val = $net * $coef - $decay * $hh;
-    return "{$net} " . t('votos') . "{$coefTxt} − " . number_format($decay * $hh, 2, ',', '') . " " . t('por antigüedad') . " = " . number_format($val, 1, ',', '');
+    $n = (int)($s['eff_pos'] ?? 0) - (int)($s['eff_neg'] ?? 0);
+    $raiz = ($n <=> 0) * sqrt(abs($n));
+    $bonus = $n > 0 ? (float)($s['bonus'] ?? 0) : 0.0;
+    $dec = delta_decay($s['portada'] ?? null) * delta_hh((string)$s['sent_date']);
+    $f = fn(float $x) => number_format($x, 2, ',', '');
+    $txt = ($n < 0 ? '−' : '') . '√' . abs($n) . ' ' . t('votos') . ' = ' . number_format($raiz, 2, ',', '');
+    if ($bonus > 0) $txt .= ' + ' . $f($bonus) . ' ' . h((string)($s['topic'] ?? ''));
+    $txt .= ' − ' . $f($dec) . ' ' . t('por antigüedad');
+    return $txt . ' = ' . number_format($raiz + $bonus - $dec, 1, ',', '');
+}
+/** Duracion en horas, en palabras y en el idioma de la pagina: 48 → «dos días», 168 → «una semana», 36 → «36 horas». */
+function dur_pg(string $lang, int $hours): string {
+    $W = [
+        'es' => [['hora', 'horas'], ['día', 'días'], ['semana', 'semanas'], ['una', 'un', 'una']],
+        'ca' => [['hora', 'hores'], ['dia', 'dies'], ['setmana', 'setmanes'], ['una', 'un', 'una']],
+        'gl' => [['hora', 'horas'], ['día', 'días'], ['semana', 'semanas'], ['unha', 'un', 'unha']],
+        'eu' => [['ordu', 'ordu'], ['egun', 'egun'], ['aste', 'aste'], ['bat', 'bat', 'bat']],
+        'en' => [['hour', 'hours'], ['day', 'days'], ['week', 'weeks'], ['one', 'one', 'one']],
+        'fr' => [['heure', 'heures'], ['jour', 'jours'], ['semaine', 'semaines'], ['une', 'un', 'une']],
+        'de' => [['Stunde', 'Stunden'], ['Tag', 'Tage'], ['Woche', 'Wochen'], ['eine', 'ein', 'eine']],
+        'it' => [['ora', 'ore'], ['giorno', 'giorni'], ['settimana', 'settimane'], ["un'", 'un', 'una']],
+        'pt' => [['hora', 'horas'], ['dia', 'dias'], ['semana', 'semanas'], ['uma', 'um', 'uma']],
+    ];
+    [$h, $d, $w, $one] = $W[$lang] ?? $W['es'];
+    $NUM = ['es' => ['dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete'], 'ca' => ['dues', 'tres', 'quatre', 'cinc', 'sis', 'set'],
+            'gl' => ['dúas', 'tres', 'catro', 'cinco', 'seis', 'sete'], 'eu' => ['bi', 'hiru', 'lau', 'bost', 'sei', 'zazpi'],
+            'en' => ['two', 'three', 'four', 'five', 'six', 'seven'], 'fr' => ['deux', 'trois', 'quatre', 'cinq', 'six', 'sept'],
+            'de' => ['zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben'], 'it' => ['due', 'tre', 'quattro', 'cinque', 'sei', 'sette'],
+            'pt' => ['duas', 'três', 'quatro', 'cinco', 'seis', 'sete']];
+    $DOS_M = ['ca' => 'dos', 'gl' => 'dous', 'pt' => 'dois'];   // «dos» masculino (dias): el resto de unidades son femeninas en estas lenguas
+    if ($hours > 0 && $hours % 168 === 0)     { $n = intdiv($hours, 168); $u = $w; $a = $one[2]; }
+    elseif ($hours > 0 && $hours % 24 === 0)  { $n = intdiv($hours, 24);  $u = $d; $a = $one[1]; }
+    else                                      { $n = $hours;              $u = $h; $a = $one[0]; }
+    if ($n === 1) return $lang === 'eu' ? "$u[0] $a" : ($lang === 'it' && $u === $h ? "un'ora" : "$a $u[0]");
+    $num = ($n >= 2 && $n <= 7) ? ($NUM[$lang] ?? $NUM['es'])[$n - 2] : (string)$n;
+    if ($n === 2 && $u === $d && isset($DOS_M[$lang])) $num = $DOS_M[$lang];
+    if ($lang === 'eu') return "$num $u[1]";
+    if ($lang === 'de' && $u === $d && $n >= 2) return "$num Tage";
+    return "$num $u[1]";
 }
 
 /* ---- alias Ghost ----------------------------------------------------
