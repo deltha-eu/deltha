@@ -9,7 +9,9 @@ function display_name(array $row, bool $revealed): string {
 
 /** $from permite entrar por otra tabla (p. ej. story_communities sc JOIN stories s ...) manteniendo el alias s. */
 function story_query_base(string $from = 'FROM stories s'): string {
-    return "SELECT s.*, t.name AS topic, t.bonus, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug, co.skin AS comm_skin,
+    // my_vote: el voto (1 | -1 | NULL) del usuario actual a cada envio, para pintar su flecha en negrita (vote_widget)
+    $my = user() ? "(SELECT mv.value FROM votes mv WHERE mv.story_id = s.story_id AND mv.user_id = " . (int)user()['user_id'] . ")" : "NULL";
+    return "SELECT s.*, t.name AS topic, t.bonus, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug, co.skin AS comm_skin, $my AS my_vote,
                    (SELECT GROUP_CONCAT(CONCAT(c2.slug, '|', c2.name) ORDER BY (c2.community_id = s.community_id) DESC, c2.name SEPARATOR '\\n')
                       FROM story_communities sc2 JOIN communities c2 ON c2.community_id = sc2.community_id AND c2.status = 'ok' WHERE sc2.story_id = s.story_id) AS comm_list
               $from
@@ -110,10 +112,11 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
 function vote_widget(array $s): void {
     $id = (int)$s['story_id'];
     $can = user() && in_array($s['status'], ['nuevas','destacadas'], true) && (int)$s['user_id'] !== (int)user()['user_id'];
+    $my = (int)($s['my_vote'] ?? 0);   // el voto propio se marca con .on (flecha y numero en negrita)
     if ($can) {
         echo "<form class=\"vote\" method=\"post\" action=\"/votar.php\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-        echo "<button name=\"v\" value=\"1\" title=\"" . t('positivo') . "\">" . icon('up') . "<span>{$s['votes_pos']}</span></button>";
-        echo "<button name=\"v\" value=\"-1\" title=\"" . t('negativo') . "\">" . icon('down') . "<span>{$s['votes_neg']}</span></button></form>";
+        echo "<button name=\"v\" value=\"1\"" . ($my === 1 ? ' class="on"' : '') . " title=\"" . t('positivo') . ($my === 1 ? ' · ' . t('tu voto') : '') . "\">" . icon('up') . "<span>{$s['votes_pos']}</span></button>";
+        echo "<button name=\"v\" value=\"-1\"" . ($my === -1 ? ' class="on"' : '') . " title=\"" . t('negativo') . ($my === -1 ? ' · ' . t('tu voto') : '') . "\">" . icon('down') . "<span>{$s['votes_neg']}</span></button></form>";
     } else {
         echo "<span class=\"vote\"><span>" . icon('up') . "<span>{$s['votes_pos']}</span></span><span>" . icon('down') . "<span>{$s['votes_neg']}</span></span></span>";
     }
