@@ -186,3 +186,27 @@ function mod_worker_line(): string {
     $ago = time() - strtotime($seen);
     return ($ago < 180 ? 'IA local conectada' : 'IA local desconectada') . ' (último contacto ' . hace($seen) . ').';
 }
+
+/* ---- voto coordinado: cuentas que votan juntas (2026-09-26) ----------------------------------------
+ * El δ no pondera por aura (democracia de un voto por persona), asi que una camarilla se combate haciendola visible, no
+ * restandole votos: aqui se listan las parejas de cuentas que coinciden en los mismos envios, en el mismo sentido y con pocos
+ * minutos de diferencia, y las cuentas que votan un mismo envio desde la misma conexion (votes.fp; en el δ ya cuentan como una).
+ * Solo informa; decidir es cosa de los moderadores. */
+function votos_coordinados(PDO $pdo, int $dias = 7, int $ventanaMin = 10, int $minCoinc = 4): array {
+    $pares = $pdo->prepare("SELECT a.user_id ua, b.user_id ub, ua.login la, ub.login lb, COUNT(*) n,
+                                   SUM(a.value = 1) pos, MIN(a.created) desde, MAX(a.created) hasta,
+                                   (SELECT COUNT(*) FROM votes x WHERE x.user_id = a.user_id AND x.created >= NOW() - INTERVAL ? DAY) na,
+                                   (SELECT COUNT(*) FROM votes y WHERE y.user_id = b.user_id AND y.created >= NOW() - INTERVAL ? DAY) nb
+                              FROM votes a JOIN votes b ON b.story_id = a.story_id AND b.user_id > a.user_id AND b.value = a.value
+                                   AND ABS(TIMESTAMPDIFF(MINUTE, a.created, b.created)) <= ?
+                              JOIN users ua ON ua.user_id = a.user_id JOIN users ub ON ub.user_id = b.user_id
+                             WHERE a.created >= NOW() - INTERVAL ? DAY
+                             GROUP BY a.user_id, b.user_id HAVING n >= ? ORDER BY n DESC, hasta DESC LIMIT 40");
+    $pares->execute([$dias, $dias, $ventanaMin, $dias, $minCoinc]);
+    $mismaConexion = $pdo->prepare("SELECT v.story_id, s.title, COUNT(DISTINCT v.user_id) cuentas, GROUP_CONCAT(DISTINCT u.login ORDER BY u.login SEPARATOR ', ') logins, MAX(v.created) ultimo
+                                      FROM votes v JOIN users u ON u.user_id = v.user_id JOIN stories s ON s.story_id = v.story_id
+                                     WHERE v.fp IS NOT NULL AND v.created >= NOW() - INTERVAL ? DAY
+                                     GROUP BY v.story_id, v.fp HAVING cuentas > 1 ORDER BY cuentas DESC, ultimo DESC LIMIT 40");
+    $mismaConexion->execute([$dias]);
+    return ['pares' => $pares->fetchAll(), 'conexion' => $mismaConexion->fetchAll()];
+}

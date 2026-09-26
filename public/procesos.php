@@ -5,7 +5,7 @@
  *  ?v=cola          el radar ordenado por delta en vivo, con la estimacion de cuando
  *                   llega cada enlace a su portada (simulando el ciclo: una por ciclo,
  *                   alternando Medios y Substacks, la de mayor delta de la portada del
- *                   turno entre las que cumplen delta_min_age_min y delta_min_publish)
+ *                   turno entre las que cumplen delta_min_age_min y delta_min_publish_<portada>, a suertes segun el δ)
  *  ?v=todo          flujo cronologico de toda la actividad
  *  ?v=moderacion    lo que espera a un moderador (con lo que ha dicho la IA) y el historico de decisiones:
  *                   retirado o se queda, quien lo decidio y por que. A la vista de todo el mundo.
@@ -59,12 +59,11 @@ if ($v !== 'cola' && $v !== 'moderacion') {   // filtro de fecha: ventana normal
 
 if ($v === 'cola') {
     $prox  = proximo_ciclo();
-    $next  = max(1, (int)ceil(($prox - time()) / 60));
     $st = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' AS delta_live,', story_query_base()) . " WHERE s.status='nuevas' AND s.content_type='link' ORDER BY delta_live DESC, s.sent_date ASC");
     $rows = $st->fetchAll();
     $total = count($rows);
     $eta = cola_eta($rows);
-    echo "<p class=\"notice\">" . t('%d en el radar · próximo ciclo en %d min, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada: el de mayor δ entre los suyos que llevan más de %d min y tienen δ ≥ %s. La estimación supone que no cambian los votos; se recalcula sola cada minuto.', $total, $next, t(DDD_PORTADAS[portada_turno($prox)]), (int)cfg('delta_min_age_min', 30), num_es(cfg('delta_min_publish', 1))) . "</p>";
+    echo "<p class=\"notice\">" . t('%d en el radar · próximo ciclo %s, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada, a suertes según el δ entre los suyos que llevan más de %d min y tienen δ ≥ %s (Medios) o %s (Substacks); si a una portada no le llega nada, el turno pasa a la otra. La estimación es orientativa: supone que sale la de mayor δ y que no cambian los votos; se recalcula sola cada minuto.', $total, proximo_ciclo_txt(), t(DDD_PORTADAS[portada_turno($prox)]), (int)cfg('delta_min_age_min', 30), num_es(delta_minpub('medios')), num_es(delta_minpub('substacks'))) . "</p>";
     $n = 0;
     // una linea por noticia: puesto, titular, quien/tema/cuando, delta, portada de destino y estimacion; sin avatar ni foto
     foreach (array_slice($rows, page_offset($page), $per) as $i => $s) {

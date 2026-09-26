@@ -620,4 +620,12 @@ return [
 'decide %s' => 'decide %s',
 'decide un moderador' => 'decide um moderador',
 'reportado' => 'reportado',
+// algoritmo 2026-09-26 (migra-080): sorteo por δ, «antes de las», bonus del tema
+'antes de las %s' => 'antes das %s',
+'%s en el próximo ciclo, antes de las %s' => '%s no próximo ciclo, antes das %s',
+'%s antes de las %s (~%d min)' => '%s antes das %s (~%d min)',
+'%d en el radar · cada ciclo, una portada, a suertes según el δ' => '%d no radar · a cada ciclo, uma capa, sorteada segundo o δ',
+'bonus %s en el δ' => 'bónus %s no δ',
+'%d en el radar · próximo ciclo %s, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada, a suertes según el δ entre los suyos que llevan más de %d min y tienen δ ≥ %s (Medios) o %s (Substacks); si a una portada no le llega nada, el turno pasa a la otra. La estimación es orientativa: supone que sale la de mayor δ y que no cambian los votos; se recalcula sola cada minuto.' => '%d no radar · próximo ciclo %s, para %s · os ciclos alternam entre Meios e Newsletters e cada um publica <b>um</b> na sua capa, sorteado segundo o δ entre os seus que têm mais de %d min e δ ≥ %s (Meios) ou %s (Newsletters); se a uma capa não chega nada, a vez passa à outra. A estimativa é indicativa: supõe que sai o de maior δ e que os votos não mudam; recalcula-se sozinha a cada minuto.',
+'Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos.php">Procesos</a> está ordenado por δ, con la estimación de cada uno.' => 'O que foi enviado e ainda não está na capa, por ordem de chegada. A cada %d min um ciclo publica em Meios ou em Newsletters, à vez, um envio dessa capa que tenha mais de %d min no radar e cujo δ chegue a %s (Meios) ou %s (Newsletters): à sorte, com mais probabilidade quanto maior for o δ. Em <a href="/procesos.php">Processos</a> está ordenado por δ, com a estimativa de cada um.',
 ];

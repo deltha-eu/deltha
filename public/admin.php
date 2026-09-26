@@ -31,11 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $out[] = "Página $pslug guardada.";
         }
     } elseif ($act === 'topics') {
-        $st = $pdo->prepare("UPDATE topics SET coef = ?, color = ? WHERE topic_id = ?");
-        foreach (($_POST['coef'] ?? []) as $id => $c) {
+        $st = $pdo->prepare("UPDATE topics SET bonus = ?, color = ? WHERE topic_id = ?");
+        foreach (($_POST['bonus'] ?? []) as $id => $c) {
             $col = (string)($_POST['color'][$id] ?? '');
             if (!preg_match('/^#[0-9a-fA-F]{6}$/', $col)) $col = '#534AB7';
-            $st->execute([(float)$c, $col, (int)$id]);
+            $st->execute([max(0.0, min(5.0, (float)str_replace(',', '.', (string)$c))), $col, (int)$id]);
         }
         $out[] = 'Temas guardados.';
     } elseif ($act === 'lateral') {   // orden y visibilidad de los modulos de la columna derecha
@@ -49,13 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else { $e = topic_delete($pdo, (int)post('topic_id'), (int)post('to')); $out[] = $e ?: 'Tema borrado; sus envíos han pasado al tema elegido.'; }
     } elseif ($act === 'tema_nuevo') {
         $name = mb_strtolower(trim(post('name')));
-        $coef = (float)(post('coef') ?: 1);
+        $bonus = (float)str_replace(',', '.', post('bonus') ?: '0');
         $col  = post('color') ?: '#534AB7';
         if (!preg_match('/^[\p{L}\p{N} \-]{2,32}$/u', $name)) $out[] = 'Nombre de tema no válido (2–32 letras, números, espacio o guion).';
-        elseif ($coef < 0.1 || $coef > 5) $out[] = 'El coeficiente debe estar entre 0,10 y 5,00.';
+        elseif ($bonus < 0 || $bonus > 5) $out[] = 'El bonus debe estar entre 0 y 5.';
         elseif (!preg_match('/^#[0-9a-fA-F]{6}$/', $col)) $out[] = 'Color no válido (formato #rrggbb).';
         else {
-            try { $pdo->prepare("INSERT INTO topics (name, coef, color) VALUES (?,?,?)")->execute([$name, $coef, $col]); $out[] = "Tema «" . h($name) . "» creado."; }
+            try { $pdo->prepare("INSERT INTO topics (name, bonus, color) VALUES (?,?,?)")->execute([$name, $bonus, $col]); $out[] = "Tema «" . h($name) . "» creado."; }
             catch (PDOException $e) { $out[] = 'Ese tema ya existe.'; }
         }
     } elseif ($act === 'fuente' || $act === 'fuente_nueva') {
@@ -416,10 +416,15 @@ if ($tab === 'usuarios') {
     echo "Un ciclo cada <input type=\"text\" name=\"cfg[cycle_minutes]\" value=\"" . h(cfg('cycle_minutes', 5)) . "\" style=\"width:60px\"> min &nbsp;·&nbsp; ";
     echo "un envío puede llegar a portada a los <input type=\"text\" name=\"cfg[delta_min_age_min]\" value=\"" . h(cfg('delta_min_age_min', 30)) . "\" style=\"width:60px\"> min &nbsp;·&nbsp; ";
     echo "vida en portada <input type=\"text\" name=\"cfg[thread_ttl_hours]\" value=\"" . h(cfg('thread_ttl_hours', 48)) . "\" style=\"width:60px\"> h</p><p>";
-    echo "δ mínimo para portada <input type=\"text\" name=\"cfg[delta_min_publish]\" value=\"" . h(cfg('delta_min_publish', 1)) . "\" style=\"width:60px\"> &nbsp;·&nbsp; ";
-    echo "caducan sin llegar a portada a las <input type=\"text\" name=\"cfg[nuevas_ttl_hours]\" value=\"" . h(cfg('nuevas_ttl_hours', 48)) . "\" style=\"width:60px\"> h (0 = nunca) ";
-    echo "<button class=\"btn\">Guardar</button></p>";
-    echo "<p><small>El cron llama al script cada minuto y el ciclo se ejecuta en los minutos múltiplos del intervalo; los ciclos se turnan entre Medios y Substacks (el de ahora le toca a <b>" . h(DDD_PORTADAS[portada_turno(time() - time() % 60)]) . "</b>, si se ejecuta a mano) y cada uno publica en su portada el enlace del radar de mayor δ de esa portada, si lleva los minutos indicados y llega al δ mínimo. Así cada portada recibe como mucho una cada dos ciclos. Los originales no van a portada. Lo que pasa las horas indicadas sin llegar a portada se archiva. El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
+    echo "δ mínimo para portada: Medios <input type=\"text\" name=\"cfg[delta_min_publish_medios]\" value=\"" . h(cfg('delta_min_publish_medios', 1)) . "\" style=\"width:60px\"> · Substacks <input type=\"text\" name=\"cfg[delta_min_publish_substacks]\" value=\"" . h(cfg('delta_min_publish_substacks', 1)) . "\" style=\"width:60px\"> &nbsp;·&nbsp; ";
+    echo "decaimiento por media hora: Medios <input type=\"text\" name=\"cfg[decay_medios]\" value=\"" . h(cfg('decay_medios', 0.05)) . "\" style=\"width:60px\"> · Substacks <input type=\"text\" name=\"cfg[decay_substacks]\" value=\"" . h(cfg('decay_substacks', 0.02)) . "\" style=\"width:60px\"></p><p>";
+    echo "caducan sin llegar a portada a las <input type=\"text\" name=\"cfg[nuevas_ttl_hours]\" value=\"" . h(cfg('nuevas_ttl_hours', 168)) . "\" style=\"width:60px\"> h (0 = nunca; 168 = una semana) &nbsp;·&nbsp; ";
+    echo "los votos de una cuenta cuentan en el δ a las <input type=\"text\" name=\"cfg[vote_quarantine_hours]\" value=\"" . h(cfg('vote_quarantine_hours', 24)) . "\" style=\"width:60px\"> h de crearse</p><p>";
+    foreach (['cycle_lottery' => 'sorteo ponderado por δ (0 = gana siempre el mayor δ)', 'cycle_cede_turno' => 'si a una portada no le llega nada, el turno pasa a la otra', 'cycle_jitter' => 'minuto de ejecución imprevisible dentro de cada ventana (0 = siempre el minuto 0)'] as $k => $lbl) {
+        echo "<label style=\"margin-right:14px\"><select name=\"cfg[$k]\"><option value=\"1\"" . (cfg($k, '1') === '1' ? ' selected' : '') . ">sí</option><option value=\"0\"" . (cfg($k, '1') !== '1' ? ' selected' : '') . ">no</option></select> $lbl</label>";
+    }
+    echo "</p><p><button class=\"btn\">Guardar</button></p>";
+    echo "<p><small>El cron llama al script cada minuto; cada ventana del intervalo tiene un minuto de ejecución que depende del secreto del sitio (fuera nadie lo sabe: contra el <i>sniping</i>, la web dice «antes de las hh:mm»). Los ciclos se turnan entre Medios y Substacks (el de ahora le toca a <b>" . h(DDD_PORTADAS[portada_turno(ciclo_ventana(time()))]) . "</b>, si se ejecuta a mano) y cada uno publica en su portada <b>uno</b> del radar de esa portada, elegido a suertes con probabilidad proporcional al δ entre los que llevan los minutos indicados y llegan al δ mínimo de su portada; si no hay ninguno y está activada la cesión, publica en la otra. Los originales no van a portada. Lo que pasa las horas indicadas sin llegar a portada se archiva. Fórmula: δ = signo(n)·√|n| + bonus del tema (si n &gt; 0) − decaimiento × max(0, medias horas − medias horas mínimas), con n = votos netos que cuentan (uno por conexión y envío, y solo de cuentas con más de las horas de cuarentena). El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
     $nq = (int)$pdo->query("SELECT COUNT(*) FROM mod_queue WHERE status IN ('needs_human','queued','processing')")->fetchColumn();
     echo "<h3>Cola de moderación</h3><p>$nq pendientes de la IA · " . open_reports() . " comentarios reportados · <a href=\"/moderacion.php\">ir a moderación</a> (la ven también los moderadores)</p>";
     echo "<h3>Últimas promociones</h3><table>";
@@ -447,14 +452,14 @@ if ($tab === 'usuarios') {
     ana_admin($pdo);
 
 } elseif ($tab === 'temas') {
-    echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>envíos</th><th style=\"width:90px\">coef</th><th style=\"width:70px\">color</th></tr>";
+    echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>envíos</th><th style=\"width:90px\">bonus δ</th><th style=\"width:70px\">color</th></tr>";
     foreach ($pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.topic_id") as $t) {
-        echo "<tr><td><a href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a></td><td class=\"num\">{$t['n']}</td><td><input type=\"text\" name=\"coef[{$t['topic_id']}]\" value=\"" . h($t['coef']) . "\"></td>";
+        echo "<tr><td><a href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a></td><td class=\"num\">{$t['n']}</td><td><input type=\"text\" name=\"bonus[{$t['topic_id']}]\" value=\"" . h(num_es($t['bonus'])) . "\"></td>";
         echo "<td><input type=\"color\" name=\"color[{$t['topic_id']}]\" value=\"" . h($t['color']) . "\" title=\"color del velo y la etiqueta\"></td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar temas</button></p></form>";
     echo "<h3>Nuevo tema</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"tema_nuevo\">";
-    echo "<input type=\"text\" name=\"name\" placeholder=\"nombre (minúsculas)\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> coef <input type=\"text\" name=\"coef\" value=\"1.00\" style=\"width:60px\"> <input type=\"color\" name=\"color\" value=\"#534AB7\"> <button class=\"btn\">Crear tema</button></form>";
+    echo "<input type=\"text\" name=\"name\" placeholder=\"nombre (minúsculas)\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> bonus δ <input type=\"text\" name=\"bonus\" value=\"0\" style=\"width:60px\"> <input type=\"color\" name=\"color\" value=\"#534AB7\"> <button class=\"btn\">Crear tema</button></form>";
     $tl = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     if (count($tl) > 1) {
         echo "<h3>Borrar un tema</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"tema_borrar\">";
@@ -462,7 +467,7 @@ if ($tab === 'usuarios') {
         echo " y mover sus envíos a <select name=\"to\">"; foreach ($tl as $t) echo "<option value=\"{$t['topic_id']}\">" . h($t['name']) . "</option>"; echo "</select>";
         echo " <label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> seguro</label> <button class=\"btn danger\">Borrar tema</button></form>";
     }
-    echo "<p><small>El coeficiente multiplica los votos en el δ (1,10 da un 10 % de ventaja al tema). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.php.</small></p>";
+    echo "<p><small>El bonus se <b>suma</b> al δ de los envíos del tema que tienen apoyo neto (con 0,3, un envío con un voto que cuenta vale 1,3 en vez de 1). Antes era un coeficiente multiplicador, que también amplificaba los votos negativos y el decaimiento; se cambió el 26/09/2026 (migra-080). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.php.</small></p>";
 
 } elseif ($tab === 'fuentes') {
     // subpestañas por tipo de fuente: Substack (newsletter), Medios, Agregadores; los formularios vuelven a la subpestaña (campo oculto k)
@@ -575,7 +580,7 @@ if ($tab === 'usuarios') {
        . " · config: logo_light=<code>" . h((string)cfg('logo_light')) . "</code> logo_dark=<code>" . h((string)cfg('logo_dark')) . "</code> logo_icon=<code>" . h((string)cfg('logo_icon')) . "</code></small></p>";
 
 } elseif ($tab === 'privacidad') {
-    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{mincand}</code> <code>{newttl}</code> <code>{decay}</code> <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code> <code>{seditaura}</code> <code>{seditmin}</code> <code>{mediamax}</code> <code>{newsmax}</code> <code>{propaura}</code> <code>{skins}</code> (número de skins) <code>{auradl}</code> (fecha de <code>aura_deadline</code>, «31 de diciembre de 2026»).</small></p>";
+    echo "<p><small>HTML. Cada apartado es un <code>&lt;h2&gt;</code> seguido de sus <code>&lt;p&gt;</code>. Marcadores que se sustituyen por la config en vigor: <code>{site}</code> <code>{ttl}</code> <code>{gm}</code> <code>{cycle}</code> <code>{minage}</code> <code>{minpub}</code> <code>{minpubs}</code> (δ mínimo Medios / Substacks) <code>{newttl}</code> <code>{newttltxt}</code> <code>{ttltxt}</code> (duraciones en palabras: «una semana», «dos días») <code>{decay}</code> <code>{decays}</code> (decaimiento Medios / Substacks) <code>{quar}</code> <code>{quartxt}</code> (cuarentena de votos) <code>{bonustemas}</code> (temas con bonus: «cultura, ciencia y relatos (+0,3)») <code>{auraport}</code> <code>{auraenv}</code> <code>{auracom}</code> <code>{auracap}</code> <code>{auradec}</code> <code>{aurastart}</code> <code>{auramax}</code> <code>{commaura}</code> <code>{commmax}</code> <code>{editaura}</code> <code>{editmin}</code> <code>{seditaura}</code> <code>{seditmin}</code> <code>{mediamax}</code> <code>{newsmax}</code> <code>{propaura}</code> <code>{skins}</code> (número de skins) <code>{auradl}</code> (fecha de <code>aura_deadline</code>, «31 de diciembre de 2026»).</small></p>";
     // Idioma que se edita: el español es el original; cada traduccion es una fila propia (slug.idioma). Sin traduccion,
     // el visitante de ese idioma ve la española, y aqui el editor sale relleno con ella para traducirla.
     $pl = (string)($_GET['pl'] ?? 'es');

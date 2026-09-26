@@ -622,4 +622,12 @@ return [
 'decide %s' => 'décidé par %s',
 'decide un moderador' => 'décidé par un modérateur',
 'reportado' => 'signalé',
+// algoritmo 2026-09-26 (migra-080): sorteo por δ, «antes de las», bonus del tema
+'antes de las %s' => 'avant %s',
+'%s en el próximo ciclo, antes de las %s' => '%s au prochain cycle, avant %s',
+'%s antes de las %s (~%d min)' => '%s avant %s (~%d min)',
+'%d en el radar · cada ciclo, una portada, a suertes según el δ' => '%d dans le radar · à chaque cycle, une une, tirée au sort selon le δ',
+'bonus %s en el δ' => 'bonus %s dans le δ',
+'%d en el radar · próximo ciclo %s, para %s · los ciclos se turnan entre Medios y Substacks y cada uno publica <b>uno</b> en su portada, a suertes según el δ entre los suyos que llevan más de %d min y tienen δ ≥ %s (Medios) o %s (Substacks); si a una portada no le llega nada, el turno pasa a la otra. La estimación es orientativa: supone que sale la de mayor δ y que no cambian los votos; se recalcula sola cada minuto.' => '%d dans le radar · prochain cycle %s, pour %s · les cycles alternent entre Médias et Substacks et chacun publie <b>un</b> envoi sur sa une, tiré au sort selon le δ parmi les siens qui ont plus de %d min et un δ ≥ %s (Médias) ou %s (Substacks) ; si une une n’a rien de prêt, le tour passe à l’autre. L’estimation est indicative : elle suppose que le plus grand δ sort et que les votes ne changent pas ; elle se recalcule chaque minute.',
+'Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos.php">Procesos</a> está ordenado por δ, con la estimación de cada uno.' => 'Ce qui attend encore la une, par ordre d’arrivée. Toutes les %d min, un cycle publie sur Médias ou sur Substacks, à tour de rôle, un envoi de cette une qui a plus de %d min dans le radar et dont le δ atteint %s (Médias) ou %s (Substacks) : au sort, avec d’autant plus de chances que le δ est grand. Dans <a href="/procesos.php">Processus</a>, tout est classé par δ, avec l’estimation de chacun.',
 ];

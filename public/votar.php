@@ -15,7 +15,7 @@ try {
         $prev->execute([$id, $u['user_id']]);
         $old = $prev->fetchColumn();
         if ($old === false) {
-            $pdo->prepare("INSERT INTO votes (story_id, user_id, value) VALUES (?,?,?)")->execute([$id, $u['user_id'], $v]);
+            $pdo->prepare("INSERT INTO votes (story_id, user_id, value, fp) VALUES (?,?,?,?)")->execute([$id, $u['user_id'], $v, vote_fp($id)]);   // huella: un voto por conexion y envio en el δ
             alias_user($pdo, $id, (int)$u['user_id']);   // alias Ghost con el que se vera el voto en /procesos.php
             $col = $v === 1 ? 'votes_pos' : 'votes_neg';
             $pdo->prepare("UPDATE stories SET $col = $col + 1 WHERE story_id = ?")->execute([$id]);
@@ -26,6 +26,7 @@ try {
                 ? "UPDATE stories SET votes_pos = votes_pos + 1, votes_neg = votes_neg - 1 WHERE story_id = ?"
                 : "UPDATE stories SET votes_neg = votes_neg + 1, votes_pos = votes_pos - 1 WHERE story_id = ?")->execute([$id]);
         }
+        if ($s['status'] === 'nuevas') eff_votes_update($pdo, $id);   // el δ en vivo refleja el voto al momento (si cuenta)
     }
     $pdo->commit();
 } catch (Throwable $e) { $pdo->rollBack(); }

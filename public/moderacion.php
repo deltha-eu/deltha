@@ -14,12 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema') {
     if (!preg_match('/^[\\p{L}\\p{N} \\-]{2,32}$/u', $name)) $out[] = 'Nombre de tema no válido (2-32 letras).';
     else {
         try {
-            $pdo->prepare("INSERT INTO topics (name, coef) VALUES (?, 1.00)")->execute([$name]);
+            $pdo->prepare("INSERT INTO topics (name, bonus) VALUES (?, 0)")->execute([$name]);
             $out[] = "Tema «{$name}» creado.";
         } catch (PDOException $e) { $out[] = 'Ese tema ya existe.'; }
     }
 }
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema_editar') {   // renombrar y cambiar el color (el coeficiente sigue siendo del admin)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema_editar') {   // renombrar y cambiar el color (el bonus sigue siendo del admin)
     $tid = (int)post('topic_id');
     $e = topic_rename($pdo, $tid, post('name'));
     if (!$e && preg_match('/^#[0-9a-fA-F]{6}$/', post('color'))) $pdo->prepare("UPDATE topics SET color = ? WHERE topic_id = ?")->execute([post('color'), $tid]);
@@ -244,6 +244,22 @@ foreach ($props as $p) {
     echo "<tr><td></td><td><button class=\"btn\">Aprobar y añadir al catálogo</button></td></tr></table></form>";
     echo "<form method=\"post\" class=\"repacts\"><input type=\"hidden\" name=\"act\" value=\"fprop_no\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><input type=\"text\" name=\"reply\" maxlength=\"300\" placeholder=\"motivo (se le envía)\" style=\"flex:1;min-width:180px\"> <button class=\"btn danger\">Rechazar</button></form></div>";
 }
+/* ---- voto coordinado ---- */
+try { $vc = votos_coordinados($pdo); } catch (Throwable $e) { $vc = ['pares' => [], 'conexion' => []]; }   // sin la migracion 080
+echo "<h3 id=\"votos\">Cuentas que votan juntas (" . count($vc['pares']) . " parejas · " . count($vc['conexion']) . " envíos con varias cuentas desde una conexión)</h3>";
+echo "<p><small>Última semana. Parejas de cuentas que coinciden en cuatro o más envíos, en el mismo sentido y con menos de 10 minutos de diferencia; y envíos votados por más de una cuenta desde la misma conexión (en el δ esos votos ya cuentan como uno). El δ no resta nada por esto: solo se enseña. Dos amigos que leen lo mismo también salen aquí; mirad antes de actuar.</small></p>";
+if (!$vc['pares']) echo "<p>Ninguna pareja llamativa.</p>";
+else {
+    echo "<table><tr><th>cuentas</th><th>coincidencias</th><th>sentido</th><th>votos de cada una (7 d)</th><th>última</th></tr>";
+    foreach ($vc['pares'] as $r) echo "<tr><td><a href=\"/u.php?u=" . rawurlencode($r['la']) . "\">" . h($r['la']) . "</a> · <a href=\"/u.php?u=" . rawurlencode($r['lb']) . "\">" . h($r['lb']) . "</a></td><td class=\"num\"><b>{$r['n']}</b></td><td>{$r['pos']} ↑ · " . ($r['n'] - $r['pos']) . " ↓</td><td>{$r['na']} · {$r['nb']}</td><td>" . h(hace($r['hasta'])) . "</td></tr>";
+    echo "</table>";
+}
+if ($vc['conexion']) {
+    echo "<table><tr><th>envío</th><th>cuentas desde la misma conexión</th><th>último voto</th></tr>";
+    foreach ($vc['conexion'] as $r) echo "<tr><td><a href=\"/hilo.php?id={$r['story_id']}\">" . h(mb_strimwidth($r['title'], 0, 60, '…')) . "</a></td><td><b>{$r['cuentas']}</b>: " . h($r['logins']) . "</td><td>" . h(hace($r['ultimo'])) . "</td></tr>";
+    echo "</table>";
+}
+
 $topics = $pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.name")->fetchAll();
 echo "<h3 id=\"temas\">Temas (" . count($topics) . ")</h3>";
 echo "<table><tr><th>tema</th><th>envíos</th><th>color</th><th></th><th>borrar (moviendo sus envíos a…)</th></tr>";
@@ -262,7 +278,7 @@ foreach ($topics as $t) {
 echo "</table>";
 echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px\"><input type=\"hidden\" name=\"act\" value=\"tema\">";
 echo "<input type=\"text\" name=\"name\" placeholder=\"nuevo tema\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\">Añadir tema</button></form>";
-echo "<p><small>Renombrar cambia el nombre en todos sus envíos. Borrar un tema mueve sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) al tema elegido; no se pierde nada. El tema de cada envío se cambia desde su hilo (desplegable bajo los votos). El coeficiente lo ajusta el admin.</small></p>";
+echo "<p><small>Renombrar cambia el nombre en todos sus envíos. Borrar un tema mueve sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) al tema elegido; no se pierde nada. El tema de cada envío se cambia desde su hilo (desplegable bajo los votos). El bonus del δ lo ajusta el admin.</small></p>";
 $bd = $pdo->query("SELECT b.*, u.login FROM banned_domains b LEFT JOIN users u ON u.user_id = b.added_by ORDER BY b.domain")->fetchAll();
 $nauto = count(array_filter($bd, fn($b) => str_starts_with((string)$b['reason'], 'auto:')));
 echo "<h3 id=\"dominios\">Dominios de correo no válidos — lista negra (" . count($bd) . ($nauto ? ", $nauto automáticos" : "") . ")</h3>";
