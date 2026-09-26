@@ -594,4 +594,5 @@ return [
 'tu voto' => 'el teu vot',
 'reportado por %d personas' => 'reportat per %d persones',
 'Motivos: %s' => 'Motius: %s',
+'necesita %d votos que cuenten' => 'necessita %d vots que comptin',
 ];
