@@ -49,7 +49,7 @@ function chat_can_delete_own(array $m, ?array $u, ?string $key): bool {
 function chat_delete_mod(PDO $pdo, int $id): bool {
     $st = $pdo->prepare("UPDATE chat SET content_orig = IF(deleted = 1, content_orig, content), deleted_at = IF(deleted = 1, deleted_at, NOW()), deleted = 1, content = ? WHERE msg_id = ? AND status = 'ok'");
     $st->execute([DDD_CHAT_DELETED_TXT, $id]);
-    try { $pdo->prepare("UPDATE chat_reports SET status = 'deleted' WHERE msg_id = ? AND status = 'open'")->execute([$id]); } catch (Throwable $e) {}
+    try { $pdo->prepare("UPDATE chat_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([user()['user_id'] ?? null, $id]); } catch (Throwable $e) {}
     return $st->rowCount() > 0;
 }
 /** Reportes de Chat pendientes (para el enlace de moderacion). */

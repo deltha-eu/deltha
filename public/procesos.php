@@ -87,8 +87,10 @@ if ($v === 'cola') {
 }
 
 /* ---- moderacion a la vista: lo pendiente y el historico ---------------
- * Mismo contenido que /moderacion.php#ia pero sin el texto senalado (aqui no se reproduce lo que se retiro
- * ni lo que esta oculto: se enlaza y punto) y con el historico, que mod_queue guarda entero: nada se borra. */
+ * Mismo contenido que /moderacion.php pero sin el texto senalado (aqui no se reproduce lo que se retiro
+ * ni lo que esta oculto: se enlaza y punto) y con el historico, que se guarda entero: nada se borra.
+ * Dos fuentes: lo que senala la IA (mod_queue) y lo que reporta la gente (comment_reports, chat_reports; quien decide y
+ * cuando en decided_by / decided, migra-082). Un comentario reportado que ademas senalo la IA sale por las dos vias. */
 if ($v === 'moderacion') {
     require_once __DIR__ . '/../lib/moderacion.php';
     $TY = ['story' => t('envío'), 'comment' => t('comentario'), 'chat' => t('chat')];
@@ -105,16 +107,44 @@ if ($v === 'moderacion') {
          LEFT JOIN comments c ON m.item_type = 'comment' AND c.comment_id = m.ref_id";
     try {
         $pend  = $pdo->query("$SEL WHERE m.status IN ('hidden','flag','needs_human') ORDER BY FIELD(m.status,'hidden','flag','needs_human'), m.score DESC, m.item_id DESC")->fetchAll();
-        $total = (int)$pdo->query("SELECT COUNT(*) FROM mod_queue WHERE status IN ('human_ok','human_removed')")->fetchColumn();
-        $hist  = $pdo->prepare("$SEL WHERE m.status IN ('human_ok','human_removed') ORDER BY m.processed DESC, m.item_id DESC LIMIT ? OFFSET ?");
+    } catch (Throwable $e) { $pend = []; }   // sin la migracion 062
+    // reportes de la gente, agrupados por comentario / mensaje: n reportes, motivos, primero y (si ya se decidio) quien y cuando
+    $RZ = report_reasons();
+    $REP = "SELECT 'comment' AS item_type, r.comment_id AS ref_id, c.story_id AS sid, r.status, COUNT(*) AS n,
+                   GROUP_CONCAT(DISTINCT r.reason ORDER BY r.reason) AS reasons, MIN(r.created) AS created, MAX(r.decided) AS decided, MAX(u.login) AS modlogin
+              FROM comment_reports r JOIN comments c ON c.comment_id = r.comment_id LEFT JOIN users u ON u.user_id = r.decided_by
+             WHERE r.status %s GROUP BY r.comment_id, r.status
+             UNION ALL
+            SELECT 'chat', r.msg_id, NULL, r.status, COUNT(*), GROUP_CONCAT(DISTINCT r.reason ORDER BY r.reason), MIN(r.created), MAX(r.decided), MAX(u.login)
+              FROM chat_reports r LEFT JOIN users u ON u.user_id = r.decided_by
+             WHERE r.status %s GROUP BY r.msg_id, r.status";
+    try { $repPend = $pdo->query(sprintf($REP, "= 'open'", "= 'open'") . " ORDER BY created DESC")->fetchAll(); } catch (Throwable $e) { $repPend = []; }
+    $motivos = fn(array $r) => implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', (string)$r['reasons'])));
+    // historico: decisiones humanas sobre lo de la IA + reportes cerrados, en una sola lista por fecha
+    try {
+        $H = "SELECT 'ia' AS src, m.item_type, m.ref_id, c.story_id AS sid, m.status, m.priority, u.login AS modlogin, COALESCE(m.processed, m.created) AS ts,
+                     m.verdict, m.category, m.score, m.created, m.processed, NULL AS n, NULL AS reasons
+                FROM mod_queue m LEFT JOIN users u ON u.user_id = m.decided_by LEFT JOIN comments c ON m.item_type = 'comment' AND c.comment_id = m.ref_id
+               WHERE m.status IN ('human_ok','human_removed')
+               UNION ALL
+              SELECT 'rep', x.item_type, x.ref_id, x.sid, x.status, 1, x.modlogin, COALESCE(x.decided, x.created), NULL, NULL, NULL, x.created, x.decided, x.n, x.reasons
+                FROM (" . sprintf($REP, "IN ('deleted','dismissed')", "IN ('deleted','dismissed')") . ") x";
+        $total = (int)$pdo->query("SELECT COUNT(*) FROM ($H) h")->fetchColumn();
+        $hist  = $pdo->prepare("$H ORDER BY ts DESC LIMIT ? OFFSET ?");
         $hist->bindValue(1, $per, PDO::PARAM_INT); $hist->bindValue(2, page_offset($page), PDO::PARAM_INT); $hist->execute();
         $hist = $hist->fetchAll();
-    } catch (Throwable $e) { $pend = $hist = []; $total = 0; }   // sin la migracion 062
+    } catch (Throwable $e) { $hist = []; $total = 0; }
 
     echo "<p class=\"notice\">" . t('Todo se publica al momento. Después, una IA que corre en un ordenador de la redacción lo revisa con el criterio de las <a href="/normas.php">normas de uso</a> y señala lo dudoso; <b>quien decide es siempre una persona</b>. Aquí está lo que espera y todo lo que ya se decidió, con quién lo hizo.') . "</p>";
 
-    echo "<h3 class=\"sec\">" . t('Pendiente (%d)', count($pend)) . "</h3>";
-    if (!$pend) echo "<p class=\"end\">" . t('Nada esperando a moderación.') . "</p>";
+    echo "<h3 class=\"sec\">" . t('Pendiente (%d)', count($pend) + count($repPend)) . "</h3>";
+    if (!$pend && !$repPend) echo "<p class=\"end\">" . t('Nada esperando a moderación.') . "</p>";
+    foreach ($repPend as $r) {   // lo que ha reportado la gente y aun no ha mirado nadie
+        $href = $enlace($r); $que = h($TY[$r['item_type']] ?? $r['item_type']) . " #" . (int)$r['ref_id'];
+        echo "<div class=\"fz mod\"><span class=\"av sys\">" . icon('proc') . "</span><div class=\"fzt\">";
+        echo "<div class=\"t\">" . ($href ? "<a href=\"" . h($href) . "\">$que</a>" : $que) . " <span class=\"meta\">· " . h(t('reportado por %d personas', (int)$r['n'])) . " · " . h(hace($r['created'])) . "</span></div>";
+        echo "<div class=\"prev\">" . h(t('Motivos: %s', $motivos($r))) . "</div></div></div>";
+    }
     foreach ($pend as $m) {
         $href = $m['status'] === 'hidden' ? '' : $enlace($m);
         $que  = h($TY[$m['item_type']] ?? $m['item_type']) . " #" . (int)$m['ref_id'];
@@ -126,13 +156,14 @@ if ($v === 'moderacion') {
     echo "<h3 class=\"sec\">" . t('Histórico (%d)', $total) . "</h3>";
     if (!$hist) echo "<p class=\"end\">" . t('Todavía no se ha decidido nada.') . "</p>";
     foreach ($hist as $m) {
-        $fuera = $m['status'] === 'human_removed';
+        $fuera = in_array($m['status'], ['human_removed', 'deleted'], true);
         $que   = h($TY[$m['item_type']] ?? $m['item_type']) . " #" . (int)$m['ref_id'];
         $href  = $enlace($m);
         echo "<div class=\"fz mod\"><span class=\"av sys\">" . icon($fuera ? 'down' : 'up') . "</span><div class=\"fzt\">";
         echo "<div class=\"t\">" . ($href ? "<a href=\"" . h($href) . "\">$que</a>" : $que) . " <span class=\"" . ($fuera ? 'neg' : 'pos') . "\">" . ($fuera ? t('retirado') : t('se queda')) . "</span>";
-        echo "<span class=\"meta\">" . ((int)$m['priority'] ? ' · ' . t('reportado') : '') . " · " . ($m['modlogin'] ? t('decide %s', '<a href="/u.php?u=' . rawurlencode($m['modlogin']) . '">' . h($m['modlogin']) . '</a>') : t('decide un moderador')) . " · " . h(hace($m['processed'] ?: $m['created'])) . "</span></div>";
-        echo "<div class=\"prev\">" . h(mod_note_line($m)) . "</div></div></div>";
+        $quien = $m['src'] === 'rep' ? t('reportado por %d personas', (int)$m['n']) : ((int)$m['priority'] ? t('reportado') : '');
+        echo "<span class=\"meta\">" . ($quien ? " · " . h($quien) : '') . " · " . ($m['modlogin'] ? t('decide %s', '<a href="/u.php?u=' . rawurlencode($m['modlogin']) . '">' . h($m['modlogin']) . '</a>') : t('decide un moderador')) . " · " . h(hace($m['ts'])) . "</span></div>";
+        echo "<div class=\"prev\">" . h($m['src'] === 'rep' ? t('Motivos: %s', $motivos($m)) : mod_note_line($m)) . "</div></div></div>";
     }
     paginate('/procesos.php?v=moderacion', $page, $total);
     page_footer();

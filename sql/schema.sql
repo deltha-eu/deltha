@@ -279,6 +279,8 @@ CREATE TABLE comment_reports (
     fp          CHAR(16) DEFAULT NULL,
     reason      ENUM('insulto','odio','acoso','datos','ilegal','spam','otro') NOT NULL DEFAULT 'otro',
     status      ENUM('open','deleted','dismissed') NOT NULL DEFAULT 'open',
+    decided_by  INT UNSIGNED DEFAULT NULL,             -- moderador que cerro los reportes (migra-082)
+    decided     DATETIME DEFAULT NULL,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_user (comment_id, user_id),
     UNIQUE KEY uq_fp   (comment_id, fp),

@@ -125,6 +125,8 @@ form.vote { display: inline-flex; gap: 22px; margin: 0; }
 form.vote button { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; cursor: pointer; }
 form.vote button:first-child:hover { color: var(--fg); }
 form.vote button:last-child:hover { color: var(--line2); }
+form.vote button.on { font-weight: 700; color: var(--fg); }            /* tu voto: flecha y numero en negrita */
+form.vote button.on .i { stroke-width: 3; }
 span.vote { display: inline-flex; gap: 22px; }
 .actions .share { margin-left: auto; font-size: 13px; }
 .actions .share.copied { color: var(--accent); }

@@ -80,12 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'medio_quitar') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['rep_borrar', 'rep_descartar'], true)) {
     $cid = (int)post('cid');
     if (post('act') === 'rep_borrar') { comment_delete($pdo, $cid); $out[] = "Comentario #$cid eliminado (texto sustituido por el aviso)."; }
-    else { $pdo->prepare("UPDATE comment_reports SET status = 'dismissed' WHERE comment_id = ? AND status = 'open'")->execute([$cid]); $out[] = "Reportes del comentario #$cid descartados."; }
+    else { $pdo->prepare("UPDATE comment_reports SET status = 'dismissed', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([user()['user_id'], $cid]); $out[] = "Reportes del comentario #$cid descartados."; }
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['chat_borrar', 'chat_descartar'], true)) {
     $mid = (int)post('mid');
     if (post('act') === 'chat_borrar') { chat_delete_mod($pdo, $mid); $out[] = "Mensaje #$mid del chat eliminado (texto sustituido por el aviso)."; }
-    else { $pdo->prepare("UPDATE chat_reports SET status = 'dismissed' WHERE msg_id = ? AND status = 'open'")->execute([$mid]); $out[] = "Reportes del mensaje #$mid descartados."; }
+    else { $pdo->prepare("UPDATE chat_reports SET status = 'dismissed', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([user()['user_id'], $mid]); $out[] = "Reportes del mensaje #$mid descartados."; }
     if (post('back') === '1') redirect("/chat.php?m=$mid#m$mid");   // «eliminar» desde el propio chat
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'ia') {   // decision humana sobre lo que ha señalado u ocultado la IA

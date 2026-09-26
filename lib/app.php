@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 125);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 126);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -328,7 +328,7 @@ function report_reasons(): array {
 function comment_delete(PDO $pdo, int $id): bool {
     $st = $pdo->prepare("UPDATE comments SET content_orig = IF(deleted = 1, content_orig, content), deleted = 1, content = ? WHERE comment_id = ? AND status = 'ok'");
     $st->execute([DDD_DELETED_TXT, $id]);
-    try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted' WHERE comment_id = ? AND status = 'open'")->execute([$id]); } catch (Throwable $e) {}
+    try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([user()['user_id'] ?? null, $id]); } catch (Throwable $e) {}
     return $st->rowCount() > 0;
 }
 /** El usuario actual puede editar este comentario suyo? Aura > comment_edit_min_aura y menos de comment_edit_minutes desde que lo publico. */
