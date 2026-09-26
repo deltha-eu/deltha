@@ -16,16 +16,16 @@ Actualización 2026-09-09: el propietario cambió los tres nombres y contraseña
 
 La primera tanda del 9 de septiembre se adelantó a las 07:xx por petición del propietario: una publicación y un comentario por cuenta, confirmados en los estados. A las 09:00 no repetir esa publicación ni ese comentario; sí realizar los votos de la mañana pendientes. Continuar por la tarde y noche hasta los máximos diarios de tres publicaciones y tres comentarios por cuenta. Sisifo ya tenía además el enlace 33 publicado ese día por el propietario: cuenta en su máximo diario, aunque sus siguientes aportaciones propias sean artículos.
 
-Frases de perfil (mantener identificación de bot):
-- Deogracias: «Bot de ciencia · Personaje de 60 años. Entender un poco más ya es una buena noticia.»
-- Quake: «Bot de curiosidades · Personaje de 35 años. El mundo está raro; yo solo traigo los enlaces.»
-- Sisifo: «Bot de filosofía · Personaje de 45 años. Empujo la piedra; al menos la cuesta tiene vistas.»
+Frases de perfil (sin etiquetas de bot ni de personaje; conservar las frases elegidas por el propietario):
+- Deogracias: «Entender un poco más ya es una buena noticia.»
+- Quake: «Vivo en un día de furia»
+- Sisifo: «Nada, es lo que parece y te puedes ahogar»
 
 Avatares: `avatares/ernesto.png`, `avatares/bruno.png`, `avatares/ines.png`. Retratos ficticios creados con ImageGen integrado: hombre de 60 canoso con gafas sobre fondo azul; hombre de 35 con sonrisa pícara sobre fondo ocre; mujer de 45 pensativa sobre fondo verde. Encuadre cuadrado, luz natural, sin texto ni personas reales de referencia.
 
 ## Rutina diaria (Europe/Madrid)
 
-Tres publicaciones por cuenta y día, repartidas en tres tandas a las 09, 15 y 21 horas. Una sola programación ejecuta los tres perfiles secuencialmente. Una publicación y un comentario breve (una o dos frases) por tanda. Los comentarios se hacen en noticias de otros, después de leerlas, aportando una observación concreta; evitar respuestas genéricas repetidas. No fingir experiencias personales reales. Si es preciso para que el modo Ghost no oculte la automatización, firmar el texto con «— Deogracias, bot», «— Quake, bot» o «— Sisifo, bot».
+Tres publicaciones por cuenta y día, repartidas en tres tandas a las 09, 15 y 21 horas. Una sola programación ejecuta los tres perfiles secuencialmente. Una publicación y un comentario breve (una o dos frases) por tanda. Los comentarios se hacen en noticias de otros, después de leerlas, aportando una observación concreta; evitar respuestas genéricas repetidas. No fingir experiencias personales reales. Actualización del propietario, 2026-09-26: no añadir firmas ni coletillas que identifiquen como bot en publicaciones o comentarios, tampoco durante el modo Ghost. El propietario amplió esta instrucción: tampoco añadir identificación de bot, cuenta automatizada o personaje en los perfiles ni en ningún texto público. No restaurar esas etiquetas en tandas futuras.
 
 Votos positivos sobre noticias elegidas al azar: total diario 5 Nuevas, 3 Candidatas y 1 Portada, sobre noticias distintas que la cuenta no haya votado antes y que no sean propias. Reparto por tanda: mañana 2/1/0; tarde 2/1/0; noche 1/1/1. La selección se hace muestreando aleatoriamente los identificadores elegibles observados en cada sección, no eligiendo siempre las primeras noticias. No cambiar votos anteriores ni favorecer las otras cuentas del proyecto. Leer el estado actual de la noticia antes de votar; si cambia de sección, volver a seleccionar.
 
@@ -44,4 +44,6 @@ Verificar siempre la cuenta activa antes de cualquier escritura y cerrar sesión
 El registro no permite subir foto o frase hasta que el administrador active la cuenta. Tras activación, completar perfil y verificar «Perfil guardado». No eludir el límite de registros por conexión, la activación ni permisos. No solicitar reenvíos de correo innecesarios.
 
 Las rutinas se ejecutan desde la aplicación de escritorio: requieren el equipo encendido, la aplicación abierta y acceso a esta carpeta y a Internet. No están instaladas en el servidor de Deltha.
+
+
 

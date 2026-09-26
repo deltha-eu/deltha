@@ -26,6 +26,16 @@ for f in "$DIR"/sql/migra-*.sql; do
   mysql deltha < "$f" && echo "$b" >> "$REG"
 done
 
+echo "== sesiones"
+# La sesion iniciada dura 30 dias (config.session_days). El limpiador de sesiones de Ubuntu (phpsessionclean.timer,
+# a las :09 y :39) lee gc_maxlifetime del pool de php-fpm, no del ini_set() de lib/app.php: sin esta linea borra
+# la sesion a los 24 min de inactividad y el usuario aparece desconectado (README, «Sesiones»). Idempotente.
+POOL=/etc/php/8.3/fpm/pool.d/www.conf
+if [ -f "$POOL" ] && ! grep -q 'session.gc_maxlifetime' "$POOL"; then
+  printf '\n; Deltha: la sesion iniciada dura 30 dias (ver README, «Sesiones»)\nphp_admin_value[session.gc_maxlifetime] = 2592000\n' >> "$POOL"
+  echo "gc_maxlifetime = 30 dias anadido al pool de php-fpm"
+fi
+
 echo "== comprobacion"
 for f in $(find "$DIR/lib" "$DIR/public" "$DIR/scripts" -name '*.php'); do php -l "$f" >/dev/null || echo "ERROR de sintaxis en $f"; done
 systemctl reload php8.3-fpm 2>/dev/null || true
