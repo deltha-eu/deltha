@@ -125,7 +125,7 @@ form.vote { display: inline-flex; gap: 22px; margin: 0; }
 form.vote button { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; cursor: pointer; }
 form.vote button:first-child:hover { color: var(--fg); }
 form.vote button:last-child:hover { color: var(--line2); }
-form.vote button.on { font-weight: 700; color: var(--fg); }            /* tu voto: flecha y numero en negrita */
+form.vote button.on { color: var(--fg); text-shadow: 0 0 .55px currentColor, 0 0 .55px currentColor; }   /* tu voto: «negrita» sin cambiar el ancho (font-weight ensancha el numero y mueve la fila) */
 form.vote button.on .i { stroke-width: 3; }
 span.vote { display: inline-flex; gap: 22px; }
 .actions .share { margin-left: auto; font-size: 13px; }
