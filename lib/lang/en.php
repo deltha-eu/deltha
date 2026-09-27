@@ -635,4 +635,16 @@ return [
 'reportado por %d personas' => 'reported by %d people',
 'Motivos: %s' => 'Reasons: %s',
 'necesita %d votos que cuenten' => 'needs %d votes that count',
+// buscador (migra-085)
+'Buscar' => 'Search',
+'Buscar en %s' => 'Search %s',
+'Hilos' => 'Threads',
+'en «%s»' => 'in “%s”',
+'ver todos' => 'see all',
+'%d resultados' => '%d results',
+'Nada encontrado para «%s».' => 'Nothing found for “%s”.',
+'Escribe al menos %d letras.' => 'Type at least %d letters.',
+'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Search threads, comments, news from the media and substacks, and people.',
+'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Search threads, comments and news from the media and substacks.',
+'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Words match by their beginning (“vaccin” finds “vaccines”); a phrase in quotes is matched as is.',
 ];

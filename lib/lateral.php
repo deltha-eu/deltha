@@ -12,6 +12,7 @@ function rail(string $tab): void {
     $u = user();
     echo "<aside class=\"rail\">";
     echo "<a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
+    if (buscar_on()) echo "<form class=\"rail-search\" action=\"/buscar.php\" method=\"get\" role=\"search\"><input type=\"search\" name=\"q\" placeholder=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\" maxlength=\"80\"><button type=\"submit\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</button></form>";   // buscador (migra-085): solo escritorio; en movil, la lupa de la cabecera
     nav_tabs($tab, 'rail-top');
     nav_tabs($tab, 'rail-bottom');
     rail_skins();

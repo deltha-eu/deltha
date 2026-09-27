@@ -596,4 +596,16 @@ return [
 'reportado por %d personas' => 'segnalato da %d persone',
 'Motivos: %s' => 'Motivi: %s',
 'necesita %d votos que cuenten' => 'servono %d voti che contano',
+// buscador (migra-085)
+'Buscar' => 'Cerca',
+'Buscar en %s' => 'Cerca in %s',
+'Hilos' => 'Discussioni',
+'en «%s»' => 'in «%s»',
+'ver todos' => 'vedi tutti',
+'%d resultados' => '%d risultati',
+'Nada encontrado para «%s».' => 'Nessun risultato per «%s».',
+'Escribe al menos %d letras.' => 'Scrivi almeno %d lettere.',
+'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Cerca nelle discussioni, nei commenti, nelle notizie dei media e substack e tra gli utenti.',
+'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Cerca nelle discussioni, nei commenti e nelle notizie dei media e substack.',
+'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Le parole si cercano dall\'inizio («vaccin» trova «vaccini»); una frase tra virgolette, così com\'è.',
 ];

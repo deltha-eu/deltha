@@ -595,4 +595,16 @@ return [
 'reportado por %d personas' => 'reportat per %d persones',
 'Motivos: %s' => 'Motius: %s',
 'necesita %d votos que cuenten' => 'necessita %d vots que comptin',
+// buscador (migra-085)
+'Buscar' => 'Cerca',
+'Buscar en %s' => 'Cerca a %s',
+'Hilos' => 'Fils',
+'en «%s»' => 'a «%s»',
+'ver todos' => 'veure\'ls tots',
+'%d resultados' => '%d resultats',
+'Nada encontrado para «%s».' => 'No s\'ha trobat res per a «%s».',
+'Escribe al menos %d letras.' => 'Escriu almenys %d lletres.',
+'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Cerca als fils, els comentaris, les notícies dels mitjans i substacks i la gent.',
+'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Cerca als fils, els comentaris i les notícies dels mitjans i substacks.',
+'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Les paraules es cerquen pel seu començament («vacuna» troba «vacunes»); una frase entre cometes, tal qual.',
 ];
