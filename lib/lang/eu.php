@@ -595,4 +595,16 @@ return [
 'reportado por %d personas' => '%d pertsonak salatuta',
 'Motivos: %s' => 'Arrazoiak: %s',
 'necesita %d votos que cuenten' => 'kontatzen duten %d boto behar ditu',
+// buscador (migra-085)
+'Buscar' => 'Bilatu',
+'Buscar en %s' => 'Bilatu %s-n',
+'Hilos' => 'Hariak',
+'en «%s»' => '«%s»-n',
+'ver todos' => 'denak ikusi',
+'%d resultados' => '%d emaitza',
+'Nada encontrado para «%s».' => 'Ez da ezer aurkitu «%s» bilatuta.',
+'Escribe al menos %d letras.' => 'Idatzi gutxienez %d letra.',
+'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Bilatu harietan, iruzkinetan, hedabideen eta substacken albisteetan eta jendearen artean.',
+'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Bilatu harietan, iruzkinetan eta hedabideen eta substacken albisteetan.',
+'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Hitzak hasieratik bilatzen dira («txerto» hitzak «txertoak» aurkitzen du); komatxo arteko esaldia, dagoen-dagoenean.',
 ];

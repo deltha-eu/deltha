@@ -634,4 +634,16 @@ return [
 'reportado por %d personas' => 'signalé par %d personnes',
 'Motivos: %s' => 'Motifs : %s',
 'necesita %d votos que cuenten' => 'il lui faut %d votes qui comptent',
+// buscador (migra-085)
+'Buscar' => 'Rechercher',
+'Buscar en %s' => 'Rechercher dans %s',
+'Hilos' => 'Fils',
+'en «%s»' => 'dans « %s »',
+'ver todos' => 'tout voir',
+'%d resultados' => '%d résultats',
+'Nada encontrado para «%s».' => 'Rien trouvé pour « %s ».',
+'Escribe al menos %d letras.' => 'Saisissez au moins %d lettres.',
+'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Recherchez dans les fils, les commentaires, les actualités des médias et substacks et parmi les membres.',
+'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Recherchez dans les fils, les commentaires et les actualités des médias et substacks.',
+'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Les mots sont recherchés par leur début (« vaccin » trouve « vaccins ») ; une phrase entre guillemets, telle quelle.',
 ];
