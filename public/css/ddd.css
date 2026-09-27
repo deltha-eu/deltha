@@ -736,6 +736,24 @@ form.plain.skinform { gap: 6px; }
 .post.reply.deleted .delmsg a { text-decoration: underline; text-underline-offset: 2px; }
 .actions .replink { font-size: 12px; color: var(--muted); opacity: .75; }
 .actions .replink:hover { opacity: 1; text-decoration: underline; }
+/* ---- ghostear (lib/ghost.php, migra-086): comentario de alguien a quien he ghosteado, plegado; lista en «Mi perfil»; pagina /ghostear.php ---- */
+.post.reply.ghosted { opacity: .8; }
+.post.reply.ghosted details.gfold summary { cursor: pointer; font-size: 12px; color: var(--muted); list-style: none; }
+.post.reply.ghosted details.gfold summary::before { content: "▸ "; }
+.post.reply.ghosted details.gfold[open] summary::before { content: "▾ "; }
+.post.reply.ghosted details.gfold summary::-webkit-details-marker { display: none; }
+.post.reply.ghosted details.gfold summary a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.post.reply.ghosted details.gfold[open] { opacity: 1; }
+.post.reply.ghosted details.gfold p { margin-top: 6px; }
+.at:not(a) { color: var(--muted); }
+.ghostlist { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.ghostlist .ulist { border-bottom: 0; padding: 8px 16px; }
+.ghostlist form.inline { display: inline; margin: 0 0 0 10px; }
+.ghostlist button.link { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ghostlist small.hint { display: block; padding: 0 16px 8px; color: var(--muted); font-size: 13px; }
+.ghostbox .notice { margin: 8px 16px; }
+.ghostbox form.plain { flex-direction: row; align-items: center; gap: 16px; }
+.ghostbox form.plain .cancel { color: var(--muted); }
 /* «editar» de moderación: en la fila de acciones de cada post (listas) y en la cabecera del post principal del hilo */
 .post:not(.reply) .actions .modlink { font-size: 12px; color: var(--muted); opacity: .75; gap: 4px; }
 .post:not(.reply) .actions .modlink .i { width: 15px; height: 15px; }

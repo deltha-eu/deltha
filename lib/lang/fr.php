@@ -646,4 +646,18 @@ return [
 'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Recherchez dans les fils, les commentaires, les actualités des médias et substacks et parmi les membres.',
 'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Recherchez dans les fils, les commentaires et les actualités des médias et substacks.',
 'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Les mots sont recherchés par leur début (« vaccin » trouve « vaccins ») ; une phrase entre guillemets, telle quelle.',
+// ghostear (lib/ghost.php, migra-086)
+'ghostear' => 'ghoster',
+'Ghostear' => 'Ghoster',
+'Ghosteados' => 'Ghostés',
+'deshacer' => 'annuler',
+'dejar de ver a este usuario: para ti y para él seréis siempre Ghost' => 'ne plus voir cet utilisateur : pour toi et pour lui vous serez toujours des Ghost',
+'Comentario de alguien a quien has ghosteado' => 'Commentaire de quelqu\'un que tu as ghosté',
+'¿Ghostear a %s?' => 'Ghoster %s ?',
+'A partir de ahora, para %s serás siempre un Ghost: no verá tu nombre en tus envíos, comentarios ni menciones, no podrá ver tu perfil ni escribirte por privado. Y tú lo verás igual: como un Ghost más, con sus comentarios plegados, por si en algún momento quieres leerlos.' => 'À partir de maintenant, pour %s tu seras toujours un Ghost : il ne verra pas ton nom sur tes envois, commentaires ni mentions, il ne pourra ni voir ton profil ni t\'écrire en privé. Et tu le verras de la même façon : comme un Ghost de plus, avec ses commentaires repliés, au cas où tu voudrais un jour les lire.',
+'Nadie recibe aviso y no hay listas públicas. No afecta a los votos ni oculta nada al resto. Puedes deshacerlo cuando quieras desde tu perfil.' => 'Personne n\'est prévenu et il n\'y a pas de listes publiques. Cela n\'affecte pas les votes et ne cache rien aux autres. Tu peux revenir en arrière quand tu veux depuis ton profil.',
+'Hecho: volvéis a veros con normalidad.' => 'C\'est fait : vous vous voyez à nouveau normalement.',
+'Hecho: para ese usuario ya eres un Ghost, y él para ti.' => 'C\'est fait : pour cet utilisateur tu es désormais un Ghost, et lui pour toi.',
+'No has ghosteado a nadie.' => 'Tu n\'as ghosté personne.',
+'Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.' => 'Ils ne voient pas ton nom et tu ne vois pas le leur ; leurs commentaires t\'apparaissent repliés et vous ne pouvez pas vous écrire. Personne n\'est prévenu.',
 ];

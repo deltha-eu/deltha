@@ -99,9 +99,10 @@ function buscar_comentarios(PDO $pdo, array $T, int $limit, int $offset): array 
     [$w, $p] = buscar_where($T, 'c.content', ['c.content']);
     [$o, $po] = buscar_orden($T, 'c.content', 'c.created');
     $base = " FROM comments c JOIN stories s ON s.story_id = c.story_id AND s.status IN ('nuevas','destacadas','archived')
+              LEFT JOIN users u ON u.user_id = c.user_id
               WHERE c.status = 'ok' AND c.deleted = 0 AND $w";
     $st = $pdo->prepare("SELECT COUNT(*)$base"); $st->execute($p); $total = (int)$st->fetchColumn();
-    $st = $pdo->prepare("SELECT c.comment_id, c.story_id, c.alias, c.aura, c.content, c.created, c.likes, u.login, u.avatar, s.title AS story_title$base ORDER BY $o LIMIT $limit OFFSET $offset");
+    $st = $pdo->prepare("SELECT c.comment_id, c.story_id, c.user_id, c.alias, c.aura, c.content, c.created, c.likes, u.login, u.avatar, s.title AS story_title$base ORDER BY $o LIMIT $limit OFFSET $offset");
     $st->execute(array_merge($p, $po));
     return [$total, $st->fetchAll()];
 }
@@ -121,7 +122,7 @@ function buscar_usuarios(PDO $pdo, array $T, int $limit, int $offset): array {
     if (!user()) return [0, []];
     $w = []; $p = [];
     foreach ($T['all'] as $t) { $w[] = '(u.login LIKE ? OR u.bio LIKE ?)'; $p[] = '%' . addcslashes($t, '%_\\') . '%'; $p[] = $p[count($p) - 1]; }
-    $base = " FROM users u WHERE u.verified = 1 AND " . ($w ? implode(' AND ', $w) : '0');
+    $base = " FROM users u WHERE u.verified = 1" . ghost_sql_not_in('u.user_id') . " AND " . ($w ? implode(' AND ', $w) : '0');   // sin los velados por ghosteo
     $st = $pdo->prepare("SELECT COUNT(*)$base"); $st->execute($p); $total = (int)$st->fetchColumn();
     $st = $pdo->prepare("SELECT u.login, u.aura, u.avatar, u.bio, u.created, u.last_seen$base ORDER BY (u.login LIKE ?) DESC, u.aura DESC, u.created ASC LIMIT $limit OFFSET $offset");
     $st->execute(array_merge($p, [$T['all'] ? $T['all'][0] . '%' : '']));   // primero los que empiezan por lo buscado
@@ -134,7 +135,7 @@ function buscar_pinta_comentario(array $c, array $T): void {
     $n = display_name($c, $rev);
     $href = "/hilo.php?id={$c['story_id']}#c{$c['comment_id']}";
     echo "<article class=\"post reply root found\">" . who_avatar($c, $rev, (float)$c['aura'], $n) . "<div class=\"pc\">";
-    echo "<div class=\"l1\"><b>" . (($rev && !empty($c['login'])) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n)) . "</b><span class=\"meta\"> · " . h(hace($c['created'])) . "</span></div>";
+    echo "<div class=\"l1\"><b>" . (shown($c, $rev) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n)) . "</b><span class=\"meta\"> · " . h(hace($c['created'])) . "</span></div>";
     echo "<p>" . buscar_extracto($c['content'], $T) . "</p>";
     echo "<div class=\"actions\"><a href=\"" . h($href) . "\">" . icon('reply') . "<span>" . t('en «%s»', h(mb_strimwidth($c['story_title'], 0, 80, '…'))) . "</span></a>";
     if ((int)$c['likes'] > 0) echo "<span class=\"suns\">" . icon('sun') . "<span>" . (int)$c['likes'] . "</span></span>";

@@ -607,4 +607,18 @@ return [
 'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Busca nos fíos, nos comentarios, nas noticias dos medios e substacks e na xente.',
 'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Busca nos fíos, nos comentarios e nas noticias dos medios e substacks.',
 'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'As palabras búscanse polo seu comezo («vacina» atopa «vacinas»); unha frase entre comiñas, tal cal.',
+// ghostear (lib/ghost.php, migra-086)
+'ghostear' => 'ghostear',
+'Ghostear' => 'Ghostear',
+'Ghosteados' => 'Ghosteados',
+'deshacer' => 'desfacer',
+'dejar de ver a este usuario: para ti y para él seréis siempre Ghost' => 'deixar de ver este usuario: para ti e para el seredes sempre Ghost',
+'Comentario de alguien a quien has ghosteado' => 'Comentario de alguén a quen ghosteaches',
+'¿Ghostear a %s?' => 'Ghostear a %s?',
+'A partir de ahora, para %s serás siempre un Ghost: no verá tu nombre en tus envíos, comentarios ni menciones, no podrá ver tu perfil ni escribirte por privado. Y tú lo verás igual: como un Ghost más, con sus comentarios plegados, por si en algún momento quieres leerlos.' => 'A partir de agora, para %s serás sempre un Ghost: non verá o teu nome nos teus envíos, comentarios nin mencións, non poderá ver o teu perfil nin escribirche en privado. E ti veralo igual: coma un Ghost máis, cos seus comentarios pregados, por se nalgún momento queres lelos.',
+'Nadie recibe aviso y no hay listas públicas. No afecta a los votos ni oculta nada al resto. Puedes deshacerlo cuando quieras desde tu perfil.' => 'Ninguén recibe aviso e non hai listas públicas. Non afecta os votos nin oculta nada ao resto. Podes desfacelo cando queiras desde o teu perfil.',
+'Hecho: volvéis a veros con normalidad.' => 'Feito: volvedes vervos con normalidade.',
+'Hecho: para ese usuario ya eres un Ghost, y él para ti.' => 'Feito: para ese usuario xa es un Ghost, e el para ti.',
+'No has ghosteado a nadie.' => 'Non ghosteaches a ninguén.',
+'Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.' => 'Nin eles ven o teu nome nin ti o seu; os seus comentarios sáenche pregados e non podedes escribirvos. Ninguén recibe aviso.',
 ];

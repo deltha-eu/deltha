@@ -15,6 +15,7 @@ $VIEWS = ['' => t('Últimos registros'), 'conectados' => t('Conectados ahora'), 
 $v = (string)($_GET['v'] ?? '');
 if (!isset($VIEWS[$v])) $v = '';
 $WHERE = ['' => '', 'conectados' => " AND last_seen >= NOW() - INTERVAL $onlineMin MINUTE", 'hoy' => ' AND created >= CURDATE()', '7d' => ' AND created >= NOW() - INTERVAL 7 DAY'][$v];
+$WHERE .= ghost_sql_not_in('user_id');   // los velados por ghosteo (en ambos sentidos) no salen: su perfil no esta disponible (lib/ghost.php)
 $ORDERS = ['registro' => t('fecha de registro'), 'acceso' => t('última conexión'), 'envios' => t('más envíos'), 'comentarios' => t('más comentarios')];
 $o = (string)($_GET['o'] ?? ($v === 'conectados' ? 'acceso' : 'registro'));
 if (!isset($ORDERS[$o])) $o = 'registro';

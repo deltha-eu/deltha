@@ -21,7 +21,8 @@ $MAX  = 2000;
 function msg_user(PDO $pdo, string $login): ?array {
     $st = $pdo->prepare("SELECT user_id, login, avatar, aura FROM users WHERE login = ? AND verified = 1");
     $st->execute([$login]);
-    return $st->fetch() ?: null;
+    $r = $st->fetch();
+    return ($r && !ghost_veiled($r['user_id'])) ? $r : null;   // ghosteo (en cualquier sentido): sin privados entre ambos (lib/ghost.php)
 }
 
 /* ---- enviar ------------------------------------------------------- */
@@ -94,7 +95,7 @@ $st = $pdo->prepare("SELECT IF(from_id = ?, to_id, from_id) AS other, MAX(msg_id
                        FROM messages WHERE from_id = ? OR to_id = ?
                       GROUP BY other ORDER BY last_id DESC LIMIT 100");
 $st->execute([$myId, $myId, $myId, $myId]);
-$convs = $st->fetchAll();
+$convs = array_values(array_filter($st->fetchAll(), fn($c) => !ghost_veiled($c['other'])));   // las conversaciones con velados por ghosteo no salen en la bandeja
 
 page_header(t('Mensajes'), 'mensajes');
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";

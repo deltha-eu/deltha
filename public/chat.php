@@ -66,9 +66,9 @@ if ($ids) {
 }
 $logins = [];
 if ($mentions) {
-    $q = $pdo->prepare("SELECT login FROM users WHERE LOWER(login) IN (" . implode(',', array_fill(0, count($mentions), '?')) . ")");
+    $q = $pdo->prepare("SELECT user_id, login FROM users WHERE LOWER(login) IN (" . implode(',', array_fill(0, count($mentions), '?')) . ")");
     $q->execute(array_keys($mentions));
-    foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $l) $logins[strtolower($l)] = $l;
+    foreach ($q->fetchAll() as $r) $logins[strtolower($r['login'])] = ghost_veiled($r['user_id']) ? ['alias' => ghost_alias((int)$r['user_id'])] : $r['login'];   // velados por ghosteo: alias, sin enlace
 }
 $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
@@ -98,7 +98,7 @@ foreach ($rows as $m) {
     $del = (int)$m['deleted'] === 1;
     echo "<article class=\"cm" . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\">";
     echo "<div class=\"ch\"><a class=\"num\" href=\"#m$id\">#$id</a> ";
-    echo !empty($m['login']) ? "<a class=\"who\" href=\"/u.php?u=" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";
+    echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u.php?u=" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
     echo "<span class=\"meta\"> · " . h(hace($m['created'])) . "</span></div>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
     else      echo "<p>" . chat_format($m['content'], $logins, $ids) . "</p>";

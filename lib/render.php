@@ -2,9 +2,16 @@
 /** lib/render.php — posts estilo timeline, comentarios, paginacion */
 declare(strict_types=1);
 
+/** ¿Se enseña el nombre real de esta fila? Revelado (ghost_minutes) y sin velo de ghosteo entre el autor y quien mira (lib/ghost.php). */
+function shown(array $row, bool $revealed): bool {
+    return $revealed && !empty($row['login']) && !ghost_veiled($row['user_id'] ?? 0);
+}
 function display_name(array $row, bool $revealed): string {
-    if ($revealed && !empty($row['login'])) return $row['login'];
-    return $row['alias'] ?: t('anónimo');
+    if (shown($row, $revealed)) return $row['login'];
+    if (!empty($row['alias'])) return $row['alias'];
+    // registrado velado sin alias de hilo (Chat, avisos): alias estable por pareja
+    if (!empty($row['login']) && !empty($row['user_id']) && ghost_veiled($row['user_id'])) return ghost_alias((int)$row['user_id']);
+    return t('anónimo');
 }
 
 /** $from permite entrar por otra tabla (p. ej. story_communities sc JOIN stories s ...) manteniendo el alias s. */
@@ -33,7 +40,7 @@ function avatar(float $aura, string $initial = '', ?string $photo = null, ?strin
 }
 /** Foto y enlace de perfil solo si el nombre esta revelado */
 function who_avatar(array $row, bool $revealed, float $aura, string $name): string {
-    if ($revealed && !empty($row['login'])) return avatar($aura, $name, $row['avatar'] ?? null, '/u.php?u=' . rawurlencode($row['login']));
+    if (shown($row, $revealed)) return avatar($aura, $name, $row['avatar'] ?? null, '/u.php?u=' . rawurlencode($row['login']));
     return avatar($aura, $name);
 }
 
@@ -60,7 +67,7 @@ function source_link(array $s): string {
 /** Post de timeline. $mode: full (portadas, originales) | compact (radar) */
 function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
-    $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias']], $rev);
+    $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
     $aura = $s['user_id'] ? (float)($s['author_aura'] ?? cfg('aura_start', 5)) : (float)cfg('aura_anon', 5);
     $href = "/hilo.php?id={$s['story_id']}";
     $hrefC = $href . '#comentarios';                       // el hilo, ya bajado a los comentarios
@@ -80,8 +87,11 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     }
     if ((int)$s['comments'] > 0) {   // en todos los feeds (portadas, originales y radar)
         // asomo: el comentario mas puntuado del hilo (mas soles; a igualdad, el mas antiguo), solo uno; los borrados no cuentan
-        $st = $pdo->prepare("SELECT c.comment_id, c.alias, c.aura, c.content, c.created, c.likes, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
-                             WHERE c.story_id = ? AND c.status = 'ok' AND c.deleted = 0 ORDER BY c.likes DESC, c.created ASC LIMIT 1");
+        // los comentarios de quien he ghosteado no asoman (a mi; al resto si)
+        $fold = array_keys(ghost_sets()['mine']);
+        $notIn = $fold ? " AND (c.user_id IS NULL OR c.user_id NOT IN (" . implode(',', array_map('intval', $fold)) . "))" : '';
+        $st = $pdo->prepare("SELECT c.comment_id, c.user_id, c.alias, c.aura, c.content, c.created, c.likes, u.login, u.avatar FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
+                             WHERE c.story_id = ? AND c.status = 'ok' AND c.deleted = 0$notIn ORDER BY c.likes DESC, c.created ASC LIMIT 1");
         $st->execute([$s['story_id']]);
         if ($c = $st->fetch()) {
             $rc = ghost_over($c['created']);
@@ -144,20 +154,24 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     $revealed = ghost_over($c['created']);
     $n = display_name($c, $revealed);
     $del = !empty($c['deleted']);
-    $cls = 'post reply' . ($has_next ? ' has-next' : '') . (empty($c['root_id']) ? ' root' : ' child') . ($del ? ' deleted' : '');
+    $fold = !$del && ghost_folded($c['user_id'] ?? 0);   // comentario de alguien a quien he ghosteado: plegado (details), por si quiero leerlo
+    $cls = 'post reply' . ($has_next ? ' has-next' : '') . (empty($c['root_id']) ? ' root' : ' child') . ($del ? ' deleted' : '') . ($fold ? ' ghosted' : '');
     echo "<article class=\"$cls\" id=\"c{$c['comment_id']}\">" . who_avatar($c, $revealed, (float)$c['aura'], $n) . "<div class=\"pc\">";
-    $nameHtml = ($revealed && !empty($c['login'])) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
+    $nameHtml = shown($c, $revealed) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
     echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
     if ($parent && !empty($c['root_id']) && (int)$c['parent_id'] !== (int)$c['root_id']) {
         $pn = display_name($parent, ghost_over($parent['created']));
         echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";
     }
+    if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has ghosteado') . " · <a href=\"/perfil.php#ghost\">" . t('deshacer') . "</a></summary>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
     else      echo "<p>" . nl2br(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content'])) . "</p>";
+    if ($fold) echo "</details>";
     $acts = [];
     if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
     if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
+    if (!$del && ($gl = ghost_link((int)($c['user_id'] ?? 0), $c['login'] ?? null, shown($c, $revealed))) !== '') $acts[] = $gl;   // solo con el nombre ya revelado
     if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\">" . t('editar · eliminar') . "</a>";
     if ($acts || !$del) {
         echo "<div class=\"actions\">" . implode('', $acts);

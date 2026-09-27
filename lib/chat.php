@@ -28,7 +28,10 @@ function chat_anon(): array {
     return [DDD_NOMBRES[$n % count(DDD_NOMBRES)] . '-' . DDD_LUGARES[intdiv($n, 997) % count(DDD_LUGARES)], $key];
 }
 /** Quien firma un mensaje: nick del registrado o alias del anonimo. */
-function chat_who(array $m): string { return !empty($m['login']) ? (string)$m['login'] : (string)$m['alias']; }
+function chat_who(array $m): string {
+    if (!empty($m['login']) && ghost_veiled($m['user_id'] ?? 0)) return ghost_alias((int)$m['user_id']);   // velado por ghosteo: alias de pareja (lib/ghost.php)
+    return !empty($m['login']) ? (string)$m['login'] : (string)$m['alias'];
+}
 
 /** Mensajes por hora de esta persona (registrado por user_id; anonimo por huella). */
 function chat_recent_count(PDO $pdo, ?array $u, ?string $key): int {
@@ -66,7 +69,8 @@ function chat_mentions(string $text): array {
     preg_match_all('/(?<![\w@])@([A-Za-z0-9_\-]{3,32})\b/', $text, $m);
     return array_values(array_unique(array_map('strtolower', $m[1])));
 }
-/** Texto del mensaje a HTML: escapado, #N → enlace al mensaje, @nick → perfil (solo si existe: $logins = nicks existentes en minusculas → nick real),
+/** Texto del mensaje a HTML: escapado, #N → enlace al mensaje, @nick → perfil (solo si existe: $logins = nicks existentes en minusculas → nick real,
+ *  o ['alias' => …] si esta velado por ghosteo),
  *  URLs → enlace (nofollow). $ids = ids de mensajes que estan en la pagina actual (enlace con ancla local); el resto va por ?m=N. */
 function chat_format(string $text, array $logins, array $ids): string {
     $h = h($text);
@@ -77,7 +81,9 @@ function chat_format(string $text, array $logins, array $ids): string {
     }, $h);
     $h = preg_replace_callback('~(?<![\w@])@([A-Za-z0-9_\-]{3,32})\b~', function ($m) use ($logins) {
         $k = strtolower($m[1]);
-        return isset($logins[$k]) ? "<a class=\"at\" href=\"/u.php?u=" . rawurlencode($logins[$k]) . "\">@" . h($logins[$k]) . "</a>" : $m[0];
+        if (!isset($logins[$k])) return $m[0];
+        if (is_array($logins[$k])) return "<span class=\"at\">@" . h($logins[$k]['alias']) . "</span>";   // velado por ghosteo: alias y sin enlace
+        return "<a class=\"at\" href=\"/u.php?u=" . rawurlencode($logins[$k]) . "\">@" . h($logins[$k]) . "</a>";
     }, $h);
     $h = preg_replace_callback('~(?<![">])\bhttps?://[^\s<]+~', function ($m) {
         $url = rtrim($m[0], '.,;:)');

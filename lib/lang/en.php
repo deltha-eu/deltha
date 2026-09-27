@@ -647,4 +647,18 @@ return [
 'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Search threads, comments, news from the media and substacks, and people.',
 'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Search threads, comments and news from the media and substacks.',
 'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Words match by their beginning (“vaccin” finds “vaccines”); a phrase in quotes is matched as is.',
+// ghostear (lib/ghost.php, migra-086)
+'ghostear' => 'ghost',
+'Ghostear' => 'Ghost',
+'Ghosteados' => 'Ghosted',
+'deshacer' => 'undo',
+'dejar de ver a este usuario: para ti y para él seréis siempre Ghost' => 'stop seeing this user: to each other you will always be a Ghost',
+'Comentario de alguien a quien has ghosteado' => 'Comment by someone you have ghosted',
+'¿Ghostear a %s?' => 'Ghost %s?',
+'A partir de ahora, para %s serás siempre un Ghost: no verá tu nombre en tus envíos, comentarios ni menciones, no podrá ver tu perfil ni escribirte por privado. Y tú lo verás igual: como un Ghost más, con sus comentarios plegados, por si en algún momento quieres leerlos.' => 'From now on, to %s you will always be a Ghost: they will not see your name on your posts, comments or mentions, nor be able to see your profile or message you. And you will see them the same way: as one more Ghost, with their comments folded, in case you ever want to read them.',
+'Nadie recibe aviso y no hay listas públicas. No afecta a los votos ni oculta nada al resto. Puedes deshacerlo cuando quieras desde tu perfil.' => 'Nobody is notified and there are no public lists. It does not affect votes or hide anything from others. You can undo it any time from your profile.',
+'Hecho: volvéis a veros con normalidad.' => 'Done: you can see each other normally again.',
+'Hecho: para ese usuario ya eres un Ghost, y él para ti.' => 'Done: to that user you are now a Ghost, and they are to you.',
+'No has ghosteado a nadie.' => 'You have not ghosted anyone.',
+'Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.' => 'They do not see your name and you do not see theirs; their comments appear folded to you and you cannot message each other. Nobody is notified.',
 ];

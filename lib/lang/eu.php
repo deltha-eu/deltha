@@ -607,4 +607,18 @@ return [
 'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Bilatu harietan, iruzkinetan, hedabideen eta substacken albisteetan eta jendearen artean.',
 'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Bilatu harietan, iruzkinetan eta hedabideen eta substacken albisteetan.',
 'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Hitzak hasieratik bilatzen dira («txerto» hitzak «txertoak» aurkitzen du); komatxo arteko esaldia, dagoen-dagoenean.',
+// ghostear (lib/ghost.php, migra-086)
+'ghostear' => 'ghosteatu',
+'Ghostear' => 'Ghosteatu',
+'Ghosteados' => 'Ghosteatuak',
+'deshacer' => 'desegin',
+'dejar de ver a este usuario: para ti y para él seréis siempre Ghost' => 'erabiltzaile hau ez ikusi gehiago: zuretzat eta harentzat beti Ghost izango zarete',
+'Comentario de alguien a quien has ghosteado' => 'Ghosteatu duzun norbaiten iruzkina',
+'¿Ghostear a %s?' => '%s ghosteatu?',
+'A partir de ahora, para %s serás siempre un Ghost: no verá tu nombre en tus envíos, comentarios ni menciones, no podrá ver tu perfil ni escribirte por privado. Y tú lo verás igual: como un Ghost más, con sus comentarios plegados, por si en algún momento quieres leerlos.' => 'Hemendik aurrera, %s-rentzat beti Ghost bat izango zara: ez du zure izena ikusiko zure bidalketetan, iruzkinetan ez aipamenetan, ezin izango du zure profila ikusi ezta pribatuz idatzi ere. Eta zuk berdin ikusiko duzu: beste Ghost bat bezala, bere iruzkinak tolestuta, noizbait irakurri nahi badituzu.',
+'Nadie recibe aviso y no hay listas públicas. No afecta a los votos ni oculta nada al resto. Puedes deshacerlo cuando quieras desde tu perfil.' => 'Inork ez du abisurik jasotzen eta ez dago zerrenda publikorik. Ez die botoei eragiten ez du ezer ezkutatzen gainerakoei. Nahi duzunean desegin dezakezu zure profiletik.',
+'Hecho: volvéis a veros con normalidad.' => 'Eginda: berriro normal ikusten duzue elkar.',
+'Hecho: para ese usuario ya eres un Ghost, y él para ti.' => 'Eginda: erabiltzaile horrentzat Ghost bat zara jada, eta bera zuretzat.',
+'No has ghosteado a nadie.' => 'Ez duzu inor ghosteatu.',
+'Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.' => 'Ez dute zure izena ikusten, ezta zuk beraiena ere; haien iruzkinak tolestuta agertzen zaizkizu eta ezin duzue elkarri idatzi. Inork ez du abisurik jasotzen.',
 ];
