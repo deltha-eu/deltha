@@ -607,4 +607,18 @@ return [
 'Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.' => 'Cerca als fils, els comentaris, les notícies dels mitjans i substacks i la gent.',
 'Busca en los hilos, los comentarios y las noticias de los medios y substacks.' => 'Cerca als fils, els comentaris i les notícies dels mitjans i substacks.',
 'Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.' => 'Les paraules es cerquen pel seu començament («vacuna» troba «vacunes»); una frase entre cometes, tal qual.',
+// ghostear (lib/ghost.php, migra-086)
+'ghostear' => 'ghostejar',
+'Ghostear' => 'Ghostejar',
+'Ghosteados' => 'Ghostejats',
+'deshacer' => 'desfer',
+'dejar de ver a este usuario: para ti y para él seréis siempre Ghost' => 'deixar de veure aquest usuari: per a tu i per a ell sereu sempre Ghost',
+'Comentario de alguien a quien has ghosteado' => 'Comentari d\'algú que has ghostejat',
+'¿Ghostear a %s?' => 'Ghostejar %s?',
+'A partir de ahora, para %s serás siempre un Ghost: no verá tu nombre en tus envíos, comentarios ni menciones, no podrá ver tu perfil ni escribirte por privado. Y tú lo verás igual: como un Ghost más, con sus comentarios plegados, por si en algún momento quieres leerlos.' => 'A partir d\'ara, per a %s seràs sempre un Ghost: no veurà el teu nom als teus enviaments, comentaris ni mencions, no podrà veure el teu perfil ni escriure\'t en privat. I tu el veuràs igual: com un Ghost més, amb els seus comentaris plegats, per si en algun moment els vols llegir.',
+'Nadie recibe aviso y no hay listas públicas. No afecta a los votos ni oculta nada al resto. Puedes deshacerlo cuando quieras desde tu perfil.' => 'Ningú no rep cap avís i no hi ha llistes públiques. No afecta els vots ni amaga res a la resta. Pots desfer-ho quan vulguis des del teu perfil.',
+'Hecho: volvéis a veros con normalidad.' => 'Fet: torneu a veure-us amb normalitat.',
+'Hecho: para ese usuario ya eres un Ghost, y él para ti.' => 'Fet: per a aquest usuari ja ets un Ghost, i ell per a tu.',
+'No has ghosteado a nadie.' => 'No has ghostejat ningú.',
+'Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.' => 'Ni ells veuen el teu nom ni tu el seu; els seus comentaris et surten plegats i no us podeu escriure. Ningú no rep cap avís.',
 ];

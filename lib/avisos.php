@@ -44,6 +44,7 @@ function aviso_snippet(string $text): string { return mb_strimwidth(trim(preg_re
 /** Inserta un aviso. Nunca lanza: si algo falla, la accion original (comentar, escribir) no se resiente. */
 function aviso_insert(PDO $pdo, int $to, ?int $from, string $fromName, string $kind, int $ref, ?int $story, string $text): void {
     if (!avisos_on() || $to <= 0 || ($from !== null && $from === $to)) return;
+    if (ghost_pair($pdo, $from, $to)) return;   // ghosteo entre ambos (en cualquier sentido): no se avisan (lib/ghost.php)
     try {
         $pdo->prepare("INSERT INTO notifications (user_id, from_id, from_name, kind, ref_id, story_id, snippet) VALUES (?,?,?,?,?,?,?)")
             ->execute([$to, $from, mb_substr($fromName, 0, 64), $kind, $ref, $story, aviso_snippet($text)]);
@@ -125,6 +126,9 @@ function aviso_href(array $n): string {
 }
 /** Como se llama quien avisa, ahora: en comentarios el alias hasta que el hilo revela el nick; en el Chat y privados, el nick (o el alias anonimo). */
 function aviso_who(array $n): string {
+    if (!empty($n['login']) && ghost_veiled($n['from_id'] ?? 0)) {   // velado por ghosteo (avisos anteriores al ghosteo): nunca el nick
+        return in_array($n['kind'], ['mention_comment', 'reply_comment'], true) && $n['from_name'] !== '' ? $n['from_name'] : ghost_alias((int)$n['from_id']);
+    }
     if (in_array($n['kind'], ['mention_comment', 'reply_comment'], true)) return (!empty($n['login']) && ghost_over($n['created'])) ? $n['login'] : ($n['from_name'] ?: t('anónimo'));
     return $n['login'] ?: ($n['from_name'] ?: t('anónimo'));
 }
@@ -151,14 +155,17 @@ function avisos_preload_nicks(PDO $pdo, array $texts): void {
     global $DDD_NICKS;
     $all = [];
     foreach ($texts as $t) foreach (avisos_nicks((string)$t) as $n) $all[$n] = true;
-    foreach (avisos_users_by_nick($pdo, array_keys($all)) as $k => $u) $DDD_NICKS[$k] = $u['login'];
+    // velados por ghosteo: la mencion sale con el alias de pareja y sin enlace (el nombre no se ve en las menciones)
+    foreach (avisos_users_by_nick($pdo, array_keys($all)) as $k => $u) $DDD_NICKS[$k] = ghost_veiled($u['user_id']) ? ['alias' => ghost_alias($u['user_id'])] : $u['login'];
 }
-/** HTML (ya escapado) → cada @nick existente enlazado a /u.php. */
+/** HTML (ya escapado) → cada @nick existente enlazado a /u.php (los velados por ghosteo, con su alias y sin enlace). */
 function nicks_format(string $html): string {
     global $DDD_NICKS;
     if (!$DDD_NICKS || !str_contains($html, '@')) return $html;
     return preg_replace_callback(DDD_NICK_RE, function ($m) use ($DDD_NICKS) {
         $k = strtolower($m[1]);
-        return isset($DDD_NICKS[$k]) ? "<a class=\"at\" href=\"/u.php?u=" . rawurlencode($DDD_NICKS[$k]) . "\">@" . h($DDD_NICKS[$k]) . "</a>" : $m[0];
+        if (!isset($DDD_NICKS[$k])) return $m[0];
+        if (is_array($DDD_NICKS[$k])) return "<span class=\"at\">@" . h($DDD_NICKS[$k]['alias']) . "</span>";
+        return "<a class=\"at\" href=\"/u.php?u=" . rawurlencode($DDD_NICKS[$k]) . "\">@" . h($DDD_NICKS[$k]) . "</a>";
     }, $html);
 }

@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 128);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 129);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -99,6 +99,7 @@ require_once __DIR__ . '/i18n.php';
 i18n_load();
 require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
 require_once __DIR__ . '/avisos.php';     // campanita: menciones, respuestas y privados
+require_once __DIR__ . '/ghost.php';      // «Ghostear» a un usuario: velo simetrico, comentarios plegados (user_ghosts)
 require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)

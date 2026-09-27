@@ -45,6 +45,18 @@ profile_tabs('perfil');
 echo "<p class=\"notice\">" . t('Tu foto y tu frase se ven en tu perfil y junto a tu nombre cuando se revela, a los %d minutos de cada aportación. Hasta entonces eres un alias con halo.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($ok)  echo "<p class=\"notice\">" . h($ok) . "</p>";
+// ghosteados (lib/ghost.php): a quien he dejado de ver, con fecha y «deshacer»; solo si hay alguno o se acaba de tocar
+if (ghost_on() && (($gl = ghost_list($pdo, (int)$u['user_id'])) || isset($_GET['ghost']))) {
+    echo "<div class=\"ghostlist\" id=\"ghost\"><h3 class=\"sec\">" . t('Ghosteados') . "</h3>";
+    if (isset($_GET['ghost'])) echo "<p class=\"notice\">" . ($_GET['ghost'] === 'quitado' ? t('Hecho: volvéis a veros con normalidad.') : t('Hecho: para ese usuario ya eres un Ghost, y él para ti.')) . "</p>";
+    if (!$gl) echo "<p class=\"end\">" . t('No has ghosteado a nadie.') . "</p>";
+    foreach ($gl as $g) {
+        echo "<div class=\"ulist\">" . avatar((float)$g['aura'], $g['login'], $g['avatar']) . "<div><b>" . h($g['login']) . "</b><span class=\"meta\"> · " . t('desde') . " " . h(hace($g['created'])) . "</span>";
+        echo "<form class=\"inline\" method=\"post\" action=\"/ghostear.php\"><input type=\"hidden\" name=\"u\" value=\"" . h($g['login']) . "\"><input type=\"hidden\" name=\"act\" value=\"deshacer\"><button class=\"link\">" . t('deshacer') . "</button></form></div></div>";
+    }
+    if ($gl) echo "<small class=\"hint\">" . t('Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.') . "</small>";
+    echo "</div>";
+}
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">";
 echo "" . t('<label>Nombre de usuario</label>') . "<input type=\"text\" name=\"login\" required pattern=\"[A-Za-z0-9_\\-]{3,32}\" value=\"" . h($u['login']) . "\" autocomplete=\"username\">";
 echo "" . t('<label>Frase (hasta 160 caracteres)</label>') . "<input type=\"text\" name=\"bio\" maxlength=\"160\" value=\"" . h($u['bio'] ?? '') . "\">";
