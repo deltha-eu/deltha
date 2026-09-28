@@ -1,6 +1,6 @@
 <?php
 /** /editar-usuario.php?id=N — edición del perfil de otro usuario por moderadores y admin:
- *  nick, frase y foto (mods y admin); correo, estado de activación, nueva contraseña, nivel y aura (solo admin).
+ *  nick, frase y foto (mods y admin); correo, estado de activación, nueva contraseña, nivel (normal/mod/admin) y aura (solo admin).
  *  El formulario (lib/usuarios.php, modedit_form) es el mismo que sale en el perfil público (/u.php#modedit); con back=u se vuelve allí. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -14,7 +14,7 @@ $st = $pdo->prepare("SELECT user_id, login, email, level, aura, avatar, bio, ver
 $st->execute([$id]);
 $p = $st->fetch();
 if (!$p) { http_response_code(404); page_header('Editar usuario'); echo "<p class=\"end\">Ese usuario no existe.</p>"; page_footer(); exit; }
-// un moderador no toca a admins ni a otros moderadores (ni a si mismo: eso va en /perfil.php); el admin puede con todos
+// un moderador no toca a admins ni a otros moderadores (tampoco a quien modera por aura, ni a si mismo: eso va en /perfil.php); el admin puede con todos
 if (!modedit_puede($p)) { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo el admin puede editar a moderadores y admins.</p>"; page_footer(); exit; }
 
 $err = null; $ok = ($_GET['ok'] ?? '') === '2' ? 'Perfil guardado y contraseña cambiada.' : (isset($_GET['ok']) ? 'Perfil guardado.' : null);
@@ -55,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!is_numeric($a) || (float)$a < 0 || (float)$a > (float)cfg('aura_max', 50)) $err = 'El aura debe ser un número entre 0 y ' . num_es(cfg('aura_max', 50)) . '.';
             else $aura = round((float)$a, 3);
         }
-        $level = $p['level'] === 'admin' ? 'admin' : (post('level') === 'mod' ? 'mod' : (post('level') === 'normal' ? 'normal' : $p['level']));
+        // nivel: normal | mod | admin, cualquiera a cualquiera salvo el propio (para no quedarse sin admin por un descuido)
+        $level = (int)user()['user_id'] === $id ? $p['level'] : (in_array(post('level'), ['normal', 'mod', 'admin'], true) ? post('level') : $p['level']);
     }
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, email = ?, verified = ? WHERE user_id = ?")
@@ -67,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare("INSERT INTO aura_log (user_id, amount, reason, ref_id) VALUES (?,?,?,?)")
                     ->execute([$id, round($aura - (float)$p['aura'], 3), mb_substr('admin' . ($motivo !== '' ? ": $motivo" : ''), 0, 64), (int)user()['user_id']]);
             }
-            if ($level !== $p['level']) $pdo->prepare("UPDATE users SET level = ? WHERE user_id = ? AND level <> 'admin'")->execute([$level, $id]);
+            if ($level !== $p['level']) $pdo->prepare("UPDATE users SET level = ? WHERE user_id = ? AND user_id <> ?")->execute([$level, $id, (int)user()['user_id']]);
         }
         if (is_admin() && $newpass !== '') {
             $pdo->prepare("UPDATE users SET pass = ?, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([password_hash($newpass, PASSWORD_DEFAULT), $id]);

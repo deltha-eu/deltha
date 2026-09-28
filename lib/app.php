@@ -114,7 +114,22 @@ if ($USER === null && PHP_SAPI !== 'cli' && !preg_match('~bot|crawl|spider|slurp
 }
 function user(): ?array { global $USER; return $USER; }
 function is_admin(): bool { $u = user(); return $u && $u['level'] === 'admin'; }
-function is_mod(): bool { $u = user(); return $u && in_array($u['level'], ['mod', 'admin'], true); }
+/** ¿Modera esta cuenta? Por nivel (mod, admin: lo pone el admin) o por aura: desde config.mod_aura (20; 0 = solo por nivel)
+ *  cualquier registrado modera mientras la mantenga (el aura baja cada dia, asi que se pierde solo si deja de participar). */
+function user_is_mod(?array $u): bool {
+    if (!$u) return false;
+    if (in_array($u['level'] ?? 'normal', ['mod', 'admin'], true)) return true;
+    $min = (float)cfg('mod_aura', 20);
+    return $min > 0 && (float)($u['aura'] ?? 0) >= $min;
+}
+function is_mod(): bool { return user_is_mod(user()); }
+/** De donde le viene la moderacion: 'admin' | 'mod' (nivel) | 'aura' | '' (no modera). Para las fichas y admin -> Usuarios. */
+function mod_origen(?array $u): string {
+    if (!$u) return '';
+    if ($u['level'] === 'admin') return 'admin';
+    if ($u['level'] === 'mod') return 'mod';
+    return user_is_mod($u) ? 'aura' : '';
+}
 
 /* ---- acceso privado temporal (clave) --------------------------------
  * Mientras config.access_key no este vacia, la web es privada: quien no

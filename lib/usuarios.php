@@ -2,18 +2,19 @@
 /**
  * lib/usuarios.php — ficha de moderación de un usuario, la misma en su perfil público (/u.php, desplegable «Editar este perfil»)
  * y en /editar-usuario.php, que es quien guarda.
- *   Moderadores (sobre usuarios normales) y admin (sobre cualquiera): nombre de usuario, frase y foto.
- *   Solo admin: correo, correo validado, nueva contraseña, nivel (normal / moderador) y aura a mano, con motivo; el cambio de
- *   aura queda en aura_log con reason «admin: motivo» y ref_id = el admin, y no cuenta para el tope diario de aura_add().
+ *   Moderadores (sobre usuarios que no moderan) y admin (sobre cualquiera): nombre de usuario, frase y foto.
+ *   Solo admin: correo, correo validado, nueva contraseña, nivel (normal / moderador / admin; el suyo propio no se toca) y aura
+ *   a mano, con motivo; el cambio de aura queda en aura_log con reason «admin: motivo» y ref_id = el admin, y no cuenta para el
+ *   tope diario de aura_add(). Modera también, sin nivel, quien tenga aura >= config.mod_aura (user_is_mod(), lib/app.php).
  */
 declare(strict_types=1);
 
-/** ¿Puede el usuario actual editar la ficha de $p? El admin, a cualquiera (también a sí mismo); un moderador, a los normales que no sea él. */
+/** ¿Puede el usuario actual editar la ficha de $p? El admin, a cualquiera (también a sí mismo); un moderador, a quien no modere (por nivel ni por aura) y no sea él. */
 function modedit_puede(array $p): bool {
     $me = user();
     if (!$me || !is_mod()) return false;
     if (is_admin()) return true;
-    return $p['level'] === 'normal' && (int)$me['user_id'] !== (int)$p['user_id'];
+    return !user_is_mod($p) && (int)$me['user_id'] !== (int)$p['user_id'];
 }
 
 /** Formulario de la ficha. $p: fila de users con user_id, login, email, level, aura, avatar, bio, verified. $back: 'u' = volver al perfil. */
@@ -30,8 +31,15 @@ function modedit_form(PDO $pdo, array $p, string $back = ''): string {
         $h .= "<label>Aura</label><div class=\"aurarow\"><input type=\"number\" name=\"aura\" min=\"0\" max=\"" . h((string)$max) . "\" step=\"0.001\" value=\"" . h(rtrim(rtrim(number_format((float)$p['aura'], 3, '.', ''), '0'), '.')) . "\">"
             . "<input type=\"text\" name=\"aura_motivo\" maxlength=\"50\" placeholder=\"motivo del cambio (queda en el historial)\"></div>"
             . "<small class=\"hint\">Entre 0 y " . h(num_es($max)) . " (aura_max). Sigue bajando cada día hasta " . h(num_es(cfg('aura_start', 5))) . " como la de todos.</small>";
-        if ($p['level'] === 'admin') $h .= "<label>Nivel</label><p class=\"meta\" style=\"padding:0\">admin</p>";
-        else $h .= "<label>Nivel</label><select name=\"level\"><option value=\"normal\"" . ($p['level'] === 'normal' ? ' selected' : '') . ">normal</option><option value=\"mod\"" . ($p['level'] === 'mod' ? ' selected' : '') . ">moderador</option></select>";
+        $modaura = (float)cfg('mod_aura', 20);
+        if ((int)user()['user_id'] === $id) $h .= "<label>Nivel</label><p class=\"meta\" style=\"padding:0\">admin <small>(el tuyo lo cambia otro admin)</small></p>";
+        else {
+            $h .= "<label>Nivel</label><select name=\"level\">";
+            foreach (['normal' => 'normal', 'mod' => 'moderador', 'admin' => 'admin'] as $v => $lbl) $h .= "<option value=\"$v\"" . ($p['level'] === $v ? ' selected' : '') . ">$lbl</option>";
+            $h .= "</select>";
+            $h .= "<small class=\"hint\">El admin lo puede todo (admin, usuarios, config); el moderador, la cola de moderación. "
+                . ($modaura > 0 ? "Con aura ≥ " . h(num_es($modaura)) . " (mod_aura) cualquier cuenta modera aunque su nivel sea normal" . (mod_origen($p) === 'aura' ? " — es el caso de esta" : "") . "." : "") . "</small>";
+        }
         $h .= "<label>Correo</label><input type=\"email\" name=\"email\" required value=\"" . h($p['email']) . "\" autocomplete=\"off\">";
         $h .= "<label><input type=\"checkbox\" name=\"verified\" value=\"1\"" . ((int)$p['verified'] ? ' checked' : '') . "> correo validado (sin marcar, no puede iniciar sesión)</label>";
         $h .= "<label>Nueva contraseña (vacío = no cambiar)</label><input type=\"password\" name=\"pass\" data-pw minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";
@@ -59,7 +67,7 @@ function modedit_form(PDO $pdo, array $p, string $back = ''): string {
  * Sin pasar por /registro.php: no comprueba el dominio del correo ni el tope por IP. Con «correo validado» la cuenta entra ya;
  * sin marcar, se envia el correo de activacion normal. */
 
-/** Crea la cuenta. Devuelve [user_id, null] o [0, 'error']. $level: normal | mod. */
+/** Crea la cuenta. Devuelve [user_id, null] o [0, 'error']. $level: normal | mod | admin. */
 function user_create(PDO $pdo, string $login, string $email, string $pass, string $level = 'normal', ?float $aura = null, bool $verified = true): array {
     $login = trim($login); $email = mb_strtolower(trim($email));
     if (!preg_match('/^[a-z0-9_\-]{3,32}$/i', $login)) return [0, 'Usuario: 3–32 caracteres, letras, números, guion o guion bajo.'];
@@ -67,7 +75,7 @@ function user_create(PDO $pdo, string $login, string $email, string $pass, strin
     if (strlen($pass) < 8) return [0, 'La contraseña debe tener al menos 8 caracteres.'];
     $q = $pdo->prepare("SELECT login, email FROM users WHERE login = ? OR email = ? LIMIT 1"); $q->execute([$login, $email]);
     if ($r = $q->fetch()) return [0, strcasecmp((string)$r['login'], $login) === 0 ? 'Ese nombre de usuario ya existe.' : 'Ese correo ya lo usa otra cuenta.'];
-    $level = $level === 'mod' ? 'mod' : 'normal';
+    $level = in_array($level, ['mod', 'admin'], true) ? $level : 'normal';
     $aura = $aura === null ? (float)cfg('aura_start', 5) : max(0.0, min((float)cfg('aura_max', 50), $aura));
     try {
         $pdo->prepare("INSERT INTO users (login, email, pass, verified, aura, level) VALUES (?,?,?,?,?,?)")
@@ -87,7 +95,7 @@ function user_create_form(string $back): string {
     $h .= "<label>Correo</label><input type=\"email\" name=\"email\" required autocomplete=\"off\" value=\"" . h((string)($_GET['ne'] ?? '')) . "\"><small class=\"hint\">Obligatorio y único. Si la cuenta no va a recibir correo (una cuenta de revisión, por ejemplo), vale uno inventado y dejar marcado «correo validado».</small>";
     $h .= "<label>Contraseña</label><input type=\"password\" name=\"pass\" data-pw required minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";
     $h .= pw_toggle();
-    $h .= "<label>Nivel</label><select name=\"level\"><option value=\"normal\">normal</option><option value=\"mod\">moderador</option></select>";
+    $h .= "<label>Nivel</label><select name=\"level\"><option value=\"normal\">normal</option><option value=\"mod\">moderador</option><option value=\"admin\">admin</option></select>";
     $h .= "<label>Aura inicial</label><input type=\"number\" name=\"aura\" min=\"0\" max=\"" . h((string)cfg('aura_max', 50)) . "\" step=\"0.001\" value=\"" . h((string)cfg('aura_start', 5)) . "\">";
     $h .= "<label><input type=\"checkbox\" name=\"verified\" value=\"1\" checked> correo validado (entra ya; sin marcar, se le envía el correo de activación)</label>";
     $h .= "<button>Crear usuario</button></form></details>";
