@@ -130,6 +130,8 @@ envío → radar (`nuevas`; `stories.portada` = `medios` | `substacks`, NULL en 
 - Fórmula única en `delta_sql()` (SQL) y `delta_live()` / `delta_explica()` (PHP), `lib/app.php`. Antes (migra-066): `(pos − neg) × coef − 0,05 × medias_horas`.
 - Moderación → «Cuentas que votan juntas» (`votos_coordinados()` en `lib/moderacion.php`): parejas que coinciden en ≥ 4 envíos en el mismo sentido con < 10 min de diferencia, y envíos votados por varias cuentas desde una conexión. Solo informa. Análisis y Montecarlo previos: proyecto `claude/algoritmo-critica-y-montecarlo.md`.
 
+**Modo test** (`config.test_mode`, admin → Ciclo → Modo test; `sql/migra-087-modo-test.sql` lo deja a 1 en la beta): si el ciclo no publica nada y la última promoción (`promo_log.created`) tiene más de 60 min (`TEST_MODE_MINUTES`, `lib/ciclo.php`), publica igualmente el enlace del radar con más δ —primero la portada del turno, luego la otra— sin exigir edad, votos ni δ mínimos (sin sorteo: el mayor δ, empate al más antiguo). Así la beta saca al menos uno a la hora aunque no haya gente para votar; el log lo marca «MODO TEST». Ponerlo a 0 cuando haya usuarios.
+
 ## Probar sin esperar
 Admin → "Adelantar reloj 35 min" → "Ejecutar ciclo" (publica en la portada a la que le toque ese minuto) → ver Radar/Medios/Substacks. Reloj 2940 min → ciclo → hilo archivado con nombres reales.
 

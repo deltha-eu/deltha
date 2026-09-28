@@ -25,6 +25,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('cycle_lottery',       '1',    '1 = entre las que superan el minimo se sortea con probabilidad proporcional al delta; 0 = gana la de mayor delta'),
 ('cycle_cede_turno',    '1',    '1 = si a la portada del turno no le llega nada, publica en la otra'),
 ('cycle_jitter',        '1',    '1 = el minuto de ejecucion dentro de cada ventana de cycle_minutes depende del secreto del sitio (contra el sniping); 0 = minuto 0'),
+('test_mode',           '0',    '1 = modo test (beta): si el ciclo no publica nada y la ultima promocion tiene mas de 60 min, publica el enlace del radar con mas delta sin exigir edad, votos ni delta minimos'),
 ('aura_portada',        '0.5',  'Aura por envio que llega a portada'),
 ('aura_envio',          '0.1',  'Aura por envio o articulo publicado en nuevas'),
 ('aura_comentario',     '0.02', 'Aura por comentario'),
