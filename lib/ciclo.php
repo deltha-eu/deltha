@@ -9,9 +9,14 @@
  *    - cycle_lottery = 0: el de mayor δ (empate: el mas antiguo).
  *  Si a la portada del turno no le llega nada y cycle_cede_turno = 1, el turno pasa a la otra portada (Substacks conserva los
  *  suyos; solo se ceden los vacios). Si tampoco, ese ciclo no se publica nada. Los originales (articulos) no van a portada.
+ *  MODO TEST (config.test_mode = 1, admin -> Ciclo): si el ciclo normal no publica nada y la ultima promocion tiene mas de
+ *  TEST_MODE_MINUTES (60), publica de todos modos el enlace del radar con mas δ (primero la portada del turno, luego la otra),
+ *  haya o no alcanzado la edad, los votos y el δ minimos. Para la beta, donde no hay gente para llenar la portada.
  *  El minuto de ejecucion dentro de cada ventana es imprevisible (ciclo_toca, lib/app.php). */
 declare(strict_types=1);
 require_once __DIR__ . '/aura.php';
+
+const TEST_MODE_MINUTES = 60;   // modo test: minutos sin promocion tras los que se publica el de mas δ aunque no llegue al umbral
 
 /** Elige entre las candidatas ($rows con delta, sent_date, ya ordenadas por delta DESC, sent_date ASC). */
 function ciclo_elige(array $rows): ?array {
@@ -72,13 +77,37 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
             if ($cands) { $best = ciclo_elige($cands); $donde = $p; break; }
             $log[] = "turno de $p: nada publicable (ninguna con >= $minAge min, >= " . delta_min_votes() . " votos que cuenten y delta >= " . num_es(delta_minpub($p)) . ")" . ($p === $turno && count($orden) > 1 ? " → se cede el turno" : "");
         }
+        // modo test: sin nada publicable y con mas de TEST_MODE_MINUTES desde la ultima promocion, sale el de mas δ, sin umbrales
+        $test = false;
+        if (!$best && cfg('test_mode', '0') === '1') {
+            $ultima = $pdo->query("SELECT MAX(created) FROM promo_log")->fetchColumn();
+            $hace   = $ultima ? intdiv($now - strtotime((string)$ultima), 60) : PHP_INT_MAX;
+            if ($hace >= TEST_MODE_MINUTES) {
+                $sf = $pdo->prepare("SELECT s.story_id, s.user_id, s.delta, s.sent_date,
+                                            (SELECT COUNT(*) FROM stories x WHERE x.status = 'nuevas' AND x.portada = ?) AS n_radar,
+                                            (SELECT COUNT(DISTINCT COALESCE(user_id, anon_key, comment_id))
+                                               FROM comments WHERE story_id = s.story_id AND status='ok') AS commenters
+                                       FROM stories s
+                                      WHERE s.status = 'nuevas' AND s.portada = ? AND s.content_type = 'link'
+                                      ORDER BY s.delta DESC, s.sent_date ASC LIMIT 1 FOR UPDATE");
+                foreach ([$turno, $turno === 'medios' ? 'substacks' : 'medios'] as $p) {
+                    $sf->execute([$p, $p]);
+                    $cands = $sf->fetchAll();
+                    if ($cands) { $best = $cands[0]; $donde = $p; $test = true; break; }
+                }
+                if (!$best) $log[] = "modo test: el radar esta vacio, nada que publicar";
+            } else {
+                $log[] = "modo test: la ultima promocion fue hace $hace min (< " . TEST_MODE_MINUTES . "), no se fuerza nada";
+            }
+        }
         if ($best) {
             $pdo->prepare("UPDATE stories SET status='destacadas', published_date=NOW() WHERE story_id=? AND status='nuevas'")
                 ->execute([$best['story_id']]);
             $pdo->prepare("INSERT INTO promo_log (story_id, portada, delta, candidates, commenters) VALUES (?,?,?,?,?)")
                 ->execute([$best['story_id'], $donde, $best['delta'], $best['n_radar'], $best['commenters']]);
             if ($best['user_id'] !== null) aura_add($pdo, (int)$best['user_id'], (float)cfg('aura_portada', 0.5), 'portada', (int)$best['story_id']);
-            $como = cfg('cycle_lottery', '1') === '1' ? "sorteo entre " . count($cands) . ", δ máx " . num_es((float)$cands[0]['delta']) : "la de mayor δ";
+            $como = $test ? "MODO TEST: la de mayor δ sin umbrales, " . TEST_MODE_MINUTES . " min sin promocion"
+                  : (cfg('cycle_lottery', '1') === '1' ? "sorteo entre " . count($cands) . ", δ máx " . num_es((float)$cands[0]['delta']) : "la de mayor δ");
             $log[] = "PUBLICADA en $donde" . ($donde !== $turno ? " (turno cedido por $turno)" : "") . " #{$best['story_id']} delta={$best['delta']} ($como; {$best['n_radar']} en su radar, {$best['commenters']} comentaristas)";
         }
         $pdo->commit();
