@@ -34,7 +34,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('aura_deadline',       '2026-12-31', 'Fecha del reparto de propiedad entre usuarios con aura maxima'),
 ('aura_anon',           '5',    'Aura del anonimo'),
 ('aura_start',          '5',    'Aura inicial del registrado'),
-('aura_max',            '50',   'Tope de aura'),
+('aura_max',            '30',   'Tope de aura'),
+('mod_aura',            '20',   'Aura desde la que cualquier registrado modera aunque su nivel sea normal (0 = solo por nivel mod/admin)'),
 ('thread_ttl_hours',    '48',   'Vida del hilo (destacadas -> archivo)'),
 ('nuevas_ttl_hours',    '168',  'Horas que puede pasar un envio en el radar sin llegar a portada antes de archivarse (168 = una semana; 0 = nunca)'),
 ('ghost_minutes',       '30',   'Minutos que dura el alias Ghost de cada envio/comentario antes de mostrar el nombre real'),
@@ -85,7 +86,7 @@ CREATE TABLE users (
     login       VARCHAR(32) NOT NULL,
     email       VARCHAR(128) NOT NULL,
     pass        VARCHAR(255) NOT NULL,
-    level       ENUM('normal','admin') NOT NULL DEFAULT 'normal',
+    level       ENUM('normal','mod','admin') NOT NULL DEFAULT 'normal',   -- mod: modera (migra-008); ademas modera quien tenga aura >= mod_aura
     avatar      VARCHAR(64) DEFAULT NULL,           -- fichero en /media/avatars
     bio         VARCHAR(160) DEFAULT NULL,
     theme       ENUM('auto','light','dark') NOT NULL DEFAULT 'auto',

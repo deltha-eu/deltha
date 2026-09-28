@@ -120,12 +120,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE comments SET created = created - INTERVAL ? MINUTE")->execute([$m]);
         $out[] = "Reloj adelantado $m min (todas las fechas retrasadas).";
     } elseif ($act === 'mods') {
+        // niveles de la pagina: normal | mod | admin por usuario (select lvl[id]); el propio no se toca
         $ids = array_map('intval', explode(',', post('ids')));
-        $on  = array_map('intval', array_keys($_POST['mod'] ?? []));
-        $up1 = $pdo->prepare("UPDATE users SET level = 'mod' WHERE user_id = ? AND level = 'normal'");
-        $dn  = $pdo->prepare("UPDATE users SET level = 'normal' WHERE user_id = ? AND level = 'mod'");
-        foreach ($ids as $id) { if (in_array($id, $on, true)) $up1->execute([$id]); else $dn->execute([$id]); }
-        $out[] = 'Moderadores guardados.';
+        $lv  = $_POST['lvl'] ?? [];
+        $up  = $pdo->prepare("UPDATE users SET level = ? WHERE user_id = ? AND level <> ?");
+        $n = 0;
+        foreach ($ids as $id) {
+            if ($id === (int)user()['user_id']) continue;
+            $l = (string)($lv[$id] ?? '');
+            if (!in_array($l, ['normal', 'mod', 'admin'], true)) continue;
+            $up->execute([$l, $id, $l]); $n += $up->rowCount();
+        }
+        $out[] = $n ? "Niveles guardados ($n " . ($n === 1 ? 'cambio' : 'cambios') . ")." : 'Niveles sin cambios.';
     } elseif ($act === 'humano') {
         $item = (int)post('item'); $dec = post('dec');
         $q = $pdo->prepare("SELECT item_type, ref_id FROM mod_queue WHERE item_id = ?"); $q->execute([$item]);
@@ -170,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $q = $pdo->prepare("SELECT user_id, login, level FROM users WHERE user_id = ?"); $q->execute([$id]);
         $victima = $q->fetch();
         if (!$victima) $out[] = "Usuario $id no existe.";
-        elseif ($victima['level'] === 'admin') $out[] = "No se borra a un admin (quítale el nivel antes).";
+        elseif ($victima['level'] === 'admin') $out[] = "No se borra a un admin (bájale el nivel antes, en su ficha o en la columna «nivel»).";
         elseif (post('confirmar') !== $victima['login']) {
             $pedir_confirmacion = $victima;   // se pinta abajo
         } else {
@@ -382,9 +388,16 @@ if ($tab === 'usuarios') {
     echo "<form method=\"get\" action=\"/admin.php\" style=\"display:flex;gap:6px;margin-bottom:8px\"><input type=\"hidden\" name=\"t\" value=\"usuarios\"><input type=\"text\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"usuario o correo\" style=\"flex:1\"><button class=\"btn\">Buscar</button>" . ($q !== '' ? " <a class=\"btn\" href=\"/admin.php\">todos</a>" : "") . "</form>";
     $rows = $l->fetchAll();
     echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"mods\"><input type=\"hidden\" name=\"ids\" value=\"" . implode(',', array_column($rows, 'user_id')) . "\">";
-    echo "<table class=\"users\"><tr><th>#</th><th>usuario</th><th>aura</th><th>mod</th><th></th></tr>";
+    $modaura = (float)cfg('mod_aura', 20);
+    echo "<p class=\"meta\">Nivel: <b>admin</b> lo puede todo; <b>moderador</b> ve y resuelve la cola de moderación. " . ($modaura > 0 ? "Además modera, sin cambiar de nivel, cualquier cuenta con aura ≥ " . h(num_es($modaura)) . " (<code>mod_aura</code>; marcadas «mod por aura»)." : "") . " El nivel propio lo cambia otro admin.</p>";
+    echo "<table class=\"users\"><tr><th>#</th><th>usuario</th><th>aura</th><th>nivel</th><th></th></tr>";
     foreach ($rows as $r) {
-        $cell = $r['level'] === 'admin' ? 'admin' : "<input type=\"checkbox\" name=\"mod[{$r['user_id']}]\" value=\"1\"" . ($r['level'] === 'mod' ? ' checked' : '') . ">";
+        if ((int)$r['user_id'] === (int)user()['user_id']) $cell = 'admin <small>(tú)</small>';
+        else {
+            $cell = "<select name=\"lvl[{$r['user_id']}]\">";
+            foreach (['normal' => 'normal', 'mod' => 'moderador', 'admin' => 'admin'] as $v => $lbl) $cell .= "<option value=\"$v\"" . ($r['level'] === $v ? ' selected' : '') . ">$lbl</option>";
+            $cell .= "</select>" . (mod_origen($r) === 'aura' ? "<br><small>mod por aura</small>" : "");
+        }
         // los botones usan formularios propios (atributo form=) para no anidarlos en el de moderadores
         $acc = "<a class=\"btn sm\" href=\"/editar-usuario.php?id={$r['user_id']}\" title=\"editar nick, frase, foto y correo\">editar</a> ";
         $acc .= (int)$r['verified'] === 0 ? "<button class=\"btn sm\" form=\"ver{$r['user_id']}\" title=\"marcar el correo como validado\">validar</button> " : "";
@@ -392,7 +405,7 @@ if ($tab === 'usuarios') {
         $meta = h($r['email']) . ((int)$r['verified'] === 0 ? " (sin activar)" : "") . " · registro " . h(substr($r['created'], 0, 16)) . ($r['last_seen'] ? " · último acceso " . h(hace($r['last_seen'])) : "");
         echo "<tr><td class=\"num\">{$r['user_id']}</td><td class=\"who\"><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a><small>$meta</small></td><td>" . h($r['aura']) . "</td><td style=\"text-align:center\">$cell</td><td class=\"acc\">$acc</td></tr>";
     }
-    echo "</table><p><button class=\"btn\">Guardar moderadores</button></p></form>";
+    echo "</table><p><button class=\"btn\">Guardar niveles</button></p></form>";
     foreach ($rows as $r) {
         echo "<form id=\"ver{$r['user_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"verificar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
         echo "<form id=\"del{$r['user_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
