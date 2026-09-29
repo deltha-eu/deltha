@@ -10,10 +10,11 @@ $topic = $tq->fetch();
 if (!$topic) { http_response_code(404); page_header(t('Tema')); echo "<p class=\"end\">" . t('Ese tema no existe.') . "</p>"; page_footer(); exit; }
 
 $page = page_num();
-$cnt = $pdo->prepare("SELECT COUNT(*) FROM stories WHERE topic_id = ? AND status IN ('nuevas','destacadas','archived')");
+$ml = stories_mylang_sql();
+$cnt = $pdo->prepare("SELECT COUNT(*) FROM stories s WHERE s.topic_id = ? AND s.status IN ('nuevas','destacadas','archived')$ml");
 $cnt->execute([$tid]);
 $total = (int)$cnt->fetchColumn();
-$st = $pdo->prepare(story_query_base() . " WHERE s.topic_id = ? AND s.status IN ('nuevas','destacadas','archived')
+$st = $pdo->prepare(story_query_base() . " WHERE s.topic_id = ? AND s.status IN ('nuevas','destacadas','archived')$ml
                                             ORDER BY s.sent_date DESC LIMIT ? OFFSET ?");
 $st->bindValue(1, $tid, PDO::PARAM_INT);
 $st->bindValue(2, (int)cfg('per_page', 20), PDO::PARAM_INT);

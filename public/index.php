@@ -11,10 +11,11 @@ if (user() && (user()['landing'] ?? '') !== '' && empty($_GET) && !preg_match('~
 // Dos portadas, Medios y Substacks: /?portada=medios | /?portada=substacks. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o Substacks.
 $p = portada_actual();
 $page = page_num();
-$cnt = $pdo->prepare("SELECT COUNT(*) FROM stories WHERE status='destacadas' AND portada = ?");
+$ml = stories_mylang_sql();   // «solo en mi idioma»: fuera los envios en otro idioma (migra-092)
+$cnt = $pdo->prepare("SELECT COUNT(*) FROM stories s WHERE s.status='destacadas' AND s.portada = ?$ml");
 $cnt->execute([$p]);
 $total = (int)$cnt->fetchColumn();
-$st = $pdo->prepare(story_query_base() . " WHERE s.status='destacadas' AND s.portada = ? ORDER BY s.published_date DESC LIMIT ? OFFSET ?");
+$st = $pdo->prepare(story_query_base() . " WHERE s.status='destacadas' AND s.portada = ?$ml ORDER BY s.published_date DESC LIMIT ? OFFSET ?");
 $st->bindValue(1, $p);
 $st->bindValue(2, (int)cfg('per_page', 20), PDO::PARAM_INT);
 $st->bindValue(3, page_offset($page), PDO::PARAM_INT);
