@@ -57,7 +57,7 @@ if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width
 if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h(t('en el radar, hacia %s', t(DDD_PORTADAS[portada_de($pdo, $s)]))) . "</div>";
 echo "</div></article>";
 
-echo "<div class=\"stats\" id=\"comentarios\"><span><b>" . count($all) . "</b> " . t('comentarios') . "</span>";
+echo "<div class=\"stats\" id=\"comentarios\"><span class=\"cmt\" title=\"" . count($all) . " " . t('comentarios') . "\">" . icon('reply') . "<b>" . count($all) . "</b></span>";   // icono + cifra, como en el feed: la palabra partia la barra en dos lineas
 if ($s['status'] === 'destacadas') echo "<span>" . h(queda($s['published_date'])) . "</span>";
 if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
 echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>" . fav_link($s) . share_link($s) . "</div>";
