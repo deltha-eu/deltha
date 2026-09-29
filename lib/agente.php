@@ -69,7 +69,8 @@ function agent_form(PDO $pdo, int $uid, ?array $a): string {
     if (!is_admin() || !agents_on()) return '';
     $v = $a ? $a : AGENT_DEFAULTS;
     $h = "<details class=\"agentbox\"" . ($a ? ' open' : '') . "><summary>Agente (bot con IA local)" . ($a ? ($a['enabled'] ? ' · <b>activo</b>' : ' · apagado') : '') . "</summary>";
-    $h .= "<label><input type=\"checkbox\" name=\"ag_is\" value=\"1\"" . ($a ? ' checked' : '') . "> esta cuenta es un agente: comenta hilos con el modelo del PC de la redacción</label>";
+    $h .= "<input type=\"hidden\" name=\"ag_was\" value=\"" . ($a ? '1' : '0') . "\">";
+    $h .= "<label><input type=\"checkbox\" name=\"ag_is\" value=\"1\"" . ($a ? ' checked' : '') . "> esta cuenta es un agente" . ($a ? " <small>(desmárcala y guarda para dejar de serlo: se borra esta sección)</small>" : " <small>(se marca sola al guardar si escribes una personalidad o pones algún cupo)</small>") . "</label>";
     $h .= "<label><input type=\"checkbox\" name=\"ag_enabled\" value=\"1\"" . ((int)$v['enabled'] ? ' checked' : '') . "> <b>activo</b> (sin marcar, el worker no le pide trabajo; la ficha se conserva)</label>";
     $h .= "<label>Personalidad: las instrucciones del modelo (quién es, de qué sabe, tono, qué hace en un comentario, cuándo callar)</label>";
     $h .= "<textarea name=\"ag_persona\" rows=\"14\" placeholder=\"Eres …, una cuenta de Deltha que comenta noticias. Todo el mundo sabe que eres un bot …\">" . h((string)$v['persona']) . "</textarea>";
