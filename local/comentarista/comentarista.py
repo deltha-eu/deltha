@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """
-Agente comentarista de Deltha — worker con IA local.
+Agentes comentaristas de Deltha — worker con IA local.
 
 Corre en el PC de la redacción, junto a llama-server (el mismo del moderador). Pide hilos candidatos a Deltha
-(/api/agente.php), baja el artículo, se lo pasa al modelo con la personalidad de personalidad.md y, si el modelo
-decide comentar, publica el comentario a nombre de la cuenta bot. El servidor nunca llama a este PC.
+(/api/agente.php) para cada agente activo (las cuentas marcadas como agente en su ficha, con su personalidad y sus
+parámetros), baja el artículo, se lo pasa al modelo con esa personalidad y, si el modelo decide comentar, publica el
+comentario a nombre de esa cuenta. El servidor nunca llama a este PC. Un solo worker sirve a todos los agentes.
 
 Uso:
     python comentarista.py                      bucle normal (Ctrl+C para parar)
     python comentarista.py --una-vez            una sola pasada y sale
-    python comentarista.py --prueba URL         baja ese artículo, genera el comentario y lo enseña; no publica nada
+    python comentarista.py --prueba URL         baja ese artículo, genera el comentario con personalidad.md y lo enseña; no publica
+    python comentarista.py --prueba URL --agente NICK   idem con la personalidad de ese agente (la de su ficha en Deltha)
     python comentarista.py --prueba-hilos       pide los candidatos a Deltha y genera comentarios sin publicar (ni marcar)
     python comentarista.py --seco               bucle normal pero sin publicar: enseña lo que haría (marca los hilos como vistos)
 
 Solo biblioteca estándar: vale el python del .venv de Bonsai-demo o cualquier Python 3.9+.
-Configuración en comentarista.ini (copiar de comentarista.ini.example). Personalidad en personalidad.md.
+Configuración en comentarista.ini (copiar de comentarista.ini.example). La personalidad de cada agente está en su ficha
+en Deltha; personalidad.md es el ejemplo y lo que se usa si la ficha la deja vacía.
 """
 import argparse
 import configparser
@@ -97,11 +100,11 @@ class Deltha:
     def lease(self, n):
         return http_json(f"{self.base}?act=lease&n={n}", cabeceras=self.cab)
 
-    def comentar(self, story_id, texto, parent, modelo, motivo):
-        return http_json(f"{self.base}?act=comment", {"story_id": story_id, "content": texto, "parent": parent or 0, "model": modelo, "note": motivo}, self.cab)
+    def comentar(self, agente, story_id, texto, parent, modelo, motivo):
+        return http_json(f"{self.base}?act=comment", {"agent": agente, "story_id": story_id, "content": texto, "parent": parent or 0, "model": modelo, "note": motivo}, self.cab)
 
-    def pasar(self, story_id, motivo, modelo="", fallo=False):
-        return http_json(f"{self.base}?act=skip", {"story_id": story_id, "note": str(motivo)[:300], "model": modelo, "fail": fallo}, self.cab)
+    def pasar(self, agente, story_id, motivo, modelo="", fallo=False):
+        return http_json(f"{self.base}?act=skip", {"agent": agente, "story_id": story_id, "note": str(motivo)[:300], "model": modelo, "fail": fallo}, self.cab)
 
 
 # ---------------------------------------------------------------- artículo → texto
@@ -226,25 +229,30 @@ def interpretar(salida: str) -> dict:
             "responde_a": int(v.get("responde_a") or 0)}
 
 
-def personalidad(cfg):
+def personalidad(cfg, agentes=None, nick=""):
+    """La personalidad del agente `nick` según Deltha (lista `agentes` del lease); si está vacía, la de personalidad.md."""
+    for a in agentes or []:
+        if a.get("user", "").lower() == nick.lower() and a.get("persona", "").strip():
+            return a["persona"]
     p = AQUI / cfg["worker"]["personalidad"]
     if not p.exists():
-        sys.exit(f"Falta {p} (la personalidad del agente).")
+        sys.exit(f"Falta {p} (la personalidad de ejemplo) y el agente {nick!r} no tiene personalidad en su ficha.")
     return p.read_text(encoding="utf-8")
 
 
 # ---------------------------------------------------------------- bucle
-def tratar(deltha, modelo, cfg, hilo, publicar=True, anotar=True):
-    etiqueta = f"hilo #{hilo['story_id']} «{hilo['title'][:60]}»"
+def tratar(deltha, modelo, cfg, hilo, agentes, publicar=True, anotar=True):
+    nick = hilo.get("agent", "")
+    etiqueta = f"{nick} · hilo #{hilo['story_id']} «{hilo['title'][:60]}»"
     articulo = bajar_articulo(hilo.get("url"), int(cfg["modelo"]["max_articulo"])) if hilo.get("kind") != "article" else hilo.get("lead", "")
     log.info("%s: artículo %s", etiqueta, f"{len(articulo)} caracteres" if articulo else "no disponible")
     try:
-        v = modelo.comentar(personalidad(cfg), hilo, articulo)
+        v = modelo.comentar(personalidad(cfg, agentes, nick), hilo, articulo)
     except Exception as e:
         log.error("%s: fallo del modelo: %s", etiqueta, e)
         if anotar:
             try:
-                deltha.pasar(hilo["story_id"], f"fallo del modelo: {e}", modelo.nombre, fallo=True)
+                deltha.pasar(nick, hilo["story_id"], f"fallo del modelo: {e}", modelo.nombre, fallo=True)
             except Exception as e2:
                 log.error("%s: no pude anotar el fallo: %s", etiqueta, e2)
         return None
@@ -253,31 +261,32 @@ def tratar(deltha, modelo, cfg, hilo, publicar=True, anotar=True):
     if not v["comenta"]:
         log.info("%s → paso (%ss): %s", etiqueta, v["_segundos"], v["motivo"])
         if anotar:
-            deltha.pasar(hilo["story_id"], v["motivo"], modelo.nombre)
+            deltha.pasar(nick, hilo["story_id"], v["motivo"], modelo.nombre)
         return v
     log.info("%s → comentario (%ss)%s: %s\n    %s", etiqueta, v["_segundos"], f" en respuesta a [{parent}]" if parent else "", v["motivo"], v["comentario"])
     if publicar:
         try:
-            r = deltha.comentar(hilo["story_id"], v["comentario"], parent, modelo.nombre, v["motivo"])
+            r = deltha.comentar(nick, hilo["story_id"], v["comentario"], parent, modelo.nombre, v["motivo"])
             log.info("%s: publicado como comentario #%s (quedan %s hoy)", etiqueta, r.get("comment_id"), r.get("left"))
         except Exception as e:
             log.error("%s: Deltha no aceptó el comentario: %s", etiqueta, e)
     elif anotar:
-        deltha.pasar(hilo["story_id"], "modo seco: " + v["motivo"], modelo.nombre)
+        deltha.pasar(nick, hilo["story_id"], "modo seco: " + v["motivo"], modelo.nombre)
     return v
 
 
 def pasada(deltha, modelo, cfg, publicar=True, anotar=True):
     r = deltha.lease(int(cfg["worker"]["lote"]))
-    if not r.get("enabled", False):
-        log.info("el agente está apagado en Deltha (%s)", r.get("why", "agent_enabled = 0"))
+    agentes = r.get("agents", [])
+    if not agentes:
+        log.info("ningún agente activo en Deltha (%s)", r.get("why", ""))
         return 0
-    if r.get("left", 0) <= 0:
-        log.info("tope diario alcanzado; hasta mañana")
+    if not r.get("items"):
+        log.info("nada que hacer: %s", ", ".join(f"{a['user']} ({a['left']} hoy)" for a in agentes))
         return 0
-    for hilo in r.get("items", []):
-        tratar(deltha, modelo, cfg, hilo, publicar, anotar)
-    return len(r.get("items", []))
+    for hilo in r["items"]:
+        tratar(deltha, modelo, cfg, hilo, agentes, publicar, anotar)
+    return len(r["items"])
 
 
 def bucle(cfg, una_vez=False, publicar=True):
@@ -313,14 +322,19 @@ def bucle(cfg, una_vez=False, publicar=True):
             time.sleep(espera_error)
 
 
-def prueba_url(cfg, url):
+def prueba_url(cfg, url, nick=""):
     modelo = Modelo(cfg)
     if not modelo.listo():
         sys.exit(f"llama-server no responde en {modelo.base}")
+    agentes = []
+    if nick:   # la personalidad de la ficha de ese agente (tiene que estar activo)
+        agentes = Deltha(cfg).lease(1).get("agents", [])   # ojo: reserva hasta 1 hilo por agente durante agent_lease_sec
+        if not any(a["user"].lower() == nick.lower() for a in agentes):
+            sys.exit(f"el agente {nick!r} no está activo en Deltha (activos: {', '.join(a['user'] for a in agentes) or 'ninguno'})")
     articulo = bajar_articulo(url, int(cfg["modelo"]["max_articulo"]))
-    hilo = {"story_id": 0, "title": url, "url": url, "source": re.sub(r"^https?://(www\.)?", "", url).split("/")[0], "lead": "", "topic": "", "author": "", "comments": []}
-    print(f"Artículo: {len(articulo)} caracteres\n")
-    v = modelo.comentar(personalidad(cfg), hilo, articulo)
+    hilo = {"story_id": 0, "agent": nick, "title": url, "url": url, "source": re.sub(r"^https?://(www\.)?", "", url).split("/")[0], "lead": "", "topic": "", "author": "", "comments": []}
+    print(f"Artículo: {len(articulo)} caracteres · personalidad: {'ficha de ' + nick if nick else cfg['worker']['personalidad']}\n")
+    v = modelo.comentar(personalidad(cfg, agentes, nick), hilo, articulo)
     print(json.dumps(v, ensure_ascii=False, indent=2))
 
 
@@ -330,6 +344,7 @@ def main():
     ap.add_argument("--una-vez", action="store_true")
     ap.add_argument("--seco", action="store_true", help="no publica: enseña lo que haría (marca los hilos como vistos)")
     ap.add_argument("--prueba", metavar="URL")
+    ap.add_argument("--agente", metavar="NICK", default="", help="con --prueba: usar la personalidad de ese agente (su ficha en Deltha)")
     ap.add_argument("--prueba-hilos", action="store_true", help="candidatos reales, comentarios generados, nada publicado ni marcado")
     a = ap.parse_args()
 
@@ -342,18 +357,18 @@ def main():
     cfg = cargar_config(Path(a.config))
 
     if a.prueba:
-        prueba_url(cfg, a.prueba)
+        prueba_url(cfg, a.prueba, a.agente)
     elif a.prueba_hilos:
         deltha, modelo = Deltha(cfg), Modelo(cfg)
         if not modelo.listo():
             sys.exit(f"llama-server no responde en {modelo.base}")
         r = deltha.lease(int(cfg["worker"]["lote"]))
-        print(f"enabled={r.get('enabled')} left={r.get('left')} candidatos={len(r.get('items', []))}")
+        print("agentes: " + (", ".join(f"{a['user']} ({a['left']} hoy)" for a in r.get("agents", [])) or "ninguno activo") + f" · candidatos: {len(r.get('items', []))}")
         for hilo in r.get("items", []):
-            tratar(deltha, modelo, cfg, hilo, publicar=False, anotar=False)
+            tratar(deltha, modelo, cfg, hilo, r.get("agents", []), publicar=False, anotar=False)
         print("\nOjo: estos hilos quedan reservados agent_lease_sec segundos; después vuelven a ofrecerse.")
     else:
-        log.info("agente comentarista de Deltha: %s ← %s%s", cfg["deltha"]["url"], cfg["modelo"]["url"], " (modo seco)" if a.seco else "")
+        log.info("agentes comentaristas de Deltha: %s ← %s%s", cfg["deltha"]["url"], cfg["modelo"]["url"], " (modo seco)" if a.seco else "")
         bucle(cfg, a.una_vez, publicar=not a.seco)
 
 

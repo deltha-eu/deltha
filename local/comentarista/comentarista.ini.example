@@ -21,5 +21,5 @@ max_articulo = 9000
 lote         = 3
 espera       = 600
 espera_error = 120
-; fichero con las instrucciones del modelo (se relee en cada pasada: se puede retocar sin parar el worker)
+; personalidad de ejemplo: se usa si la ficha del agente en Deltha deja la suya vacia (se relee en cada pasada)
 personalidad = personalidad.md

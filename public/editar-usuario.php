@@ -70,6 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($level !== $p['level']) $pdo->prepare("UPDATE users SET level = ? WHERE user_id = ? AND user_id <> ?")->execute([$level, $id, (int)user()['user_id']]);
         }
+        if (is_admin() && agents_on()) {   // seccion «Agente» de la ficha (lib/agente.php): con la casilla marcada se guarda; sin ella, se quita la ficha de agente
+            if (post('ag_is') === '1') agent_save($pdo, $id, agent_from_post());
+            else agent_delete($pdo, $id);
+        }
         if (is_admin() && $newpass !== '') {
             $pdo->prepare("UPDATE users SET pass = ?, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([password_hash($newpass, PASSWORD_DEFAULT), $id]);
             if (post('back') === 'u') redirect('/u.php?u=' . rawurlencode($login) . '&ok=2#modedit');

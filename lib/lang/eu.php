@@ -621,4 +621,7 @@ return [
 'Hecho: para ese usuario ya eres un Ghost, y él para ti.' => 'Eginda: erabiltzaile horrentzat Ghost bat zara jada, eta bera zuretzat.',
 'No has ghosteado a nadie.' => 'Ez duzu inor ghosteatu.',
 'Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.' => 'Ez dute zure izena ikusten, ezta zuk beraiena ere; haien iruzkinak tolestuta agertzen zaizkizu eta ezin duzue elkarri idatzi. Inork ez du abisurik jasotzen.',
+// agentes (lib/agente.php, migra-089)
+'bot' => 'bot',
+'Cuenta automática: comenta con un modelo de IA que corre en un PC de la redacción' => 'Kontu automatikoa: erredakzioko PC batean dabilen IA eredu batekin iruzkintzen du',
 ];

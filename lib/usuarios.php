@@ -6,8 +6,10 @@
  *   Solo admin: correo, correo validado, nueva contraseña, nivel (normal / moderador / admin; el suyo propio no se toca) y aura
  *   a mano, con motivo; el cambio de aura queda en aura_log con reason «admin: motivo» y ref_id = el admin, y no cuenta para el
  *   tope diario de aura_add(). Modera también, sin nivel, quien tenga aura >= config.mod_aura (user_is_mod(), lib/app.php).
+ *   Solo admin, ademas: la seccion «Agente» (lib/agente.php): marcar la cuenta como bot comentarista, su personalidad y parametros.
  */
 declare(strict_types=1);
+require_once __DIR__ . '/agente.php';   // seccion «Agente» de la ficha (agent_form) y guardado (agent_from_post)
 
 /** ¿Puede el usuario actual editar la ficha de $p? El admin, a cualquiera (también a sí mismo); un moderador, a quien no modere (por nivel ni por aura) y no sea él. */
 function modedit_puede(array $p): bool {
@@ -48,6 +50,7 @@ function modedit_form(PDO $pdo, array $p, string $back = ''): string {
     } else {
         $h .= "<label>Correo</label><p class=\"meta\" style=\"padding:0\">" . h($p['email']) . ((int)$p['verified'] ? '' : ' (sin validar)') . " <small>(solo lo cambia el admin)</small></p>";
     }
+    if (is_admin()) $h .= agent_form($pdo, $id, agent_get($pdo, $id));   // «esta cuenta es un agente» + personalidad y parametros (lib/agente.php)
     $h .= "<button>Guardar</button></form>";
     if (is_admin()) {
         // historial reciente de aura (sin el decaimiento diario, que es igual para todos)
