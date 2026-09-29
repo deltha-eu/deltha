@@ -167,8 +167,8 @@ function side_comunidades(PDO $pdo): void {
 }
 
 /** Fuentes externas en la columna derecha: un modulo por grupo («Ultimo en agregadores», «Ultimo en medios», «Ultimo en substacks»)
- *  con las cinco ultimas noticias de portada de TODO el catalogo del grupo (no solo las elegidas por el usuario), cada una con su
- *  fuente delante; el enlace lleva a la pagina de la fuente en Deltha y «todos», al catalogo del grupo. */
+ *  con las cinco ultimas noticias de portada de TODO el catalogo del grupo (no solo las elegidas por el usuario), sin repetir
+ *  fuente (la mas reciente de cada una), cada una con su fuente delante; el enlace lleva a la pagina de la fuente en Deltha y «todos», al catalogo del grupo. */
 function side_agregadores(PDO $pdo): void { side_ultimo($pdo, 'agregador', t('Último en agregadores')); }
 function side_medios(PDO $pdo): void { side_ultimo($pdo, 'medio', t('Último en medios')); }
 function side_substacks(PDO $pdo): void { side_ultimo($pdo, 'newsletter', t('Último en substacks')); }
@@ -177,10 +177,17 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
     if (!fuentes_on() || ($kind === 'agregador' && !agregadores_on())) return;
     foreach ([$kind => $title] as $kind => $title) {
         $mylang = fuentes_solo_mi_idioma();   // «solo fuentes en mi idioma»: fuera las de otro idioma (las de idioma desconocido se ven)
-        $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug FROM source_items i JOIN sources s ON s.source_id = i.source_id
-                              WHERE s.kind = ? AND s.status = 'ok' AND i.phase = 'portada'" . ($mylang ? " AND s.lang IN ('', ?)" : "") . " ORDER BY i.pub_date DESC LIMIT 5");
+        // cinco noticias de cinco fuentes distintas: la mas reciente de cada una (si un medio publica seis seguidas no acapara el modulo)
+        $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug, s.source_id FROM source_items i JOIN sources s ON s.source_id = i.source_id
+                              WHERE s.kind = ? AND s.status = 'ok' AND i.phase = 'portada'" . ($mylang ? " AND s.lang IN ('', ?)" : "") . " ORDER BY i.pub_date DESC LIMIT 80");
         $st->execute($mylang ? [$kind, lang()] : [$kind]);
-        if (!($rows = $st->fetchAll())) continue;
+        $rows = []; $vistas = [];
+        foreach ($st->fetchAll() as $r) {
+            if (isset($vistas[(int)$r['source_id']])) continue;
+            $vistas[(int)$r['source_id']] = true; $rows[] = $r;
+            if (count($rows) === 5) break;
+        }
+        if (!$rows) continue;
         // «todos» lleva al catalogo filtrado por este grupo (/medios.php?k=medio|newsletter)
         echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
         // el enlace lleva a la pagina del medio en Deltha (/fuente.php?f=slug), no a la noticia
