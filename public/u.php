@@ -11,7 +11,7 @@ if (!$p) { http_response_code(404); page_header(t('No existe')); echo "<p class=
 $own = user() && (int)user()['user_id'] === (int)$p['user_id'];
 
 page_header($p['login']);
-echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . h($p['login']) . (agent_is($pdo, (int)$p['user_id']) ? " <span class=\"botchip\" title=\"" . h(t('Cuenta automática: comenta con un modelo de IA que corre en un PC de la redacción')) . "\">" . t('bot') . "</span>" : "") . "</h1>";
+echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . h($p['login']) . ((string)cfg('agent_badge', '0') === '1' && agent_is($pdo, (int)$p['user_id']) ? " <span class=\"botchip\" title=\"" . h(t('Cuenta automática: comenta con un modelo de IA que corre en un PC de la redacción')) . "\">" . t('bot') . "</span>" : "") . "</h1>";
 if ($p['bio']) echo "<p class=\"bio\">" . h($p['bio']) . "</p>";
 $nPub = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE user_id = {$p['user_id']} AND status NOT IN ('rejected','discard') AND (revealed = 1 OR sent_date <= NOW() - INTERVAL " . (int)cfg('ghost_minutes', 30) . " MINUTE)")->fetchColumn();
 echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$p['aura'], 1, ',', '') . " · " . t('desde') . " " . date('M Y', strtotime($p['created'])) . ($p['last_seen'] ? " · " . h(t('último acceso %s', hace($p['last_seen']))) : '') . " · " . t('%d envíos revelados', $nPub);

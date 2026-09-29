@@ -40,4 +40,5 @@ CREATE TABLE agent_seen (
 DELETE FROM config WHERE ckey IN ('agent_enabled','agent_user','agent_per_day','agent_min_age_min','agent_max_age_h','agent_max_comments','agent_replies','agent_skip_users','agent_topics');
 INSERT IGNORE INTO config (ckey, cvalue, descr) VALUES
 ('agent_lease_sec',   '600', 'Agentes: segundos que un hilo queda reservado para el worker antes de volver a ofrecerse'),
-('agent_worker_seen', '',    'Agentes: ultima conexion del worker del PC');
+('agent_worker_seen', '',    'Agentes: ultima conexion del worker del PC'),
+('agent_badge',       '0',   'Agentes: 1 = etiqueta «bot» junto al nick en el perfil publico; 0 = nada lo distingue de una cuenta normal');

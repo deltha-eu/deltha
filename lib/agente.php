@@ -12,7 +12,8 @@
  */
 declare(strict_types=1);
 
-const AGENT_DEFAULTS = ['enabled' => 0, 'persona' => '', 'per_day' => 4, 'min_age_min' => 20, 'max_age_h' => 24, 'max_comments' => 6, 'replies' => 0, 'skip_users' => '', 'topics' => ''];
+const AGENT_DEFAULTS = ['enabled' => 0, 'persona' => '', 'per_day' => 4, 'min_age_min' => 20, 'max_age_h' => 24, 'max_comments' => 6, 'replies' => 0, 'skip_users' => '', 'topics' => '',
+                        'submits_per_day' => 0, 'submit_kinds' => 'ambos', 'submit_topics' => ''];
 
 /** Tabla creada (migra-089). */
 function agents_on(): bool {
@@ -39,11 +40,13 @@ function agents_active(PDO $pdo): array {
 
 /** Guarda la ficha de agente desde el formulario (solo admin). $f = campos ya saneados (ver agent_from_post). */
 function agent_save(PDO $pdo, int $uid, array $f): void {
-    $pdo->prepare("INSERT INTO agents (user_id, enabled, persona, per_day, min_age_min, max_age_h, max_comments, replies, skip_users, topics)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)
+    $pdo->prepare("INSERT INTO agents (user_id, enabled, persona, per_day, min_age_min, max_age_h, max_comments, replies, skip_users, topics, submits_per_day, submit_kinds, submit_topics)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), persona = VALUES(persona), per_day = VALUES(per_day), min_age_min = VALUES(min_age_min),
-                   max_age_h = VALUES(max_age_h), max_comments = VALUES(max_comments), replies = VALUES(replies), skip_users = VALUES(skip_users), topics = VALUES(topics)")
-        ->execute([$uid, $f['enabled'], $f['persona'], $f['per_day'], $f['min_age_min'], $f['max_age_h'], $f['max_comments'], $f['replies'], $f['skip_users'], $f['topics']]);
+                   max_age_h = VALUES(max_age_h), max_comments = VALUES(max_comments), replies = VALUES(replies), skip_users = VALUES(skip_users), topics = VALUES(topics),
+                   submits_per_day = VALUES(submits_per_day), submit_kinds = VALUES(submit_kinds), submit_topics = VALUES(submit_topics)")
+        ->execute([$uid, $f['enabled'], $f['persona'], $f['per_day'], $f['min_age_min'], $f['max_age_h'], $f['max_comments'], $f['replies'], $f['skip_users'], $f['topics'],
+                   $f['submits_per_day'], $f['submit_kinds'], $f['submit_topics']]);
 }
 function agent_delete(PDO $pdo, int $uid): void {
     $pdo->prepare("DELETE FROM agents WHERE user_id = ?")->execute([$uid]);
@@ -53,9 +56,12 @@ function agent_from_post(): array {
     $n = fn(string $k, int $d, int $min, int $max) => max($min, min($max, (int)(trim((string)($_POST[$k] ?? '')) === '' ? $d : (int)$_POST[$k])));
     $skip = implode(',', array_values(array_unique(array_filter(array_map('trim', explode(',', (string)($_POST['ag_skip_users'] ?? ''))), fn($x) => preg_match('/^[a-z0-9_\-]{3,32}$/i', $x)))));
     $topics = implode(',', array_values(array_unique(array_filter(array_map('intval', (array)($_POST['ag_topics'] ?? [])), fn($x) => $x > 0))));
+    $stopics = implode(',', array_values(array_unique(array_filter(array_map('intval', (array)($_POST['ag_submit_topics'] ?? [])), fn($x) => $x > 0))));
     return ['enabled' => post('ag_enabled') === '1' ? 1 : 0, 'persona' => mb_substr(post('ag_persona'), 0, 20000),
             'per_day' => $n('ag_per_day', 4, 0, 200), 'min_age_min' => $n('ag_min_age_min', 20, 0, 10000), 'max_age_h' => $n('ag_max_age_h', 24, 1, 720),
-            'max_comments' => $n('ag_max_comments', 6, 0, 250), 'replies' => post('ag_replies') === '1' ? 1 : 0, 'skip_users' => mb_substr($skip, 0, 300), 'topics' => mb_substr($topics, 0, 120)];
+            'max_comments' => $n('ag_max_comments', 6, 0, 250), 'replies' => post('ag_replies') === '1' ? 1 : 0, 'skip_users' => mb_substr($skip, 0, 300), 'topics' => mb_substr($topics, 0, 120),
+            'submits_per_day' => $n('ag_submits_per_day', 0, 0, 48), 'submit_kinds' => in_array(post('ag_submit_kinds'), ['medio', 'newsletter', 'ambos'], true) ? post('ag_submit_kinds') : 'ambos',
+            'submit_topics' => mb_substr($stopics, 0, 120)];
 }
 
 /** Seccion «Agente» de la ficha de moderacion (solo admin). $a = agent_get() o null. */
@@ -79,11 +85,23 @@ function agent_form(PDO $pdo, int $uid, ?array $a): string {
     foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t)
         $h .= "<label><input type=\"checkbox\" name=\"ag_topics[]\" value=\"{$t['topic_id']}\"" . (in_array((int)$t['topic_id'], $sel, true) ? ' checked' : '') . "> " . h($t['name']) . "</label>";
     $h .= "</div>";
+    // envios al radar: noticias de las fuentes tal cual (sin modelo; las hace el cron del servidor, agentes_tick)
+    $h .= "<label style=\"margin-top:10px\"><b>Envíos al radar</b>: noticias de los medios y substacks, tal cual llegan por RSS (titular, entradilla y foto de la fuente)</label>";
+    $h .= "<div class=\"agrow\"><label>Envíos al día <input type=\"number\" name=\"ag_submits_per_day\" min=\"0\" max=\"48\" value=\"" . (int)$v['submits_per_day'] . "\"></label>";
+    $h .= "<label>De <select name=\"ag_submit_kinds\">";
+    foreach (['ambos' => 'medios y substacks', 'medio' => 'solo medios', 'newsletter' => 'solo substacks'] as $k => $lbl) $h .= "<option value=\"$k\"" . ((string)$v['submit_kinds'] === $k ? ' selected' : '') . ">$lbl</option>";
+    $h .= "</select></label></div>";
+    $ssel = array_map('intval', array_filter(explode(',', (string)$v['submit_topics'])));
+    $h .= "<label>Temas de las fuentes de las que envía (el tema lo tiene cada fuente; ninguno marcado = todas)</label><div class=\"agtopics\">";
+    foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t)
+        $h .= "<label><input type=\"checkbox\" name=\"ag_submit_topics[]\" value=\"{$t['topic_id']}\"" . (in_array((int)$t['topic_id'], $ssel, true) ? ' checked' : '') . "> " . h($t['name']) . "</label>";
+    $h .= "</div><small class=\"hint\">0 = no envía. Con N al día, uno cada 24/N horas más o menos (con azar), entre las noticias de las últimas " . (int)cfg('agent_submit_max_age_h', 24) . " h que nadie haya enviado. El agente no comenta lo que envía él.</small>";
     if ($a) {
+        try { $q = $pdo->prepare("SELECT COUNT(*) FROM agent_sent WHERE user_id = ? AND created >= CURDATE()"); $q->execute([$uid]); $envHoy = (int)$q->fetchColumn(); } catch (Throwable $e) { $envHoy = 0; }
         $st = $pdo->prepare("SELECT result, COUNT(*) n FROM agent_seen WHERE user_id = ? GROUP BY result"); $st->execute([$uid]);
         $c = array_column($st->fetchAll(), 'n', 'result');
         $hoy = agent_today($pdo, $uid);
-        $h .= "<p class=\"meta\" style=\"padding:0\">Hoy " . $hoy . " de " . (int)$v['per_day'] . " · vistos: " . (int)($c['comment'] ?? 0) . " comentados, " . (int)($c['skip'] ?? 0) . " pasados, " . (int)($c['fail'] ?? 0) . " fallos"
+        $h .= "<p class=\"meta\" style=\"padding:0\">Hoy " . $hoy . " de " . (int)$v['per_day'] . " comentarios · " . $envHoy . " de " . (int)$v['submits_per_day'] . " envíos" . (!empty($a['next_submit']) && (int)$v['submits_per_day'] > 0 ? " (próximo hacia las " . date('H:i', strtotime((string)$a['next_submit'])) . ")" : "") . " · vistos: " . (int)($c['comment'] ?? 0) . " comentados, " . (int)($c['skip'] ?? 0) . " pasados, " . (int)($c['fail'] ?? 0) . " fallos"
             . " · worker visto " . h((string)cfg('agent_worker_seen', '') ?: 'nunca') . " · <a href=\"/admin.php?t=agentes&amp;a=$uid\">registro</a></p>";
     }
     $h .= "</details>";
@@ -180,4 +198,72 @@ function agent_skip(PDO $pdo, int $uid, int $story_id, string $result, string $n
     $pdo->prepare("INSERT INTO agent_seen (user_id, story_id, result, note, model, leased_until) VALUES (?, ?, ?, ?, ?, NULL)
                    ON DUPLICATE KEY UPDATE result = VALUES(result), note = VALUES(note), model = VALUES(model), leased_until = NULL")
         ->execute([$uid, $story_id, $result, mb_substr($note, 0, 300), mb_substr($model, 0, 80) ?: null]);
+}
+
+/* ---- envios al radar (cron, sin modelo) ------------------------------------------------------------------------
+ * Cada minuto desde scripts/promocionar.php. Para cada agente activo con submits_per_day > 0 al que le toque (next_submit
+ * NULL o pasado), elige al azar una noticia reciente de sus fuentes (source_items de medios/substacks activos, del tipo y los
+ * temas de su ficha, publicada en las ultimas agent_submit_max_age_h horas, no enviada ya por nadie ni en agent_sent) y la
+ * envia tal cual como haria una persona desde /fuente.php: titular y entradilla del feed, foto del feed copiada (como en
+ * enviar.php ?x=), tema el de la fuente (o el primero de su ficha), al radar, alias Ghost, cola de moderacion. Sin aura.
+ * Luego fija next_submit = ahora + 24/N horas por un factor al azar entre 0,7 y 1,4, para que no sea un reloj. */
+function agentes_tick(PDO $pdo): array {
+    $log = [];
+    if (!agents_on()) return $log;
+    try { $ags = $pdo->query("SELECT a.*, u.login, u.aura FROM agents a JOIN users u ON u.user_id = a.user_id WHERE a.enabled = 1 AND u.verified = 1 AND a.submits_per_day > 0 AND (a.next_submit IS NULL OR a.next_submit <= NOW())")->fetchAll(); }
+    catch (Throwable $e) { return ["agentes: " . $e->getMessage()]; }   // sin migra-091
+    foreach ($ags as $a) {
+        try { $log[] = agent_submit_one($pdo, $a); }
+        catch (Throwable $e) { $log[] = "agente {$a['login']}: ERROR " . $e->getMessage(); }
+    }
+    return $log;
+}
+
+/** Envia una noticia por el agente (o no, si no hay candidatas) y programa la siguiente. Devuelve la linea de log. */
+function agent_submit_one(PDO $pdo, array $a): string {
+    $uid = (int)$a['user_id'];
+    $gapMin = max(30, (int)round(1440 / max(1, (int)$a['submits_per_day'])));
+    $next = (int)round($gapMin * (0.7 + random_int(0, 700) / 1000));   // 0,7–1,4 veces el intervalo
+    $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL ? MINUTE WHERE user_id = ?")->execute([$next, $uid]);
+    $maxAge = max(1, (int)cfg('agent_submit_max_age_h', 24));
+    $kinds = $a['submit_kinds'] === 'ambos' ? ['medio', 'newsletter'] : [$a['submit_kinds']];
+    $topics = array_filter(array_map('intval', agent_list((string)$a['submit_topics'])));
+    $w = ["s.status = 'ok'", "s.kind IN (" . implode(',', array_fill(0, count($kinds), '?')) . ")", "i.pub_date >= NOW() - INTERVAL $maxAge HOUR",
+          "i.url LIKE 'http%'", "NOT EXISTS (SELECT 1 FROM agent_sent x WHERE x.item_id = i.item_id)",
+          "NOT EXISTS (SELECT 1 FROM stories st WHERE st.url = i.url AND st.status NOT IN ('rejected','discard') AND st.sent_date > NOW() - INTERVAL 30 DAY)"];
+    $p = $kinds;
+    if ($topics) $w[] = "s.topic_id IN (" . implode(',', $topics) . ")";
+    $st = $pdo->prepare("SELECT i.item_id, i.title, i.url, i.content, i.image, i.pub_date, s.name AS src_name, s.topic_id
+                           FROM source_items i JOIN sources s ON s.source_id = i.source_id
+                          WHERE " . implode(' AND ', $w) . " ORDER BY i.pub_date DESC LIMIT 12");
+    $st->execute($p);
+    $cands = $st->fetchAll();
+    // sin medios bloqueados (lib/bloqueos.php) y con titular
+    $cands = array_values(array_filter($cands, fn($i) => mb_strlen((string)$i['title']) >= 8 && !(function_exists('source_blocked') && source_blocked($pdo, (string)$i['url']))));
+    if (!$cands) {   // nada que enviar ahora: volver a mirar en media hora, no dentro de todo el intervalo
+        $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL 30 MINUTE WHERE user_id = ?")->execute([$uid]);
+        return "agente {$a['login']}: sin noticias nuevas que enviar (vuelve a mirar en 30 min)";
+    }
+    $i = $cands[random_int(0, count($cands) - 1)];
+    $topic = (int)($i['topic_id'] ?: ($topics[0] ?? 0));
+    if ($topic <= 0) $topic = (int)$pdo->query("SELECT topic_id FROM topics ORDER BY topic_id LIMIT 1")->fetchColumn();
+    // foto: copia de la del feed (la del item se borra cuando caduca), como hace enviar.php con ?x=
+    $image = null;
+    if (!empty($i['image']) && preg_match('/^[a-f0-9]{24}\.jpg$/', (string)$i['image']) && is_file(DDD_MEDIA_DIR . '/' . $i['image'])) {
+        $copia = bin2hex(random_bytes(12)) . '.jpg';
+        if (@copy(DDD_MEDIA_DIR . '/' . $i['image'], DDD_MEDIA_DIR . '/' . $copia)) $image = $copia;
+    }
+    require_once __DIR__ . '/moderacion.php';
+    $title = mb_substr(trim((string)$i['title']), 0, 200);
+    $lead = mb_substr(trim((string)$i['content']), 0, 2000) ?: null;
+    $pdo->beginTransaction();
+    $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, 'nuevas')")
+        ->execute([$uid, $topic, $title, $i['url'], source_of((string)$i['url']), $lead, $image]);
+    $sid = (int)$pdo->lastInsertId();
+    $pdo->prepare("UPDATE stories SET portada = ?, author_alias = ? WHERE story_id = ?")
+        ->execute([portada_de($pdo, ['url' => $i['url'], 'source' => source_of((string)$i['url'])]), alias_user($pdo, $sid, $uid), $sid]);
+    mod_enqueue($pdo, 'story', $sid);
+    $pdo->prepare("INSERT INTO agent_sent (item_id, user_id, story_id) VALUES (?, ?, ?)")->execute([(int)$i['item_id'], $uid, $sid]);
+    $pdo->commit();
+    return "agente {$a['login']}: enviada #$sid «" . mb_strimwidth($title, 0, 60, '…') . "» ({$i['src_name']}; próximo en $next min)";
 }
