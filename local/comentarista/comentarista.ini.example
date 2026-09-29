@@ -1,0 +1,25 @@
+; Copiar a comentarista.ini (no va al repositorio: lleva el token).
+[deltha]
+url   = https://deltha.eu
+; el [agent] token de /etc/deltha/config.ini del droplet (si no existe esa seccion, vale el [mod] token)
+token =
+
+[modelo]
+; el mismo llama-server del moderador (local/moderador/arrancar-modelo.ps1); con slots = 1 se turnan
+url         = http://127.0.0.1:8080
+api_key     =
+timeout     = 240
+nombre      = Ternary-Bonsai-2-27B-PQ2_0
+; comentar no es clasificar: algo de temperatura para que no suene a formulario
+temperatura = 0.7
+max_tokens  = 400
+; caracteres del articulo que se le pasan al modelo (unos 2.500 tokens; el contexto del moderador es de 8192)
+max_articulo = 9000
+
+[worker]
+; hilos que pide en cada pasada, segundos entre pasadas (el tope diario esta en Deltha: agent_per_day) y tras un error
+lote         = 3
+espera       = 600
+espera_error = 120
+; fichero con las instrucciones del modelo (se relee en cada pasada: se puede retocar sin parar el worker)
+personalidad = personalidad.md
