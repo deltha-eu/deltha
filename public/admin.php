@@ -353,7 +353,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -462,6 +462,35 @@ if ($tab === 'usuarios') {
     }
     echo "</table><p><button class=\"btn\">Guardar config</button></p></form>";
 
+} elseif ($tab === 'agentes') {
+    // agentes comentaristas (lib/agente.php): quien es agente, si esta activo, cuanto lleva hoy; ?a=uid abre su registro (agent_seen)
+    require_once __DIR__ . '/../lib/agente.php';
+    echo "<h3>Agentes comentaristas</h3>";
+    if (!agents_on()) echo "<p class=\"meta\">Falta la migración 089 (tabla <code>agents</code>).</p>";
+    else {
+        $ags = $pdo->query("SELECT a.*, u.login, u.verified FROM agents a JOIN users u ON u.user_id = a.user_id ORDER BY a.enabled DESC, u.login")->fetchAll();
+        echo "<p class=\"meta\">Una cuenta se convierte en agente desde su ficha (<b>editar</b> en Usuarios o «editar perfil» en su perfil público): allí van la personalidad y los parámetros, y la casilla <b>activo</b>. El worker del PC de la redacción (<code>local/comentarista/</code>) sirve a todos los activos; última conexión: <b>" . h((string)cfg('agent_worker_seen', '') ?: 'nunca') . "</b>.</p>";
+        if (!$ags) echo "<p class=\"end\">No hay ninguna cuenta marcada como agente.</p>";
+        else {
+            echo "<table class=\"users\"><tr><th>agente</th><th>estado</th><th>hoy</th><th>vistos</th><th>parámetros</th><th></th></tr>";
+            foreach ($ags as $a) {
+                $st = $pdo->prepare("SELECT result, COUNT(*) n FROM agent_seen WHERE user_id = ? GROUP BY result"); $st->execute([$a['user_id']]);
+                $c = array_column($st->fetchAll(), 'n', 'result');
+                $params = (int)$a['per_day'] . "/día · " . (int)$a['min_age_min'] . " min–" . (int)$a['max_age_h'] . " h · ≤ " . (int)$a['max_comments'] . " com." . ((int)$a['replies'] ? " · responde" : "") . ($a['topics'] !== '' ? " · temas " . h($a['topics']) : "") . ($a['skip_users'] !== '' ? " · evita " . h($a['skip_users']) : "");
+                echo "<tr><td class=\"who\"><a href=\"/u.php?u=" . rawurlencode($a['login']) . "\">" . h($a['login']) . "</a><small>" . (trim((string)$a['persona']) === '' ? 'sin personalidad (usa personalidad.md)' : mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['persona']), 0, 90, '…')) . "</small></td>"
+                   . "<td>" . ((int)$a['enabled'] ? '<b>activo</b>' : 'apagado') . ((int)$a['verified'] ? '' : ' (cuenta sin validar)') . "</td><td class=\"num\">" . agent_today($pdo, (int)$a['user_id']) . "</td>"
+                   . "<td class=\"num\">" . (int)($c['comment'] ?? 0) . " com. · " . (int)($c['skip'] ?? 0) . " pasa · " . (int)($c['fail'] ?? 0) . " fallo</td><td><small>$params</small></td>"
+                   . "<td class=\"acc\"><a class=\"btn sm\" href=\"/editar-usuario.php?id={$a['user_id']}\">ficha</a> <a class=\"btn sm\" href=\"/admin.php?t=agentes&amp;a={$a['user_id']}\">registro</a></td></tr>";
+            }
+            echo "</table>";
+        }
+        if (($aid = (int)($_GET['a'] ?? 0)) > 0) {
+            $st = $pdo->prepare("SELECT v.*, s.title FROM agent_seen v JOIN stories s ON s.story_id = v.story_id WHERE v.user_id = ? ORDER BY v.created DESC LIMIT 100"); $st->execute([$aid]);
+            echo "<h3>Registro</h3><table class=\"users\"><tr><th>cuándo</th><th>hilo</th><th>resultado</th><th>nota del modelo</th></tr>";
+            foreach ($st->fetchAll() as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\"><a href=\"/hilo.php?id={$r['story_id']}" . ($r['comment_id'] ? "#c{$r['comment_id']}" : "") . "\">" . h(mb_strimwidth((string)$r['title'], 0, 70, '…')) . "</a></td><td>" . h($r['result']) . "</td><td><small>" . h((string)$r['note']) . ($r['model'] ? " · " . h($r['model']) : "") . "</small></td></tr>";
+            echo "</table>";
+        }
+    }
 } elseif ($tab === 'analitica') {
     require __DIR__ . '/../lib/analitica-admin.php';
     ana_admin($pdo);

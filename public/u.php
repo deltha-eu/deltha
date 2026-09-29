@@ -7,18 +7,16 @@ $login = trim((string)($_GET['u'] ?? ''));
 $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, created, last_seen FROM users WHERE login = ?");
 $st->execute([$login]);
 $p = $st->fetch();
-if ($p && ghost_veiled($p['user_id'])) $p = null;   // ghosteo (en cualquier sentido): el perfil no esta disponible para el otro (lib/ghost.php)
 if (!$p) { http_response_code(404); page_header(t('No existe')); echo "<p class=\"end\">" . t('No existe ese usuario.') . "</p>"; page_footer(); exit; }
 $own = user() && (int)user()['user_id'] === (int)$p['user_id'];
 
 page_header($p['login']);
-echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . h($p['login']) . "</h1>";
+echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . h($p['login']) . (agent_is($pdo, (int)$p['user_id']) ? " <span class=\"botchip\" title=\"" . h(t('Cuenta automática: comenta con un modelo de IA que corre en un PC de la redacción')) . "\">" . t('bot') . "</span>" : "") . "</h1>";
 if ($p['bio']) echo "<p class=\"bio\">" . h($p['bio']) . "</p>";
 $nPub = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE user_id = {$p['user_id']} AND status NOT IN ('rejected','discard') AND (revealed = 1 OR sent_date <= NOW() - INTERVAL " . (int)cfg('ghost_minutes', 30) . " MINUTE)")->fetchColumn();
 echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$p['aura'], 1, ',', '') . " · " . t('desde') . " " . date('M Y', strtotime($p['created'])) . ($p['last_seen'] ? " · " . h(t('último acceso %s', hace($p['last_seen']))) : '') . " · " . t('%d envíos revelados', $nPub);
 if ($own) echo " · " . t('<a href="/perfil.php">editar</a>') . "";
 if (!$own && user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes.php?u=" . rawurlencode($p['login']) . "\">" . t('enviar mensaje') . "</a>";
-if (($gl = ghost_link((int)$p['user_id'], $p['login'], true, '')) !== '') echo " · " . $gl;   // «ghostear» (lib/ghost.php)
 $canMod = modedit_puede($p);   // moderadores: usuarios normales; admin: cualquiera (lib/usuarios.php)
 if ($canMod) echo " · <a href=\"#modedit\" onclick=\"document.getElementById('modedit').open = true\">" . t('editar perfil') . "</a>";
 echo "</p></div></div>";

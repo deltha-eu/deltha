@@ -4,10 +4,11 @@
  * de la redaccion. El servidor nunca llama al PC. Autenticacion: cabecera X-Deltha-Token = [agent] token de
  * /etc/deltha/config.ini (si no existe, vale [mod] token; vacio = API cerrada). lib/agente.php
  *
- *   GET  ?act=ping                 -> {"ok":true,"enabled":bool,"user":"nick","left":n}
- *   GET  ?act=lease&n=3            -> {"enabled":bool,"left":n,"items":[{story_id,kind,title,url,source,lead,topic,author,sent,status,comments:[{id,parent,who,text}]}]}
- *   POST ?act=comment {"story_id","content","parent"?,"model","note"}  -> {"ok":true,"comment_id":N,"left":n}
- *   POST ?act=skip    {"story_id","note","model"?,"fail"?:true}         -> {"ok":true}
+ *   GET  ?act=ping                 -> {"ok":true,"agents":[{"user":"nick","enabled":bool,"left":n}]}
+ *   GET  ?act=lease&n=3            -> {"agents":[{user,persona,left}], "items":[{agent,story_id,kind,title,url,source,lead,topic,author,sent,status,comments:[{id,parent,who,text}]}]}
+ *                                     (n hilos como mucho por agente activo con cupo; cada item lleva el nick del agente al que va)
+ *   POST ?act=comment {"agent","story_id","content","parent"?,"model","note"}  -> {"ok":true,"comment_id":N,"left":n}
+ *   POST ?act=skip    {"agent","story_id","note","model"?,"fail"?:true}         -> {"ok":true}
  */
 define('DDD_PUBLIC', 1);   // sin la puerta de la clave de acceso: la protege el token
 require __DIR__ . '/../../lib/app.php';
@@ -36,31 +37,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = json_decode((string)file_get_contents('php://input'), true);
     if (!is_array($body)) api_out(['error' => 'JSON no valido'], 400);
 }
-$bot = agent_on() ? agent_user($pdo) : null;
-$left = $bot ? agent_quota_left($pdo, (int)$bot['user_id']) : 0;
+$agents = agents_on() ? agents_active($pdo) : [];
+$byLogin = [];
+foreach ($agents as $a) $byLogin[strtolower($a['login'])] = $a;
+$resumen = array_map(fn($a) => ['user' => $a['login'], 'enabled' => true, 'left' => agent_quota_left($pdo, $a)], $agents);
 
-if ($act === 'ping') api_out(['ok' => true, 'enabled' => (bool)$bot, 'user' => $bot['login'] ?? '', 'left' => $left]);
+if ($act === 'ping') api_out(['ok' => true, 'agents' => $resumen, 'why' => $agents ? '' : (agents_on() ? 'ningun agente activo' : 'falta la migracion 089')]);
 
 if ($act === 'lease') {
-    if (!$bot) api_out(['enabled' => false, 'left' => 0, 'items' => [], 'why' => agent_on() ? 'la cuenta agent_user no existe' : 'agent_enabled = 0 o agent_user vacio']);
-    if ($left <= 0) api_out(['enabled' => true, 'left' => 0, 'items' => []]);
     $n = max(1, min(10, (int)($_GET['n'] ?? 3)));
-    api_out(['enabled' => true, 'left' => $left, 'items' => agent_lease($pdo, $bot, min($n, $left))]);
+    $items = []; $out = [];
+    foreach ($agents as $a) {
+        $left = agent_quota_left($pdo, $a);
+        $out[] = ['user' => $a['login'], 'persona' => (string)$a['persona'], 'left' => $left];
+        if ($left > 0) $items = array_merge($items, agent_lease($pdo, $a, min($n, $left)));
+    }
+    api_out(['agents' => $out, 'items' => $items, 'why' => $agents ? '' : (agents_on() ? 'ningun agente activo' : 'falta la migracion 089')]);
 }
 
-if ($act === 'comment') {
-    if (!$bot) api_out(['error' => 'agente apagado'], 409);
-    [$cid, $err] = agent_comment($pdo, $bot, (int)($body['story_id'] ?? 0), (string)($body['content'] ?? ''), (int)($body['parent'] ?? 0) ?: null,
-                                 (string)($body['model'] ?? ''), (string)($body['note'] ?? ''));
-    if ($err) api_out(['error' => $err], 409);
-    api_out(['ok' => true, 'comment_id' => $cid, 'left' => agent_quota_left($pdo, (int)$bot['user_id'])]);
-}
-
-if ($act === 'skip') {
+if ($act === 'comment' || $act === 'skip') {
+    $a = $byLogin[strtolower((string)($body['agent'] ?? ''))] ?? null;
+    if (!$a) api_out(['error' => 'agente desconocido o apagado: ' . mb_substr((string)($body['agent'] ?? ''), 0, 32)], 409);
     $sid = (int)($body['story_id'] ?? 0);
     if ($sid <= 0) api_out(['error' => 'falta story_id'], 400);
-    agent_skip($pdo, $sid, !empty($body['fail']) ? 'fail' : 'skip', (string)($body['note'] ?? ''), (string)($body['model'] ?? ''));
-    api_out(['ok' => true]);
+    if ($act === 'skip') {
+        agent_skip($pdo, (int)$a['user_id'], $sid, !empty($body['fail']) ? 'fail' : 'skip', (string)($body['note'] ?? ''), (string)($body['model'] ?? ''));
+        api_out(['ok' => true]);
+    }
+    [$cid, $err] = agent_comment($pdo, $a, $sid, (string)($body['content'] ?? ''), (int)($body['parent'] ?? 0) ?: null, (string)($body['model'] ?? ''), (string)($body['note'] ?? ''));
+    if ($err) api_out(['error' => $err], 409);
+    api_out(['ok' => true, 'comment_id' => $cid, 'left' => agent_quota_left($pdo, $a)]);
 }
 
 api_out(['error' => 'accion desconocida'], 400);

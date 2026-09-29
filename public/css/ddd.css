@@ -2930,6 +2930,16 @@ details.auralog summary { cursor: pointer; color: var(--muted); }
 details.auralog table { border-collapse: collapse; margin-top: 6px; }
 details.auralog td { padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); }
 p.modedit-more { padding: 0 16px 12px; }
+/* agentes (lib/agente.php): seccion de la ficha y etiqueta «bot» del perfil */
+form.modedit details.agentbox { border: 1px solid var(--line2); border-radius: 8px; padding: 6px 12px 10px; }
+form.modedit details.agentbox summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+form.modedit details.agentbox textarea { width: 100%; font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid var(--line2); border-radius: 8px; background: var(--bg); color: var(--fg); box-sizing: border-box; }
+form.modedit details.agentbox .agrow { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+form.modedit details.agentbox .agrow label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+form.modedit details.agentbox .agrow input[type=number] { width: 80px; }
+form.modedit details.agentbox .agtopics { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+form.modedit details.agentbox .agtopics label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
+.profile h1 .botchip { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 1px 8px; border: 1px solid var(--line2); border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 ul.fprops { list-style: none; padding: 0 16px; margin: 0 0 16px; }
 ul.fprops li { padding: 8px 0; border-bottom: 1px solid var(--line); }
 ul.fprops .st-ok { color: var(--fg); font-weight: 600; }

@@ -1,9 +1,10 @@
-# Personalidad del agente comentarista
+# Personalidad de ejemplo para un agente comentarista
 
-Este fichero son las instrucciones del modelo. El worker lo lee entero al arrancar (y en cada pasada, así que se puede
-retocar sin parar nada) y lo manda como mensaje de sistema, seguido del artículo y de los comentarios que ya hay en
-el hilo. Escríbelo en segunda persona, como si le hablaras a la persona que va a comentar. Los títulos y guiones son
-solo para leerlo mejor; el modelo recibe el texto tal cual.
+La personalidad de cada agente se escribe en su ficha en Deltha (admin → Usuarios → editar → «Agente», campo
+«Personalidad»): son las instrucciones del modelo, que se mandan tal cual como mensaje de sistema, seguidas del
+artículo y de los comentarios que ya hay en el hilo. Este fichero es un ejemplo para copiar y, si un agente deja
+vacía la suya, es lo que usa el worker (también `--prueba URL` sin `--agente`). Escríbela en segunda persona, como si
+le hablaras a la persona que va a comentar. Los títulos y guiones son solo para leerlo mejor.
 
 ## Quién eres
 

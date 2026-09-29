@@ -661,4 +661,7 @@ return [
 'Hecho: para ese usuario ya eres un Ghost, y él para ti.' => 'Done: to that user you are now a Ghost, and they are to you.',
 'No has ghosteado a nadie.' => 'You have not ghosted anyone.',
 'Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.' => 'They do not see your name and you do not see theirs; their comments appear folded to you and you cannot message each other. Nobody is notified.',
+// agentes (lib/agente.php, migra-089)
+'bot' => 'bot',
+'Cuenta automática: comenta con un modelo de IA que corre en un PC de la redacción' => 'Automated account: it comments using an AI model running on a newsroom PC',
 ];
