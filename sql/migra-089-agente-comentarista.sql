@@ -39,4 +39,5 @@ CREATE TABLE IF NOT EXISTS agent_seen (
 
 INSERT IGNORE INTO config (ckey, cvalue, descr) VALUES
 ('agent_lease_sec',   '600', 'Agentes: segundos que un hilo queda reservado para el worker antes de volver a ofrecerse'),
-('agent_worker_seen', '',    'Agentes: ultima conexion del worker del PC');
+('agent_worker_seen', '',    'Agentes: ultima conexion del worker del PC'),
+('agent_badge',       '0',   'Agentes: 1 = etiqueta «bot» junto al nick en el perfil publico; 0 = nada lo distingue de una cuenta normal');

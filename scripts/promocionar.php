@@ -19,5 +19,7 @@ if ($force || ciclo_toca(time())) {
 }
 try { foreach (fuentes_tick($pdo, $force) as $l) echo date('c') . "  $l\n"; }
 catch (Throwable $e) { echo date('c') . "  fuentes: ERROR " . $e->getMessage() . "\n"; }
+require __DIR__ . '/../lib/agente.php';   // agentes: envios al radar de noticias de las fuentes (sin modelo)
+try { foreach (agentes_tick($pdo) as $l) echo date('c') . "  $l\n"; } catch (Throwable $e) { echo date('c') . "  agentes: ERROR " . $e->getMessage() . "\n"; }
 foreach (ana_tick($pdo) as $l) echo date('c') . "  $l\n";   // analitica: cierra los dias completos en ana_daily y poda hits
 flock($lock, LOCK_UN);
