@@ -33,12 +33,17 @@ avisos_preload_nicks($pdo, array_column($all, 'content'));   // @nick → enlace
 // Dos vistas de los comentarios (subpestañas «Por hilos» / «Por tiempo» bajo la barra del envio):
 //  · por hilos (la de siempre, ahora en arbol): cada conversacion = comentario raiz + sus respuestas, cada respuesta justo debajo
 //    del comentario al que contesta y sangrada segun su nivel (tope 6), sin rayas;
-//  · por tiempo (?v=tiempo): todos seguidos del mas antiguo al mas nuevo, con «en respuesta a X» en los que contestan a otro.
-$porTiempo = (string)($_GET['v'] ?? '') === 'tiempo';
-$GLOBALS['DDD_HILO_V'] = $porTiempo ? 'tiempo' : '';
+//  · por tiempo (?v=tiempo): todos seguidos del mas antiguo al mas nuevo, con «en respuesta a X» en los que contestan a otro;
+//  · por votos (?v=votos): todos seguidos, el mejor valorado primero (soles menos lagrimas); a igualdad, el mas antiguo primero.
+$vista = (string)($_GET['v'] ?? '');
+if (!in_array($vista, ['tiempo', 'votos'], true)) $vista = '';
+$porTiempo = $vista !== '';   // lista plana (por tiempo o por votos), no arbol
+$GLOBALS['DDD_HILO_V'] = $vista;
 $threads = []; $nivel = [];
 if ($porTiempo) {
-    foreach ($all as $c) $threads[] = [$c];
+    $plana = $all;   // ya viene por fecha
+    if ($vista === 'votos') usort($plana, fn($a, $b) => (((int)$b['likes'] - (int)$b['dislikes']) <=> ((int)$a['likes'] - (int)$a['dislikes'])) ?: (strcmp((string)$a['created'], (string)$b['created']) ?: ((int)$a['comment_id'] <=> (int)$b['comment_id'])));
+    foreach ($plana as $c) $threads[] = [$c];
 } else {
     $grupos = [];
     foreach ($all as $c) { $k = $c['root_id'] ?: $c['comment_id']; $grupos[$k][] = $c; }
@@ -67,7 +72,7 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por su autor; lo demas, noindex
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
 page_header(t('Hilo'), $tab, og_tags($s['title'], $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo.php?id=' . $id)), $s['title']);
-echo "<div class=\"hilo " . ($porTiempo ? 'tiempo' : 'arbol') . "\">";
+echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
 $dest = $s['url'] ?: null;
@@ -135,7 +140,7 @@ if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice
 
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
 
-if (count($all) > 1) echo "<nav class=\"sub cvista\"><a href=\"/hilo.php?id=$id#comentarios\"" . ($porTiempo ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo.php?id=$id&amp;v=tiempo#comentarios\"" . ($porTiempo ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a></nav>";
+if (count($all) > 1) echo "<nav class=\"sub cvista\"><a href=\"/hilo.php?id=$id#comentarios\"" . ($porTiempo ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo.php?id=$id&amp;v=tiempo#comentarios\"" . ($vista === 'tiempo' ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a><a href=\"/hilo.php?id=$id&amp;v=votos#comentarios\"" . ($vista === 'votos' ? ' class="on"' : '') . ">" . t('Por votos') . "</a></nav>";
 foreach ($threads as $list) {
     echo "<div class=\"thread\">";
     $n = count($list);
