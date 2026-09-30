@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('quitar') === '1' && $avatar) { @unlink(DDD_MEDIA_DIR . '/avatars/' . $avatar); $avatar = null; }
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ?, src_mylang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $mylang, $u['user_id']]);
+        try { $pdo->prepare("UPDATE users SET twofa = ? WHERE user_id = ?")->execute([post('twofa') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-095 sin aplicar */ }
         redirect('/perfil.php?ok=1');
     }
 }
@@ -65,6 +66,17 @@ echo "<label>" . t('Idioma') . "</label><select name=\"ulang\"><option value=\"\
 foreach (DDD_LANGS as $k => $v) echo "<option value=\"$k\"" . (($u['lang'] ?? '') === $k ? ' selected' : '') . ">$v</option>";
 echo "</select>";
 if (fuentes_on()) echo "<label id=\"fuentes-idioma\"><input type=\"checkbox\" name=\"src_mylang\" value=\"1\"" . (!empty($u['src_mylang']) ? ' checked' : '') . "> " . t('Mostrar fuentes y envíos solo en mi idioma') . "</label><small class=\"hint\">" . t('Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.') . "</small>";
+// verificacion en dos pasos por correo (lib/twofa.php): casilla; a los administradores se les puede exigir desde admin -> Config (twofa_admin)
+try {
+    require_once __DIR__ . '/../lib/twofa.php';
+    $r2 = twofa_row($pdo, (int)$u['user_id']);
+    if ($r2 && twofa_email_ok((string)$r2['email'])) {
+        $forz = $r2['level'] === 'admin' && twofa_admin_forced();
+        echo "<label id=\"dos-pasos\">" . t('Verificación en dos pasos') . "</label><label><input type=\"checkbox\" name=\"twofa\" value=\"1\"" . ((int)$r2['twofa'] === 1 || $forz ? ' checked' : '') . ($forz ? ' disabled' : '') . "> " . t('Pedir un código por correo al entrar') . "</label>"
+           . ($forz ? "<input type=\"hidden\" name=\"twofa\" value=\"1\">" : '')
+           . "<small class=\"hint\">" . t('Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.', h(twofa_mask((string)$r2['email']))) . ($forz ? ' ' . t('Es obligatoria para administradores.') : '') . "</small>";
+    }
+} catch (Throwable $e) { /* migra-095 sin aplicar: sin casilla */ }
 echo "" . t('<label>Tema</label>') . "<select name=\"theme\">";
 foreach (['auto' => t('Automático (como el sistema)'), 'light' => t('Claro'), 'dark' => t('Oscuro')] as $k => $v) {
     echo "<option value=\"$k\"" . (($u['theme'] ?? 'auto') === $k ? ' selected' : '') . ">" . h($v) . "</option>";

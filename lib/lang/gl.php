@@ -642,4 +642,38 @@ return [
 'Por tiempo' => 'Por tempo',
 'Por hilos' => 'Por fíos',
 'Por votos' => 'Por votos',
+// verificacion en dos pasos por correo (migra-095)
+'Hola.
+
+Tu código para entrar en %s es:
+
+%s
+
+Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con nadie.
+
+— %s
+' => 'Ola.
+
+O teu código para entrar en %s é:
+
+%s
+
+Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ninguén.
+
+— %s
+',
+'Tu código para entrar en %s: %s' => 'O teu código para entrar en %s: %s',
+'El código ha caducado o se han agotado los intentos: <a href="/login2.php?otro=1">pide otro</a>.' => 'O código caducou ou esgotáronse os intentos: <a href="/login2.php?otro=1">pide outro</a>.',
+'Código incorrecto.' => 'Código incorrecto.',
+'Te hemos enviado otro código.' => 'Enviámosche outro código.',
+'Acabamos de enviarte uno: espera un minuto antes de pedir otro.' => 'Acabamos de enviarche un: agarda un minuto antes de pedir outro.',
+'No hemos podido enviarte el código. Inténtalo de nuevo más tarde.' => 'Non puidemos enviarche o código. Téntao de novo máis tarde.',
+'Código de acceso' => 'Código de acceso',
+'Te hemos enviado un código de seis cifras a %s. Caduca en %d minutos; mira también en la carpeta de correo no deseado.' => 'Enviámosche un código de seis cifras a %s. Caduca en %d minutos; mira tamén no cartafol de correo non desexado.',
+'<label>Código</label>' => '<label>Código</label>',
+'Enviar otro código' => 'Enviar outro código',
+'Verificación en dos pasos' => 'Verificación en dous pasos',
+'Pedir un código por correo al entrar' => 'Pedir un código por correo ao entrar',
+'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Ademais do contrasinal, ao entrar enviarémosche un código de seis cifras a %s. Só se pide ao iniciar sesión, non en cada visita.',
+'Es obligatoria para administradores.' => 'É obrigatoria para administradores.',
 ];

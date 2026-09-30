@@ -642,4 +642,38 @@ return [
 'Por tiempo' => 'Per temps',
 'Por hilos' => 'Per fils',
 'Por votos' => 'Per vots',
+// verificacion en dos pasos por correo (migra-095)
+'Hola.
+
+Tu código para entrar en %s es:
+
+%s
+
+Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con nadie.
+
+— %s
+' => 'Hola.
+
+El teu codi per entrar a %s és:
+
+%s
+
+Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb ningú.
+
+— %s
+',
+'Tu código para entrar en %s: %s' => 'El teu codi per entrar a %s: %s',
+'El código ha caducado o se han agotado los intentos: <a href="/login2.php?otro=1">pide otro</a>.' => 'El codi ha caducat o s\'han esgotat els intents: <a href="/login2.php?otro=1">demana\'n un altre</a>.',
+'Código incorrecto.' => 'Codi incorrecte.',
+'Te hemos enviado otro código.' => 'T\'hem enviat un altre codi.',
+'Acabamos de enviarte uno: espera un minuto antes de pedir otro.' => 'Te n\'acabem d\'enviar un: espera un minut abans de demanar-ne un altre.',
+'No hemos podido enviarte el código. Inténtalo de nuevo más tarde.' => 'No t\'hem pogut enviar el codi. Torna-ho a provar més tard.',
+'Código de acceso' => 'Codi d\'accés',
+'Te hemos enviado un código de seis cifras a %s. Caduca en %d minutos; mira también en la carpeta de correo no deseado.' => 'T\'hem enviat un codi de sis xifres a %s. Caduca en %d minuts; mira també a la carpeta de correu brossa.',
+'<label>Código</label>' => '<label>Codi</label>',
+'Enviar otro código' => 'Enviar un altre codi',
+'Verificación en dos pasos' => 'Verificació en dos passos',
+'Pedir un código por correo al entrar' => 'Demanar un codi per correu en entrar',
+'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'A més de la contrasenya, en entrar t\'enviarem un codi de sis xifres a %s. Només es demana en iniciar sessió, no a cada visita.',
+'Es obligatoria para administradores.' => 'És obligatòria per als administradors.',
 ];

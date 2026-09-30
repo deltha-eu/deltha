@@ -1,6 +1,7 @@
 <?php
 define('DDD_PUBLIC', true);   // los registrados entran sin clave
 require __DIR__ . '/../lib/app.php';
+require __DIR__ . '/../lib/twofa.php';
 if (user()) redirect('/');
 $err = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -10,15 +11,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($row && password_verify(post('pass'), $row['pass']) && (int)$row['verified'] === 0) {
         $err = t('Esa cuenta aún no está activada: abre el enlace del correo que te enviamos o <a href="/reenviar.php">pide otro</a>.');
     } elseif ($row && password_verify(post('pass'), $row['pass'])) {
-        session_arranca();   // dura session_days (lib/app.php), no hasta cerrar el navegador
-        session_regenerate_id(true);
-        $_SESSION['uid'] = (int)$row['user_id'];
-        if (($_COOKIE['ddd_srclang'] ?? '') === '1') {   // marco «Solo fuentes en mi idioma» antes de entrar: pasa a su cuenta
-            $pdo->prepare("UPDATE users SET src_mylang = 1 WHERE user_id = ?")->execute([(int)$row['user_id']]);
-            pref_cookie('ddd_srclang', '');
+        $uid = (int)$row['user_id'];
+        $r2 = twofa_row($pdo, $uid);
+        if (!twofa_needed($r2)) login_finish($pdo, $uid);
+        // verificacion en dos pasos: la contraseña es buena, pero no entra hasta escribir el codigo que va a su correo (/login2.php)
+        $env = twofa_send($pdo, $uid, (string)$r2['email']);
+        if ($env === 'ok' || $env === 'wait') {
+            session_arranca();
+            session_regenerate_id(true);
+            $_SESSION['pending_uid'] = $uid; $_SESSION['pending_at'] = time();
+            redirect('/login2.php');
         }
-        $lu = $pdo->prepare("SELECT landing FROM users WHERE user_id = ?"); $lu->execute([(int)$row['user_id']]);
-        redirect(landing_url($pdo, ['landing' => (string)$lu->fetchColumn()]));
+        $err = t('No hemos podido enviarte el código. Inténtalo de nuevo más tarde.');
     }
     if (!$err) $err = t('Usuario o contraseña incorrectos.');
 }
