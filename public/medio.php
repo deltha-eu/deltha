@@ -8,11 +8,12 @@ $m = strtolower(trim((string)($_GET['m'] ?? '')));
 if ($m === '' || !preg_match('~^[a-z0-9.-]{3,100}$~', $m)) { http_response_code(404); page_header(t('Medio')); echo "<p class=\"end\">" . t('Ese medio no existe.') . "</p>"; page_footer(); exit; }
 
 $page = page_num();
-$cnt = $pdo->prepare("SELECT COUNT(*) FROM stories WHERE source = ? AND status IN ('nuevas','destacadas','archived')");
+$ml = stories_mylang_sql();
+$cnt = $pdo->prepare("SELECT COUNT(*) FROM stories s WHERE s.source = ? AND s.status IN ('nuevas','destacadas','archived')$ml");
 $cnt->execute([$m]);
 $total = (int)$cnt->fetchColumn();
 if ($total === 0) { http_response_code(404); page_header(t('Medio')); echo "<p class=\"end\">" . t('No hay nada enviado de <b>%s</b>.', h($m)) . "</p>"; page_footer(); exit; }
-$st = $pdo->prepare(story_query_base() . " WHERE s.source = ? AND s.status IN ('nuevas','destacadas','archived')
+$st = $pdo->prepare(story_query_base() . " WHERE s.source = ? AND s.status IN ('nuevas','destacadas','archived')$ml
                                             ORDER BY s.sent_date DESC LIMIT ? OFFSET ?");
 $st->bindValue(1, $m);
 $st->bindValue(2, (int)cfg('per_page', 20), PDO::PARAM_INT);

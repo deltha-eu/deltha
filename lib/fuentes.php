@@ -51,7 +51,7 @@ function fuentes_solo_mi_idioma(): bool { $u = user(); return $u ? !empty($u['sr
  *  y vuelve a la pagina. Se guarda con el boton «Guardar» de al lado (no se envia sola al marcarla). */
 function fuentes_casilla_idioma(): string {
     return "<form class=\"srclang\" method=\"get\" action=\"/cambiar-skin.php\" autocomplete=\"off\"><input type=\"hidden\" name=\"m\" value=\"0\"><label><input type=\"checkbox\" name=\"m\" value=\"1\""
-         . (fuentes_solo_mi_idioma() ? ' checked' : '') . "> " . t('Solo fuentes en mi idioma') . " <small>(" . h(DDD_LANGS[lang()] ?? lang()) . ")</small></label>"
+         . (fuentes_solo_mi_idioma() ? ' checked' : '') . "> " . t('Solo fuentes y envíos en mi idioma') . " <small>(" . h(DDD_LANGS[lang()] ?? lang()) . ")</small></label>"
          . " <button type=\"submit\">" . t('Guardar') . "</button></form>";
 }
 function fuente_en_mi_idioma(array $src): bool {

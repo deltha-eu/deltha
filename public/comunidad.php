@@ -27,10 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEdit) {
 }
 
 $page = page_num();
-$cnt = $pdo->prepare("SELECT COUNT(*) FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id WHERE sc.community_id = ? AND s.status IN " . DDD_COMM_PUBLIC);
+$ml = stories_mylang_sql();
+$cnt = $pdo->prepare("SELECT COUNT(*) FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id WHERE sc.community_id = ? AND s.status IN " . DDD_COMM_PUBLIC . $ml);
 $cnt->execute([$c['community_id']]);
 $total = (int)$cnt->fetchColumn();
-$st = $pdo->prepare(story_query_base("FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id") . " WHERE sc.community_id = ? AND s.status IN " . DDD_COMM_PUBLIC . " ORDER BY sc.created DESC, s.sent_date DESC LIMIT ? OFFSET ?");
+$st = $pdo->prepare(story_query_base("FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id") . " WHERE sc.community_id = ? AND s.status IN " . DDD_COMM_PUBLIC . $ml . " ORDER BY sc.created DESC, s.sent_date DESC LIMIT ? OFFSET ?");
 $st->bindValue(1, (int)$c['community_id'], PDO::PARAM_INT);
 $st->bindValue(2, (int)cfg('per_page', 20), PDO::PARAM_INT);
 $st->bindValue(3, page_offset($page), PDO::PARAM_INT);

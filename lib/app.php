@@ -769,6 +769,73 @@ function alias_user(PDO $pdo, int $story_id, int $user_id): string {
     return $alias;
 }
 
+/* ---- idioma de un texto (envios) ------------------------------------
+ * Deteccion barata por palabras frecuentes y distintivas de cada idioma de la interfaz: sirve para titular + entradilla.
+ * Devuelve el codigo (es, en, pt, ca, gl, eu, fr, de, it) o '' si no esta claro (texto corto o empate): '' = se ve para todos. */
+function lang_detect(string $text): string {
+    // [palabras casi exclusivas del idioma (pesan 3), palabras frecuentes que comparte con otros (pesan 1)]
+    static $W = [
+        'es' => [['y','el','los','las','del','es','para','por','como','pero','también','muy','sus','más','ya','entre','lo','su','este','esta','hay','con','una'], ['de','en','un','a','no','se','al','que','la']],
+        'en' => [['the','and','of','to','is','that','for','with','are','this','by','from','was','it','be','as','at','have','not','an','has','their','which'], ['a','in','on']],
+        'pt' => [['não','é','uma','um','você','também','já','são','pelo','pela','mais','ao','com','isso','muito','em','dos','das'], ['o','a','os','as','de','do','da','e','que','para','como','nas','nos']],
+        'ca' => [['els','les','amb','és','per','aquest','aquesta','també','molt','dels','més','però','són','ho','hi','i','seva','seu'], ['el','la','de','del','que','en','un','una','al','no','ha']],
+        'gl' => [['unha','non','máis','ao','cos','polo','pola','tamén','xa','moi','coa','cando','mentres','ata'], ['de','en','un','con','o','a','os','as','e','do','da','das','dos','que','para','nas','nos']],
+        'eu' => [['eta','da','du','ez','dira','ere','bere','dute','izan','zen','bat','hau','hori','egin','dago','ditu','edo','baina','zer','oso','dela','zuen','izango','arte'], []],
+        'fr' => [['les','des','est','pour','dans','qui','pas','sur','une','ce','et','du','au','plus','avec','par','sont','cette','à','elle','ne'], ['le','la','de','un','que','en','il','se','on']],
+        'de' => [['der','die','das','und','ist','nicht','mit','für','ein','eine','den','dem','von','zu','sich','auf','auch','wird','werden','sind','im','als','bei','nach','über','hat','einer','einem'], ['es','an']],
+        'it' => [['il','gli','della','nel','che','è','sono','anche','più','alla','dei','delle','essere','si','da','di','nella','sul'], ['la','le','un','una','con','del','per','in','al','lo','e','non']],
+    ];
+    $t = mb_strtolower($text);
+    preg_match_all('/\p{L}+/u', $t, $m);
+    $words = $m[0];
+    if (count($words) < 6) return '';
+    $cnt = array_count_values($words);
+    $score = [];
+    foreach ($W as $l => [$dist, $comun]) {
+        $n = 0;
+        foreach ($dist as $w) $n += 3 * ($cnt[$w] ?? 0);
+        foreach ($comun as $w) $n += $cnt[$w] ?? 0;
+        $score[$l] = $n;
+    }
+    arsort($score);
+    $best = array_key_first($score); $vals = array_values($score);
+    if ($vals[0] < 3 || $vals[0] <= $vals[1]) return '';   // poco claro o empate
+    return $best;
+}
+/** Idioma para un envio nuevo: el de la fuente del catalogo si el dominio esta (sources.lang), si no, detectado del texto. */
+function lang_for_story(PDO $pdo, ?string $url, string $title, ?string $content): string {
+    $host = source_of($url);
+    if ($host) {
+        try {
+            $st = $pdo->prepare("SELECT lang FROM sources WHERE lang <> '' AND SUBSTRING_INDEX(REPLACE(REPLACE(REPLACE(home, 'https://', ''), 'http://', ''), 'www.', ''), '/', 1) = ? LIMIT 1");
+            $st->execute([$host]);
+            if ($l = $st->fetchColumn()) return (string)$l;
+        } catch (Throwable $e) {}
+    }
+    return lang_detect($title . ' ' . (string)$content);
+}
+/** Trozo SQL para las listas de envios: con «solo en mi idioma» marcado, fuera los de otro idioma (los sin idioma se ven). */
+function stories_mylang_sql(string $alias = 's'): string {
+    if (!function_exists('fuentes_solo_mi_idioma')) require_once __DIR__ . '/fuentes.php';
+    if (!fuentes_solo_mi_idioma()) return '';
+    $l = preg_replace('/[^a-z]/', '', lang());
+    return " AND $alias.lang IN ('', '??', '$l')";
+}
+/** Cron: pone idioma a los envios que aun no lo tienen (los anteriores a migra-092), unos pocos por pasada. */
+function lang_tick(PDO $pdo): array {
+    try {
+        $rows = $pdo->query("SELECT story_id, url, title, content FROM stories WHERE lang = '' ORDER BY story_id DESC LIMIT 40")->fetchAll();
+    } catch (Throwable $e) { return []; }
+    if (!$rows) return [];
+    $n = 0; $up = $pdo->prepare("UPDATE stories SET lang = ? WHERE story_id = ?");
+    foreach ($rows as $r) {
+        $l = lang_for_story($pdo, $r['url'], (string)$r['title'], (string)$r['content']);
+        if ($l === '') $l = '??';   // no se sabe: se marca para no volver a intentarlo (se ve para todos igual que '')
+        $up->execute([$l, $r['story_id']]); $n++;
+    }
+    return ["idioma de envios: $n revisados"];
+}
+
 /* ---- aura -> halo --------------------------------------------------- */
 function halo_style(float $aura): string {
     $max = (float)cfg('aura_max', 50);

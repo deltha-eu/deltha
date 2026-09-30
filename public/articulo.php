@@ -38,9 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $u = user();
         $status = 'nuevas';   // posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
         $pdo->beginTransaction();
-        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status, indexable)
-                       VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)")
-            ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['content'], $image, $status, $f['indexable']]);
+        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status, indexable)
+                       VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?)")
+            ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], lang_detect($f['title'] . ' ' . $f['content']), $f['content'], $image, $status, $f['indexable']]);
         $sid = (int)$pdo->lastInsertId();
         $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
         $pdo->prepare("UPDATE stories SET author_alias = ? WHERE story_id = ?")->execute([$alias, $sid]);
