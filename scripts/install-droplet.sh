@@ -59,11 +59,12 @@ fi
 echo "== 5. Apache"
 a2enmod -q rewrite headers expires proxy_fcgi setenvif ssl
 a2enconf -q php8.3-fpm
-# Sesiones de 30 dias: el limpiador de sesiones de Debian/Ubuntu (cron de php-fpm) lee gc_maxlifetime del pool,
-# no de lo que ponga la web en tiempo de ejecucion; sin esta linea borraria la sesion a los 24 min de inactividad.
-POOL=/etc/php/8.3/fpm/pool.d/www.conf
-if [ -f "$POOL" ] && ! grep -q 'session.gc_maxlifetime' "$POOL"; then
-  printf '\n; Deltha: la sesion iniciada dura 30 dias (ver README, «Sesiones»)\nphp_admin_value[session.gc_maxlifetime] = 2592000\n' >> "$POOL"
+# Sesiones de 30 dias: el limpiador de sesiones de Debian/Ubuntu (/usr/lib/php/sessionclean) lee gc_maxlifetime de
+# php.ini + conf.d, no de lo que ponga la web en tiempo de ejecucion ni del pool de php-fpm; sin este fichero
+# borraria la sesion a los 24 min de inactividad.
+INI=/etc/php/8.3/fpm/conf.d/99-deltha-sesiones.ini
+if [ -d /etc/php/8.3/fpm/conf.d ] && [ ! -f "$INI" ]; then
+  printf '; Deltha: la sesion iniciada dura 30 dias (ver README, «Sesiones»)\nsession.gc_maxlifetime = 2592000\n' > "$INI"
   systemctl restart php8.3-fpm || true
 fi
 sed -e "s/deltha\.eu/$DOMAIN/g" "$DIR/apache.conf.example" > /etc/apache2/sites-available/deltha.conf
