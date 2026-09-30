@@ -30,16 +30,44 @@ $can_vote = $open && (bool)user();   // sol / lagrima: registrados, hilo abierto
 $all = []; $byId = [];
 foreach ($cs as $c) { $all[] = $c; $byId[$c['comment_id']] = $c; }
 avisos_preload_nicks($pdo, array_column($all, 'content'));   // @nick → enlace al perfil en comment_block()
-// conversaciones: raiz + sus respuestas, en orden cronologico
-$threads = [];
-foreach ($all as $c) { $k = $c['root_id'] ?: $c['comment_id']; $threads[$k][] = $c; }
+// Dos vistas de los comentarios (subpestañas «Por hilos» / «Por tiempo» bajo la barra del envio):
+//  · por hilos (la de siempre, ahora en arbol): cada conversacion = comentario raiz + sus respuestas, cada respuesta justo debajo
+//    del comentario al que contesta y sangrada segun su nivel (tope 6), sin rayas;
+//  · por tiempo (?v=tiempo): todos seguidos del mas antiguo al mas nuevo, con «en respuesta a X» en los que contestan a otro.
+$porTiempo = (string)($_GET['v'] ?? '') === 'tiempo';
+$GLOBALS['DDD_HILO_V'] = $porTiempo ? 'tiempo' : '';
+$threads = []; $nivel = [];
+if ($porTiempo) {
+    foreach ($all as $c) $threads[] = [$c];
+} else {
+    $grupos = [];
+    foreach ($all as $c) { $k = $c['root_id'] ?: $c['comment_id']; $grupos[$k][] = $c; }
+    foreach ($grupos as $k => $list) {
+        $enGrupo = array_column($list, null, 'comment_id');
+        $raiz = isset($enGrupo[$k]) ? (int)$k : (int)$list[0]['comment_id'];   // si la raiz ya no esta visible, abre el primero
+        $hijos = [];
+        foreach ($list as $c) {
+            $cid = (int)$c['comment_id'];
+            if ($cid === $raiz) continue;
+            $p = (int)$c['parent_id'];
+            $hijos[(isset($enGrupo[$p]) && $p !== $cid) ? $p : $raiz][] = $cid;   // padre no visible: cuelga de la raiz
+        }
+        $orden = []; $pila = [[$raiz, 0]];
+        while ($pila) {
+            [$cid, $lv] = array_pop($pila);
+            $orden[] = $enGrupo[$cid]; $nivel[$cid] = min(6, $lv);
+            foreach (array_reverse($hijos[$cid] ?? []) as $h) $pila[] = [$h, $lv + 1];
+        }
+        $threads[] = $orden;
+    }
+}
 $replyTo = (int)($_GET['r'] ?? 0);
 $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo] : null;
 
 robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por su autor; lo demas, noindex
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
 page_header(t('Hilo'), $tab, og_tags($s['title'], $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo.php?id=' . $id)), $s['title']);
-echo "<div class=\"hilo\">";
+echo "<div class=\"hilo " . ($porTiempo ? 'tiempo' : 'arbol') . "\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
 $dest = $s['url'] ?: null;
@@ -107,14 +135,17 @@ if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice
 
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
 
+if (count($all) > 1) echo "<nav class=\"sub cvista\"><a href=\"/hilo.php?id=$id#comentarios\"" . ($porTiempo ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo.php?id=$id&amp;v=tiempo#comentarios\"" . ($porTiempo ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a></nav>";
 foreach ($threads as $list) {
     echo "<div class=\"thread\">";
     $n = count($list);
     foreach ($list as $i => $c) {
         $isTarget = $replyTo && (int)$replyTo['comment_id'] === (int)$c['comment_id'];
-        $hasNext = $i < $n - 1 || $isTarget;
-        comment_block($c, $hasNext, $c['parent_id'] ? ($byId[$c['parent_id']] ?? null) : null, $can_comment, $can_vote);
-        if ($isTarget) composer($id, $c, $i < $n - 1);
+        $padre = $c['parent_id'] ? ($byId[$c['parent_id']] ?? null) : null;
+        // en arbol no hay raya de union ni «en respuesta a» (la sangria ya lo dice); por tiempo, el rotulo sale siempre que responde a otro
+        if ($porTiempo) comment_block($c, $isTarget, $padre, $can_comment, $can_vote, 0, true);
+        else            comment_block($c, false, null, $can_comment, $can_vote, $nivel[(int)$c['comment_id']] ?? 0);
+        if ($isTarget) composer($id, $c, false);
     }
     echo "</div>";
 }

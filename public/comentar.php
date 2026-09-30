@@ -35,4 +35,4 @@ if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_comentario', 0.02), 
 $pdo->commit();
 // avisos: @mencionados y autor del comentario respondido (lib/avisos.php)
 avisos_comment($pdo, ['comment_id' => $cid, 'story_id' => $id, 'user_id' => $uid, 'alias' => $alias, 'content' => $content], $parent ? $pr : null);
-redirect("/hilo.php?id=$id" . (isset($_POST['js']) ? '' : "#c$cid"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll
+redirect("/hilo.php?id=$id" . (post('v') === 'tiempo' ? '&v=tiempo' : '') . (isset($_POST['js']) ? '' : "#c$cid"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll
