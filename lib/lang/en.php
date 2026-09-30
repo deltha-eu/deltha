@@ -682,4 +682,38 @@ return [
 'Por tiempo' => 'By time',
 'Por hilos' => 'By thread',
 'Por votos' => 'By votes',
+// verificacion en dos pasos por correo (migra-095)
+'Hola.
+
+Tu código para entrar en %s es:
+
+%s
+
+Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con nadie.
+
+— %s
+' => 'Hello.
+
+Your code to log in to %s is:
+
+%s
+
+It expires in %d minutes. If it is not you trying to log in, do not share it with anyone.
+
+— %s
+',
+'Tu código para entrar en %s: %s' => 'Your code to log in to %s: %s',
+'El código ha caducado o se han agotado los intentos: <a href="/login2.php?otro=1">pide otro</a>.' => 'The code has expired or you have run out of attempts: <a href="/login2.php?otro=1">request another</a>.',
+'Código incorrecto.' => 'Wrong code.',
+'Te hemos enviado otro código.' => 'We have sent you another code.',
+'Acabamos de enviarte uno: espera un minuto antes de pedir otro.' => 'We have just sent you one: wait a minute before requesting another.',
+'No hemos podido enviarte el código. Inténtalo de nuevo más tarde.' => 'We could not send you the code. Please try again later.',
+'Código de acceso' => 'Access code',
+'Te hemos enviado un código de seis cifras a %s. Caduca en %d minutos; mira también en la carpeta de correo no deseado.' => 'We have sent a six-digit code to %s. It expires in %d minutes; check your spam folder too.',
+'<label>Código</label>' => '<label>Code</label>',
+'Enviar otro código' => 'Send another code',
+'Verificación en dos pasos' => 'Two-step verification',
+'Pedir un código por correo al entrar' => 'Ask for a code by email when logging in',
+'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Besides your password, when you log in we will send a six-digit code to %s. It is only asked for when you log in, not on every visit.',
+'Es obligatoria para administradores.' => 'It is mandatory for administrators.',
 ];

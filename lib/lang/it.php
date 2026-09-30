@@ -643,4 +643,38 @@ return [
 'Por tiempo' => 'Per data',
 'Por hilos' => 'Per discussione',
 'Por votos' => 'Per voti',
+// verificacion en dos pasos por correo (migra-095)
+'Hola.
+
+Tu código para entrar en %s es:
+
+%s
+
+Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con nadie.
+
+— %s
+' => 'Ciao.
+
+Il tuo codice per entrare in %s è:
+
+%s
+
+Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno.
+
+— %s
+',
+'Tu código para entrar en %s: %s' => 'Il tuo codice per entrare in %s: %s',
+'El código ha caducado o se han agotado los intentos: <a href="/login2.php?otro=1">pide otro</a>.' => 'Il codice è scaduto o hai esaurito i tentativi: <a href="/login2.php?otro=1">chiedine un altro</a>.',
+'Código incorrecto.' => 'Codice errato.',
+'Te hemos enviado otro código.' => 'Ti abbiamo inviato un altro codice.',
+'Acabamos de enviarte uno: espera un minuto antes de pedir otro.' => 'Te ne abbiamo appena inviato uno: aspetta un minuto prima di chiederne un altro.',
+'No hemos podido enviarte el código. Inténtalo de nuevo más tarde.' => 'Non siamo riusciti a inviarti il codice. Riprova più tardi.',
+'Código de acceso' => 'Codice di accesso',
+'Te hemos enviado un código de seis cifras a %s. Caduca en %d minutos; mira también en la carpeta de correo no deseado.' => 'Ti abbiamo inviato un codice di sei cifre a %s. Scade tra %d minuti; controlla anche la cartella dello spam.',
+'<label>Código</label>' => '<label>Codice</label>',
+'Enviar otro código' => 'Invia un altro codice',
+'Verificación en dos pasos' => 'Verifica in due passaggi',
+'Pedir un código por correo al entrar' => 'Chiedi un codice via email all\'accesso',
+'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Oltre alla password, all\'accesso ti invieremo un codice di sei cifre a %s. Viene chiesto solo quando accedi, non a ogni visita.',
+'Es obligatoria para administradores.' => 'È obbligatoria per gli amministratori.',
 ];

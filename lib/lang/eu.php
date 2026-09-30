@@ -642,4 +642,38 @@ return [
 'Por tiempo' => 'Denboraren arabera',
 'Por hilos' => 'Harien arabera',
 'Por votos' => 'Botoen arabera',
+// verificacion en dos pasos por correo (migra-095)
+'Hola.
+
+Tu código para entrar en %s es:
+
+%s
+
+Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con nadie.
+
+— %s
+' => 'Kaixo.
+
+%s gunean sartzeko zure kodea hau da:
+
+%s
+
+%d minututan iraungiko da. Sartu nahian dabilena zu ez bazara, ez partekatu inorekin.
+
+— %s
+',
+'Tu código para entrar en %s: %s' => '%s gunean sartzeko zure kodea: %s',
+'El código ha caducado o se han agotado los intentos: <a href="/login2.php?otro=1">pide otro</a>.' => 'Kodea iraungi da edo saiakerak agortu dira: <a href="/login2.php?otro=1">eskatu beste bat</a>.',
+'Código incorrecto.' => 'Kode okerra.',
+'Te hemos enviado otro código.' => 'Beste kode bat bidali dizugu.',
+'Acabamos de enviarte uno: espera un minuto antes de pedir otro.' => 'Oraintxe bidali dizugu bat: itxaron minutu bat beste bat eskatu aurretik.',
+'No hemos podido enviarte el código. Inténtalo de nuevo más tarde.' => 'Ezin izan dizugu kodea bidali. Saiatu berriro geroago.',
+'Código de acceso' => 'Sarbide-kodea',
+'Te hemos enviado un código de seis cifras a %s. Caduca en %d minutos; mira también en la carpeta de correo no deseado.' => 'Sei zifrako kode bat bidali dizugu %s helbidera. %d minututan iraungiko da; begiratu spam karpetan ere.',
+'<label>Código</label>' => '<label>Kodea</label>',
+'Enviar otro código' => 'Bidali beste kode bat',
+'Verificación en dos pasos' => 'Bi urratseko egiaztapena',
+'Pedir un código por correo al entrar' => 'Sartzean kode bat eskatu posta elektronikoz',
+'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Pasahitzaz gain, sartzean sei zifrako kode bat bidaliko dizugu %s helbidera. Saioa hastean bakarrik eskatzen da, ez bisita bakoitzean.',
+'Es obligatoria para administradores.' => 'Nahitaezkoa da administratzaileentzat.',
 ];

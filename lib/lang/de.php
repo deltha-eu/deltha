@@ -643,4 +643,38 @@ return [
 'Por tiempo' => 'Nach Zeit',
 'Por hilos' => 'Nach Thema',
 'Por votos' => 'Nach Stimmen',
+// verificacion en dos pasos por correo (migra-095)
+'Hola.
+
+Tu código para entrar en %s es:
+
+%s
+
+Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con nadie.
+
+— %s
+' => 'Hallo.
+
+Dein Code für die Anmeldung bei %s lautet:
+
+%s
+
+Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niemanden weiter.
+
+— %s
+',
+'Tu código para entrar en %s: %s' => 'Dein Code für die Anmeldung bei %s: %s',
+'El código ha caducado o se han agotado los intentos: <a href="/login2.php?otro=1">pide otro</a>.' => 'Der Code ist abgelaufen oder die Versuche sind aufgebraucht: <a href="/login2.php?otro=1">fordere einen neuen an</a>.',
+'Código incorrecto.' => 'Falscher Code.',
+'Te hemos enviado otro código.' => 'Wir haben dir einen neuen Code geschickt.',
+'Acabamos de enviarte uno: espera un minuto antes de pedir otro.' => 'Wir haben dir gerade einen geschickt: Warte eine Minute, bevor du einen neuen anforderst.',
+'No hemos podido enviarte el código. Inténtalo de nuevo más tarde.' => 'Wir konnten dir den Code nicht schicken. Versuch es später noch einmal.',
+'Código de acceso' => 'Zugangscode',
+'Te hemos enviado un código de seis cifras a %s. Caduca en %d minutos; mira también en la carpeta de correo no deseado.' => 'Wir haben einen sechsstelligen Code an %s geschickt. Er läuft in %d Minuten ab; sieh auch im Spam-Ordner nach.',
+'<label>Código</label>' => '<label>Code</label>',
+'Enviar otro código' => 'Neuen Code senden',
+'Verificación en dos pasos' => 'Zweistufige Anmeldung',
+'Pedir un código por correo al entrar' => 'Bei der Anmeldung einen Code per E-Mail verlangen',
+'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Zusätzlich zum Passwort schicken wir dir bei der Anmeldung einen sechsstelligen Code an %s. Er wird nur bei der Anmeldung verlangt, nicht bei jedem Besuch.',
+'Es obligatoria para administradores.' => 'Für Administratoren ist sie Pflicht.',
 ];
