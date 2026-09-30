@@ -2976,10 +2976,11 @@ form.seguir.on button:hover { background: var(--hover); color: var(--fg); }
 .rail details.rail-dd.medios .list a.more { color: var(--muted); font-size: 12px; }
 .rail details.rail-dd.medios .list a.more.on::before { content: none; }
 
-/* ---- Chat por hilos (/chat.php?v=hilos, v131): cada mensaje con sus respuestas debajo, sangradas y con raya a la izquierda;
-   entre hilo e hilo, una raya mas marcada. ---- */
-.chat.hilos .cm { border-bottom: 0; }
-.chat.hilos .cm.top { border-top: 1px solid var(--line2); padding-top: 12px; }
-.chat.hilos .cm.top:first-of-type { border-top: 0; }
-.chat.hilos .cm.rep { margin-left: 28px; padding: 6px 16px 6px 12px; border-left: 2px solid var(--line2); }
+/* ---- Chat por hilos (/chat.php?v=hilos, v131): sin rayas entre mensajes; cada respuesta va sangrada segun a quien responde
+   (--lv = nivel, lo pone chat.php: 1 responde al que abre el hilo, 2 a una respuesta...); entre hilo e hilo, solo aire.
+   !important: varias plantillas pintan sus propios bordes en .chat .cm. ---- */
+.chat.hilos .cm { border: 0 !important; box-shadow: none !important; padding-top: 5px; padding-bottom: 5px; }
+.chat.hilos .cm.top { margin-top: 14px; }
+.chat.hilos .cm.rep { margin-left: calc(var(--lv, 1) * 28px) !important; }
 .chat.hilos .chatbox.reply { margin-left: 28px; }
+@media (max-width: 520px) { .chat.hilos .cm.rep { margin-left: calc(var(--lv, 1) * 16px) !important; } }

@@ -9,7 +9,7 @@
  *  refresco en cuanto hay algo escrito (antes se perdia el mensaje a medias); sin JS, el <noscript><meta refresh> de siempre.
  *  Dos vistas (subpestañas «Por tiempo» / «Por hilos»): por tiempo es el flujo de siempre; ?v=hilos agrupa cada mensaje con sus respuestas
  *  (reply_to: el primer #N citado), el hilo con actividad mas reciente arriba y, dentro, del mas antiguo al mas nuevo con las respuestas
- *  sangradas. La vista viaja en la URL (no hay cookie): responder, publicar, borrar, paginar y el refresco la conservan. */
+ *  sangradas segun a quien responden (sin rayas entre mensajes). La vista viaja en la URL (no hay cookie): responder, publicar, borrar, paginar y el refresco la conservan. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/chat.php';
@@ -56,7 +56,7 @@ $goto = (int)($_GET['m'] ?? 0);
 $sel = "SELECT c.*, u.login, cv.value AS my_vote FROM chat c LEFT JOIN users u ON u.user_id = c.user_id
         LEFT JOIN chat_votes cv ON cv.msg_id = c.msg_id AND cv.user_id = ?";   // my_vote: sol (1) o lagrima (-1) del usuario actual (NULL si ninguno o anonimo); migra-074
 $uid = (int)($u['user_id'] ?? 0);
-$sangria = [];   // vista por hilos: msg_id => true si es respuesta (va sangrado); $cabeza: msg_id => true si abre hilo
+$sangria = [];   // vista por hilos: msg_id => nivel de sangria de una respuesta (1 = responde al que abre el hilo, 2 = a una respuesta... tope 6); $cabeza: msg_id => true si abre hilo
 $cabeza = [];
 if ($hilos) {
     // Hilos de los ultimos mensajes visibles (tope: 3000, de sobra para el Chat): la raiz de cada mensaje se saca subiendo por reply_to
@@ -65,6 +65,10 @@ if ($hilos) {
     $raiz = function (int $id) use ($padre): int {
         for ($n = 0; $n < 200 && !empty($padre[$id]) && array_key_exists((int)$padre[$id], $padre) && (int)$padre[$id] < $id; $n++) $id = (int)$padre[$id];
         return $id;
+    };
+    $nivel = function (int $id) use ($padre): int {   // pasos hasta la raiz: cuanto se sangra
+        for ($n = 0; $n < 200 && !empty($padre[$id]) && array_key_exists((int)$padre[$id], $padre) && (int)$padre[$id] < $id; $n++) $id = (int)$padre[$id];
+        return $n;
     };
     $grupos = [];   // raiz => [msg_id...]; las claves quedan ya por actividad mas reciente (la consulta viene del mas nuevo al mas viejo)
     foreach ($padre as $id => $p) $grupos[$raiz((int)$id)][] = (int)$id;
@@ -81,8 +85,13 @@ if ($hilos) {
         $st->execute([$uid]);
         $porId = array_column($st->fetchAll(), null, 'msg_id');
         foreach ($trozo as $r => $lista) {
-            sort($lista);   // dentro del hilo, del mas antiguo al mas nuevo: se lee de arriba abajo
-            foreach ($lista as $id) if (isset($porId[$id])) { $rows[] = $porId[$id]; if ($id === (int)$r) $cabeza[$id] = true; else $sangria[$id] = true; }
+            // dentro del hilo, en arbol: cada respuesta justo debajo del mensaje al que responde (y entre hermanas, la mas antigua primero)
+            sort($lista);
+            $hijos = [];
+            foreach ($lista as $id) if ($id !== (int)$r) $hijos[(int)$padre[$id]][] = $id;
+            $orden = []; $pila = [(int)$r];
+            while ($pila) { $id = array_pop($pila); $orden[] = $id; foreach (array_reverse($hijos[$id] ?? []) as $h) $pila[] = $h; }
+            foreach ($orden as $id) if (isset($porId[$id])) { $rows[] = $porId[$id]; if ($id === (int)$r) $cabeza[$id] = true; else $sangria[$id] = min(6, max(1, $nivel($id))); }
         }
     }
 } else {
@@ -135,7 +144,7 @@ foreach ($rows as $m) {
     $id = (int)$m['msg_id'];
     $who = chat_who($m);
     $del = (int)$m['deleted'] === 1;
-    echo "<article class=\"cm" . (isset($sangria[$id]) ? ' rep' : '') . (isset($cabeza[$id]) ? ' top' : '') . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\">";
+    echo "<article class=\"cm" . (isset($sangria[$id]) ? ' rep' : '') . (isset($cabeza[$id]) ? ' top' : '') . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\"" . (isset($sangria[$id]) ? " style=\"--lv:{$sangria[$id]}\"" : '') . ">";
     echo "<div class=\"ch\"><a class=\"num\" href=\"#m$id\">#$id</a> ";
     echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u.php?u=" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
     echo "<span class=\"meta\"> · " . h(hace($m['created'])) . "</span></div>";
