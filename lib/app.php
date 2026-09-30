@@ -60,8 +60,8 @@ function icon_src($size): string {
  * De serie PHP cierra la sesion sola: la cookie muere al cerrar el navegador (session.cookie_lifetime = 0) y el
  * servidor borra el fichero de sesion a los 24 min de inactividad (session.gc_maxlifetime = 1440). Por eso «se
  * cerraban las sesiones de vez en cuando». Aqui dura config.session_days (30) y el plazo cuenta desde la ultima
- * visita, no desde que se entro. En el droplet hace falta ademas una linea en el pool de php-fpm: el limpiador de
- * sesiones de Debian/Ubuntu lee gc_maxlifetime de ahi, no de aqui (ver README, «Sesiones»). */
+ * visita, no desde que se entro. En el droplet hace falta ademas un .ini en conf.d de php-fpm: el limpiador de
+ * sesiones de Debian/Ubuntu lee gc_maxlifetime de php.ini + conf.d, no de aqui ni del pool (ver README, «Sesiones»). */
 /** Dias que dura la sesion iniciada. */
 function session_dias(): int { return max(1, (int)cfg('session_days', 30)); }
 /** ¿La peticion llega por HTTPS? (con Cloudflare delante, Apache puede verla como HTTP: entonces la cabecera lo dice). */

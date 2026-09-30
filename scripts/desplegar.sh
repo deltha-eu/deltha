@@ -28,13 +28,17 @@ done
 
 echo "== sesiones"
 # La sesion iniciada dura 30 dias (config.session_days). El limpiador de sesiones de Ubuntu (phpsessionclean.timer,
-# a las :09 y :39) lee gc_maxlifetime del pool de php-fpm, no del ini_set() de lib/app.php: sin esta linea borra
-# la sesion a los 24 min de inactividad y el usuario aparece desconectado (README, «Sesiones»). Idempotente.
-POOL=/etc/php/8.3/fpm/pool.d/www.conf
-if [ -f "$POOL" ] && ! grep -q 'session.gc_maxlifetime' "$POOL"; then
-  printf '\n; Deltha: la sesion iniciada dura 30 dias (ver README, «Sesiones»)\nphp_admin_value[session.gc_maxlifetime] = 2592000\n' >> "$POOL"
-  echo "gc_maxlifetime = 30 dias anadido al pool de php-fpm"
-fi
+# a las :09 y :39, /usr/lib/php/sessionclean) lee gc_maxlifetime de php.ini + conf.d de cada SAPI: NO ve el
+# ini_set() de lib/app.php ni los php_admin_value del pool de php-fpm. Sin este fichero borra la sesion a los
+# 24 min de inactividad y el usuario aparece desconectado (README, «Sesiones»). Idempotente.
+for d in /etc/php/8.3/fpm/conf.d /etc/php/8.3/apache2/conf.d; do
+  [ -d "$d" ] || continue
+  INI="$d/99-deltha-sesiones.ini"
+  if [ ! -f "$INI" ]; then
+    printf '; Deltha: la sesion iniciada dura 30 dias (ver README, «Sesiones»)\nsession.gc_maxlifetime = 2592000\n' > "$INI"
+    echo "gc_maxlifetime = 30 dias en $INI"
+  fi
+done
 
 echo "== comprobacion"
 for f in $(find "$DIR/lib" "$DIR/public" "$DIR/scripts" -name '*.php'); do php -l "$f" >/dev/null || echo "ERROR de sintaxis en $f"; done
