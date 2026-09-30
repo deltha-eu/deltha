@@ -641,4 +641,5 @@ return [
 // chat: vista por tiempo o por hilos
 'Por tiempo' => 'Denboraren arabera',
 'Por hilos' => 'Harien arabera',
+'Por votos' => 'Botoen arabera',
 ];

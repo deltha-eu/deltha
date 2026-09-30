@@ -681,4 +681,5 @@ return [
 // chat: vista por tiempo o por hilos
 'Por tiempo' => 'By time',
 'Por hilos' => 'By thread',
+'Por votos' => 'By votes',
 ];
