@@ -150,16 +150,19 @@ function comment_vote_widget(array $c, bool $can_vote, string $action = '/votar-
     }
 }
 
-function comment_block(array $c, bool $has_next = false, ?array $parent = null, bool $can_reply = false, bool $can_vote = false): void {
+/** Un comentario. $nivel > 0: vista en arbol, sangrado ese numero de niveles (--lv). $reto: «en respuesta a X» tambien cuando responde
+ *  al comentario raiz (vista por tiempo, donde la respuesta no queda debajo de lo que contesta). La vista «por tiempo» viaja en
+ *  $GLOBALS['DDD_HILO_V'] ('tiempo' | '') para que «Responder» y «cancelar» la conserven. */
+function comment_block(array $c, bool $has_next = false, ?array $parent = null, bool $can_reply = false, bool $can_vote = false, int $nivel = 0, bool $reto = false): void {
     $revealed = ghost_over($c['created']);
     $n = display_name($c, $revealed);
     $del = !empty($c['deleted']);
     $fold = !$del && ghost_folded($c['user_id'] ?? 0);   // comentario de alguien a quien he ghosteado: plegado (details), por si quiero leerlo
     $cls = 'post reply' . ($has_next ? ' has-next' : '') . (empty($c['root_id']) ? ' root' : ' child') . ($del ? ' deleted' : '') . ($fold ? ' ghosted' : '');
-    echo "<article class=\"$cls\" id=\"c{$c['comment_id']}\">" . who_avatar($c, $revealed, (float)$c['aura'], $n) . "<div class=\"pc\">";
+    echo "<article class=\"$cls\" id=\"c{$c['comment_id']}\"" . ($nivel > 0 ? " style=\"--lv:$nivel\"" : '') . ">" . who_avatar($c, $revealed, (float)$c['aura'], $n) . "<div class=\"pc\">";
     $nameHtml = shown($c, $revealed) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
     echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
-    if ($parent && !empty($c['root_id']) && (int)$c['parent_id'] !== (int)$c['root_id']) {
+    if ($parent && !empty($c['root_id']) && ($reto || (int)$c['parent_id'] !== (int)$c['root_id'])) {
         $pn = display_name($parent, ghost_over($parent['created']));
         echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";
     }
@@ -168,7 +171,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     else      echo "<p>" . nl2br(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content'])) . "</p>";
     if ($fold) echo "</details>";
     $acts = [];
-    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
+    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}" . (($GLOBALS['DDD_HILO_V'] ?? '') === 'tiempo' ? '&amp;v=tiempo' : '') . "&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
     if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
     if (!$del && ($gl = ghost_link((int)($c['user_id'] ?? 0), $c['login'] ?? null, shown($c, $revealed))) !== '') $acts[] = $gl;   // solo con el nombre ya revelado
@@ -187,12 +190,14 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     $u = user();
     $cls = 'composer' . ($parent ? ' inreply' : '') . ($has_next ? ' has-next' : '');
     echo "<form class=\"$cls\" id=\"responder\" method=\"post\" action=\"/comentar.php\"><input type=\"hidden\" name=\"id\" value=\"$story_id\">";
+    $vt = ($GLOBALS['DDD_HILO_V'] ?? '') === 'tiempo';   // vista por tiempo: se conserva al publicar y al cancelar
+    if ($vt) echo "<input type=\"hidden\" name=\"v\" value=\"tiempo\">";
     if ($parent) echo "<input type=\"hidden\" name=\"parent\" value=\"{$parent['comment_id']}\">";
     echo avatar($u ? (float)$u['aura'] : (float)cfg('aura_anon', 5), $u ? $u['login'] : '');
     echo "<div class=\"cbox\">";
     if ($parent) {
         $pn = display_name($parent, ghost_over($parent['created']));
-        echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo.php?id=$story_id\">" . t('cancelar') . "</a></div>";
+        echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo.php?id=$story_id" . ($vt ? '&amp;v=tiempo' : '') . "\">" . t('cancelar') . "</a></div>";
     }
     $ph = $u ? t('Escribe con alias; tu nombre aparecerá en %d min', (int)cfg('ghost_minutes', 30)) : t('Escribe como anónimo');
     echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h($ph) . "\" required" . ($parent ? " autofocus" : "") . "></textarea>";

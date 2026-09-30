@@ -2984,3 +2984,14 @@ form.seguir.on button:hover { background: var(--hover); color: var(--fg); }
 .chat.hilos .cm.rep { margin-left: calc(var(--lv, 1) * 28px) !important; }
 .chat.hilos .chatbox.reply { margin-left: 28px; }
 @media (max-width: 520px) { .chat.hilos .cm.rep { margin-left: calc(var(--lv, 1) * 16px) !important; } }
+
+/* ---- Comentarios del hilo por hilos (en arbol) o por tiempo (v132). En arbol (.hilo.arbol): sin rayas — ni la de union entre avatares
+   ni la que separa conversaciones — y cada respuesta sangrada segun su nivel (--lv, lo pone hilo.php); entre conversaciones, solo aire.
+   !important: varias plantillas pintan sus propios bordes y margenes en .post.reply. ---- */
+nav.sub.cvista { margin-bottom: 4px; }
+.hilo.arbol .thread { border: 0 !important; margin-top: 12px; }
+.hilo.arbol .thread .post.reply { border: 0 !important; }
+.hilo.arbol .thread .post.reply[style] { margin-left: calc(var(--lv, 1) * 28px) !important; }
+.hilo.arbol .thread .post.reply.child .pc { border-left: 0 !important; }
+.hilo.arbol .has-next::after { display: none !important; }
+@media (max-width: 520px) { .hilo.arbol .thread .post.reply[style] { margin-left: calc(var(--lv, 1) * 14px) !important; } }
