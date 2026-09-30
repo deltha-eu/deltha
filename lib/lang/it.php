@@ -639,4 +639,7 @@ return [
 'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'Media e Substack con RSS che puoi leggere con l\'aspetto di Deltha. Ogni notizia ha un pulsante per proporla al radar. Premi «Segui» su quelli che vuoi, senza limite: li troverai in «I miei media» e «I miei Substack».',
 'Los que sigues en este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; sigue o deja de seguir aquí, en el <a href="%s">catálogo</a> o en cada noticia.' => 'Quelli che segui in questo gruppo, senza limite. Nel menu compaiono i %d che hanno pubblicato più di recente; segui o smetti di seguire qui, nel <a href="%s">catalogo</a> o in ogni notizia.',
 'Todavía no sigues ninguno aquí. Pulsa «Seguir» en el <a href="%s">catálogo</a> o en cada noticia.' => 'Non ne segui ancora nessuno qui. Premi «Segui» nel <a href="%s">catalogo</a> o in ogni notizia.',
+// chat: vista por tiempo o por hilos
+'Por tiempo' => 'Per data',
+'Por hilos' => 'Per discussione',
 ];
