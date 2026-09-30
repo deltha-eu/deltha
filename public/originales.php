@@ -5,8 +5,9 @@ require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
 $page = page_num();
-$total = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE content_type='article' AND status IN ('nuevas','destacadas','archived')")->fetchColumn();
-$st = $pdo->prepare(story_query_base() . " WHERE s.content_type='article' AND s.status IN ('nuevas','destacadas','archived')
+$ml = stories_mylang_sql();
+$total = (int)$pdo->query("SELECT COUNT(*) FROM stories s WHERE s.content_type='article' AND s.status IN ('nuevas','destacadas','archived')$ml")->fetchColumn();
+$st = $pdo->prepare(story_query_base() . " WHERE s.content_type='article' AND s.status IN ('nuevas','destacadas','archived')$ml
                     ORDER BY s.sent_date DESC LIMIT ? OFFSET ?");
 $st->bindValue(1, (int)cfg('per_page', 20), PDO::PARAM_INT);
 $st->bindValue(2, page_offset($page), PDO::PARAM_INT);

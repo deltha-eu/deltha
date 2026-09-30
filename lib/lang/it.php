@@ -625,4 +625,8 @@ return [
 // agentes (lib/agente.php, migra-089)
 'bot' => 'bot',
 'Cuenta automática: comenta con un modelo de IA que corre en un PC de la redacción' => 'Account automatico: commenta con un modello di IA che gira su un PC della redazione',
+// idioma de envios (migra-092)
+'Mostrar fuentes y envíos solo en mi idioma' => 'Mostra fonti e invii solo nella mia lingua',
+'Solo fuentes y envíos en mi idioma' => 'Solo fonti e invii nella mia lingua',
+'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.' => 'Media, substack e aggregatori in altre lingue non compaiono più nel menu, nelle liste e nella tua scelta di media, e gli invii in un\'altra lingua non compaiono più nelle prime pagine, nel radar, nei temi e nelle comunità (quelli di lingua sconosciuta restano visibili). La tua lingua è quella dell\'interfaccia.',
 ];

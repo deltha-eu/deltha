@@ -13,7 +13,7 @@
 declare(strict_types=1);
 
 const AGENT_DEFAULTS = ['enabled' => 0, 'persona' => '', 'per_day' => 4, 'min_age_min' => 20, 'max_age_h' => 24, 'max_comments' => 6, 'replies' => 0, 'skip_users' => '', 'topics' => '',
-                        'submits_per_day' => 0, 'submit_kinds' => 'ambos', 'submit_topics' => ''];
+                        'submits_per_day' => 0, 'submit_kinds' => 'ambos', 'submit_topics' => '', 'submit_langs' => ''];
 
 /** Tabla creada (migra-089). */
 function agents_on(): bool {
@@ -40,13 +40,13 @@ function agents_active(PDO $pdo): array {
 
 /** Guarda la ficha de agente desde el formulario (solo admin). $f = campos ya saneados (ver agent_from_post). */
 function agent_save(PDO $pdo, int $uid, array $f): void {
-    $pdo->prepare("INSERT INTO agents (user_id, enabled, persona, per_day, min_age_min, max_age_h, max_comments, replies, skip_users, topics, submits_per_day, submit_kinds, submit_topics)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+    $pdo->prepare("INSERT INTO agents (user_id, enabled, persona, per_day, min_age_min, max_age_h, max_comments, replies, skip_users, topics, submits_per_day, submit_kinds, submit_topics, submit_langs)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), persona = VALUES(persona), per_day = VALUES(per_day), min_age_min = VALUES(min_age_min),
                    max_age_h = VALUES(max_age_h), max_comments = VALUES(max_comments), replies = VALUES(replies), skip_users = VALUES(skip_users), topics = VALUES(topics),
-                   submits_per_day = VALUES(submits_per_day), submit_kinds = VALUES(submit_kinds), submit_topics = VALUES(submit_topics)")
+                   submits_per_day = VALUES(submits_per_day), submit_kinds = VALUES(submit_kinds), submit_topics = VALUES(submit_topics), submit_langs = VALUES(submit_langs)")
         ->execute([$uid, $f['enabled'], $f['persona'], $f['per_day'], $f['min_age_min'], $f['max_age_h'], $f['max_comments'], $f['replies'], $f['skip_users'], $f['topics'],
-                   $f['submits_per_day'], $f['submit_kinds'], $f['submit_topics']]);
+                   $f['submits_per_day'], $f['submit_kinds'], $f['submit_topics'], $f['submit_langs']]);
 }
 function agent_delete(PDO $pdo, int $uid): void {
     $pdo->prepare("DELETE FROM agents WHERE user_id = ?")->execute([$uid]);
@@ -61,7 +61,8 @@ function agent_from_post(): array {
             'per_day' => $n('ag_per_day', 4, 0, 200), 'min_age_min' => $n('ag_min_age_min', 20, 0, 10000), 'max_age_h' => $n('ag_max_age_h', 24, 1, 720),
             'max_comments' => $n('ag_max_comments', 6, 0, 250), 'replies' => post('ag_replies') === '1' ? 1 : 0, 'skip_users' => mb_substr($skip, 0, 300), 'topics' => mb_substr($topics, 0, 120),
             'submits_per_day' => $n('ag_submits_per_day', 0, 0, 48), 'submit_kinds' => in_array(post('ag_submit_kinds'), ['medio', 'newsletter', 'ambos'], true) ? post('ag_submit_kinds') : 'ambos',
-            'submit_topics' => mb_substr($stopics, 0, 120)];
+            'submit_topics' => mb_substr($stopics, 0, 120),
+            'submit_langs' => mb_substr(implode(',', array_values(array_filter(array_map('strval', (array)($_POST['ag_submit_langs'] ?? [])), fn($x) => isset(DDD_LANGS[$x])))), 0, 40)];
 }
 
 /** Seccion «Agente» de la ficha de moderacion (solo admin). $a = agent_get() o null. */
@@ -96,6 +97,10 @@ function agent_form(PDO $pdo, int $uid, ?array $a): string {
     $h .= "<label>Temas de las fuentes de las que envía (el tema lo tiene cada fuente; ninguno marcado = todas)</label><div class=\"agtopics\">";
     foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t)
         $h .= "<label><input type=\"checkbox\" name=\"ag_submit_topics[]\" value=\"{$t['topic_id']}\"" . (in_array((int)$t['topic_id'], $ssel, true) ? ' checked' : '') . "> " . h($t['name']) . "</label>";
+    $h .= "</div>";
+    $lsel = agent_list((string)$v['submit_langs']);
+    $h .= "<label>Idiomas de las fuentes de las que envía (ninguno marcado = todos)</label><div class=\"agtopics\">";
+    foreach (DDD_LANGS as $k => $name) $h .= "<label><input type=\"checkbox\" name=\"ag_submit_langs[]\" value=\"$k\"" . (in_array($k, $lsel, true) ? ' checked' : '') . "> " . h($name) . "</label>";
     $h .= "</div><small class=\"hint\">0 = no envía. Con N al día, uno cada 24/N horas más o menos (con azar), entre las noticias de las últimas " . (int)cfg('agent_submit_max_age_h', 24) . " h que nadie haya enviado. El agente no comenta lo que envía él.</small>";
     if ($a) {
         try { $q = $pdo->prepare("SELECT COUNT(*) FROM agent_sent WHERE user_id = ? AND created >= CURDATE()"); $q->execute([$uid]); $envHoy = (int)$q->fetchColumn(); } catch (Throwable $e) { $envHoy = 0; }
@@ -234,7 +239,9 @@ function agent_submit_one(PDO $pdo, array $a): string {
           "NOT EXISTS (SELECT 1 FROM stories st WHERE st.url = i.url AND st.status NOT IN ('rejected','discard') AND st.sent_date > NOW() - INTERVAL 30 DAY)"];
     $p = $kinds;
     if ($topics) $w[] = "s.topic_id IN (" . implode(',', $topics) . ")";
-    $st = $pdo->prepare("SELECT i.item_id, i.title, i.url, i.content, i.image, i.pub_date, s.name AS src_name, s.topic_id
+    $langs = array_values(array_filter(agent_list((string)($a['submit_langs'] ?? '')), fn($x) => isset(DDD_LANGS[$x])));
+    if ($langs) { $w[] = "s.lang IN (" . implode(',', array_fill(0, count($langs), '?')) . ")"; $p = array_merge($p, $langs); }
+    $st = $pdo->prepare("SELECT i.item_id, i.title, i.url, i.content, i.image, i.pub_date, s.name AS src_name, s.topic_id, s.lang AS src_lang
                            FROM source_items i JOIN sources s ON s.source_id = i.source_id
                           WHERE " . implode(' AND ', $w) . " ORDER BY i.pub_date DESC LIMIT 12");
     $st->execute($p);
@@ -258,8 +265,9 @@ function agent_submit_one(PDO $pdo, array $a): string {
     $title = mb_substr(trim((string)$i['title']), 0, 200);
     $lead = mb_substr(trim((string)$i['content']), 0, 2000) ?: null;
     $pdo->beginTransaction();
-    $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, 'nuevas')")
-        ->execute([$uid, $topic, $title, $i['url'], source_of((string)$i['url']), $lead, $image]);
+    $lang = (string)($i['src_lang'] ?? '') ?: lang_detect($title . ' ' . (string)$lead);
+    $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, ?, 'nuevas')")
+        ->execute([$uid, $topic, $title, $i['url'], source_of((string)$i['url']), $lang, $lead, $image]);
     $sid = (int)$pdo->lastInsertId();
     $pdo->prepare("UPDATE stories SET portada = ?, author_alias = ? WHERE story_id = ?")
         ->execute([portada_de($pdo, ['url' => $i['url'], 'source' => source_of((string)$i['url'])]), alias_user($pdo, $sid, $uid), $sid]);

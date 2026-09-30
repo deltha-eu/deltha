@@ -79,9 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $u = user();
             $status = 'nuevas';   // posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
             $pdo->beginTransaction();
-            $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, content, image, status)
-                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), $f['content'] ?: null, $f['image'], $status]);
+            $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status)
+                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
             $sid = (int)$pdo->lastInsertId();
             $pdo->prepare("UPDATE stories SET portada = ? WHERE story_id = ?")->execute([portada_de($pdo, ['url' => $f['url'], 'source' => source_of($f['url'])]), $sid]);   // Medios o Substacks (el ciclo lo recalcula)
             if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
