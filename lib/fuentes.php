@@ -7,7 +7,7 @@
  *    fuente; se ve en /fuente.php?f=slug con Portada / Populares / Nuevas.
  *  - medio (Jot Down, Revista Mercurio...): un solo feed, sin fases ni votos; cada noticia lleva un boton
  *    «enviar al radar» que abre /enviar.php prerrellenado. Cada usuario marca como favoritos los que quiera, sin
- *    limite (estrella en el catalogo, en la fuente, en cada noticia y en el hilo; tabla user_media); en el rail salen
+ *    limite (boton «Seguir» en el catalogo, en la fuente, en cada noticia y en el hilo; tabla user_media); en el rail salen
  *    los media_max_per_user que han publicado mas recientemente y en /mis-fuentes.php (pestañas del perfil), todos.
  *
  * El cron (promocionar.php, cada minuto) llama a fuentes_tick(): lee los feeds de cada fuente cuando vence su
@@ -88,7 +88,7 @@ function fuente_url(array $src, string $view = ''): string {
 function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar al radar»
 /** Grupos con favoritos del usuario: tipo => [clave de config de cuantos salen en el menu, etiqueta del grupo] */
 const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios'], 'newsletter' => ['news_max_per_user', 'Mis substacks']];
-/** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con la estrella (DDD_MEDIA_KINDS). */
+/** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con el boton «Seguir» (DDD_MEDIA_KINDS). */
 const DDD_ULTIMO_KINDS = ['medio' => ['Mis medios', 'news'], 'newsletter' => ['Mis substacks', 'letter'], 'agregador' => ['Mis agregadores', 'agg']];   // mismo orden que las portadas: Medios, Substacks
 /** Fuentes de las que /ultimo.php saca las noticias de un grupo: TODOS los favoritos del usuario (sin limite) o, si no tiene
  *  ninguno / no tiene cuenta, las del menu (medios_menu(): las que han publicado mas recientemente; agregadores: los destacados). */
@@ -130,7 +130,7 @@ function mis_medios_recientes(PDO $pdo, ?array $u, string $kind): array {
     usort($list, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
     return $list;
 }
-/** Fuente del catalogo (medio o substack) a la que pertenece un dominio («jotdown.es»), para ofrecer la estrella desde un envio. */
+/** Fuente del catalogo (medio o substack) a la que pertenece un dominio («jotdown.es»), para ofrecer «Seguir» desde un envio. */
 function fuente_por_dominio(PDO $pdo, string $dominio): ?array {
     static $map = null;
     if ($map === null) {
@@ -139,14 +139,15 @@ function fuente_por_dominio(PDO $pdo, string $dominio): ?array {
     }
     return $map[strtolower($dominio)] ?? null;
 }
-/** Estrella «añadir a favoritos / quitar» de un medio o substack, solo para registrados; sin JS: un POST a /fav-fuente.php que vuelve
- *  a la misma pagina. $label: con el texto «guardar» / «guardado» al lado (hilo, pagina de la fuente); sin el, solo el icono (tarjetas). */
-function fuente_fav_form(array $src, bool $label = false): string {
+/** Boton «+ Seguir» / «✓ Siguiendo» de un medio o substack (el + y el ✓ los pone el CSS), solo para registrados; sin JS: un POST a
+ *  /fav-fuente.php que vuelve a la misma pagina. Pulsarlo cuando ya se sigue, deja de seguir. $nombre: «Seguir Jot Down» (pagina de la
+ *  fuente, hilo: ahi no se ve a que medio se refiere); sin el, «Seguir» a secas (filas del catalogo y tarjetas, que ya llevan el nombre). */
+function fuente_fav_form(array $src, bool $nombre = false): string {
     if (!user() || !fuente_es_medio($src)) return '';
     $on = fuente_es_fav($src);
-    $title = h($on ? t('quitar %s de tus favoritos', $src['name']) : t('añadir %s a tus favoritos', $src['name']));
-    return "<form class=\"fav src" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/fav-fuente.php\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$src['source_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
-         . "<button title=\"$title\" aria-label=\"$title\">" . icon('star') . ($label ? "<span>" . ($on ? t('guardado') : t('guardar')) . "</span>" : '') . "</button></form>";
+    $title = h($on ? t('dejar de seguir %s', $src['name']) : t('Seguir %s', $src['name']));
+    return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/fav-fuente.php\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$src['source_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
+         . "<button title=\"$title\">" . h($on ? t('Siguiendo') : ($nombre ? t('Seguir %s', $src['name']) : t('Seguir'))) . "</button></form>";
 }
 /** Fuentes de un tipo que se ofrecen en el menu: de los favoritos del usuario, los que han publicado mas recientemente (una noticia
  *  por fuente: «los tres ultimos sin repetir fuente») o, si no tiene favoritos (o no tiene cuenta),
@@ -585,7 +586,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
         if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo.php?id=" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
         elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia al radar')) . "\">" . icon('plus') . "<span>" . t('enviar al radar') . "</span></a>";
         echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h(t('leer en %s', $src['name'])) . "</span></a>";
-        echo fuente_fav_form($src);   // estrella: el medio o substack de esta noticia, a favoritos
+        echo fuente_fav_form($src);   // «+ Seguir»: el medio o substack de esta noticia, a «Mis medios» / «Mis substacks»
     } else {
         echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
         if (!fuente_sin_votos($src)) echo "<span class=\"vote\"><span>" . icon('up') . "<span>" . (int)$i['votes'] . "</span></span><span>" . icon('down') . "<span>" . (int)$i['negatives'] . "</span></span></span>";

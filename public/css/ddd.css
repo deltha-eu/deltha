@@ -2960,15 +2960,18 @@ ul.fprops .st-rejected { text-decoration: line-through; }
 .side .mod.comm .row:hover .t { text-decoration: none; }
 .side .mod.comm .row .t > a:not(.cm):hover, .side .mod.comm .row a.cm:hover b { text-decoration: underline; text-underline-offset: 2px; }
 
-/* ---- medios y substacks favoritos sin limite (v131): estrella (form.fav.src) en tarjetas de noticia, hilo, pagina de la fuente y catalogo;
-   fila del catalogo con estrella (div.fz > a.fzl + form); «todos · N» al pie del grupo del rail. ---- */
-form.fav.src button { gap: 5px; }
-.post .actions form.fav.src { margin-left: 2px; }
+/* ---- seguir medios y substacks sin limite (v131): boton «+ Seguir» / «✓ Siguiendo» (form.seguir) en tarjetas de noticia, hilo, pagina de la
+   fuente y catalogo; fila del catalogo con boton (div.fz > a.fzl + form); «todos · N» al pie del grupo del rail. ---- */
+form.seguir { display: inline-flex; align-items: center; margin: 0; flex: none; }
+form.seguir button { font: inherit; font-family: var(--sans); font-size: 12px; font-weight: 700; line-height: 1.2; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; padding: 4px 11px; border: 1px solid var(--accent); border-radius: 999px; background: none; color: var(--accent); }
+form.seguir button::before { content: "+ "; }
+form.seguir button:hover { background: var(--accent); color: var(--bg); }
+form.seguir.on button { border-color: var(--line2); color: var(--muted); font-weight: 600; }
+form.seguir.on button::before { content: "✓ "; }
+form.seguir.on button:hover { background: var(--hover); color: var(--fg); }
 .fz > a.fzl { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; color: inherit; text-decoration: none; }
-.fz > form.fav.src { flex: none; }
-.fz > form.fav.src button { padding: 6px; }
-.fz > form.fav.src .i { width: 20px; height: 20px; }
 .srcfav { margin: -6px 16px 12px; }
-.srcfav form.fav button { font-size: 14px; padding: 6px 14px; border: 1px solid var(--line2); border-radius: 999px; }
+.srcfav form.seguir button { font-size: 14px; padding: 6px 16px; max-width: none; }
+.hilo .stats form.seguir button { max-width: 160px; }
 .rail details.rail-dd.medios .list a.more { color: var(--muted); font-size: 12px; }
 .rail details.rail-dd.medios .list a.more.on::before { content: none; }

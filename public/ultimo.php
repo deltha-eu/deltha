@@ -30,7 +30,7 @@ echo "</nav>";
 $mias = $k !== 'agregador' && mis_medios($pdo, $u, $k);
 $nombres = implode(', ', array_map(fn($m) => "<a href=\"" . h(fuente_url($m)) . "\">" . h($m['name']) . "</a>", array_slice($fuentes, 0, 5))) . (count($fuentes) > 5 ? '…' : '');   // con muchos favoritos, solo los cinco mas recientes
 $intro = $fuentes ? t('Lo último de %s: las %d noticias más recientes, la última primero.', $nombres, 10) : t('Todavía no hay medios en el catálogo.');
-if ($k !== 'agregador') $intro .= ' ' . ($u ? ($mias ? t('Son tus favoritos: <a href="%s">verlos todos</a>.', "/mis-fuentes.php?k=$k") : t('Son los que han publicado más recientemente: marca tus favoritos con la estrella.')) : t('<a href="/login.php">Entra</a> para elegir tus medios.'));
+if ($k !== 'agregador') $intro .= ' ' . ($u ? ($mias ? t('Son los que sigues: <a href="%s">verlos todos</a>.', "/mis-fuentes.php?k=$k") : t('Son los que han publicado más recientemente: pulsa «Seguir» en los que quieras tener aquí.')) : t('<a href="/login.php">Entra</a> para elegir tus medios.'));
 $intro .= ' <a href="/medios.php?k=' . $k . '">' . t('todos') . '</a>.';
 echo "<p class=\"notice\">$intro</p>";
 echo fuentes_casilla_idioma();   // la misma casilla que en el perfil
