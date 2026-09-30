@@ -8,9 +8,9 @@
  *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca)
  *  salvo cuando se esta escribiendo (?r=N) o se acaba de publicar. Con JS lo lleva /app/escribir.js, que cancela el
  *  refresco en cuanto hay algo escrito (antes se perdia el mensaje a medias); sin JS, el <noscript><meta refresh> de siempre.
- *  Dos vistas (subpestañas «Por tiempo» / «Por hilos»): por tiempo es el flujo de siempre; ?v=hilos agrupa cada mensaje con sus respuestas
+ *  Dos vistas (subpestañas «Por hilos» / «Por tiempo»): por hilos, la de por defecto, agrupa cada mensaje con sus respuestas
  *  (reply_to: el primer #N citado), el hilo con actividad mas reciente arriba y, dentro, del mas antiguo al mas nuevo con las respuestas
- *  sangradas segun a quien responden (sin rayas entre mensajes). La vista viaja en la URL (no hay cookie): responder, publicar, borrar, paginar y el refresco la conservan. */
+ *  sangradas segun a quien responden (sin rayas entre mensajes); ?v=tiempo es el flujo cronologico de antes, el mas reciente arriba. La vista viaja en la URL (no hay cookie): responder, publicar, borrar, paginar y el refresco la conservan. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/chat.php';
@@ -22,9 +22,9 @@ $u = user();
 $canWrite = $u || (string)cfg('chat_anon', '1') === '1';
 $maxLen = min(1000, max(50, (int)cfg('chat_max_len', 500)));
 $err = null;
-$hilos = (string)($_GET['v'] ?? '') === 'hilos';
-$base = '/chat.php' . ($hilos ? '?v=hilos' : '');   // la vista elegida va en todos los enlaces y redirecciones
-$amp = $hilos ? '&' : '?';
+$hilos = (string)($_GET['v'] ?? '') !== 'tiempo';   // por hilos es la vista por defecto; ?v=tiempo, el flujo cronologico (?v=hilos de enlaces antiguos sigue valiendo)
+$base = '/chat.php' . ($hilos ? '' : '?v=tiempo');   // la vista elegida va en todos los enlaces y redirecciones
+$amp = $hilos ? '?' : '&';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('act') === 'borrar') {
@@ -123,7 +123,7 @@ $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 
 $refresco = $writing ? 0 : max(0, (int)cfg('chat_refresh_sec', 60));   // 0 = no se recarga sola
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
-echo "<nav class=\"sub\"><a href=\"/chat.php\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a><a href=\"/chat.php?v=hilos\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a></nav>";
+echo "<nav class=\"sub\"><a href=\"/chat.php\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat.php?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a></nav>";
 echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refresco ? " data-refresh=\"$refresco\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
 $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
