@@ -1,6 +1,6 @@
 <?php
 /** /mis-fuentes.php?k=medio|newsletter — pestañas «Mis medios» y «Mis substacks» del perfil: todos los favoritos del usuario en ese grupo
- *  (sin limite), el que ha publicado mas recientemente primero, cada uno con su estrella para quitarlo. Privado, solo el dueño.
+ *  (sin limite), el que ha publicado mas recientemente primero, cada uno con su boton «Siguiendo» para dejar de seguirlo. Privado, solo el dueño.
  *  En el menu lateral salen los tres primeros de esta lista (medios_menu()). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -23,7 +23,7 @@ $ult = fuentes_ultima_noticia($pdo);
 usort($lista, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
 $cat = "/medios.php?k=$k";
 if ($lista) {
-    echo "<p class=\"notice\">" . t('Tus favoritos de este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; añade o quita con la estrella, aquí, en el <a href="%s">catálogo</a> o en cada noticia.', medios_max($k), $cat)
+    echo "<p class=\"notice\">" . t('Los que sigues en este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; sigue o deja de seguir aquí, en el <a href="%s">catálogo</a> o en cada noticia.', medios_max($k), $cat)
        . " <a href=\"/ultimo.php?k=$k\">" . h(t('lo último en %s', $label)) . "</a>.</p>";
     foreach ($lista as $m) {
         $descr = h((string)$m['descr'] ?: source_of($m['home']));
@@ -32,6 +32,6 @@ if ($lista) {
            . (isset($ult[$m['source_id']]) ? " · " . h(hace($ult[$m['source_id']])) : '') . "</span></span></a>" . fuente_fav_form($m) . "</div>";
     }
 } else {
-    echo "<p class=\"end\">" . t('Todavía no tienes favoritos aquí. Márcalos con la estrella en el <a href="%s">catálogo</a> o en cada noticia.', $cat) . "</p>";
+    echo "<p class=\"end\">" . t('Todavía no sigues ninguno aquí. Pulsa «Seguir» en el <a href="%s">catálogo</a> o en cada noticia.', $cat) . "</p>";
 }
 page_footer();

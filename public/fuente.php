@@ -54,7 +54,7 @@ if ($medio) {
 $intro .= ' ' . t('Se lee cada %d min · última lectura: %s.', (int)$src['interval_min'], h($last));
 if ($src['last_error'] && is_admin()) $intro .= " <b>" . h($src['last_error']) . "</b>";
 echo "<p class=\"notice\">$intro</p>";
-if ($medio && ($fav = fuente_fav_form($src, true))) echo "<div class=\"srcfav\">$fav</div>";   // estrella con texto: esta fuente, a favoritos
+if ($medio && ($fav = fuente_fav_form($src, true))) echo "<div class=\"srcfav\">$fav</div>";   // «+ Seguir <medio>» / «✓ Siguiendo»
 
 foreach ($rows as $i) fuente_post($src, $i, ($medio || $view === 'portada') ? 'full' : 'compact', $sent);
 if (!$rows) echo "<p class=\"end\">" . ($src['last_fetch'] ? t('No hay nada en esta vista ahora mismo.') : t('El lector aún no ha pasado por esta fuente.')) . "</p>";

@@ -61,8 +61,8 @@ echo "<div class=\"stats\" id=\"comentarios\"><span class=\"cmt\" title=\"" . co
 if ($s['status'] === 'destacadas') echo "<span>" . h(queda($s['published_date'])) . "</span>";
 if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
 echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>";
-// estrella: el medio o substack del envio, a favoritos (solo si su dominio es de una fuente del catalogo)
-if (user() && $s['content_type'] !== 'article' && $s['source']) { require_once __DIR__ . '/../lib/fuentes.php'; if (fuentes_on() && ($fsrc = fuente_por_dominio($pdo, (string)$s['source']))) echo fuente_fav_form($fsrc); }
+// «+ Seguir <medio>»: el medio o substack del envio (solo si su dominio es de una fuente del catalogo)
+if (user() && $s['content_type'] !== 'article' && $s['source']) { require_once __DIR__ . '/../lib/fuentes.php'; if (fuentes_on() && ($fsrc = fuente_por_dominio($pdo, (string)$s['source']))) echo fuente_fav_form($fsrc, true); }
 echo fav_link($s) . share_link($s) . "</div>";
 if (is_mod()) {   // moderadores y admin: cambiar el tema y la comunidad principal del envio
     echo "<form class=\"modbar\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><label>Tema</label><select name=\"topic\">";

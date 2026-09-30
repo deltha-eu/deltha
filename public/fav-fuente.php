@@ -1,6 +1,6 @@
 <?php
 /** /fav-fuente.php — añadir o quitar un medio o substack de los favoritos del usuario (POST f=source_id, act=guardar|quitar), sin limite.
- *  Sin JS: vuelve a la pagina de origen. La estrella la pinta fuente_fav_form() (lib/fuentes.php). */
+ *  Sin JS: vuelve a la pagina de origen. El boton «Seguir» lo pinta fuente_fav_form() (lib/fuentes.php). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/fuentes.php';
 $u = user();
