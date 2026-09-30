@@ -1,6 +1,6 @@
 <?php
 /** /medios.php — catalogo de medios (fuentes RSS de tipo «medio»), newsletters («newsletter») y agregadores que se pueden ver con el aspecto
- *  de Deltha (los dos primeros, elegibles en el perfil). ?il=<idioma> filtra por idioma (fila de idiomas bajo la casilla). Con ?k=newsletter|medio|agregador se muestra solo ese grupo (es a donde llevan los
+ *  de Deltha (los dos primeros se pueden marcar como favoritos con la estrella, sin limite). ?il=<idioma> filtra por idioma (fila de idiomas bajo la casilla). Con ?k=newsletter|medio|agregador se muestra solo ese grupo (es a donde llevan los
  *  «todos» de la columna derecha); sin k, los tres. Dentro de cada grupo, por orden de aparicion: la fuente con la noticia mas reciente primero. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -17,7 +17,7 @@ $titulo = $k ? $GRUPOS[$k] : t('Medios');
 
 page_header($titulo);
 // sin <h1>: page_header() ya pinta el titulo en la cabecera (salia repetido)
-echo "<p class=\"notice\">" . t('Medios con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Elige hasta %d en <a href="/perfil.php#medios">tu perfil</a> y los tendrás en el menú lateral y en el pie.', medios_max('medio')) . ' ' . t('Las newsletters (Substack) van en su propio grupo, «Mis substacks», hasta %d.', medios_max('newsletter')) . ($u ? '' : ' ' . t('<a href="/login.php">Entra</a> para elegir tus medios.'))
+echo "<p class=\"notice\">" . t('Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Marca con la estrella los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».') . ($u ? '' : ' ' . t('<a href="/login.php">Entra</a> para elegir tus medios.'))
    . ($k !== 'agregador' ? ' ' . (fprop_puede($u) ? t('Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.', num_pg(lang(), cfg('source_propose_aura', 6)), num_pg(lang(), round((float)$u['aura'], 1)))
                                                   : t('Con aura %s o más puedes proponer medios y substacks nuevos.', num_pg(lang(), cfg('source_propose_aura', 6)))) : '') . "</p>";
 echo fuentes_casilla_idioma();   // la misma casilla que en el perfil: marcarla aqui la marca alli
@@ -50,7 +50,10 @@ foreach ($kinds as $kind) {
     foreach ($lista as $m) {
         $descr = $kind === 'agregador' ? t('portada, populares y nuevas, solo lectura') : h((string)$m['descr'] ?: source_of($m['home']));
         if (($m['lang'] ?? '') !== '' && $m['lang'] !== lang()) $descr = "<b>" . h(strtoupper($m['lang'])) . "</b> · " . $descr;   // otro idioma: se avisa
-        echo "<a class=\"fz medio\" href=\"" . h(fuente_url($m)) . "\">" . avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . (in_array($m['source_id'], $mine, false) ? " <small class=\"mine\">" . t('mío') . "</small>" : "") . "</span><br><span class=\"meta\">" . $descr . " · " . t('%d noticias', (int)$m['cnt']) . ($m['last'] ? " · " . h(hace($m['last'])) : '') . "</span></span>" . icon($kind === 'agregador' ? 'agg' : 'news') . "</a>";
+        $cuerpo = avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . (in_array($m['source_id'], $mine, false) ? " <small class=\"mine\">" . t('mío') . "</small>" : "") . "</span><br><span class=\"meta\">" . $descr . " · " . t('%d noticias', (int)$m['cnt']) . ($m['last'] ? " · " . h(hace($m['last'])) : '') . "</span></span>";
+        // con cuenta, medios y substacks llevan la estrella de favoritos al final de la fila (la fila deja de ser un solo enlace: un form no cabe dentro de un <a>)
+        if ($fav = fuente_fav_form($m)) echo "<div class=\"fz medio\"><a class=\"fzl\" href=\"" . h(fuente_url($m)) . "\">$cuerpo</a>$fav</div>";
+        else echo "<a class=\"fz medio\" href=\"" . h(fuente_url($m)) . "\">$cuerpo" . icon($kind === 'agregador' ? 'agg' : 'news') . "</a>";
     }
 }
 // abajo, los tres grupos (y «todos» cuando se esta viendo uno solo)

@@ -393,7 +393,7 @@ INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada
 CREATE TABLE user_media (
     user_id   INT UNSIGNED NOT NULL,
     source_id SMALLINT UNSIGNED NOT NULL,
-    pos       TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    pos       SMALLINT UNSIGNED NOT NULL DEFAULT 1,
     PRIMARY KEY (user_id, source_id),
     CONSTRAINT fk_um_user   FOREIGN KEY (user_id)   REFERENCES users(user_id)     ON DELETE CASCADE,
     CONSTRAINT fk_um_source FOREIGN KEY (source_id) REFERENCES sources(source_id) ON DELETE CASCADE

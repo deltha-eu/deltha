@@ -628,4 +628,12 @@ return [
 'Mostrar fuentes y envíos solo en mi idioma' => 'Iturriak eta bidalketak nire hizkuntzan bakarrik erakutsi',
 'Solo fuentes y envíos en mi idioma' => 'Iturriak eta bidalketak nire hizkuntzan bakarrik',
 'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.' => 'Beste hizkuntza batzuetako hedabideak, substackak eta agregatzaileak ez dira agertuko menuan, zerrendetan eta zure hedabide-aukeran, eta beste hizkuntza bateko bidalketak ez dira agertuko azaletan, radarrean, gaietan eta komunitateetan (zein hizkuntzatan dauden ez dakigunak, bai). Zure hizkuntza interfazearena da.',
+// medios y substacks favoritos sin limite (migra-093)
+'quitar %s de tus favoritos' => 'kendu %s zure gogokoetatik',
+'añadir %s a tus favoritos' => 'gehitu %s zure gogokoetara',
+'Son tus favoritos: <a href="%s">verlos todos</a>.' => 'Zure gogokoak dira: <a href="%s">ikusi denak</a>.',
+'Son los que han publicado más recientemente: marca tus favoritos con la estrella.' => 'Azkenaldian argitaratu dutenak dira: markatu zure gogokoak izarrarekin.',
+'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Marca con la estrella los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'RSSa duten hedabideak eta Substackak, Delthako itxurarekin irakurtzeko. Albiste bakoitzak radarrera proposatzeko botoia du. Markatu izarrarekin nahi dituzunak, mugarik gabe: «Nire hedabideak» eta «Nire Substackak» ataletan izango dituzu.',
+'Tus favoritos de este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; añade o quita con la estrella, aquí, en el <a href="%s">catálogo</a> o en cada noticia.' => 'Talde honetako zure gogokoak, mugarik gabe. Menuan azkenaldian argitaratu duten %d agertzen dira; gehitu edo kendu izarrarekin, hemen, <a href="%s">katalogoan</a> edo albiste bakoitzean.',
+'Todavía no tienes favoritos aquí. Márcalos con la estrella en el <a href="%s">catálogo</a> o en cada noticia.' => 'Oraindik ez duzu gogokorik hemen. Markatu izarrarekin <a href="%s">katalogoan</a> edo albiste bakoitzean.',
 ];

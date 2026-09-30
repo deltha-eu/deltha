@@ -628,4 +628,12 @@ return [
 'Mostrar fuentes y envíos solo en mi idioma' => 'Mostrar fonts i enviaments només en el meu idioma',
 'Solo fuentes y envíos en mi idioma' => 'Només fonts i enviaments en el meu idioma',
 'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.' => 'Els mitjans, substacks i agregadors en altres idiomes deixen de sortir al menú, a les llistes i a la teva tria de mitjans, i els enviaments en un altre idioma deixen de sortir a les portades, al radar, als temes i a les comunitats (els que no se sap en quin idioma són, sí que es veuen). El teu idioma és el de la interfície.',
+// medios y substacks favoritos sin limite (migra-093)
+'quitar %s de tus favoritos' => 'treure %s dels teus favorits',
+'añadir %s a tus favoritos' => 'afegir %s als teus favorits',
+'Son tus favoritos: <a href="%s">verlos todos</a>.' => 'Són els teus favorits: <a href="%s">veure\'ls tots</a>.',
+'Son los que han publicado más recientemente: marca tus favoritos con la estrella.' => 'Són els que han publicat més recentment: marca els teus favorits amb l\'estrella.',
+'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Marca con la estrella los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'Mitjans i Substacks amb RSS que pots llegir amb l\'aspecte de Deltha. Cada notícia porta un botó per proposar-la al radar. Marca amb l\'estrella els que vulguis, sense límit: els tindràs a «Els meus mitjans» i «Els meus Substacks».',
+'Tus favoritos de este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; añade o quita con la estrella, aquí, en el <a href="%s">catálogo</a> o en cada noticia.' => 'Els teus favorits d\'aquest grup, sense límit. Al menú surten els %d que han publicat més recentment; afegeix-ne o treu-ne amb l\'estrella, aquí, al <a href="%s">catàleg</a> o a cada notícia.',
+'Todavía no tienes favoritos aquí. Márcalos con la estrella en el <a href="%s">catálogo</a> o en cada noticia.' => 'Encara no tens favorits aquí. Marca\'ls amb l\'estrella al <a href="%s">catàleg</a> o a cada notícia.',
 ];

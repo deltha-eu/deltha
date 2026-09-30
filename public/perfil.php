@@ -31,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('quitar') === '1' && $avatar) { @unlink(DDD_MEDIA_DIR . '/avatars/' . $avatar); $avatar = null; }
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ?, src_mylang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $mylang, $u['user_id']]);
-        if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, , $field]) { try { guardar_mis_medios($pdo, (int)$u['user_id'], (array)($_POST[$field] ?? []), $kind); } catch (Throwable $e) {} }
         redirect('/perfil.php?ok=1');
     }
 }
@@ -78,19 +77,7 @@ foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) e
 echo "</optgroup><optgroup label=\"" . t('Una comunidad') . "\">";
 foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) echo "<option value=\"c:{$co['community_id']}\"" . (($u['landing'] ?? '') === "c:{$co['community_id']}" ? ' selected' : '') . ">" . h($co['name']) . "</option>";
 echo "</optgroup></select><small class=\"hint\">" . t('Se aplica al entrar con tu cuenta y al abrir Deltha desde fuera (un marcador, la app); la pestaña Portada sigue llevando a la portada.') . "</small>";
-if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, $label, $field]) {
-    if (!($catalogo = fuentes_visibles($pdo, $kind))) continue;
-    $max = medios_max($kind);
-    $mine = array_column(mis_medios($pdo, $u, $kind), 'source_id');
-    echo "<label id=\"" . ($kind === 'medio' ? 'medios' : 'substacks') . "\">" . t($label) . "</label><small class=\"hint\">" . ($kind === 'medio'
-        ? t('Hasta %d medios con RSS que verás con el aspecto de Deltha, en el menú lateral y en el pie; desde cada noticia puedes proponerla en el radar. El catálogo lo mantiene el sitio: <a href="/medios.php">ver todos</a>.', $max)
-        : t('Hasta %d newsletters (Substack) que verás igual que los medios, en su propio grupo del menú.', $max)) . "</small>";
-    for ($k = 0; $k < $max; $k++) {
-        echo "<select name=\"{$field}[]\" class=\"medsel\"><option value=\"\">" . t('— ninguno —') . "</option>";
-        foreach ($catalogo as $m) echo "<option value=\"{$m['source_id']}\"" . ((int)($mine[$k] ?? 0) === (int)$m['source_id'] ? ' selected' : '') . ">" . h($m['name']) . "</option>";
-        echo "</select>";
-    }
-}
+// los medios y substacks favoritos ya no se eligen aqui (eran tres desplegables): pestañas «Mis medios» y «Mis substacks» (/mis-fuentes.php)
 if (fuentes_on()) { require_once __DIR__ . '/../lib/propuestas.php'; if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php') . "</p>"; }
 echo "" . t('<button>Guardar</button>') . "</form>";
 page_footer();

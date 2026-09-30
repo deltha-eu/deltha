@@ -44,8 +44,7 @@ if ($medio) {
     $intro = t('Las últimas noticias de <a href="%s" rel="noopener">%s</a> por RSS, vistas desde Deltha.', h($src['home']), h($src['name']));
     if ($src['descr']) $intro .= ' ' . h($src['descr']) . '.';
     $intro .= ' ' . t('Cada titular lleva a la noticia; con «enviar al radar» la propones en Deltha como cualquier envío.');
-    $u = user();
-    $intro .= ' ' . ($u ? (mis_medios($pdo, $u) ? t('Es uno de <a href="/perfil.php#medios">tus medios</a>.') : t('Puedes elegir <a href="/perfil.php#medios">tus medios</a> en el perfil.')) : t('<a href="/login.php">Entra</a> para elegir tus medios.'));
+    if (!user()) $intro .= ' ' . t('<a href="/login.php">Entra</a> para elegir tus medios.');
 } else {
     $intro = fuente_sin_votos($src)
         ? t('Solo lectura: los últimos mensajes de <a href="%s" rel="noopener">%s</a>, vistos desde Deltha. Aquí no se responde: cada mensaje lleva a su sitio en el hilo original; el número es el del mensaje dentro del hilo.', h($src['home']), h($src['name']))
@@ -55,6 +54,7 @@ if ($medio) {
 $intro .= ' ' . t('Se lee cada %d min · última lectura: %s.', (int)$src['interval_min'], h($last));
 if ($src['last_error'] && is_admin()) $intro .= " <b>" . h($src['last_error']) . "</b>";
 echo "<p class=\"notice\">$intro</p>";
+if ($medio && ($fav = fuente_fav_form($src, true))) echo "<div class=\"srcfav\">$fav</div>";   // estrella con texto: esta fuente, a favoritos
 
 foreach ($rows as $i) fuente_post($src, $i, ($medio || $view === 'portada') ? 'full' : 'compact', $sent);
 if (!$rows) echo "<p class=\"end\">" . ($src['last_fetch'] ? t('No hay nada en esta vista ahora mismo.') : t('El lector aún no ha pasado por esta fuente.')) . "</p>";
