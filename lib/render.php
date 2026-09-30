@@ -264,9 +264,12 @@ function fav_link(array $s): string {
          . "<button title=\"" . h($on ? t('quitar de favoritos') : t('guardar en favoritos')) . "\">" . icon('fav') . "<span>" . ($on ? t('guardado') : t('guardar')) . "</span></button></form>";
 }
 
-/** Pestañas del perfil propio (perfil.php, favoritos.php): datos y favoritos. */
+/** Pestañas del perfil propio (perfil.php, favoritos.php, mis-fuentes.php): datos, envios guardados y medios y substacks favoritos. */
 function profile_tabs(string $on): void {
+    global $pdo;
     $tabs = ['perfil' => ['/perfil.php', t('Mi perfil')], 'favoritos' => ['/favoritos.php', t('Favoritos')]];
+    require_once __DIR__ . '/fuentes.php';
+    if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, $label]) if (fuentes_activas($pdo, $kind)) $tabs["fuentes:$kind"] = ["/mis-fuentes.php?k=$kind", t($label)];
     echo "<nav class=\"sub\">";
     foreach ($tabs as $k => [$href, $label]) echo "<a href=\"$href\"" . ($k === $on ? ' class="on"' : '') . ">" . h($label) . "</a>";
     echo "</nav>";

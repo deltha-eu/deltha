@@ -668,4 +668,12 @@ return [
 'Mostrar fuentes y envíos solo en mi idioma' => 'Show sources and posts only in my language',
 'Solo fuentes y envíos en mi idioma' => 'Only sources and posts in my language',
 'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.' => 'Media, substacks and aggregators in other languages no longer appear in the menu, the lists or your choice of media, and posts in another language no longer appear on the front pages, the radar, topics and communities (those whose language is unknown are still shown). Your language is the interface language.',
+// medios y substacks favoritos sin limite (migra-093)
+'quitar %s de tus favoritos' => 'remove %s from your favourites',
+'añadir %s a tus favoritos' => 'add %s to your favourites',
+'Son tus favoritos: <a href="%s">verlos todos</a>.' => 'These are your favourites: <a href="%s">see them all</a>.',
+'Son los que han publicado más recientemente: marca tus favoritos con la estrella.' => 'These are the ones that published most recently: mark your favourites with the star.',
+'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Marca con la estrella los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'Media and Substacks with RSS that you can read with the Deltha look. Every story has a button to propose it on the radar. Star as many as you like, with no limit: you will find them under “My media” and “My Substacks”.',
+'Tus favoritos de este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; añade o quita con la estrella, aquí, en el <a href="%s">catálogo</a> o en cada noticia.' => 'Your favourites in this group, with no limit. The menu shows the %d that published most recently; add or remove with the star, here, in the <a href="%s">catalogue</a> or on each story.',
+'Todavía no tienes favoritos aquí. Márcalos con la estrella en el <a href="%s">catálogo</a> o en cada noticia.' => 'You have no favourites here yet. Mark them with the star in the <a href="%s">catalogue</a> or on each story.',
 ];

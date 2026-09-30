@@ -54,19 +54,21 @@ function rail_skins(): void {
     rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
 }
 
-/** Cuarto grupo del rail: «Mis substacks», «Mis medios» y «Mis agregadores» como cabeceras (mismo aspecto que Plantilla / Aspecto / Idioma,
+/** Cuarto grupo del rail: «Mis medios», «Mis substacks» y «Mis agregadores» como cabeceras (mismo aspecto que Plantilla / Aspecto / Idioma,
  *  sin flecha ni plegado), cada una pulsable → /ultimo.php?k=… (las diez ultimas noticias del grupo en formato normal), y debajo, siempre
- *  visibles, solo los nombres: los elegidos en el perfil o, sin eleccion / sin cuenta, los que han publicado mas recientemente (agregadores: los destacados en admin). */
+ *  visibles, solo los nombres: de los favoritos del usuario, los tres que han publicado mas recientemente (y «todos» → /mis-fuentes.php si
+ *  tiene mas) o, sin favoritos / sin cuenta, los que han publicado mas recientemente del catalogo (agregadores: los destacados en admin). */
 function rail_medios(): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on()) return;
     $u = user();
     foreach (DDD_ULTIMO_KINDS as $kind => [$label, $ic]) {
-        if (!($list = ultimo_fuentes($pdo, $u, $kind))) continue;
-        $mine = $kind !== 'agregador' && mis_medios($pdo, $u, $kind);
+        if (!($list = medios_menu($pdo, $u, 0, $kind))) continue;
+        $mias = $kind !== 'agregador' ? count(mis_medios_recientes($pdo, $u, $kind)) : 0;
         $on = current_tab() === "ultimo:$kind" ? ' class="on"' : '';
-        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo.php?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($kind === 'agregador' ? t('%d fuentes', count($list)) : ($mine ? t('%d elegidos', count($list)) : t('recientes'))) . "</small></span></a></summary><div class=\"list\">";
+        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo.php?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($kind === 'agregador' ? t('%d fuentes', count($list)) : ($mias ? t('%d elegidos', $mias) : t('recientes'))) . "</small></span></a></summary><div class=\"list\">";
         foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
+        if ($mias > count($list)) echo "<a class=\"more" . (current_tab() === "fuentes:$kind" ? ' on' : '') . "\" href=\"/mis-fuentes.php?k=$kind\">" . t('todos') . " · $mias</a>";
         echo "</div></details>";
     }
 }

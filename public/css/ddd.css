@@ -2959,3 +2959,16 @@ ul.fprops .st-rejected { text-decoration: line-through; }
 .side .mod.comm .row a { color: inherit; text-decoration: none; }
 .side .mod.comm .row:hover .t { text-decoration: none; }
 .side .mod.comm .row .t > a:not(.cm):hover, .side .mod.comm .row a.cm:hover b { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---- medios y substacks favoritos sin limite (v131): estrella (form.fav.src) en tarjetas de noticia, hilo, pagina de la fuente y catalogo;
+   fila del catalogo con estrella (div.fz > a.fzl + form); «todos · N» al pie del grupo del rail. ---- */
+form.fav.src button { gap: 5px; }
+.post .actions form.fav.src { margin-left: 2px; }
+.fz > a.fzl { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; color: inherit; text-decoration: none; }
+.fz > form.fav.src { flex: none; }
+.fz > form.fav.src button { padding: 6px; }
+.fz > form.fav.src .i { width: 20px; height: 20px; }
+.srcfav { margin: -6px 16px 12px; }
+.srcfav form.fav button { font-size: 14px; padding: 6px 14px; border: 1px solid var(--line2); border-radius: 999px; }
+.rail details.rail-dd.medios .list a.more { color: var(--muted); font-size: 12px; }
+.rail details.rail-dd.medios .list a.more.on::before { content: none; }

@@ -6,8 +6,9 @@
  *  - agregador (Menéame): feed de portada y feed de cola, fases nuevas -> portada, votos y comentarios de la
  *    fuente; se ve en /fuente.php?f=slug con Portada / Populares / Nuevas.
  *  - medio (Jot Down, Revista Mercurio...): un solo feed, sin fases ni votos; cada noticia lleva un boton
- *    «enviar al radar» que abre /enviar.php prerrellenado. Cada usuario elige hasta media_max_per_user medios
- *    en su perfil («Mis medios», tabla user_media) y los tiene en el rail bajo Idioma y en el pie.
+ *    «enviar al radar» que abre /enviar.php prerrellenado. Cada usuario marca como favoritos los que quiera, sin
+ *    limite (estrella en el catalogo, en la fuente, en cada noticia y en el hilo; tabla user_media); en el rail salen
+ *    los media_max_per_user que han publicado mas recientemente y en /mis-fuentes.php (pestañas del perfil), todos.
  *
  * El cron (promocionar.php, cada minuto) llama a fuentes_tick(): lee los feeds de cada fuente cuando vence su
  * interval_min y guarda los items en source_items, uno por id externo (meneame:link_id o guid), actualizando
@@ -85,16 +86,20 @@ function fuente_url(array $src, string $view = ''): string {
     return '/fuente.php?f=' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
 }
 function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar al radar»
-/** Grupos elegibles por el usuario: tipo => [clave de config del maximo, etiqueta del grupo, campo del formulario del perfil] */
-const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios', 'media'], 'newsletter' => ['news_max_per_user', 'Mis substacks', 'news']];
-/** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen en el perfil (DDD_MEDIA_KINDS). */
+/** Grupos con favoritos del usuario: tipo => [clave de config de cuantos salen en el menu, etiqueta del grupo] */
+const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios'], 'newsletter' => ['news_max_per_user', 'Mis substacks']];
+/** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con la estrella (DDD_MEDIA_KINDS). */
 const DDD_ULTIMO_KINDS = ['medio' => ['Mis medios', 'news'], 'newsletter' => ['Mis substacks', 'letter'], 'agregador' => ['Mis agregadores', 'agg']];   // mismo orden que las portadas: Medios, Substacks
-/** Fuentes que se muestran en el rail para un grupo: medios_menu() — las elegidas, si no las destacadas, si no las primeras; nunca mas de
- *  tres (media_max_per_user). Los agregadores no se eligen en el perfil, asi que salen los destacados en admin (sources.featured). */
-function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array { return medios_menu($pdo, $u, 0, $kind); }
+/** Fuentes de las que /ultimo.php saca las noticias de un grupo: TODOS los favoritos del usuario (sin limite) o, si no tiene
+ *  ninguno / no tiene cuenta, las del menu (medios_menu(): las que han publicado mas recientemente; agregadores: los destacados). */
+function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array {
+    if ($kind !== 'agregador' && ($mias = mis_medios_recientes($pdo, $u, $kind))) return $mias;
+    return medios_menu($pdo, $u, 0, $kind);
+}
+/** Cuantas fuentes de un grupo salen en el menu (no cuantas se pueden guardar: eso no tiene limite). */
 function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[$kind][0] ?? 'media_max_per_user', 3)); }
 
-/** Fuentes de un tipo elegidas por un usuario (en su orden). Vacio si no ha elegido. */
+/** Fuentes de un tipo que el usuario tiene como favoritas (en el orden en que las guardo). Vacio si no tiene. */
 function mis_medios(PDO $pdo, ?array $u, string $kind = 'medio'): array {
     static $cache = [];
     if (!$u) return [];
@@ -106,16 +111,45 @@ function mis_medios(PDO $pdo, ?array $u, string $kind = 'medio'): array {
         return $cache[$k] = $st->fetchAll();
     } catch (Throwable $e) { return $cache[$k] = []; }
 }
-/** Guarda la eleccion de un tipo (lista de source_id, en orden; se recorta al maximo del tipo y a fuentes activas de ese tipo). */
-function guardar_mis_medios(PDO $pdo, int $uid, array $ids, string $kind = 'medio'): void {
-    $ok = array_column(fuentes_activas($pdo, $kind), 'source_id');
-    $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn($i) => in_array($i, $ok, false))));
-    $ids = array_slice($ids, 0, medios_max($kind));
-    $pdo->prepare("DELETE um FROM user_media um JOIN sources s ON s.source_id = um.source_id WHERE um.user_id = ? AND s.kind = ?")->execute([$uid, $kind]);
-    $ins = $pdo->prepare("INSERT INTO user_media (user_id, source_id, pos) VALUES (?,?,?)");
-    foreach ($ids as $i => $sid) $ins->execute([$uid, $sid, $i + 1]);
+/** Añade o quita una fuente de los favoritos del usuario (sin limite). */
+function fuente_fav_set(PDO $pdo, int $uid, int $sid, bool $on): void {
+    if ($on) $pdo->prepare("INSERT IGNORE INTO user_media (user_id, source_id, pos) SELECT ?, ?, LEAST(COALESCE(MAX(pos), 0) + 1, 65535) FROM user_media WHERE user_id = ?")->execute([$uid, $sid, $uid]);
+    else     $pdo->prepare("DELETE FROM user_media WHERE user_id = ? AND source_id = ?")->execute([$uid, $sid]);
 }
-/** Fuentes de un tipo que se ofrecen en el menu, el pie y la columna: las elegidas por el usuario o, si no ha elegido (o no tiene cuenta),
+/** ¿Es favorita del usuario actual? */
+function fuente_es_fav(array $src): bool {
+    global $pdo;
+    foreach (mis_medios($pdo, user(), (string)($src['kind'] ?? 'medio')) as $m) if ((int)$m['source_id'] === (int)$src['source_id']) return true;
+    return false;
+}
+/** Favoritos de un tipo, la que ha publicado mas recientemente primero (las que aun no tienen noticias, al final); con «solo en mi
+ *  idioma» se quitan las de otro idioma. */
+function mis_medios_recientes(PDO $pdo, ?array $u, string $kind): array {
+    $list = array_values(array_filter(mis_medios($pdo, $u, $kind), 'fuente_en_mi_idioma'));
+    $ult = fuentes_ultima_noticia($pdo);
+    usort($list, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
+    return $list;
+}
+/** Fuente del catalogo (medio o substack) a la que pertenece un dominio («jotdown.es»), para ofrecer la estrella desde un envio. */
+function fuente_por_dominio(PDO $pdo, string $dominio): ?array {
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        foreach (fuentes_activas($pdo) as $s) if (fuente_es_medio($s) && ($d = (string)source_of((string)$s['home'])) !== '') $map[$d] ??= $s;
+    }
+    return $map[strtolower($dominio)] ?? null;
+}
+/** Estrella «añadir a favoritos / quitar» de un medio o substack, solo para registrados; sin JS: un POST a /fav-fuente.php que vuelve
+ *  a la misma pagina. $label: con el texto «guardar» / «guardado» al lado (hilo, pagina de la fuente); sin el, solo el icono (tarjetas). */
+function fuente_fav_form(array $src, bool $label = false): string {
+    if (!user() || !fuente_es_medio($src)) return '';
+    $on = fuente_es_fav($src);
+    $title = h($on ? t('quitar %s de tus favoritos', $src['name']) : t('añadir %s a tus favoritos', $src['name']));
+    return "<form class=\"fav src" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/fav-fuente.php\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$src['source_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
+         . "<button title=\"$title\" aria-label=\"$title\">" . icon('star') . ($label ? "<span>" . ($on ? t('guardado') : t('guardar')) . "</span>" : '') . "</button></form>";
+}
+/** Fuentes de un tipo que se ofrecen en el menu: de los favoritos del usuario, los que han publicado mas recientemente (una noticia
+ *  por fuente: «los tres ultimos sin repetir fuente») o, si no tiene favoritos (o no tiene cuenta),
  *  en medios y substacks las que han publicado mas recientemente (siempre hay algo fresco, y van rotando solas); en agregadores las
  *  destacadas en admin (sources.featured). Si no sale ninguna, las primeras del catalogo. Nunca mas del maximo del tipo. */
 /** Fecha de la noticia mas reciente de cada fuente: source_id => pub_date (una consulta por peticion). */
@@ -129,7 +163,7 @@ function fuentes_ultima_noticia(PDO $pdo): array {
 }
 function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
     $max = $max ?: medios_max($kind);
-    $list = array_values(array_filter(mis_medios($pdo, $u, $kind), 'fuente_en_mi_idioma'));   // «solo en mi idioma» tambien quita las elegidas en otro
+    $list = $kind === 'agregador' ? [] : mis_medios_recientes($pdo, $u, $kind);   // «solo en mi idioma» tambien quita las favoritas en otro
     if (!$list && $kind !== 'agregador') {
         $ult = fuentes_ultima_noticia($pdo);
         $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => isset($ult[$m['source_id']])));
@@ -551,6 +585,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
         if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo.php?id=" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
         elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia al radar')) . "\">" . icon('plus') . "<span>" . t('enviar al radar') . "</span></a>";
         echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h(t('leer en %s', $src['name'])) . "</span></a>";
+        echo fuente_fav_form($src);   // estrella: el medio o substack de esta noticia, a favoritos
     } else {
         echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
         if (!fuente_sin_votos($src)) echo "<span class=\"vote\"><span>" . icon('up') . "<span>" . (int)$i['votes'] . "</span></span><span>" . icon('down') . "<span>" . (int)$i['negatives'] . "</span></span></span>";

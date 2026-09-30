@@ -628,4 +628,12 @@ return [
 'Mostrar fuentes y envíos solo en mi idioma' => 'Mostrar fontes e envíos só no meu idioma',
 'Solo fuentes y envíos en mi idioma' => 'Só fontes e envíos no meu idioma',
 'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.' => 'Medios, substacks e agregadores noutros idiomas deixan de saír no menú, nas listas e na túa elección de medios, e os envíos noutro idioma deixan de saír nas portadas, no radar, nos temas e nas comunidades (os que non se sabe en que idioma están, si se ven). O teu idioma é o da interface.',
+// medios y substacks favoritos sin limite (migra-093)
+'quitar %s de tus favoritos' => 'quitar %s dos teus favoritos',
+'añadir %s a tus favoritos' => 'engadir %s aos teus favoritos',
+'Son tus favoritos: <a href="%s">verlos todos</a>.' => 'Son os teus favoritos: <a href="%s">velos todos</a>.',
+'Son los que han publicado más recientemente: marca tus favoritos con la estrella.' => 'Son os que publicaron máis recentemente: marca os teus favoritos coa estrela.',
+'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Marca con la estrella los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'Medios e Substacks con RSS que podes ler co aspecto de Deltha. Cada noticia leva un botón para propoñela no radar. Marca coa estrela os que queiras, sen límite: teralos en «Os meus medios» e «Os meus Substacks».',
+'Tus favoritos de este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; añade o quita con la estrella, aquí, en el <a href="%s">catálogo</a> o en cada noticia.' => 'Os teus favoritos deste grupo, sen límite. No menú saen os %d que publicaron máis recentemente; engade ou quita coa estrela, aquí, no <a href="%s">catálogo</a> ou en cada noticia.',
+'Todavía no tienes favoritos aquí. Márcalos con la estrella en el <a href="%s">catálogo</a> o en cada noticia.' => 'Aínda non tes favoritos aquí. Márcaos coa estrela no <a href="%s">catálogo</a> ou en cada noticia.',
 ];

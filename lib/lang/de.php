@@ -629,4 +629,12 @@ return [
 'Mostrar fuentes y envíos solo en mi idioma' => 'Quellen und Beiträge nur in meiner Sprache anzeigen',
 'Solo fuentes y envíos en mi idioma' => 'Nur Quellen und Beiträge in meiner Sprache',
 'Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.' => 'Medien, Substacks und Aggregatoren in anderen Sprachen erscheinen nicht mehr im Menü, in den Listen und in deiner Medienauswahl, und Beiträge in einer anderen Sprache erscheinen nicht mehr auf den Titelseiten, im Radar, in den Themen und Communities (solche mit unbekannter Sprache bleiben sichtbar). Deine Sprache ist die der Oberfläche.',
+// medios y substacks favoritos sin limite (migra-093)
+'quitar %s de tus favoritos' => '%s aus deinen Favoriten entfernen',
+'añadir %s a tus favoritos' => '%s zu deinen Favoriten hinzufügen',
+'Son tus favoritos: <a href="%s">verlos todos</a>.' => 'Das sind deine Favoriten: <a href="%s">alle ansehen</a>.',
+'Son los que han publicado más recientemente: marca tus favoritos con la estrella.' => 'Das sind die mit den neuesten Beiträgen: Markiere deine Favoriten mit dem Stern.',
+'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Marca con la estrella los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'Medien und Substacks mit RSS, die du im Deltha-Look lesen kannst. Jede Meldung hat einen Button, um sie im Radar vorzuschlagen. Markiere mit dem Stern so viele, wie du willst, ohne Limit: Du findest sie unter „Meine Medien“ und „Meine Substacks“.',
+'Tus favoritos de este grupo, sin límite. En el menú salen los %d que han publicado más recientemente; añade o quita con la estrella, aquí, en el <a href="%s">catálogo</a> o en cada noticia.' => 'Deine Favoriten in dieser Gruppe, ohne Limit. Im Menü erscheinen die %d mit den neuesten Beiträgen; füge mit dem Stern hinzu oder entferne, hier, im <a href="%s">Katalog</a> oder bei jeder Meldung.',
+'Todavía no tienes favoritos aquí. Márcalos con la estrella en el <a href="%s">catálogo</a> o en cada noticia.' => 'Du hast hier noch keine Favoriten. Markiere sie mit dem Stern im <a href="%s">Katalog</a> oder bei jeder Meldung.',
 ];
