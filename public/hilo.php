@@ -76,14 +76,15 @@ echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
 $dest = $s['url'] ?: null;
+if (foco()) media_block($s, 'media', $s['content_type'] === 'article' ? null : $dest);   // sin distracciones: la foto, antes del titular, flota a su derecha
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
-    media_block($s, 'media', null);
+    if (!foco()) media_block($s, 'media', null);
     // cada parrafo con su aire (.para): la separacion la da el CSS, no los <br>
     echo md_articulo((string)$s['content']);   // **negrita** *cursiva* > cita [enlace](url), parrafo a parrafo (.para)
 } else {
     if ($s['content']) echo "<p class=\"lead\">" . nl2br(h($s['content'])) . "</p>";
-    media_block($s, 'media', $dest);
+    if (!foco()) media_block($s, 'media', $dest);
 }
 if ($s['url']) echo "<a class=\"source\" href=\"" . h($s['url']) . "\" rel=\"noopener nofollow\">" . icon('link') . h($s['source']) . "</a>";
 if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";

@@ -676,4 +676,8 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Pedir un código por correo al entrar' => 'Pedir un código por correo ao entrar',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Ademais do contrasinal, ao entrar enviarémosche un código de seis cifras a %s. Só se pide ao iniciar sesión, non en cada visita.',
 'Es obligatoria para administradores.' => 'É obrigatoria para administradores.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Sen distraccións',
+'Activado' => 'Activado',
+'Desactivado' => 'Desactivado',
 ];

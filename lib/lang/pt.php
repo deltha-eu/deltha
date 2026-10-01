@@ -713,4 +713,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Pedir un código por correo al entrar' => 'Pedir um código por email ao entrar',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Além da palavra-passe, ao entrar enviamos-te um código de seis algarismos para %s. Só é pedido ao iniciar sessão, não em cada visita.',
 'Es obligatoria para administradores.' => 'É obrigatória para administradores.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Sem distrações',
+'Activado' => 'Ativado',
+'Desactivado' => 'Desativado',
 ];

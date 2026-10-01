@@ -676,4 +676,8 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Pedir un código por correo al entrar' => 'Demanar un codi per correu en entrar',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'A més de la contrasenya, en entrar t\'enviarem un codi de sis xifres a %s. Només es demana en iniciar sessió, no a cada visita.',
 'Es obligatoria para administradores.' => 'És obligatòria per als administradors.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Sense distraccions',
+'Activado' => 'Activat',
+'Desactivado' => 'Desactivat',
 ];

@@ -677,4 +677,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Pedir un código por correo al entrar' => 'Bei der Anmeldung einen Code per E-Mail verlangen',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Zusätzlich zum Passwort schicken wir dir bei der Anmeldung einen sechsstelligen Code an %s. Er wird nur bei der Anmeldung verlangt, nicht bei jedem Besuch.',
 'Es obligatoria para administradores.' => 'Für Administratoren ist sie Pflicht.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Ohne Ablenkung',
+'Activado' => 'An',
+'Desactivado' => 'Aus',
 ];
