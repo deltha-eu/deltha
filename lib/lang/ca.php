@@ -687,4 +687,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'En Deltha' => 'A Deltha',
 'En los medios' => 'Als mitjans',
 'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'L\'últim dels mitjans i Substacks d\'aquest tema, encara sense enviar: %s. Cada notícia porta un botó per proposar-la al radar.',
+'En medios en mi idioma' => 'Als mitjans en el meu idioma',
 ];

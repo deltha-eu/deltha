@@ -688,4 +688,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'En Deltha' => 'Su Deltha',
 'En los medios' => 'Nei media',
 'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'Le ultime dai media e dai Substack di questo tema, non ancora inviate: %s. Ogni notizia ha un pulsante per proporla al radar.',
+'En medios en mi idioma' => 'Nei media nella mia lingua',
 ];
