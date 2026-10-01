@@ -676,4 +676,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Pedir un código por correo al entrar' => 'Sartzean kode bat eskatu posta elektronikoz',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Pasahitzaz gain, sartzean sei zifrako kode bat bidaliko dizugu %s helbidera. Saioa hastean bakarrik eskatzen da, ez bisita bakoitzean.',
 'Es obligatoria para administradores.' => 'Nahitaezkoa da administratzaileentzat.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Distrakziorik gabe',
+'Activado' => 'Aktibatuta',
+'Desactivado' => 'Desaktibatuta',
 ];

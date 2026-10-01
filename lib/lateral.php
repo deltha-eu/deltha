@@ -47,6 +47,9 @@ function rail_skins(): void {
     $items = [];
     foreach ($opts as $k => $v) $items[] = ["/cambiar-skin.php?t=$k", $v, $k === $th, null];
     rail_dd('theme', t('Aspecto'), $opts[$th], $items);
+    // sin distracciones (escritorio): sin columna derecha, columna central ancha y fotos a la derecha del titular
+    $fz = foco();
+    rail_dd('focus', t('Sin distracciones'), $fz ? t('Activado') : t('Desactivado'), [['/cambiar-skin.php?z=1', t('Activado'), $fz, null], ['/cambiar-skin.php?z=0', t('Desactivado'), !$fz, null]], 'foco');
     // idioma
     $cl = lang();
     $items = [];

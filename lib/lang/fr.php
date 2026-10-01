@@ -715,4 +715,8 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Pedir un código por correo al entrar' => 'Demander un code par e-mail à la connexion',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'En plus du mot de passe, à la connexion nous vous enverrons un code à six chiffres à %s. Il n’est demandé qu’à la connexion, pas à chaque visite.',
 'Es obligatoria para administradores.' => 'Elle est obligatoire pour les administrateurs.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Sans distractions',
+'Activado' => 'Activé',
+'Desactivado' => 'Désactivé',
 ];

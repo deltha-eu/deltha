@@ -2995,3 +2995,17 @@ nav.sub.cvista { margin-bottom: 4px; }
 .hilo.arbol .thread .post.reply.child .pc { border-left: 0 !important; }
 .hilo.arbol .has-next::after { display: none !important; }
 @media (max-width: 520px) { .hilo.arbol .thread .post.reply[style] { margin-left: calc(var(--lv, 1) * 14px) !important; } }
+
+/* ---- Modo «sin distracciones» (v134): <html data-foco="1"> lo pone page_header() cuando foco() (cookie ddd_foco, menu lateral).
+   Solo en el escritorio de tres columnas: desaparece la columna derecha y la central ocupa su sitio (600 + 40 + 340 = 980 px);
+   las fotos dejan de ser tarjeta bajo el texto y flotan a la derecha del titular, al ancho que tenia la columna derecha (340 px)
+   (por eso con foco() la foto se emite ANTES del titular: story_post, fuente_post, hilo.php). En un original, cuerpo algo mayor. ---- */
+@media (min-width: 1300px) {
+  html[data-foco] .side { display: none; }
+  html[data-foco] .cols { grid-template-columns: 260px 980px; }
+  html[data-foco] .shell { max-width: none; }
+  html[data-foco] .post .pc { display: flow-root; }   /* la tarjeta crece hasta contener la foto flotada */
+  html[data-foco] .post .media, html[data-foco] .post .media.sm, html[data-foco] .hilo .post.main .media { float: right; width: 340px; margin: 2px 0 10px 28px; aspect-ratio: 16 / 9; }
+  html[data-foco] .hilo .post.main h2 { font-size: 30px; line-height: 1.15; margin-bottom: 10px; }
+  html[data-foco] .hilo .post.main .para { font-size: 19px; line-height: 1.65; }
+}

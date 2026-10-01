@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 133);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 134);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -504,6 +504,11 @@ function save_theme_pref(string $t): void {
     else pref_cookie('ddd_theme', $t === 'auto' ? '' : $t);
 }
 /** Tema claro/oscuro: users.theme o, sin cuenta, la cookie ddd_theme (solo si se eligio en el menu). null = sigue al sistema. */
+/** Modo «sin distracciones» (solo cambia el escritorio de tres columnas): sin columna derecha, la central se ensancha hasta ocupar su
+ *  sitio y las fotos dejan de ir como tarjeta bajo el texto para ir a la derecha del titular, al ancho que tenia esa columna. Pensado para
+ *  leer los originales. Es una preferencia del navegador, no de la cuenta (depende de la pantalla): cookie ddd_foco, con o sin sesion;
+ *  se cambia en el menu lateral (/cambiar-skin.php?z=0|1). page_header() lo marca en <html data-foco="1">. */
+function foco(): bool { return ($_COOKIE['ddd_foco'] ?? '') === '1'; }
 function theme(): ?string {
     $u = user();
     $t = $u ? (string)($u['theme'] ?? 'auto') : (string)($_COOKIE['ddd_theme'] ?? 'auto');
@@ -870,6 +875,7 @@ function icon(string $n): string {
         'news'   => '<rect x="3" y="5" width="15" height="15" rx="2"/><path d="M18 9h2a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2"/><path d="M7 9h7M7 13h7M7 17h4"/>',
         'edit'   => '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m13.5 8.5 3 3"/>',
         'fav'    => '<path d="M6 4h12v17l-6-4.5L6 21z"/>',
+        'focus'  => '<path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4"/><path d="M9 10h6M9 14h4"/>',   // modo sin distracciones: marco con dos lineas de texto
         'agg'    => '<circle cx="5" cy="6" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 6H20"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 18H20"/>',   // agregadores: lista de fuentes
         'tag'    => '<path d="M3 11V4h7l10 10-7 7z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',   // temas
         'comm'   => '<circle cx="12" cy="8" r="3.2"/><circle cx="5" cy="11" r="2.2"/><circle cx="19" cy="11" r="2.2"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0"/><path d="M2 17.5a3.5 3.5 0 0 1 3-2.3M22 17.5a3.5 3.5 0 0 0-3-2.3"/>',   // comunidades
@@ -949,7 +955,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     ana_hit();                 // analitica propia: una fila por pagina vista (GET, sin bots, sin admin)
     $u = user();
     $theme = theme();   // null = sigue al sistema
-    echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"><head><meta charset=\"utf-8\">";
+    echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"" . (foco() ? ' data-foco="1"' : '') . "><head><meta charset=\"utf-8\">";
     echo "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">";
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
     echo "<link rel=\"icon\" href=\"" . icon_src(64) . "\"><link rel=\"apple-touch-icon\" href=\"" . icon_src(180) . "\">";

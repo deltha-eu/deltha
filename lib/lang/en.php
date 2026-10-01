@@ -716,4 +716,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Pedir un código por correo al entrar' => 'Ask for a code by email when logging in',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Besides your password, when you log in we will send a six-digit code to %s. It is only asked for when you log in, not on every visit.',
 'Es obligatoria para administradores.' => 'It is mandatory for administrators.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Distraction-free',
+'Activado' => 'On',
+'Desactivado' => 'Off',
 ];

@@ -677,4 +677,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Pedir un código por correo al entrar' => 'Chiedi un codice via email all\'accesso',
 'Además de la contraseña, al entrar te enviaremos un código de seis cifras a %s. Solo se pide al iniciar sesión, no en cada visita.' => 'Oltre alla password, all\'accesso ti invieremo un codice di sei cifre a %s. Viene chiesto solo quando accedi, non a ogni visita.',
 'Es obligatoria para administradores.' => 'È obbligatoria per gli amministratori.',
+// modo sin distracciones (escritorio)
+'Sin distracciones' => 'Senza distrazioni',
+'Activado' => 'Attivo',
+'Desactivado' => 'Disattivato',
 ];
