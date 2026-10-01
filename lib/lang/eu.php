@@ -680,4 +680,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Sin distracciones' => 'Distrakziorik gabe',
 'Activado' => 'Aktibatuta',
 'Desactivado' => 'Desaktibatuta',
+'Solo en Originales' => 'Originaletan bakarrik',
+'Siempre' => 'Beti',
+'Nunca' => 'Inoiz ez',
 ];

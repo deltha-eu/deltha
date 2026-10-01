@@ -681,4 +681,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Sin distracciones' => 'Senza distrazioni',
 'Activado' => 'Attivo',
 'Desactivado' => 'Disattivato',
+'Solo en Originales' => 'Solo in Originali',
+'Siempre' => 'Sempre',
+'Nunca' => 'Mai',
 ];

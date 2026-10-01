@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 136);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 137);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -507,8 +507,13 @@ function save_theme_pref(string $t): void {
 /** Modo «sin distracciones» (solo cambia el escritorio de tres columnas): sin columna derecha, la central se ensancha hasta ocupar su
  *  sitio y las fotos dejan de ir como tarjeta bajo el texto para ir a la derecha del titular, al ancho que tenia esa columna. Pensado para
  *  leer los originales. Es una preferencia del navegador, no de la cuenta (depende de la pantalla): cookie ddd_foco, con o sin sesion;
- *  se cambia en el menu lateral (/cambiar-skin.php?z=0|1). page_header() lo marca en <html data-foco="1">. */
-function foco(): bool { return ($_COOKIE['ddd_foco'] ?? '') === '1'; }
+ *  se cambia en el menu lateral (/cambiar-skin.php?z=…). Tres estados: sin cookie = solo en Originales (la lista /originales.php y el hilo
+ *  de un original: esas paginas llaman a foco_por_defecto() antes de pintar); '1' = siempre; '0' = nunca.
+ *  page_header() lo marca en <html data-foco="1">. */
+$DDD_FOCO_DEF = false;
+function foco_por_defecto(bool $on = true): void { global $DDD_FOCO_DEF; $DDD_FOCO_DEF = $on; }
+function foco_pref(): string { $c = (string)($_COOKIE['ddd_foco'] ?? ''); return in_array($c, ['0', '1'], true) ? $c : ''; }
+function foco(): bool { global $DDD_FOCO_DEF; $p = foco_pref(); return $p === '1' || ($p === '' && $DDD_FOCO_DEF); }
 function theme(): ?string {
     $u = user();
     $t = $u ? (string)($u['theme'] ?? 'auto') : (string)($_COOKIE['ddd_theme'] ?? 'auto');

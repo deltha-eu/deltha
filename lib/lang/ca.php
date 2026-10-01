@@ -680,4 +680,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Sin distracciones' => 'Sense distraccions',
 'Activado' => 'Activat',
 'Desactivado' => 'Desactivat',
+'Solo en Originales' => 'Només a Originals',
+'Siempre' => 'Sempre',
+'Nunca' => 'Mai',
 ];
