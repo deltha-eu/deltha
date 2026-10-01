@@ -188,7 +188,7 @@ function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $ma
     $maxN   = $maxN   ?? max(1, (int)cfg('sources_per_tick', 3));
     $maxSec = $maxSec ?? max(5, (int)cfg('sources_tick_seconds', 40));
     $t0 = time(); $n = 0;
-    $due = array_values(array_filter(fuentes_activas($pdo), fn($src) => $force || !$src['last_fetch'] || time() - strtotime($src['last_fetch']) >= max(1, (int)$src['interval_min']) * 60 - 5));
+    $due = array_values(array_filter(fuentes_activas($pdo), fn($src) => empty($src['relay']) && ($force || !$src['last_fetch'] || time() - strtotime($src['last_fetch']) >= max(1, (int)$src['interval_min']) * 60 - 5)));   // relay = 1: la lee el lector local (TIBERIO), no el cron
     usort($due, fn($a, $b) => strcmp((string)$a['last_fetch'], (string)$b['last_fetch']));   // NULL ('') primero, luego la mas antigua
     foreach ($due as $i => $src) {
         if ($n >= $maxN || time() - $t0 >= $maxSec) { $log[] = "fuentes: " . (count($due) - $i) . " pendientes para la proxima pasada"; break; }
@@ -202,9 +202,14 @@ function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $ma
     return $log;
 }
 
-/** Lee los feeds de una fuente y sincroniza source_items. */
-function fuente_actualizar(PDO $pdo, array $src): array {
+/** Lee los feeds de una fuente y sincroniza source_items.
+ *  $xmls (lector local, /api/lector.php): los feeds ya descargados desde fuera, ['portada' => xml, 'nuevas' => xml]; entonces el
+ *  servidor no pide nada a la fuente (ni feeds ni fotos: las fotos pendientes se apuntan en $GLOBALS['ddd_relay_pend'] para que
+ *  las traiga el lector). Una fuente con relay = 1 no se lee nunca desde el servidor: su web rechaza la IP del droplet. */
+function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
     $log = []; $err = [];
+    if (!empty($src['relay']) && $xmls === null) return ["fuente {$src['slug']}: la lee el lector local (relay), no el servidor"];
+    $GLOBALS['DDD_RELAY'] = $xmls !== null; $GLOBALS['ddd_relay_pend'] = [];
     $timeout = max(3, (int)cfg('sources_timeout_sec', 8));
     $feeds = ['portada' => $src['feed_portada'], 'nuevas' => $src['feed_nuevas']];
     fuente_imagen($src, [], true);   // contadores de imagenes a cero para esta fuente
@@ -212,7 +217,8 @@ function fuente_actualizar(PDO $pdo, array $src): array {
     foreach (['nuevas', 'portada'] as $phase) {
         $url = trim((string)$feeds[$phase]);
         if ($url === '') continue;
-        $xml = http_get($url, $timeout, 4000000);
+        $xml = $xmls !== null ? (isset($xmls[$phase]) && $xmls[$phase] !== '' ? (string)$xmls[$phase] : null) : http_get($url, $timeout, 4000000);
+        if ($xml === null && $xmls !== null) { $err[] = "$phase: el lector local no pudo descargarlo" . (!empty($xmls["error_$phase"]) ? ' (' . mb_substr((string)$xmls["error_$phase"], 0, 120) . ')' : ''); continue; }
         if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
@@ -348,6 +354,10 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
 function fuente_imagen(array $src, array $it, bool $reset = false): ?string {
     static $fails = 0, $og = 0;   // contadores POR FUENTE (se reinician al empezar cada una): si su CDN no responde, no insistir item a item;
     if ($reset) { $fails = 0; $og = 0; return null; }   // y no descargar mas de sources_og_per_run paginas de esa fuente por pasada
+    if (!empty($GLOBALS['DDD_RELAY'])) {   // lector local: el servidor no puede pedir nada a esta fuente; la foto la traera el lector
+        if (fuente_es_medio($src)) $GLOBALS['ddd_relay_pend'][(string)$it['ext_id']] = ['thumb' => (string)($it['thumb'] ?? ''), 'url' => (string)$it['url']];
+        return null;
+    }
     if ($fails >= 3) return null;
     if (!fuente_es_medio($src)) {
         if (empty($it['thumb'])) return null;

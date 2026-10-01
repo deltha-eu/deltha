@@ -25,3 +25,7 @@ token = ""
 [agent]
 ; token del worker del agente comentarista (local/comentarista/comentarista.ini lleva el mismo). Vacio = usa el de [mod].
 token = ""
+
+[lector]
+; token del lector local de feeds (local/lector/lector.ini lleva el mismo). Vacio = vale el de [mod] o el de [agent].
+token = ""
