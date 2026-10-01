@@ -1126,7 +1126,7 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { grid-area: h2; font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.2; margin: 0 0 6px; }
 [data-skin="orange"] .post.compact h2 { font-size: 17px; }
 [data-skin="orange"] .post.full .l1, [data-skin="orange"] .post.compact .l1 { grid-area: l1; line-height: 24px; min-height: 24px; font-size: 12px; color: var(--muted); }
-[data-skin="orange"] .post .l1 b { font-weight: 700; color: var(--or); }   /* el autor, en naranja, como en Meneame */
+[data-skin="orange"] .post .l1 b { font-weight: 600; color: var(--or); }   /* el autor, en naranja, como en Meneame */
 [data-skin="orange"] .post .l1 .meta .sep + a { color: var(--fg); font-weight: 600; }
 [data-skin="orange"] .post .lead { grid-area: lead; font-size: 13.5px; line-height: 1.42; color: color-mix(in srgb, var(--fg) 82%, var(--bg)); margin: 6px 0 6px; }
 [data-skin="orange"] .post .media, [data-skin="orange"] .post .media.sm { grid-area: media; width: 96px; aspect-ratio: 4 / 3; margin: 0; border: 0; border-radius: 5px; align-self: start; }
@@ -1152,7 +1152,7 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="orange"] .post .vote button[value="-1"], [data-skin="orange"] .post span.vote > span:last-child { justify-content: center; gap: 3px; font-size: 11px; color: var(--muted); padding: 5px 0 0; }
 [data-skin="orange"] .post .vote button[value="-1"] .i, [data-skin="orange"] .post span.vote > span:last-child .i { width: 13px; height: 13px; }
 /* barra de acciones abajo: los comentarios, en pastilla palida */
-[data-skin="orange"] .post .actions > a { grid-area: actions; justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 5px 12px; background: var(--or2); color: var(--or); font-weight: 700; font-size: 13px; border-radius: 6px; }
+[data-skin="orange"] .post .actions > a { grid-area: actions; justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 5px 12px; background: var(--or2); color: var(--or); font-weight: 500; font-size: 13px; border-radius: 6px; }   /* 01/10: de 700 a 500, el naranja en negrita pesaba demasiado en los comentarios */
 [data-skin="orange"] .post .actions > a .i { width: 17px; height: 17px; }
 [data-skin="orange"] .post .actions > a.share { justify-self: end; background: transparent; color: var(--muted); font-weight: 600; padding-right: 0; }
 [data-skin="orange"] .post .actions > a.share:hover { background: transparent; color: var(--or); }
@@ -3009,6 +3009,12 @@ nav.sub.cvista { margin-bottom: 4px; }
   /* la barra de vida: mas fina, con mas aire arriba y abajo, y sin llegar a tocar la foto (overflow: hidden la hace parar antes del float) */
   html[data-foco] .post .life { height: 1px !important; margin: 14px 0 14px !important; overflow: hidden; border: 0 !important; }
   html[data-foco] .post .life span { height: 1px !important; margin: 0 !important; }
+  /* Orange y Flujo ya llevan la foto a la derecha con su propia rejilla (columna de 96 / 120 px): aqui la foto no flota, se ensancha esa
+     columna a 224 px; la fila de la entradilla pasa a 1fr para que el alto de la foto no abra huecos entre titular, autor y entradilla. */
+  html[data-foco][data-skin="orange"] .post.full, html[data-foco][data-skin="orange"] .post.compact { grid-template-columns: 62px 24px minmax(0, 1fr) 224px; grid-template-rows: auto auto 1fr; column-gap: 12px; }
+  html[data-foco][data-skin="flujo"] .post.full, html[data-foco][data-skin="flujo"] .post.compact { grid-template-columns: 22px minmax(0, 1fr) 224px; grid-template-rows: auto auto auto 1fr; }
+  html[data-foco][data-skin="orange"] .post .media, html[data-foco][data-skin="orange"] .post .media.sm,
+  html[data-foco][data-skin="flujo"] .post .media, html[data-foco][data-skin="flujo"] .post .media.sm { float: none; width: 224px; margin: 0 0 8px; }
   html[data-foco] .hilo .post.main h2 { font-size: 30px; line-height: 1.15; margin-bottom: 10px; }
   html[data-foco] .hilo .post.main .para { font-size: 19px; line-height: 1.65; }
 }
