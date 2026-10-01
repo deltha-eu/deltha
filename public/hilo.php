@@ -13,6 +13,7 @@ if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true)
     page_footer();
     exit;
 }
+if ($s['content_type'] === 'article') foco_por_defecto();   // un original se abre en modo sin distracciones salvo que el lector lo haya quitado
 if (!empty($s['comm_skin'])) community_skin($s['comm_skin']);   // el hilo se ve con la plantilla de su comunidad
 $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
 $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);

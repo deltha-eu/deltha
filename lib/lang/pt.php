@@ -717,4 +717,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Sin distracciones' => 'Sem distrações',
 'Activado' => 'Ativado',
 'Desactivado' => 'Desativado',
+'Solo en Originales' => 'Só em Originais',
+'Siempre' => 'Sempre',
+'Nunca' => 'Nunca',
 ];

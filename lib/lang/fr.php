@@ -719,4 +719,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Sin distracciones' => 'Sans distractions',
 'Activado' => 'Activé',
 'Desactivado' => 'Désactivé',
+'Solo en Originales' => 'Seulement dans Originaux',
+'Siempre' => 'Toujours',
+'Nunca' => 'Jamais',
 ];

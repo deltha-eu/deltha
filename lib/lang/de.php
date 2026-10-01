@@ -681,4 +681,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Sin distracciones' => 'Ohne Ablenkung',
 'Activado' => 'An',
 'Desactivado' => 'Aus',
+'Solo en Originales' => 'Nur in Originale',
+'Siempre' => 'Immer',
+'Nunca' => 'Nie',
 ];

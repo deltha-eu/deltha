@@ -720,4 +720,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Sin distracciones' => 'Distraction-free',
 'Activado' => 'On',
 'Desactivado' => 'Off',
+'Solo en Originales' => 'Only in Originals',
+'Siempre' => 'Always',
+'Nunca' => 'Never',
 ];

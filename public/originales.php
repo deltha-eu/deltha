@@ -3,6 +3,7 @@
  *  No pasan por el radar ni van a las portadas: se leen, se votan y se comentan aqui mientras su hilo este abierto. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
+foco_por_defecto();   // Originales se lee en modo sin distracciones salvo que el lector lo haya quitado (lib/app.php)
 
 $page = page_num();
 $ml = stories_mylang_sql();
