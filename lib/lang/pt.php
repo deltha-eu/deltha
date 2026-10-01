@@ -720,4 +720,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Solo en Originales' => 'Só em Originais',
 'Siempre' => 'Sempre',
 'Nunca' => 'Nunca',
+// pagina de un tema: lo enviado / lo ultimo de sus medios
+'En Deltha' => 'No Deltha',
+'En los medios' => 'Nos meios',
+'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'O mais recente dos meios e newsletters deste tema, ainda por enviar: %s. Cada notícia tem um botão para a propor no radar.',
 ];

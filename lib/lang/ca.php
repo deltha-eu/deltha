@@ -683,4 +683,8 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Solo en Originales' => 'Només a Originals',
 'Siempre' => 'Sempre',
 'Nunca' => 'Mai',
+// pagina de un tema: lo enviado / lo ultimo de sus medios
+'En Deltha' => 'A Deltha',
+'En los medios' => 'Als mitjans',
+'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'L\'últim dels mitjans i Substacks d\'aquest tema, encara sense enviar: %s. Cada notícia porta un botó per proposar-la al radar.',
 ];

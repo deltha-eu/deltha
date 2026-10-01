@@ -723,4 +723,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Solo en Originales' => 'Only in Originals',
 'Siempre' => 'Always',
 'Nunca' => 'Never',
+// pagina de un tema: lo enviado / lo ultimo de sus medios
+'En Deltha' => 'On Deltha',
+'En los medios' => 'In the media',
+'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'The latest from the media and Substacks on this topic, not yet submitted: %s. Every story has a button to propose it on the radar.',
 ];
