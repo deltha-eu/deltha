@@ -3015,6 +3015,6 @@ nav.sub.cvista { margin-bottom: 4px; }
   html[data-foco][data-skin="flujo"] .post.full, html[data-foco][data-skin="flujo"] .post.compact { grid-template-columns: 22px minmax(0, 1fr) 224px; grid-template-rows: auto auto auto 1fr; }
   html[data-foco][data-skin="orange"] .post .media, html[data-foco][data-skin="orange"] .post .media.sm,
   html[data-foco][data-skin="flujo"] .post .media, html[data-foco][data-skin="flujo"] .post .media.sm { float: none; width: 224px; margin: 0 0 8px; }
-  html[data-foco] .hilo .post.main h2 { font-size: 30px; line-height: 1.15; margin-bottom: 10px; }
+  html[data-foco] .hilo .post.main h2 { font-size: 22px; line-height: 1.2; margin-bottom: 8px; }   /* 01/10: de 30 a 22; manda sobre el tamaño propio de cada skin (zen lo tenia a 28) */
   html[data-foco] .hilo .post.main .para { font-size: 18px; line-height: 1.65; }
 }
