@@ -2,7 +2,9 @@
 /** /tema.php?t=ID[&v=deltha|medios] — la pagina de un tema, con dos subpestañas:
  *   · «En Deltha»: todo lo enviado en el tema (enlaces y originales, en cualquier fase), de mas reciente a mas antiguo;
  *   · «En los medios»: las ultimas noticias de los medios y substacks del catalogo que tienen este tema asignado (sources.topic_id),
- *     sin enviar todavia, cada una con su boton «enviar al radar». Es el «feed por tema» sin añadir nada al menu.
+ *     sin enviar todavia, cada una con su boton «enviar al radar». Es el «feed por tema» sin añadir nada al menu;
+ *   · «En medios en mi idioma» (&v=idioma): lo mismo, solo con las fuentes en el idioma de la interfaz (las de idioma desconocido
+ *     cuentan). Solo sale si el tema tiene fuentes en otros idiomas y el lector no tiene ya marcado «solo en mi idioma».
  *  Sin ?v=, abre «En Deltha» salvo que el tema tenga menos de TEMA_POCO envios y si tenga fuentes: entonces «En los medios»
  *  (en la beta, que ningun tema se vea vacio). Si el tema no tiene fuentes, no hay subpestañas. */
 require __DIR__ . '/../lib/app.php';
@@ -25,19 +27,24 @@ $total = (int)$cnt->fetchColumn();
 
 // medios y substacks del catalogo con este tema (los de otro idioma, fuera si el lector lo ha pedido)
 $fuentes = fuentes_on() ? array_values(array_filter(fuentes_visibles($pdo), fn($f) => fuente_es_medio($f) && (int)($f['topic_id'] ?? 0) === $tid)) : [];
+$mias = array_values(array_filter($fuentes, fn($f) => in_array((string)($f['lang'] ?? ''), ['', lang()], true)));   // en mi idioma (o sin idioma conocido)
+$hayIdioma = $mias && count($mias) < count($fuentes);   // la tercera pestaña solo si quita algo
 $v = (string)($_GET['v'] ?? '');
-if (!in_array($v, ['deltha', 'medios'], true)) $v = ($fuentes && $total < TEMA_POCO) ? 'medios' : 'deltha';
+if (!in_array($v, ['deltha', 'medios', 'idioma'], true)) $v = ($fuentes && $total < TEMA_POCO) ? 'medios' : 'deltha';
 if (!$fuentes) $v = 'deltha';
+if ($v === 'idioma' && !$hayIdioma) $v = 'medios';
 $base = "/tema.php?t=$tid";
 
 header('Cache-Control: private, no-cache');   // depende de la sesion y de «solo en mi idioma»
 page_header(ucfirst($topic['name']));
 if ($fuentes) {
     echo "<nav class=\"sub\"><a href=\"$base&amp;v=deltha\"" . ($v === 'deltha' ? ' class="on"' : '') . ">" . t('En Deltha') . " <small>$total</small></a>"
-       . "<a href=\"$base&amp;v=medios\"" . ($v === 'medios' ? ' class="on"' : '') . ">" . t('En los medios') . " <small>" . count($fuentes) . "</small></a></nav>";
+       . "<a href=\"$base&amp;v=medios\"" . ($v === 'medios' ? ' class="on"' : '') . ">" . t('En los medios') . " <small>" . count($fuentes) . "</small></a>"
+       . ($hayIdioma ? "<a href=\"$base&amp;v=idioma\"" . ($v === 'idioma' ? ' class="on"' : '') . ">" . t('En medios en mi idioma') . " <small>" . count($mias) . "</small></a>" : '') . "</nav>";
 }
 
-if ($v === 'medios') {
+if ($v === 'medios' || $v === 'idioma') {
+    if ($v === 'idioma') $fuentes = $mias;
     $porId = array_column($fuentes, null, 'source_id');
     $in = implode(',', array_map('intval', array_keys($porId)));
     $ult = fuentes_ultima_noticia($pdo);
@@ -51,7 +58,7 @@ if ($v === 'medios') {
     echo "<p class=\"notice\">" . t('Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.', $nombres) . "</p>";
     foreach ($rows as $i) fuente_post($porId[$i['source_id']], $i, 'full', $sent);
     if (!$rows) echo "<p class=\"end\">" . t('El lector aún no ha pasado por esta fuente.') . "</p>";
-    paginate("$base&amp;v=medios", $page, $totalM, $per);
+    paginate("$base&amp;v=$v", $page, $totalM, $per);
 } else {
     $st = $pdo->prepare(story_query_base() . " WHERE s.topic_id = ? AND s.status IN ('nuevas','destacadas','archived')$ml
                                                 ORDER BY s.sent_date DESC LIMIT ? OFFSET ?");
