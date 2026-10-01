@@ -684,4 +684,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Solo en Originales' => 'Nur in Originale',
 'Siempre' => 'Immer',
 'Nunca' => 'Nie',
+// pagina de un tema: lo enviado / lo ultimo de sus medios
+'En Deltha' => 'Auf Deltha',
+'En los medios' => 'In den Medien',
+'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'Das Neueste aus den Medien und Substacks zu diesem Thema, noch nicht eingesendet: %s. Jede Meldung hat einen Button, um sie im Radar vorzuschlagen.',
 ];

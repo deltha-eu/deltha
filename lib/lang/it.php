@@ -684,4 +684,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Solo en Originales' => 'Solo in Originali',
 'Siempre' => 'Sempre',
 'Nunca' => 'Mai',
+// pagina de un tema: lo enviado / lo ultimo de sus medios
+'En Deltha' => 'Su Deltha',
+'En los medios' => 'Nei media',
+'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'Le ultime dai media e dai Substack di questo tema, non ancora inviate: %s. Ogni notizia ha un pulsante per proporla al radar.',
 ];

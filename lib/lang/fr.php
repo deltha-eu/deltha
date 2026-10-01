@@ -722,4 +722,8 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Solo en Originales' => 'Seulement dans Originaux',
 'Siempre' => 'Toujours',
 'Nunca' => 'Jamais',
+// pagina de un tema: lo enviado / lo ultimo de sus medios
+'En Deltha' => 'Sur Deltha',
+'En los medios' => 'Dans les médias',
+'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'Les dernières nouvelles des médias et Substacks de ce thème, pas encore envoyées : %s. Chaque article a un bouton pour le proposer dans le radar.',
 ];

@@ -1007,6 +1007,8 @@ function nav_tabs(string $tab, string $cls): void {
         'originales'   => ['/originales.php', t('Originales'), 'art'],
         'chat'         => ['/chat.php', t('Chat'), 'chat'],
     ] : [
+        'temas'        => ['/temas.php', t('Temas'), 'tag'],            // solo en el rail (01/10): en modo sin distracciones no hay columna derecha, que era
+        'comunidades'  => ['/comunidades.php', t('Comunidades'), 'comm'],   // donde se veian temas y comunidades; en movil ya estan en la franja nav.tabs-fuentes
         'usuarios'     => ['/usuarios.php', t('Usuarios'), 'users'],
         'plantilla'    => ['/plantilla.php', t('Skin'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
         'procesos'     => ['/procesos.php', t('Procesos'), 'proc'],
@@ -1015,6 +1017,7 @@ function nav_tabs(string $tab, string $cls): void {
         'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
     ];
     if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
+    if ($cls !== 'rail-bottom') unset($tabs['temas'], $tabs['comunidades']);
     if (isset($tabs['analitica']) && ($cls === 'tabs-bottom' || !user() || !ana_on())) unset($tabs['analitica']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
     echo "<nav class=\"$cls\">";
