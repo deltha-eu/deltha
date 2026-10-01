@@ -130,7 +130,7 @@ function side_ciclo(PDO $pdo): void {
 function side_temas(PDO $pdo): void {
     $rows = $pdo->query("SELECT t.topic_id, t.name, t.color, t.bonus,
                                 (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL 7 DAY) n
-                           FROM topics t ORDER BY n DESC, t.name")->fetchAll();
+                           FROM topics t ORDER BY t.name")->fetchAll();
     if (!$rows) return;
     echo "<section class=\"mod temas\"><h3>" . t('Temas') . "<span>" . t('esta semana') . "</span></h3><div class=\"chips\">";
     foreach ($rows as $r) {
