@@ -154,7 +154,7 @@ form.fav.on .i { fill: currentColor; }
 .hilo .main .lead a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 form.plain .mdhelp { margin: -6px 0 12px; font-size: 13px; color: var(--muted); }
 form.plain .mdhelp code { font-size: 12px; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); padding: 1px 5px; border-radius: 4px; }
-.hilo .source { display: inline-flex; gap: 6px; align-items: center; color: var(--accent); font-size: 14px; margin: 4px 0; }
+.hilo .source { display: inline-flex; gap: 6px; align-items: center; color: var(--accent); font-size: 14px; margin: 14px 0 6px; }   /* 01/10: aire sobre el enlace a la fuente, iba pegado al texto */
 /* barra del hilo: todo en una linea (~44px), icono + cifra en horizontal; cifras tabulares para que 0, 12 y 1234 no muevan el resto */
 .hilo .stats { display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .hilo .stats b { color: var(--fg); }
@@ -3018,3 +3018,8 @@ nav.sub.cvista { margin-bottom: 4px; }
   html[data-foco] .hilo .post.main h2 { font-size: 22px; line-height: 1.2; margin-bottom: 8px; }   /* 01/10: de 30 a 22; manda sobre el tamaño propio de cada skin (zen lo tenia a 28) */
   html[data-foco] .hilo .post.main .para { font-size: 18px; line-height: 1.65; }
 }
+
+/* ---- Miga en la cabecera (v139): «Originales › Hilo»; la primera parte es un enlace para volver a la lista (page_crumb()). ---- */
+header.top .ttl a.crumb { color: inherit; text-decoration: none; }
+header.top .ttl a.crumb:hover { text-decoration: underline; text-underline-offset: 3px; }
+header.top .ttl .crumbsep { opacity: .5; }

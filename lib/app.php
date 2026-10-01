@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 138);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 140);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -954,6 +954,10 @@ function refresh_url(): string {
 function refresh_meta(int $seconds): string {
     return '<meta http-equiv="refresh" content="' . $seconds . ';url=' . h(refresh_url()) . '">';
 }
+/** Miga delante del titulo de la cabecera: «Originales › Hilo», con la primera parte enlazada para volver atras. La fija la pagina antes
+ *  de page_header() (hoy, el hilo de un original). */
+$DDD_CRUMB = null;
+function page_crumb(string $href, string $label): void { global $DDD_CRUMB; $DDD_CRUMB = [$href, $label]; }
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $robots = robots_meta();   // antes del primer echo: tambien manda la cabecera X-Robots-Tag
@@ -983,7 +987,8 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     rail($tab);
     echo "<div class=\"shell\">";
     echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
-    echo "<span class=\"ttl\">" . h($title) . "</span>";
+    global $DDD_CRUMB;
+    echo "<span class=\"ttl\">" . ($DDD_CRUMB ? "<a class=\"crumb\" href=\"" . h($DDD_CRUMB[0]) . "\">" . h($DDD_CRUMB[1]) . "</a><span class=\"crumbsep\"> › </span>" : '') . h($title) . "</span>";
     if (buscar_on()) echo "<a class=\"lupa\" href=\"/buscar.php\" title=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</a>";   // movil y tablet; en escritorio la caja va en el rail
     if ($u) echo avisos_bell('top') . "<a class=\"me\" href=\"/perfil.php\" title=\"" . t('perfil') . "\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
     else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
