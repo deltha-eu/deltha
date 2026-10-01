@@ -7,11 +7,11 @@ $rows = $pdo->query("SELECT t.topic_id, t.name, t.color, t.coef,
                             (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL 7 DAY) n,
                             (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','destacadas','archived')) total,
                             (SELECT MAX(s.sent_date) FROM stories s WHERE s.topic_id = t.topic_id AND s.status IN ('nuevas','destacadas','archived')) last
-                       FROM topics t ORDER BY n DESC, total DESC, t.name")->fetchAll();
+                       FROM topics t ORDER BY t.name")->fetchAll();
 
 if (user()) header('Cache-Control: private, no-cache'); else { header('Cache-Control: public, max-age=60'); header('Vary: Cookie'); }
 page_header(t('Temas'), 'temas');
-echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por actividad de la última semana; cada tema muestra todo lo enviado en él, esté en la fase que esté.', h(cfg('site_name'))) . "</p>";
+echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por orden alfabético; cada tema muestra todo lo enviado en él, esté en la fase que esté.', h(cfg('site_name'))) . "</p>";
 if (!$rows) echo "<p class=\"end\">" . t('Todavía no hay temas.') . "</p>";
 foreach ($rows as $r) {
     $coef = (float)$r['coef'];

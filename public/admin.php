@@ -497,7 +497,7 @@ if ($tab === 'usuarios') {
 
 } elseif ($tab === 'temas') {
     echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>envíos</th><th style=\"width:90px\">bonus δ</th><th style=\"width:70px\">color</th></tr>";
-    foreach ($pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.topic_id") as $t) {
+    foreach ($pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.name") as $t) {
         echo "<tr><td><a href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a></td><td class=\"num\">{$t['n']}</td><td><input type=\"text\" name=\"bonus[{$t['topic_id']}]\" value=\"" . h(num_es($t['bonus'])) . "\"></td>";
         echo "<td><input type=\"color\" name=\"color[{$t['topic_id']}]\" value=\"" . h($t['color']) . "\" title=\"color del velo y la etiqueta\"></td></tr>";
     }

@@ -6,7 +6,7 @@ require __DIR__ . '/../lib/moderacion.php';
 
 if (!user() && cfg('anon_can_submit') !== '1') redirect('/login.php');
 
-$topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY topic_id")->fetchAll();
+$topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();   // alfabetico, como en el resto de selectores
 $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
 $maxWords = (int)cfg('article_max_words', 1000);   // tope de palabras: Admin → Config
 $maxChars = max(2000, $maxWords * 12);                // tope de caracteres derivado (holgura para palabras largas), por si llega mas de la cuenta

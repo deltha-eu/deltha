@@ -439,7 +439,7 @@ return [
 '%d esta semana' => '%d esta semana',
 '%d en total' => '%d no total',
 'Todavía no hay temas.' => 'Ainda não há temas.',
-'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por actividad de la última semana; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => 'Os <b>temas</b> são definidos por %s; todo o envio tem um. Aqui aparecem por atividade da última semana; cada tema mostra tudo o que foi enviado nele, seja qual for a fase.',
+'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por orden alfabético; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => 'Os <b>temas</b> são definidos por %s; todo o envio tem um. Aqui aparecem por ordem alfabética; cada tema mostra tudo o que foi enviado nele, seja qual for a fase.',
 'Mis agregadores' => 'Os meus agregadores',
 'lo último en %s' => 'o mais recente em %s',
 '%d fuentes' => '%d fontes',

@@ -402,7 +402,7 @@ return [
 '%d esta semana' => '%d aquesta setmana',
 '%d en total' => '%d en total',
 'Todavía no hay temas.' => 'Encara no hi ha temes.',
-'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por actividad de la última semana; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => 'Els <b>temes</b> els posa %s; tot enviament en porta un. Aquí van per activitat de l\'última setmana; cada tema mostra tot el que s\'hi ha enviat, sigui en la fase que sigui.',
+'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por orden alfabético; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => 'Els <b>temes</b> els posa %s; tot enviament en porta un. Aquí van per ordre alfabètic; cada tema mostra tot el que s\'hi ha enviat, sigui en la fase que sigui.',
 'Mis agregadores' => 'Els meus agregadors',
 'lo último en %s' => 'l\'últim a %s',
 '%d fuentes' => '%d fonts',

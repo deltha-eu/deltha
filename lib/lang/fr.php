@@ -441,7 +441,7 @@ return [
 '%d esta semana' => '%d cette semaine',
 '%d en total' => '%d au total',
 'Todavía no hay temas.' => 'Pas encore de thèmes.',
-'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por actividad de la última semana; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => 'Les <b>thèmes</b> sont fixés par %s ; tout envoi en a un. Ils sont classés ici par activité de la semaine passée ; chaque thème montre tout ce qui y a été envoyé, quelle que soit sa phase.',
+'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por orden alfabético; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => 'Les <b>thèmes</b> sont fixés par %s ; tout envoi en a un. Ils sont classés ici par ordre alphabétique ; chaque thème montre tout ce qui y a été envoyé, quelle que soit sa phase.',
 'Mis agregadores' => 'Mes agrégateurs',
 'lo último en %s' => 'le dernier de %s',
 '%d fuentes' => '%d sources',

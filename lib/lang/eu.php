@@ -402,7 +402,7 @@ return [
 '%d esta semana' => '%d aste honetan',
 '%d en total' => '%d guztira',
 'Todavía no hay temas.' => 'Oraindik ez dago gairik.',
-'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por actividad de la última semana; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => '<b>Gaiak</b> %s-k jartzen ditu; bidalketa orok du bat. Hemen azken asteko jardueraren arabera daude; gai bakoitzak bertara bidalitako guztia erakusten du, edozein fasetan egonda ere.',
+'Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por orden alfabético; cada tema muestra todo lo enviado en él, esté en la fase que esté.' => '<b>Gaiak</b> %s-k jartzen ditu; bidalketa orok du bat. Hemen alfabetikoki ordenatuta daude; gai bakoitzak bertara bidalitako guztia erakusten du, edozein fasetan egonda ere.',
 'Mis agregadores' => 'Nire agregatzaileak',
 'lo último en %s' => '%s-en azkena',
 '%d fuentes' => '%d iturri',
