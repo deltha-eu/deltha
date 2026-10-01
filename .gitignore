@@ -17,3 +17,6 @@ revision_entrevista/
 local/comentarista/comentarista.ini
 local/comentarista/*.log
 local/comentarista/__pycache__/
+local/lector/lector.ini
+local/lector/*.log
+local/lector/__pycache__/

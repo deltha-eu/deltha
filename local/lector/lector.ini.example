@@ -1,0 +1,14 @@
+; Copiar a lector.ini (no va al repositorio: lleva el token). Si no existe lector.ini, el lector usa la direccion y el
+; token de ..\comentarista\comentarista.ini o de ..\moderador\moderador.ini, asi que en TIBERIO no hace falta crearlo.
+[deltha]
+url   = https://deltha.eu
+; el token de [lector], [mod] o [agent] de /etc/deltha/config.ini del droplet (vale cualquiera de los tres)
+token =
+
+[worker]
+; segundos entre pasadas (cada fuente se lee segun su propio intervalo en admin -> Fuentes) y tras un error
+espera       = 300
+espera_error = 120
+; segundos de espera por descarga y fotos que trae como mucho por fuente y pasada
+timeout      = 20
+fotos        = 10
