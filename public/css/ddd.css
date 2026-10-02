@@ -3034,3 +3034,9 @@ p.fz-add a::before { content: "+ "; }
 p.fz-add a:hover { opacity: .85; }
 p.fz-add.on a { background: none; border-color: var(--line2); color: var(--muted); font-weight: 600; }
 p.fz-add.on a::before { content: "× "; }
+
+/* ---- skin Comunidad, escritorio (v144): la barra del titulo con las esquinas redondeadas (6px, como las tarjetas y las cajas del lateral);
+   en movil sigue de lado a lado, recta. ---- */
+@media (min-width: 1300px) {
+  [data-skin="comunidad"] header.top { border-radius: 6px; }
+}
