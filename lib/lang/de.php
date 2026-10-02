@@ -697,4 +697,12 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Moderadores' => 'Moderatoren',
 'Admins' => 'Admins',
 'moderador' => 'Moderator',
+'Registros' => 'Registrierungen',
+'%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.' => '%d Registrierungen: %d aktiviert und %d unvollständig (E-Mail nicht bestätigt). Unvollständige werden %d h nach dem Versand des Links automatisch gelöscht und erscheinen dann nicht mehr. Nur Admins sehen das.',
+'activada' => 'aktiviert',
+'a medias' => 'unvollständig',
+'desactivada a mano' => 'von Hand deaktiviert',
+'enlace caducado' => 'Link abgelaufen',
+'enlace enviado %s' => 'Link gesendet %s',
+'Ningún registro en este periodo.' => 'Keine Registrierungen in diesem Zeitraum.',
 ];

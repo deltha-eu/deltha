@@ -696,4 +696,12 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Moderadores' => 'Moderatzaileak',
 'Admins' => 'Adminak',
 'moderador' => 'moderatzailea',
+'Registros' => 'Erregistroak',
+'%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.' => '%d erregistro: %d aktibatuta eta %d erdizka (posta baieztatu gabe). Erdizka geratzen direnak esteka bidali eta %d ordura ezabatzen dira berez, eta ez dira hemen gehiago agertzen. Adminek bakarrik ikusten dute.',
+'activada' => 'aktibatuta',
+'a medias' => 'erdizka',
+'desactivada a mano' => 'eskuz desaktibatuta',
+'enlace caducado' => 'esteka iraungita',
+'enlace enviado %s' => 'esteka bidalita %s',
+'Ningún registro en este periodo.' => 'Ez dago erregistrorik aldi honetan.',
 ];

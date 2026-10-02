@@ -10,6 +10,8 @@
  *  ?v=moderacion    lo que espera a un moderador (con lo que ha dicho la IA) y el historico de decisiones:
  *                   retirado o se queda, quien lo decidio y por que. A la vista de todo el mundo.
  *  ?v=envios | comentarios | votos | portadas   flujo filtrado
+ *  ?v=registros   SOLO ADMIN: altas de cuentas, activadas o a medias (sin confirmar el correo), la mas reciente primero, con su correo.
+ *                   Las que se quedan a medias se borran solas a las token_hours + 24 h (users_purge_unverified()): despues ya no salen.
  *  &d=hoy | todo    solo lo de hoy / sin ventana de dias (desde /estadisticas.php). «todo»
  *                   solo en las vistas de un tipo, no en ?v=todo: el UNION sin ventana no seria barato
  *
@@ -23,6 +25,7 @@ require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
 $VIEWS = ['cola' => t('Radar'), 'todo' => t('Todo'), 'moderacion' => t('Moderación'), 'envios' => t('Envíos'), 'comentarios' => t('Comentarios'), 'votos' => t('Votos'), 'portadas' => t('Portadas')];
+if (is_admin()) $VIEWS['registros'] = t('Registros');   // solo admin: ni la pestaña ni la vista existen para los demas
 $v = (string)($_GET['v'] ?? 'cola');
 if (!isset($VIEWS[$v])) $v = 'cola';
 $page = page_num();
@@ -166,6 +169,34 @@ if ($v === 'moderacion') {
         echo "<div class=\"prev\">" . h($m['src'] === 'rep' ? t('Motivos: %s', $motivos($m)) : mod_note_line($m)) . "</div></div></div>";
     }
     paginate('/procesos.php?v=moderacion', $page, $total);
+    page_footer();
+    exit;
+}
+
+/* ---- registros (solo admin): altas activadas y a medias ------------- */
+if ($v === 'registros') {
+    $dU = $desde('u.created');
+    $horas = (int)cfg('token_hours', 48);
+    [$total, $ok] = $pdo->query("SELECT COUNT(*), COALESCE(SUM(u.verified = 1), 0) FROM users u WHERE $dU")->fetch(PDO::FETCH_NUM);
+    $total = (int)$total; $ok = (int)$ok;
+    $st = $pdo->prepare("SELECT u.user_id, u.login, u.email, u.aura, u.avatar, u.verified, u.token, u.token_sent, u.created, u.last_seen FROM users u WHERE $dU ORDER BY u.created DESC, u.user_id DESC LIMIT ? OFFSET ?");
+    $st->bindValue(1, $per, PDO::PARAM_INT);
+    $st->bindValue(2, page_offset($page), PDO::PARAM_INT);
+    $st->execute();
+    echo "<p class=\"notice\">" . t('%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.', $total, $ok, $total - $ok, $horas + 24) . "</p>";
+    $n = 0;
+    foreach ($st as $r) {
+        if ((int)$r['verified'] === 1) $estado = t('activada') . ($r['last_seen'] ? ' · ' . t('último acceso %s', hace($r['last_seen'])) : '');
+        elseif (!$r['token'] || !$r['token_sent']) $estado = t('a medias') . ' · ' . t('desactivada a mano');
+        else $estado = t('a medias') . ' · ' . (strtotime($r['token_sent']) < time() - $horas * 3600 ? t('enlace caducado') : t('enlace enviado %s', hace($r['token_sent'])));
+        $nombre = (int)$r['verified'] === 1 ? "<a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a>" : h($r['login']);
+        echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar']) . "<div><b>$nombre</b>"
+           . "<span class=\"meta\"> · " . h($r['email']) . " · " . h(t('registro %s', hace($r['created']))) . "</span>"
+           . "<p class=\"bio\">" . ((int)$r['verified'] === 1 ? h($estado) : "<b>" . h($estado) . "</b>") . "</p></div></div>";
+        $n++;
+    }
+    if ($n === 0) echo "<p class=\"end\">" . t('Ningún registro en este periodo.') . "</p>";
+    paginate("/procesos.php?v=registros$qd", $page, $total);
     page_footer();
     exit;
 }

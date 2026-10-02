@@ -697,4 +697,12 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Moderadores' => 'Moderatori',
 'Admins' => 'Admin',
 'moderador' => 'moderatore',
+'Registros' => 'Registrazioni',
+'%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.' => '%d registrazioni: %d attivate e %d a metà (e-mail non confermata). Quelle rimaste a metà si cancellano da sole %d h dopo l’invio del link e non compaiono più qui. Lo vedono solo gli admin.',
+'activada' => 'attivata',
+'a medias' => 'a metà',
+'desactivada a mano' => 'disattivata a mano',
+'enlace caducado' => 'link scaduto',
+'enlace enviado %s' => 'link inviato %s',
+'Ningún registro en este periodo.' => 'Nessuna registrazione in questo periodo.',
 ];

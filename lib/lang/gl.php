@@ -696,4 +696,12 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Moderadores' => 'Moderadores',
 'Admins' => 'Admins',
 'moderador' => 'moderador',
+'Registros' => 'Rexistros',
+'%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.' => '%d rexistros: %d activados e %d a medias (sen confirmar o correo). Os que quedan a medias bórranse sós %d h despois de enviarlles a ligazón e deixan de saír aquí. Só o ven os admins.',
+'activada' => 'activada',
+'a medias' => 'a medias',
+'desactivada a mano' => 'desactivada á man',
+'enlace caducado' => 'ligazón caducada',
+'enlace enviado %s' => 'ligazón enviada %s',
+'Ningún registro en este periodo.' => 'Ningún rexistro neste período.',
 ];
