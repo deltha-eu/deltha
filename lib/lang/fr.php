@@ -754,4 +754,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'en Canales' => 'dans Chaînes',
 'Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.' => 'Rien dans Chaînes pour l’instant. La vidéo du radar ayant le δ le plus élevé est publiée ici quand elle atteint le minimum.',
 'Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.' => 'Les vidéos YouTube vont sur la une Chaînes, qui n’occupe un cycle que lorsqu’une d’elles atteint le minimum (δ ≥ %s), et au plus toutes les %d min.',
+'reproducir aquí' => 'lire ici',
 ];

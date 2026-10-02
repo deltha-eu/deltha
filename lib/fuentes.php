@@ -674,7 +674,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . implode(' · ', $meta) . "</span></div>";
     $isThumb = $i['image'] && str_starts_with($i['image'], 'fuentes/');
     if ($isThumb) echo "<a class=\"thumb\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a>";
-    $foto = ($i['image'] && !$isThumb) ? "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . ($yt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>" : '';
+    $foto = ($i['image'] && !$isThumb) ? "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . ($yt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($i['url']) . "\" $rel" . ($yt ? youtube_attr($i['url']) : '') . " style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>" : '';
     if (foco()) echo $foto;   // sin distracciones: la foto, antes del titular, flota a su derecha
     echo "<h2><a href=\"" . h($i['url']) . "\" $rel>" . h($i['title']) . "</a></h2>";
     if ($i['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($i['content'], 0, $mode === 'full' ? 240 : 160, '…')) . "</p>";
