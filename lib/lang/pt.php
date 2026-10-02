@@ -741,4 +741,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'enlace caducado' => 'ligação expirada',
 'enlace enviado %s' => 'ligação enviada %s',
 'Ningún registro en este periodo.' => 'Nenhum registo neste período.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d registos: %d ativados, %d a meio (sem confirmar o e-mail) e %d que não passaram do formulário. Histórico permanente; só os admins veem isto.',
+'no pasó' => 'não passou',
+'cuenta borrada' => 'conta apagada',
+'borrada por no activar' => 'apagada por não ativar',
 ];

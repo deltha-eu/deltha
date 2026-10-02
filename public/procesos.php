@@ -10,8 +10,8 @@
  *  ?v=moderacion    lo que espera a un moderador (con lo que ha dicho la IA) y el historico de decisiones:
  *                   retirado o se queda, quien lo decidio y por que. A la vista de todo el mundo.
  *  ?v=envios | comentarios | votos | portadas   flujo filtrado
- *  ?v=registros   SOLO ADMIN: altas de cuentas, activadas o a medias (sin confirmar el correo), la mas reciente primero, con su correo.
- *                   Las que se quedan a medias se borran solas a las token_hours + 24 h (users_purge_unverified()): despues ya no salen.
+ *  ?v=registros   SOLO ADMIN: historico permanente de registros (tabla reg_log, migra-102): cada intento de alta, la mas reciente primero,
+ *                   con su correo y como acabo: activada, a medias (sin confirmar el correo, o borrada por no activar) o rechazada en el formulario.
  *  &d=hoy | todo    solo lo de hoy / sin ventana de dias (desde /estadisticas.php). «todo»
  *                   solo en las vistas de un tipo, no en ?v=todo: el UNION sin ventana no seria barato
  *
@@ -175,27 +175,41 @@ if ($v === 'moderacion') {
 
 /* ---- registros (solo admin): altas activadas y a medias ------------- */
 if ($v === 'registros') {
-    $dU = $desde('u.created');
+    // Historico permanente (tabla reg_log, migra-102): una fila por intento de alta, pase o no del formulario. El estado de las cuentas que
+    // siguen existiendo se lee de users (asi vale tambien si un admin la valida o desvalida a mano); el de las que ya no, de reg_log.
+    $dR = $desde('r.created');
     $horas = (int)cfg('token_hours', 48);
-    [$total, $ok] = $pdo->query("SELECT COUNT(*), COALESCE(SUM(u.verified = 1), 0) FROM users u WHERE $dU")->fetch(PDO::FETCH_NUM);
-    $total = (int)$total; $ok = (int)$ok;
-    $st = $pdo->prepare("SELECT u.user_id, u.login, u.email, u.aura, u.avatar, u.verified, u.token, u.token_sent, u.created, u.last_seen FROM users u WHERE $dU ORDER BY u.created DESC, u.user_id DESC LIMIT ? OFFSET ?");
-    $st->bindValue(1, $per, PDO::PARAM_INT);
-    $st->bindValue(2, page_offset($page), PDO::PARAM_INT);
-    $st->execute();
-    echo "<p class=\"notice\">" . t('%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.', $total, $ok, $total - $ok, $horas + 24) . "</p>";
-    $n = 0;
-    foreach ($st as $r) {
-        if ((int)$r['verified'] === 1) $estado = t('activada') . ($r['last_seen'] ? ' · ' . t('último acceso %s', hace($r['last_seen'])) : '');
-        elseif (!$r['token'] || !$r['token_sent']) $estado = t('a medias') . ' · ' . t('desactivada a mano');
-        else $estado = t('a medias') . ' · ' . (strtotime($r['token_sent']) < time() - $horas * 3600 ? t('enlace caducado') : t('enlace enviado %s', hace($r['token_sent'])));
-        $nombre = (int)$r['verified'] === 1 ? "<a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a>" : h($r['login']);
-        echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar']) . "<div><b>$nombre</b>"
+    $rows = []; $total = $ok = $rech = 0;
+    try {
+        [$total, $ok, $rech] = $pdo->query("SELECT COUNT(*), COALESCE(SUM(u.verified = 1 OR (u.user_id IS NULL AND r.estado = 'activada')), 0), COALESCE(SUM(r.estado = 'rechazado'), 0)
+                                              FROM reg_log r LEFT JOIN users u ON u.user_id = r.user_id WHERE $dR")->fetch(PDO::FETCH_NUM);
+        $total = (int)$total; $ok = (int)$ok; $rech = (int)$rech;
+        $st = $pdo->prepare("SELECT r.*, u.user_id AS uid, u.login AS ulogin, u.aura, u.avatar, u.verified, u.token, u.token_sent, u.last_seen
+                               FROM reg_log r LEFT JOIN users u ON u.user_id = r.user_id WHERE $dR ORDER BY r.created DESC, r.reg_id DESC LIMIT ? OFFSET ?");
+        $st->bindValue(1, $per, PDO::PARAM_INT);
+        $st->bindValue(2, page_offset($page), PDO::PARAM_INT);
+        $st->execute();
+        $rows = $st->fetchAll();
+    } catch (Throwable $e) { echo "<p class=\"error\">Falta la tabla reg_log (sql/migra-102-registro-historico.sql).</p>"; }
+    echo "<p class=\"notice\">" . t('%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.', $total, $ok, $total - $ok - $rech, $rech) . "</p>";
+    foreach ($rows as $r) {
+        $viva = $r['uid'] !== null; $act = $viva && (int)$r['verified'] === 1;
+        if ($r['estado'] === 'rechazado') $estado = t('no pasó') . ' · ' . $r['motivo'];
+        else {
+            if ($act) $estado = t('activada') . ($r['last_seen'] ? ' · ' . t('último acceso %s', hace($r['last_seen'])) : '');
+            elseif ($viva && (!$r['token'] || !$r['token_sent'])) $estado = t('a medias') . ' · ' . t('desactivada a mano');
+            elseif ($viva) $estado = t('a medias') . ' · ' . (strtotime($r['token_sent']) < time() - $horas * 3600 ? t('enlace caducado') : t('enlace enviado %s', hace($r['token_sent'])));
+            elseif ($r['estado'] === 'activada') $estado = t('activada') . ' · ' . t('cuenta borrada');
+            else $estado = t('a medias') . ' · ' . ($r['estado'] === 'caducada' ? t('borrada por no activar') : t('cuenta borrada'));
+            if ($r['motivo'] !== '') $estado .= ' · ' . $r['motivo'];
+        }
+        $login = $viva ? (string)$r['ulogin'] : (string)$r['login'];
+        $nombre = $act ? "<a href=\"/u.php?u=" . rawurlencode($login) . "\">" . h($login) . "</a>" : h($login !== '' ? $login : '—');
+        echo "<div class=\"ulist\">" . avatar((float)($viva ? $r['aura'] : cfg('aura_anon', 5)), $login !== '' ? $login : '?', $viva ? $r['avatar'] : null) . "<div><b>$nombre</b>"
            . "<span class=\"meta\"> · " . h($r['email']) . " · " . h(t('registro %s', hace($r['created']))) . "</span>"
-           . "<p class=\"bio\">" . ((int)$r['verified'] === 1 ? h($estado) : "<b>" . h($estado) . "</b>") . "</p></div></div>";
-        $n++;
+           . "<p class=\"bio\">" . ($act ? h($estado) : "<b>" . h($estado) . "</b>") . "</p></div></div>";
     }
-    if ($n === 0) echo "<p class=\"end\">" . t('Ningún registro en este periodo.') . "</p>";
+    if (!$rows) echo "<p class=\"end\">" . t('Ningún registro en este periodo.') . "</p>";
     paginate("/procesos.php?v=registros$qd", $page, $total);
     page_footer();
     exit;

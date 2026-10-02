@@ -158,6 +158,14 @@ function pw_toggle(): string {
     return "<span class=\"showpw\" hidden><label><input type=\"checkbox\"> mostrar contraseña</label></span><script src=\"/app/pw.js\" defer></script>";
 }
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+/** Apunta un intento de registro en el historico permanente (tabla reg_log, migra-102; lo ve el admin en Procesos -> Registros).
+ *  $estado: pendiente | activada | rechazado. Nunca rompe el registro: si la tabla no existe todavia, no hace nada. */
+function reg_log_add(PDO $pdo, string $login, string $email, string $estado, string $motivo = '', int $uid = 0): void {
+    try {
+        $pdo->prepare("INSERT INTO reg_log (login, email, user_id, estado, motivo, activated) VALUES (?,?,?,?,?,?)")
+            ->execute([mb_substr($login, 0, 64), mb_substr($email, 0, 128), $uid ?: null, $estado, mb_substr($motivo, 0, 160), $estado === 'activada' ? date('Y-m-d H:i:s') : null]);
+    } catch (Throwable $e) { /* sin migra-102 */ }
+}
 /** Saltos de linea de un texto ya escapado, para pintarlo: como mucho una linea en blanco seguida (tres o mas saltos se quedan en dos) y
  *  cada salto pasa a ser un <br> SIN el salto literal detras. nl2br() dejaba «<br />\n» y, como los comentarios y el chat se pintan con
  *  white-space: pre-wrap, cada salto contaba dos veces (un parrafo aparte salia con tres lineas en blanco). */

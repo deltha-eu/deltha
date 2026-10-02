@@ -460,3 +460,17 @@ CREATE TABLE IF NOT EXISTS notifications (
     CONSTRAINT fk_n_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_n_from FOREIGN KEY (from_id) REFERENCES users(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+
+-- Historico permanente de registros (migra-102): una fila por intento de alta, pase o no del formulario. Sin FK: sobrevive al borrado de la cuenta.
+CREATE TABLE reg_log (
+    reg_id      INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    login       VARCHAR(64) NOT NULL DEFAULT '',
+    email       VARCHAR(128) NOT NULL DEFAULT '',
+    user_id     INT UNSIGNED DEFAULT NULL,
+    estado      VARCHAR(16) NOT NULL DEFAULT 'pendiente',
+    motivo      VARCHAR(160) NOT NULL DEFAULT '',
+    activated   DATETIME DEFAULT NULL,
+    KEY idx_reglog_created (created),
+    KEY idx_reglog_user (user_id)
+) ENGINE=InnoDB;

@@ -84,7 +84,9 @@ function user_create(PDO $pdo, string $login, string $email, string $pass, strin
         $pdo->prepare("INSERT INTO users (login, email, pass, verified, aura, level) VALUES (?,?,?,?,?,?)")
             ->execute([$login, $email, password_hash($pass, PASSWORD_DEFAULT), $verified ? 1 : 0, round($aura, 3), $level]);
     } catch (PDOException $e) { return [0, 'Ese usuario o correo ya existe.']; }
-    return [(int)$pdo->lastInsertId(), null];
+    $uid = (int)$pdo->lastInsertId();
+    reg_log_add($pdo, $login, $email, $verified ? 'activada' : 'pendiente', 'creada por un admin', $uid);   // historico de registros
+    return [$uid, null];
 }
 
 /** Formulario de alta (solo admin). $back: 'usuarios' | 'admin' = adonde vuelve si hay error. */

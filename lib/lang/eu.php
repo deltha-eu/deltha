@@ -704,4 +704,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'enlace caducado' => 'esteka iraungita',
 'enlace enviado %s' => 'esteka bidalita %s',
 'Ningún registro en este periodo.' => 'Ez dago erregistrorik aldi honetan.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d erregistro: %d aktibatuta, %d erdizka (posta baieztatu gabe) eta %d formularioa gainditu ez dutenak. Historia iraunkorra; adminek bakarrik ikusten dute.',
+'no pasó' => 'ez du gainditu',
+'cuenta borrada' => 'kontua ezabatuta',
+'borrada por no activar' => 'ez aktibatzeagatik ezabatuta',
 ];

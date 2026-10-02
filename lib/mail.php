@@ -149,6 +149,9 @@ function email_rejected(PDO $pdo, string $email): ?string {
 /** Borra las cuentas que nunca se activaron: sin validar, con token pendiente y cuyo enlace caduco hace mas de 24 h
  *  (token_hours + 24). Liberan nombre de usuario y correo. No toca a quien el admin desvalido a mano (token NULL). Devuelve cuantas. */
 function users_purge_unverified(PDO $pdo): int {
+    $horas = (int)cfg('token_hours', 48) + 24;
+    // antes de borrarlas, quedan como «caducada» en el historico de registros (reg_log, migra-102)
+    try { $pdo->prepare("UPDATE reg_log r JOIN users u ON u.user_id = r.user_id SET r.estado = 'caducada' WHERE u.verified = 0 AND u.token IS NOT NULL AND u.token_sent IS NOT NULL AND u.token_sent < NOW() - INTERVAL ? HOUR AND u.level = 'normal'")->execute([$horas]); } catch (Throwable $e) { }
     try {
         $st = $pdo->prepare("DELETE FROM users WHERE verified = 0 AND token IS NOT NULL AND token_sent IS NOT NULL AND token_sent < NOW() - INTERVAL ? HOUR AND level = 'normal'");
         $st->execute([(int)cfg('token_hours', 48) + 24]);

@@ -705,4 +705,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'enlace caducado' => 'link scaduto',
 'enlace enviado %s' => 'link inviato %s',
 'Ningún registro en este periodo.' => 'Nessuna registrazione in questo periodo.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d registrazioni: %d attivate, %d a metà (e-mail non confermata) e %d che non hanno superato il modulo. Storico permanente; lo vedono solo gli admin.',
+'no pasó' => 'non è passata',
+'cuenta borrada' => 'account cancellato',
+'borrada por no activar' => 'cancellata per mancata attivazione',
 ];

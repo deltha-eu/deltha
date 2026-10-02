@@ -18,6 +18,7 @@ if (strtotime($u['token_sent']) < time() - $hours * 3600) {
     echo "<h1>" . t('Enlace caducado') . "</h1><p class=\"end\">" . t('Tenía %d horas de validez. <a href="/reenviar.php">Pide otro</a>.', $hours) . "</p>"; page_footer(); exit;
 }
 $pdo->prepare("UPDATE users SET verified = 1, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([$uid]);
+try { $pdo->prepare("UPDATE reg_log SET estado = 'activada', activated = NOW() WHERE user_id = ? AND estado = 'pendiente'")->execute([$uid]); } catch (Throwable $e) { /* sin migra-102 */ }
 session_arranca();   // misma duracion que en login.php (session_days), no hasta cerrar el navegador
 session_regenerate_id(true);
 $_SESSION['uid'] = $uid;
