@@ -513,25 +513,29 @@ function fuentes_parse_rss(string $xml): array {
 
 /** Mediavida (sin RSS): la tabla #tablatemas de /foro/spy (hilos con actividad reciente; /foro/new son los hilos nuevos). Por fila:
  *  <tr id="tNNN">, el subforo en td.autor-avatar a[original-title], el titulo en a.hb, las respuestas en span.num.reply[title="Este tema
- *  tiene N respuestas…"], el ultimo autor en td.col-av img[alt] y la hora del ultimo mensaje en span.m_date[data-time] (epoch).
+ *  tiene N respuestas…"], el ultimo autor en td.col-av a[href=/id/usuario] y la hora del ultimo mensaje en span.m_date[data-time] (epoch).
+ *  OJO: en el codigo fuente (no en el DOM del navegador) el enlace del hilo va con comillas simples (<a id='aNNN' href='…'>) y el
+ *  subforo en title= (original-title lo pone su JS): los atributos se leen con cualquiera de las dos comillas.
  *  No trae extracto: content vacio. url = el hilo desde el principio; thread_url = el ultimo mensaje. Mismos campos que el RSS. */
 function fuentes_parse_mediavida(string $html): array {
     $base = 'https://www.mediavida.com';
+    $q = '(["\'])';   // la comilla que abra el atributo; \\N cierra con la misma
     if (!preg_match('~<tbody[^>]*>(.*?)</tbody>~su', $html, $tb)) $tb = [1 => $html];
-    if (!preg_match_all('~<tr\s+id="t(\d+)"[^>]*>(.*?)</tr>~su', $tb[1], $trs, PREG_SET_ORDER)) return [];
+    if (!preg_match_all('~<tr\s+id=' . $q . 't(\d+)\1[^>]*>(.*?)</tr>~su', $tb[1], $trs, PREG_SET_ORDER)) return [];
     $out = []; $now = time();
+    $dec = fn(string $v): string => trim(html_entity_decode($v, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     foreach ($trs as $tr) {
-        [$row, $id] = [$tr[2], (int)$tr[1]];
-        if (!preg_match('~<a\s+id="a\d+"[^>]*href="([^"]+)"[^>]*>(.*?)</a>~su', $row, $m)) continue;
-        $href = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        [$row, $id] = [$tr[3], (int)$tr[2]];
+        if (!preg_match('~<a\s+id=' . $q . 'a\d+\1[^>]*?\shref=' . $q . '([^"\']+)\2[^>]*>(.*?)</a>~su', $row, $m)) continue;
+        $href = $dec($m[3]);
         if (!str_starts_with($href, 'http')) $href = $base . $href;
-        $title = trim(html_entity_decode(strip_tags($m[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $title = $dec(strip_tags($m[4]));
         if ($title === '') continue;
-        $topic   = preg_match('~class="autor-avatar".*?original-title="([^"]*)"~su', $row, $t) ? trim(html_entity_decode($t[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : null;
-        $replies = preg_match('~class="num reply"[^>]*title="Este tema tiene (\d+)~u', $row, $r) ? (int)$r[1] : 0;
-        $author  = preg_match('~class="col-av[^"]*".*?<img[^>]*alt="([^"]*)"~su', $row, $a) ? trim(html_entity_decode($a[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : null;
-        $ts      = preg_match('~class="m_date[^"]*"[^>]*data-time="(\d+)"~u', $row, $d) ? (int)$d[1] : (preg_match('~data-time="(\d+)"~u', $row, $d) ? (int)$d[1] : $now);
-        $last    = preg_match('~class="last-av[^"]*".*?<a\s+href="([^"]+)"~su', $row, $l) ? html_entity_decode($l[1], ENT_QUOTES | ENT_HTML5, 'UTF-8') : $href;
+        $topic   = preg_match('~class=' . $q . 'autor-avatar\1.*?\s(?:original-)?title=' . $q . '([^"\']*)\2~su', $row, $t) ? $dec($t[3]) : null;
+        $replies = preg_match('~class=' . $q . 'num reply\1[^>]*title=' . $q . 'Este tema tiene (\d+)~u', $row, $r) ? (int)$r[3] : 0;
+        $author  = preg_match('~class=' . $q . 'col-av[^"\']*\1.*?href=' . $q . '/id/([^"\']+)\2~su', $row, $a) ? $dec(rawurldecode($a[3])) : null;   // /id/usuario (sin avatar hay una letra, no <img>)
+        $ts      = preg_match('~class=' . $q . 'm_date[^"\']*\1[^>]*data-time=' . $q . '(\d+)\2~u', $row, $d) ? (int)$d[3] : (preg_match('~data-time=' . $q . '(\d+)\1~u', $row, $d) ? (int)$d[2] : $now);
+        $last    = preg_match('~class=' . $q . 'last-av[^"\']*\1.*?<a\s+href=' . $q . '([^"\']+)\2~su', $row, $l) ? $dec($l[3]) : $href;
         if (!str_starts_with($last, 'http')) $last = $base . $last;
         $out[] = [
             'ext_id'     => 'mv:' . $id,
