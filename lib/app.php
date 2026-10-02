@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 151);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 152);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1090,7 +1090,7 @@ function nav_fuentes(string $tab): void {
     $tabs['temas'] = ['/temas.php', t('Temas'), 'tag'];
     $tabs['comunidades'] = ['/comunidades.php', t('Comunidades'), 'comm'];
     echo "<nav class=\"tabs-fuentes\">";
-    foreach ($tabs as $k => [$href, $label, $ic]) echo "<a href=\"" . h($href) . "\"" . ($k === $tab ? ' class="on"' : '') . ">" . icon($ic) . "<span>" . h($label) . "</span></a>";
+    foreach ($tabs as $k => [$href, $label, $ic]) echo "<a href=\"" . h($href) . "\" title=\"" . h($label) . "\"" . ($k === $tab ? ' class="on"' : '') . ">" . icon($ic) . "<span>" . h($label) . "</span></a>";   // solo se pinta el icono (CSS); el rotulo queda para title y lectores de pantalla
     echo "</nav>";
 }
 /** Mensajes privados sin leer del usuario actual (una consulta por pagina, cacheada) */
