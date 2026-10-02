@@ -9,6 +9,8 @@
  *    - cycle_lottery = 0: el de mayor δ (empate: el mas antiguo).
  *  Si a la portada del turno no le llega nada y cycle_cede_turno = 1, el turno pasa a la otra portada (Substacks conserva los
  *  suyos; solo se ceden los vacios). Si tampoco, ese ciclo no se publica nada. Los originales (articulos) no van a portada.
+ *  CANALES (YouTube, migra-106) no entra en la alternancia: turno condicionado. Si han pasado canales_gap_min desde su ultima
+ *  publicacion y tiene algun video publicable, el ciclo es suyo; si no, el ciclo sigue siendo de la portada del turno.
  *  MODO TEST (config.test_mode = 1, admin -> Ciclo): si el ciclo normal no publica nada y la ultima promocion tiene mas de
  *  TEST_MODE_MINUTES (60), publica de todos modos el enlace del radar con mas δ (primero la portada del turno, luego la otra),
  *  haya o no alcanzado la edad, los votos y el δ minimos. Para la beta, donde no hay gente para llenar la portada.
@@ -70,11 +72,17 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
                               ORDER BY s.delta DESC, s.sent_date ASC LIMIT 200 FOR UPDATE");
         $orden = [$turno];
         if (cfg('cycle_cede_turno', '1') === '1') $orden[] = $turno === 'medios' ? 'substacks' : 'medios';
+        // Canales: va primero solo si ya ha pasado su intervalo; si no tiene nada publicable, no gasta el ciclo
+        if (portada_canales_on()) {
+            $uc = $pdo->query("SELECT MAX(created) FROM promo_log WHERE portada = 'canales'")->fetchColumn();
+            if (!$uc || $now - strtotime((string)$uc) >= canales_gap() * 60 - 30) array_unshift($orden, 'canales');
+        }
         $best = null; $donde = $turno; $cands = [];
         foreach ($orden as $p) {
             $st->execute([$p, $p, $minAge, delta_min_votes(), delta_minpub($p)]);
             $cands = $st->fetchAll();
             if ($cands) { $best = ciclo_elige($cands); $donde = $p; break; }
+            if ($p === 'canales') continue;   // sin video publicable: el ciclo sigue siendo de la portada del turno, sin mas
             $log[] = "turno de $p: nada publicable (ninguna con >= $minAge min, >= " . delta_min_votes() . " votos que cuenten y delta >= " . num_es(delta_minpub($p)) . ")" . ($p === $turno && count($orden) > 1 ? " → se cede el turno" : "");
         }
         // modo test: sin nada publicable y con mas de TEST_MODE_MINUTES desde la ultima promocion, sale el de mas δ, sin umbrales
@@ -90,7 +98,7 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
                                        FROM stories s
                                       WHERE s.status = 'nuevas' AND s.portada = ? AND s.content_type = 'link'
                                       ORDER BY s.delta DESC, s.sent_date ASC LIMIT 1 FOR UPDATE");
-                foreach ([$turno, $turno === 'medios' ? 'substacks' : 'medios'] as $p) {
+                foreach (array_merge([$turno, $turno === 'medios' ? 'substacks' : 'medios'], portada_canales_on() ? ['canales'] : []) as $p) {
                     $sf->execute([$p, $p]);
                     $cands = $sf->fetchAll();
                     if ($cands) { $best = $cands[0]; $donde = $p; $test = true; break; }
@@ -108,7 +116,7 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
             if ($best['user_id'] !== null) aura_add($pdo, (int)$best['user_id'], (float)cfg('aura_portada', 0.5), 'portada', (int)$best['story_id']);
             $como = $test ? "MODO TEST: la de mayor δ sin umbrales, " . TEST_MODE_MINUTES . " min sin promocion"
                   : (cfg('cycle_lottery', '1') === '1' ? "sorteo entre " . count($cands) . ", δ máx " . num_es((float)$cands[0]['delta']) : "la de mayor δ");
-            $log[] = "PUBLICADA en $donde" . ($donde !== $turno ? " (turno cedido por $turno)" : "") . " #{$best['story_id']} delta={$best['delta']} ($como; {$best['n_radar']} en su radar, {$best['commenters']} comentaristas)";
+            $log[] = "PUBLICADA en $donde" . ($donde === 'canales' ? " (turno condicionado)" : ($donde !== $turno ? " (turno cedido por $turno)" : "")) . " #{$best['story_id']} delta={$best['delta']} ($como; {$best['n_radar']} en su radar, {$best['commenters']} comentaristas)";
         }
         $pdo->commit();
     } catch (Throwable $e) {

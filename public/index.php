@@ -8,7 +8,7 @@ if (user() && (user()['landing'] ?? '') !== '' && empty($_GET) && !preg_match('~
     $to = landing_url($pdo, user());
     if ($to !== '/') redirect($to);
 }
-// Dos portadas, Medios y Substacks: /?portada=medios | /?portada=substacks. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o Substacks.
+// Portadas: Medios, Substacks y Canales (YouTube): /?portada=medios | substacks | canales. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o Substacks.
 $p = portada_actual();
 $page = page_num();
 $ml = stories_mylang_sql();   // «solo en mi idioma»: fuera los envios en otro idioma (migra-092)
@@ -27,8 +27,8 @@ if (isset($_GET['bienvenida']) && user()) {
 }
 $n = 0;
 foreach ($st as $s) { story_post($pdo, $s, "full"); $n++; }
-if ($n === 0) echo "<p class=\"end\">" . ($p === 'substacks'
+if ($n === 0) echo "<p class=\"end\">" . ($p === 'canales' ? t('Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.') : ($p === 'substacks'
     ? t('Nada en Substacks todavía. Cada dos ciclos se publica aquí el Substack del radar con mayor δ, si llega al mínimo.')
-    : t('Nada en Medios todavía. Cada dos ciclos se publica aquí la noticia del radar con mayor δ, si llega al mínimo.')) . "</p>";
+    : t('Nada en Medios todavía. Cada dos ciclos se publica aquí la noticia del radar con mayor δ, si llega al mínimo.'))) . "</p>";
 paginate('/?portada=' . $p, $page, $total);
 page_footer();

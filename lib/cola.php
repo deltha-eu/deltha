@@ -27,9 +27,11 @@ function cola_eta(array $rows): array {
         $pend[$p][] = $r;
     }
     $eta = []; $guard = 0;
-    while (($pend['medios'] ?? []) || ($pend['substacks'] ?? [])) {
+    $gap = canales_gap() * 60; $uc = canales_ultima($pdo);   // Canales: turno condicionado (lib/ciclo.php)
+    while (($pend['medios'] ?? []) || ($pend['substacks'] ?? []) || ($pend['canales'] ?? [])) {
         if ($guard++ > 5000) break;
         $p = portada_turno($t);
+        if ($t - $uc >= $gap - 30) foreach ($pend['canales'] ?? [] as $r) if (strtotime($r['sent_date']) + $minAge <= $t) { $p = 'canales'; $uc = $t; break; }
         foreach ($pend[$p] ?? [] as $i => $r) {
             if (strtotime($r['sent_date']) + $minAge <= $t) {   // la primera elegible = la de mayor delta
                 $eta[(int)$r['story_id']] = $t;

@@ -712,4 +712,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Mis canales' => 'Meine Kanäle',
 'Añadir canal' => 'Kanal hinzufügen',
 'Último en YouTube' => 'Neu auf YouTube',
+'Canales' => 'Kanäle',
+'en Canales' => 'in Kanäle',
+'Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.' => 'Noch nichts in Kanäle. Hier erscheint das Video aus dem Radar mit dem höchsten δ, sobald es das Minimum erreicht.',
+'Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.' => 'YouTube-Videos kommen auf die Startseite Kanäle, die nur dann einen Zyklus belegt, wenn eines das Minimum erreicht (δ ≥ %s), und höchstens alle %d Min.',
 ];

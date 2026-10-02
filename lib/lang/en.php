@@ -751,4 +751,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Mis canales' => 'My channels',
 'Añadir canal' => 'Add channel',
 'Último en YouTube' => 'Latest on YouTube',
+'Canales' => 'Channels',
+'en Canales' => 'in Channels',
+'Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.' => 'Nothing in Channels yet. The video in the radar with the highest δ is published here when it reaches the minimum.',
+'Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.' => 'YouTube videos go to the Channels front page, which only takes a cycle when one of them reaches the minimum (δ ≥ %s), and at most every %d min.',
 ];
