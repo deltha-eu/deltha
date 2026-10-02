@@ -709,4 +709,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'no pasó' => 'non è passata',
 'cuenta borrada' => 'account cancellato',
 'borrada por no activar' => 'cancellata per mancata attivazione',
+'Mis canales' => 'I miei canali',
+'Añadir canal' => 'Aggiungi canale',
+'Último en YouTube' => 'Ultimi video su YouTube',
 ];

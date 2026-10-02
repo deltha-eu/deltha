@@ -8,8 +8,9 @@ require __DIR__ . '/../lib/fuentes.php';
 require __DIR__ . '/../lib/propuestas.php';
 
 $u = user();
-$GRUPOS = ['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'agregador' => t('Agregadores')];
-if (!agregadores_on()) unset($GRUPOS['agregador']);   // agregadores apagados (config.sources_agregadores)
+$GRUPOS = ['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'youtube' => 'YouTube', 'agregador' => t('Agregadores')];
+foreach (array_keys($GRUPOS) as $gk) if (!fuente_kind_on($gk)) unset($GRUPOS[$gk]);   // agregadores (config.sources_agregadores) o YouTube (config.sources_youtube) apagados
+if (!fuentes_activas($pdo, 'youtube')) unset($GRUPOS['youtube']);   // sin canales en el catalogo, el grupo no se anuncia
 $k = (string)($_GET['k'] ?? '');
 if (!isset($GRUPOS[$k])) $k = '';
 $kinds = $k ? [$k] : array_keys($GRUPOS);
@@ -34,7 +35,7 @@ if (count($porIdioma) > 1) {
     foreach ($ord as $l) echo "<a href=\"/medios.php?{$qk}il=" . h($l) . "\"" . ($il === $l ? ' class="on"' : '') . " lang=\"" . h($l) . "\">" . h(DDD_LANGS[$l] ?? strtoupper($l)) . " <small>" . (int)$porIdioma[$l] . "</small></a>";
     echo "</nav>";
 }
-if (fprop_puede($u) && $k !== 'agregador') echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
+if (fprop_puede($u) && $k !== 'agregador' && $k !== 'youtube') echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
 foreach ($kinds as $kind) {
     $lista = fuentes_on() ? fuentes_visibles($pdo, $kind) : [];
     if ($il !== '') $lista = array_values(array_filter($lista, fn($m) => ($m['lang'] ?? '') === $il));
@@ -52,7 +53,7 @@ foreach ($kinds as $kind) {
         $cuerpo = avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . "</span><br><span class=\"meta\">" . $descr . " · " . t('%d noticias', (int)$m['cnt']) . ($m['last'] ? " · " . h(hace($m['last'])) : '') . "</span></span>";
         // con cuenta, medios y substacks llevan «+ Seguir» / «✓ Siguiendo» al final de la fila (la fila deja de ser un solo enlace: un form no cabe dentro de un <a>)
         if ($fav = fuente_fav_form($m)) echo "<div class=\"fz medio\"><a class=\"fzl\" href=\"" . h(fuente_url($m)) . "\">$cuerpo</a>$fav</div>";
-        else echo "<a class=\"fz medio\" href=\"" . h(fuente_url($m)) . "\">$cuerpo" . icon($kind === 'agregador' ? 'agg' : 'news') . "</a>";
+        else echo "<a class=\"fz medio\" href=\"" . h(fuente_url($m)) . "\">$cuerpo" . icon($kind === 'agregador' ? 'agg' : ($kind === 'youtube' ? 'play' : 'news')) . "</a>";
     }
 }
 // abajo, los tres grupos (y «todos» cuando se esta viendo uno solo)

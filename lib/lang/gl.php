@@ -708,4 +708,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'no pasó' => 'non pasou',
 'cuenta borrada' => 'conta borrada',
 'borrada por no activar' => 'borrada por non activar',
+'Mis canales' => 'As miñas canles',
+'Añadir canal' => 'Engadir canle',
+'Último en YouTube' => 'O último en YouTube',
 ];

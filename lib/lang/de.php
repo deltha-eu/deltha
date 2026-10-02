@@ -709,4 +709,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'no pasó' => 'nicht durchgekommen',
 'cuenta borrada' => 'Konto gelöscht',
 'borrada por no activar' => 'wegen fehlender Aktivierung gelöscht',
+'Mis canales' => 'Meine Kanäle',
+'Añadir canal' => 'Kanal hinzufügen',
+'Último en YouTube' => 'Neu auf YouTube',
 ];

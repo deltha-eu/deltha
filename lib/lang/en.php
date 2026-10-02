@@ -748,4 +748,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'no pasó' => 'did not get through',
 'cuenta borrada' => 'account deleted',
 'borrada por no activar' => 'deleted for not activating',
+'Mis canales' => 'My channels',
+'Añadir canal' => 'Add channel',
+'Último en YouTube' => 'Latest on YouTube',
 ];

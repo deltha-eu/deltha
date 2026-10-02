@@ -89,9 +89,10 @@ function side_modules(): array {
             'votadas'     => [t('Las más votadas'), 'side_votadas'],
             'agregadores' => [t('Último en agregadores'), 'side_agregadores'],
             'medios'      => [t('Último en medios'), 'side_medios'],
-            'substacks'   => [t('Último en substacks'), 'side_substacks']];
+            'substacks'   => [t('Último en substacks'), 'side_substacks'],
+            'youtube'     => [t('Último en YouTube'), 'side_youtube']];
 }
-const DDD_SIDE_DEFAULT = 'ciclo,temas,comunidades,votadas,agregadores,medios,substacks';
+const DDD_SIDE_DEFAULT = 'ciclo,temas,comunidades,votadas,agregadores,medios,substacks,youtube';
 /** Orden en vigor (solo claves existentes). */
 function side_order(): array {
     $mods = side_modules(); $out = [];
@@ -180,9 +181,10 @@ function side_comunidades(PDO $pdo): void {
 function side_agregadores(PDO $pdo): void { side_ultimo($pdo, 'agregador', t('Último en agregadores')); }
 function side_medios(PDO $pdo): void { side_ultimo($pdo, 'medio', t('Último en medios')); }
 function side_substacks(PDO $pdo): void { side_ultimo($pdo, 'newsletter', t('Último en substacks')); }
+function side_youtube(PDO $pdo): void { side_ultimo($pdo, 'youtube', t('Último en YouTube')); }
 function side_ultimo(PDO $pdo, string $kind, string $title): void {
     require_once __DIR__ . '/fuentes.php';
-    if (!fuentes_on() || ($kind === 'agregador' && !agregadores_on())) return;
+    if (!fuentes_on() || !fuente_kind_on($kind)) return;
     foreach ([$kind => $title] as $kind => $title) {
         $mylang = fuentes_solo_mi_idioma();   // «solo fuentes en mi idioma»: fuera las de otro idioma (las de idioma desconocido se ven)
         // cinco noticias de cinco fuentes distintas: la mas reciente de cada una (si un medio publica seis seguidas no acapara el modulo)

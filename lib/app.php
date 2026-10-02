@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 147);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 148);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -335,7 +335,7 @@ function topic_delete(PDO $pdo, int $topic_id, int $to): ?string {
     } catch (PDOException $e) { $pdo->rollBack(); return 'No se pudo borrar el tema: ' . $e->getMessage(); }
     return null;
 }
-/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub / u:agg (lo ultimo de Mis medios / Mis substacks / Mis agregadores, /ultimo.php) */
+/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub / u:yt / u:agg (lo ultimo de Mis medios / Mis substacks / Mis canales / Mis agregadores, /ultimo.php) */
 function landing_url(PDO $pdo, ?array $u): string {
     $l = (string)($u['landing'] ?? '');
     if ($l === 'u:medio' || $l === 'u:sub') return (string)cfg('sources_enabled', '1') === '1' ? '/ultimo.php?k=' . ($l === 'u:sub' ? 'newsletter' : 'medio') : '/';
@@ -347,6 +347,7 @@ function landing_url(PDO $pdo, ?array $u): string {
         if ($slug = $st->fetchColumn()) return '/comunidad.php?c=' . rawurlencode($slug);
     }
     if ($l === 'u:agg' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_agregadores', '0') === '1') return '/ultimo.php?k=agregador';
+    if ($l === 'u:yt' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_youtube', '1') === '1') return '/ultimo.php?k=youtube';
     return '/';
 }
 
@@ -901,6 +902,7 @@ function icon(string $n): string {
         'agg'    => '<circle cx="5" cy="6" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 6H20"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 18H20"/>',   // agregadores: lista de fuentes
         'tag'    => '<path d="M3 11V4h7l10 10-7 7z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',   // temas
         'comm'   => '<circle cx="12" cy="8" r="3.2"/><circle cx="5" cy="11" r="2.2"/><circle cx="19" cy="11" r="2.2"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0"/><path d="M2 17.5a3.5 3.5 0 0 1 3-2.3M22 17.5a3.5 3.5 0 0 0-3-2.3"/>',   // comunidades
+        'play'   => '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z" fill="currentColor" stroke="none"/>',   // canales de YouTube: pantalla con triangulo (generico, no el logotipo)
         'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
         'bell'   => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/>',   // avisos (campanita)
         'sun'    => '<circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',   // me gusta (comentarios)
@@ -1074,7 +1076,7 @@ function footer_links(): string {
     // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios.php?k=…), no uno por agregador
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
-        foreach (['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
+        foreach (['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'youtube' => 'YouTube', 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
     }
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema, idioma y portada, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";

@@ -745,4 +745,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'no pasó' => 'não passou',
 'cuenta borrada' => 'conta apagada',
 'borrada por no activar' => 'apagada por não ativar',
+'Mis canales' => 'Os meus canais',
+'Añadir canal' => 'Adicionar canal',
+'Último en YouTube' => 'O mais recente no YouTube',
 ];

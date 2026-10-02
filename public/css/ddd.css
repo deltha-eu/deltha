@@ -3053,3 +3053,7 @@ p.fz-add.on a::before { content: "× "; }
 @media (min-width: 1300px) {
   [data-skin="phantom"] header.top { border-radius: 8px; margin: 10px 10px 0; }
 }
+
+/* ---- canales de YouTube (v148): triangulo de «reproducir» sobre la miniatura de un video (.media.yt); el enlace abre el video en YouTube ---- */
+.media.yt .pic::after { content: ""; position: absolute; left: 50%; top: 50%; width: 64px; height: 44px; margin: -22px 0 0 -32px; border-radius: 12px; background: rgba(0, 0, 0, .62) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6.5v11l9-5.5z' fill='%23fff'/%3E%3C/svg%3E") center / 30px no-repeat; transition: background-color .15s; }
+.media.yt .pic:hover::after { background-color: rgba(0, 0, 0, .82); }
