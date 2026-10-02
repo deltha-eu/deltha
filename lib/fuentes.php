@@ -331,7 +331,13 @@ function fuente_renegados_completar(array &$items, int $timeout): int {
 /** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
  *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
  *  «burbuja» de votos en su pagina (skin Phantom), asi que se pinta el widget normal, a 0 hasta que su feed los incluya. */
-const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss'];
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania)
+/** Foros XenForo y vBulletin: el feed trae el primer mensaje con sus fotos (emoticonos, capturas, anuncios de venta); no se descargan:
+ *  el listado de un foro no lleva miniaturas. */
+function fuente_sin_fotos(array $src): bool {
+    foreach (['index.rss', 'external.php'] as $p) if (str_contains((string)$src['feed_portada'], $p)) return true;
+    return false;
+}
 function fuente_sin_votos(array $src): bool {
     foreach (DDD_FEEDS_SIN_VOTOS as $p) if (str_contains((string)$src['feed_portada'], $p)) return true;
     return false;
@@ -378,7 +384,7 @@ function fuente_imagen(array $src, array $it, bool $reset = false): ?string {
     }
     if ($fails >= 3) return null;
     if (!fuente_es_medio($src)) {
-        if (empty($it['thumb'])) return null;
+        if (empty($it['thumb']) || fuente_sin_fotos($src)) return null;
         $bytes = http_get($it['thumb'], 3, 600000);
         if ($bytes === null || strlen($bytes) < 100) { $fails++; return null; }
         $info = @getimagesizefromstring($bytes);
@@ -428,8 +434,12 @@ function fuentes_parse_rss(string $xml): array {
         $sl = fuentes_ns($i, 'http://purl.org/rss/1.0/modules/slash/');   // slash:comments (XenForo: Burbuja)
         $link = trim((string)$i->link);
         if ($link === '') continue;
+        $link = preg_replace('/&goto=newpost$/', '', $link);   // vBulletin (HTCMania): el enlace salta al ultimo mensaje; sin eso, al principio del hilo
         $desc = (string)$i->description;
         $full = isset($ce->encoded) ? (string)$ce->encoded : '';
+        // XenForo (ForoMTB, ForoBeta): el extracto del primer mensaje acaba con un enlace al hilo («Leer más» o el titulo repetido)
+        if ($full !== '') $full = preg_replace('~(?:\s|<br\s*/?>)*<a [^>]*class="(?:internalLink|link link--internal)"[^>]*>[^<]*</a>\s*(?:</div>)?\s*$~u', '', $full);
+        $desc = preg_replace('~^Image: \S+\s*~u', '', $desc);   // vBulletin: la descripcion en texto plano empieza por la URL de la primera foto
         $meneame = isset($mn->link_id) && trim((string)$mn->link_id) !== '';
         // foros SMF (Areopago): guid «tag:…:msg=N» y enlace «topic=T.msgN»; cada item es un mensaje
         $smf = preg_match('/[?&;]topic=(\d+)\.msg(\d+)/', $link, $sm) && str_starts_with(trim((string)$i->guid), 'tag:') ? ['topic' => (int)$sm[1], 'msg' => (int)$sm[2]] : null;
