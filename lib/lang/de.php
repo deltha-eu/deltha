@@ -693,4 +693,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Añadir substack' => 'Substack hinzufügen',
 'Cerrar' => 'Schließen',
 'Ya sigues todos los del catálogo.' => 'Du folgst bereits allen im Katalog.',
+'Añadir agregador' => 'Aggregator hinzufügen',
 ];

@@ -692,4 +692,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Añadir substack' => 'Gehitu substacka',
 'Cerrar' => 'Itxi',
 'Ya sigues todos los del catálogo.' => 'Katalogoko guztiak jarraitzen dituzu jada.',
+'Añadir agregador' => 'Gehitu agregatzailea',
 ];

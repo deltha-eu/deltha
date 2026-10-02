@@ -7,7 +7,7 @@ $u = user();
 if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login.php');
 $sid = (int)post('f');
 $src = null;
-if (fuentes_on()) foreach (fuentes_activas($pdo) as $s) if ((int)$s['source_id'] === $sid && fuente_es_medio($s)) { $src = $s; break; }
+if (fuentes_on()) foreach (fuentes_activas($pdo) as $s) if ((int)$s['source_id'] === $sid && fuente_seguible($s)) { $src = $s; break; }
 if ($src) { try { fuente_fav_set($pdo, (int)$u['user_id'], $sid, post('act') !== 'quitar'); } catch (Throwable $e) { /* no romper la navegacion */ } }
 
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');

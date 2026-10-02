@@ -693,4 +693,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Añadir substack' => 'Aggiungi substack',
 'Cerrar' => 'Chiudi',
 'Ya sigues todos los del catálogo.' => 'Segui già tutti quelli del catalogo.',
+'Añadir agregador' => 'Aggiungi aggregatore',
 ];

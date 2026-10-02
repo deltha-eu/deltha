@@ -39,7 +39,6 @@ foreach ($kinds as $kind) {
     $lista = fuentes_on() ? fuentes_visibles($pdo, $kind) : [];
     if ($il !== '') $lista = array_values(array_filter($lista, fn($m) => ($m['lang'] ?? '') === $il));
     if ($il !== '' && !$lista && !$k) continue;   // viendo los tres grupos: el que no tiene nada en ese idioma no se pinta
-    $mine = $kind === 'agregador' ? [] : array_column(mis_medios($pdo, $u, $kind), 'source_id');
     if (!$k) echo "<h3 class=\"sec\">" . h($GRUPOS[$kind]) . "</h3>";
     if (!$lista) echo "<p class=\"end\">" . t('Todavía no hay medios en el catálogo.') . "</p>";
     // numero de noticias y fecha de la ultima, y orden por esa fecha (la mas reciente primero; sin noticias, al final)

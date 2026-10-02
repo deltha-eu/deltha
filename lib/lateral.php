@@ -70,9 +70,9 @@ function rail_medios(): void {
     $u = user();
     foreach (DDD_ULTIMO_KINDS as $kind => [$label, $ic]) {
         if (!($list = medios_menu($pdo, $u, 0, $kind))) continue;
-        $mias = $kind !== 'agregador' ? count(mis_medios_recientes($pdo, $u, $kind)) : 0;
+        $mias = count(mis_medios_recientes($pdo, $u, $kind));
         $on = current_tab() === "ultimo:$kind" ? ' class="on"' : '';
-        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo.php?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($kind === 'agregador' ? t('%d fuentes', count($list)) : ($mias ? t('%d elegidos', $mias) : t('recientes'))) . "</small></span></a></summary><div class=\"list\">";
+        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo.php?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($mias ? t('%d elegidos', $mias) : ($kind === 'agregador' ? t('%d fuentes', count($list)) : t('recientes'))) . "</small></span></a></summary><div class=\"list\">";
         foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
         if ($mias > count($list)) echo "<a class=\"more" . (current_tab() === "fuentes:$kind" ? ' on' : '') . "\" href=\"/mis-fuentes.php?k=$kind\">" . t('todos') . " · $mias</a>";
         echo "</div></details>";

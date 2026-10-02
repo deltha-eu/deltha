@@ -320,7 +320,7 @@ function topic_delete(PDO $pdo, int $topic_id, int $to): ?string {
     } catch (PDOException $e) { $pdo->rollBack(); return 'No se pudo borrar el tema: ' . $e->getMessage(); }
     return null;
 }
-/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub (lo ultimo de Mis medios / Mis substacks, /ultimo.php) */
+/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub / u:agg (lo ultimo de Mis medios / Mis substacks / Mis agregadores, /ultimo.php) */
 function landing_url(PDO $pdo, ?array $u): string {
     $l = (string)($u['landing'] ?? '');
     if ($l === 'u:medio' || $l === 'u:sub') return (string)cfg('sources_enabled', '1') === '1' ? '/ultimo.php?k=' . ($l === 'u:sub' ? 'newsletter' : 'medio') : '/';
@@ -331,6 +331,7 @@ function landing_url(PDO $pdo, ?array $u): string {
         $st = $pdo->prepare("SELECT slug FROM communities WHERE community_id = ? AND status = 'ok'"); $st->execute([(int)$m[1]]);
         if ($slug = $st->fetchColumn()) return '/comunidad.php?c=' . rawurlencode($slug);
     }
+    if ($l === 'u:agg' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_agregadores', '0') === '1') return '/ultimo.php?k=agregador';
     return '/';
 }
 
