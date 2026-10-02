@@ -3072,3 +3072,15 @@ p.fz-add.on a::before { content: "× "; }
 .media.playing { aspect-ratio: 16 / 9 !important; float: none !important; width: 100% !important; margin: 8px 0 10px !important; background: #000; }
 .media.playing .pic, .media.playing .tag { display: none; }
 .media.playing iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* ---- skin Phantom (v153): 1) sobre la barra morada, el logo claro y la lupa y la campana en blanco (heredaban el gris del skin claro);
+   2) las tarjetas de medios, substacks y canales (.post.medio) no llevan caja de votos: sin la columna izquierda que se le reserva,
+   que quedaba vacia. ---- */
+[data-skin="phantom"] header.top .logo { --logo-l: none; --logo-d: block; }
+[data-skin="phantom"] header.top a, [data-skin="phantom"] header.top .lupa, [data-skin="phantom"] header.top .bell { color: #fff; }
+[data-skin="phantom"] header.top .lupa:hover, [data-skin="phantom"] header.top .bell:hover { color: #fff; opacity: .8; }
+[data-skin="phantom"] .post.full.medio, [data-skin="phantom"] .post.compact.medio { padding-left: 14px; }
+[data-skin="phantom"] .post.full.medio .actions, [data-skin="phantom"] .post.compact.medio .actions { margin-left: -14px; }
+/* ---- /ultimo.php en movil y tablet: la fila de texto «Mis medios · Mis substacks…» repetia la franja de iconos de arriba (nav.tabs-fuentes);
+   solo se pinta en escritorio, donde esa franja no existe. ---- */
+@media (max-width: 1299px) { nav.sub.grupos { display: none; } }
