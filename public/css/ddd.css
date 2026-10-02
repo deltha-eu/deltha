@@ -3084,3 +3084,17 @@ p.fz-add.on a::before { content: "× "; }
 /* ---- /ultimo.php en movil y tablet: la fila de texto «Mis medios · Mis substacks…» repetia la franja de iconos de arriba (nav.tabs-fuentes);
    solo se pinta en escritorio, donde esa franja no existe. ---- */
 @media (max-width: 1299px) { nav.sub.grupos { display: none; } }
+
+/* ---- movil y tablet (v154): 1) cabecera: la δ deja de ir centrada por su cuenta y pasa al grupo de la derecha, delante de la lupa y la
+   campana, los tres a la misma distancia (el hueco de la barra); 2) franja de iconos de grupos: en vez de repartirse todo el ancho,
+   los iconos van juntos y centrados. ---- */
+@media (max-width: 1299px) {
+  header.top { gap: 14px; }
+  header.top .ttl { order: 0; max-width: none; min-width: 0; }
+  header.top .logo { position: static; transform: none; order: 1; margin-left: auto; flex: none; }
+  header.top .lupa { order: 2; margin-left: 0; }
+  header.top .bell { order: 3; margin-left: 0; margin-right: 0; }
+  header.top .me { order: 4; margin-left: 0; }
+  nav.tabs-fuentes { justify-content: center; }
+  nav.tabs-fuentes a { flex: 0 1 58px; }
+}
