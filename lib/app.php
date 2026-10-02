@@ -158,6 +158,13 @@ function pw_toggle(): string {
     return "<span class=\"showpw\" hidden><label><input type=\"checkbox\"> mostrar contraseña</label></span><script src=\"/app/pw.js\" defer></script>";
 }
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+/** Saltos de linea de un texto ya escapado, para pintarlo: como mucho una linea en blanco seguida (tres o mas saltos se quedan en dos) y
+ *  cada salto pasa a ser un <br> SIN el salto literal detras. nl2br() dejaba «<br />\n» y, como los comentarios y el chat se pintan con
+ *  white-space: pre-wrap, cada salto contaba dos veces (un parrafo aparte salia con tres lineas en blanco). */
+function saltos(string $html): string {
+    $html = preg_replace('/\n{3,}/', "\n\n", trim(str_replace(["\r\n", "\r"], "\n", $html)));
+    return str_replace("\n", '<br>', $html);
+}
 function redirect(string $to): never { header("Location: $to"); exit; }
 // Los navegadores envian los textarea con CRLF: se normaliza a LF, que es lo que esperan los parrafos (\n\n) al pintar.
 function post(string $k, string $d = ''): string { return trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST[$k] ?? $d))); }

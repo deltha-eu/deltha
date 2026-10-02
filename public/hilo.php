@@ -84,7 +84,7 @@ if ($s['content_type'] === 'article') {
     // cada parrafo con su aire (.para): la separacion la da el CSS, no los <br>
     echo md_articulo((string)$s['content']);   // **negrita** *cursiva* > cita [enlace](url), parrafo a parrafo (.para)
 } else {
-    if ($s['content']) echo "<p class=\"lead\">" . nl2br(h($s['content'])) . "</p>";
+    if ($s['content']) echo "<p class=\"lead\">" . saltos(h($s['content'])) . "</p>";
     if (!foco()) media_block($s, 'media', $dest);
 }
 if ($s['url']) echo "<a class=\"source\" href=\"" . h($s['url']) . "\" rel=\"noopener nofollow\">" . icon('link') . h($s['source']) . "</a>";

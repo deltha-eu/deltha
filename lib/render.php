@@ -169,7 +169,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     }
     if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has ghosteado') . " · <a href=\"/perfil.php#ghost\">" . t('deshacer') . "</a></summary>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
-    else      echo "<p>" . nl2br(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content'])) . "</p>";
+    else      echo "<p>" . saltos(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content'])) . "</p>";
     if ($fold) echo "</details>";
     $acts = [];
     if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "&amp;v=$hv" : '') . "&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
@@ -297,8 +297,8 @@ function md_articulo(string $content): string {   // parrafos separados por line
         if ($para === '') continue;
         if (preg_match('/^>\s?/u', $para)) {
             $para = preg_replace('/^>\s?/mu', '', $para);
-            $out .= "<blockquote class=\"lead para cita\">" . nl2br(md_inline(h(trim($para)))) . "</blockquote>";
-        } else $out .= "<p class=\"lead para\">" . nl2br(md_inline(h($para))) . "</p>";
+            $out .= "<blockquote class=\"lead para cita\">" . saltos(md_inline(h(trim($para)))) . "</blockquote>";
+        } else $out .= "<p class=\"lead para\">" . saltos(md_inline(h($para))) . "</p>";
     }
     return $out;
 }

@@ -90,7 +90,7 @@ function chat_format(string $text, array $logins, array $ids): string {
         $tail = substr($m[0], strlen($url));
         return "<a href=\"$url\" rel=\"noopener nofollow\">" . h(mb_strimwidth(html_entity_decode($url, ENT_QUOTES), 0, 60, '…')) . "</a>$tail";
     }, $h);
-    return nl2br($h);
+    return saltos($h);
 }
 /** Pagina (1..n) en la que esta el mensaje N, con los mensajes ordenados del mas nuevo al mas viejo. */
 function chat_page_of(PDO $pdo, int $id): int {
