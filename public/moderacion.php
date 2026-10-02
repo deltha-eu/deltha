@@ -166,7 +166,7 @@ foreach ($q as $m) {
     $estado = ['hidden' => '<b>oculto provisionalmente</b>', 'flag' => 'visible, señalado', 'needs_human' => 'la IA no ha podido decidir'][$m['status']];
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . $TY[$m['item_type']] . " #{$m['ref_id']}</b> " . ($m['status'] !== 'hidden' ? "<a href=\"$link\">ver</a>" : "") . "<span class=\"meta\"> · $estado · " . h(hace($m['created'])) . ($m['priority'] ? " · reportado" : "") . "</span></div>";
     echo "<p class=\"meta\">" . h(mod_note_line($m)) . "</p>";
-    echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth((string)$m['txt'], 0, 600, '…'))) . "</blockquote>";
+    echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth((string)$m['txt'], 0, 600, '…'))) . "</blockquote>";
     if (!empty($v['cita'])) echo "<p class=\"meta\">Fragmento: «" . h($v['cita']) . "»</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"ia\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
     echo "<button class=\"btn danger\" name=\"dec\" value=\"remove\" title=\"" . ($m['item_type'] === 'story' ? 'el envío se rechaza' : 'se queda con el texto sustituido por el aviso') . "\">Retirar</button> ";
@@ -189,7 +189,7 @@ foreach ($reps as $r) {
     $motivos = implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', $r['reasons'])));
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($who) . "</b> en <a href=\"/hilo.php?id={$r['story_id']}#c{$r['comment_id']}\">" . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</a>";
     echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
-    echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
+    echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
     if ($nl = mod_note_line($notes[(int)$r['comment_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_borrar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar comentario</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_descartar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn\" title=\"el comentario se queda; los reportes se cierran\">Descartar reporte</button></form>";
@@ -210,7 +210,7 @@ foreach ($creps as $r) {
     $motivos = implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', $r['reasons'])));
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h(chat_who($r)) . "</b> <a href=\"/chat.php?m={$r['msg_id']}#m{$r['msg_id']}\">#{$r['msg_id']}</a>";
     echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
-    echo "<blockquote class=\"quote\">" . nl2br(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
+    echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
     if ($nl = mod_note_line($cnotes[(int)$r['msg_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar mensaje</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_descartar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn\" title=\"el mensaje se queda; los reportes se cierran\">Descartar reporte</button></form></div></div>";
@@ -226,7 +226,7 @@ foreach ($props as $p) {
     echo "<div class=\"repitem fprop\"><div class=\"rephead\"><b>" . h($p['name']) . "</b> · " . ($p['kind'] === 'newsletter' ? 'substack/newsletter' : 'medio');
     echo "<span class=\"meta\"> · propuesta por <a href=\"/u.php?u=" . rawurlencode($p['login']) . "\">" . h($p['login']) . "</a> (aura " . h(num_es(round((float)$p['aura'], 1))) . ") · " . h(hace($p['created'])) . "</span></div>";
     echo "<p class=\"meta\">web: <a href=\"" . h($p['home']) . "\" rel=\"nofollow noopener\" target=\"_blank\">" . h($p['home']) . "</a><br>RSS: <a href=\"" . h($p['feed']) . "\" rel=\"nofollow noopener\" target=\"_blank\">" . h($p['feed']) . "</a>" . ($p['descr'] ? "<br>" . h($p['descr']) : '') . "</p>";
-    if ($p['note']) echo "<blockquote class=\"quote\">" . nl2br(h($p['note'])) . "</blockquote>";
+    if ($p['note']) echo "<blockquote class=\"quote\">" . saltos(h($p['note'])) . "</blockquote>";
     echo "<pre class=\"ftest " . ($ok ? 'ok' : 'err') . "\">" . ($ok ? "RSS leído: {$p['test_items']} noticias · " : '') . h((string)$p['test_info']) . "</pre>";
     // aprobar: datos editables, como en admin > Fuentes
     echo "<form method=\"post\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fprop_ok\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><table>";
