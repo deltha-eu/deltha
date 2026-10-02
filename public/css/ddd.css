@@ -3047,3 +3047,9 @@ p.fz-add.on a::before { content: "× "; }
 @media (min-width: 1300px) {
   [data-skin="grotesque"] header.top { margin-top: 10px; }
 }
+
+/* ---- skin Phantom, escritorio (v147): la barra morada del titulo como una tarjeta mas: redondeada (8px), del ancho de las tarjetas (10px a
+   cada lado, como main) y despegada de arriba (10px); al hacer scroll se sigue quedando pegada. En movil no cambia. ---- */
+@media (min-width: 1300px) {
+  [data-skin="phantom"] header.top { border-radius: 8px; margin: 10px 10px 0; }
+}
