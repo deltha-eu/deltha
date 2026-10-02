@@ -736,4 +736,12 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Moderadores' => 'Moderators',
 'Admins' => 'Admins',
 'moderador' => 'moderator',
+'Registros' => 'Sign-ups',
+'%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.' => '%d sign-ups: %d activated and %d unfinished (email not confirmed). Unfinished ones are deleted automatically %d h after the link was sent and stop showing here. Only admins see this.',
+'activada' => 'activated',
+'a medias' => 'unfinished',
+'desactivada a mano' => 'deactivated by hand',
+'enlace caducado' => 'link expired',
+'enlace enviado %s' => 'link sent %s',
+'Ningún registro en este periodo.' => 'No sign-ups in this period.',
 ];

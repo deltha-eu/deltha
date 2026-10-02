@@ -733,4 +733,12 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Moderadores' => 'Moderadores',
 'Admins' => 'Admins',
 'moderador' => 'moderador',
+'Registros' => 'Registos',
+'%d registros: %d activados y %d a medias (sin confirmar el correo). Los que se quedan a medias se borran solos %d h después de enviarles el enlace y dejan de salir aquí. Solo lo ven los admins.' => '%d registos: %d ativados e %d a meio (sem confirmar o e-mail). Os que ficam a meio são apagados automaticamente %d h depois de lhes ser enviada a ligação e deixam de aparecer aqui. Só os admins veem isto.',
+'activada' => 'ativada',
+'a medias' => 'a meio',
+'desactivada a mano' => 'desativada à mão',
+'enlace caducado' => 'ligação expirada',
+'enlace enviado %s' => 'ligação enviada %s',
+'Ningún registro en este periodo.' => 'Nenhum registo neste período.',
 ];
