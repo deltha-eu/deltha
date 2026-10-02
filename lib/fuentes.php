@@ -69,9 +69,12 @@ function fuente_en_mi_idioma(array $src): bool {
     $l = (string)($src['lang'] ?? '');
     return $l === '' || $l === lang();
 }
-/** fuentes_activas() menos las de otro idioma si el usuario lo ha pedido. */
+/** ¿Esta en el catalogo publico? Las que se añade un usuario pegando su direccion (migra-108) entran con listed = 0: se leen y las ve
+ *  quien las sigue, pero no salen en menus, catalogo, lateral ni buscador hasta que un moderador las aprueba. */
+function fuente_listada(array $src): bool { return !isset($src['listed']) || (int)$src['listed'] === 1; }
+/** El catalogo publico: fuentes_activas() sin las no listadas y, si el usuario lo ha pedido, sin las de otro idioma. */
 function fuentes_visibles(PDO $pdo, string $kind = ''): array {
-    return array_values(array_filter(fuentes_activas($pdo, $kind), 'fuente_en_mi_idioma'));
+    return array_values(array_filter(fuentes_activas($pdo, $kind), fn($s) => fuente_listada($s) && fuente_en_mi_idioma($s)));
 }
 /** Idioma declarado por un feed (RSS <language>, dc:language, Atom xml:lang): «es-ES» -> «es». '' si no dice nada. */
 function fuentes_feed_lang(string $xml): string {
@@ -146,7 +149,7 @@ function fuente_por_dominio(PDO $pdo, string $dominio): ?array {
     static $map = null;
     if ($map === null) {
         $map = [];
-        foreach (fuentes_activas($pdo) as $s) if (fuente_es_medio($s) && ($s['kind'] ?? '') !== 'youtube' && ($d = (string)source_of((string)$s['home'])) !== '') $map[$d] ??= $s;
+        foreach (fuentes_activas($pdo) as $s) if (fuente_es_medio($s) && fuente_listada($s) && ($s['kind'] ?? '') !== 'youtube' && ($d = (string)source_of((string)$s['home'])) !== '') $map[$d] ??= $s;
     }
     return $map[strtolower($dominio)] ?? null;
 }

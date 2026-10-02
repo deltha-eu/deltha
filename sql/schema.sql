@@ -344,6 +344,8 @@ CREATE TABLE sources (
     feed_nuevas  VARCHAR(300) NOT NULL DEFAULT '',          -- RSS de la cola (vacio = la fuente no tiene cola)
     interval_min SMALLINT UNSIGNED NOT NULL DEFAULT 5,      -- cada cuantos minutos se leen los feeds
     status       ENUM('ok','off') NOT NULL DEFAULT 'ok',
+    listed       TINYINT(1) NOT NULL DEFAULT 1,             -- 1 = en el catalogo publico; 0 = añadida por un usuario, solo la ven quienes la siguen hasta que se modera (migra-108)
+    added_by     INT UNSIGNED DEFAULT NULL,                 -- quien la añadio (NULL = admin o moderacion)
     featured     TINYINT(1) NOT NULL DEFAULT 0,           -- medio que ven quienes no han elegido (anonimos); se marca en admin
     last_fetch   DATETIME DEFAULT NULL,
     last_error   VARCHAR(255) DEFAULT NULL,
@@ -422,7 +424,7 @@ CREATE TABLE favorites (
 CREATE TABLE source_proposals (
     prop_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     user_id     INT UNSIGNED NOT NULL,                       -- quien la propone
-    kind        ENUM('medio','newsletter') NOT NULL DEFAULT 'medio',
+    kind        ENUM('medio','newsletter','youtube') NOT NULL DEFAULT 'medio',
     name        VARCHAR(48) NOT NULL,
     home        VARCHAR(200) NOT NULL,                       -- web
     feed        VARCHAR(300) NOT NULL,                       -- RSS (el dado o el encontrado en la web)

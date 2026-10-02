@@ -189,7 +189,7 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
         $mylang = fuentes_solo_mi_idioma();   // «solo fuentes en mi idioma»: fuera las de otro idioma (las de idioma desconocido se ven)
         // cinco noticias de cinco fuentes distintas: la mas reciente de cada una (si un medio publica seis seguidas no acapara el modulo)
         $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug, s.source_id FROM source_items i JOIN sources s ON s.source_id = i.source_id
-                              WHERE s.kind = ? AND s.status = 'ok' AND i.phase = 'portada'" . ($mylang ? " AND s.lang IN ('', ?)" : "") . " ORDER BY i.pub_date DESC LIMIT 80");
+                              WHERE s.kind = ? AND s.status = 'ok' AND s.listed = 1 AND i.phase = 'portada'" . ($mylang ? " AND s.lang IN ('', ?)" : "") . " ORDER BY i.pub_date DESC LIMIT 80");
         $st->execute($mylang ? [$kind, lang()] : [$kind]);
         $rows = []; $vistas = [];
         foreach ($st->fetchAll() as $r) {

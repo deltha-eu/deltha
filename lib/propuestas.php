@@ -67,7 +67,7 @@ function fprop_norm(string $url): string {
  *  'titles' => [hasta 5], 'error' => '' o el motivo].
  */
 function fprop_probar(string $feed, string $home): array {
-    $r = ['feed' => $feed, 'items' => 0, 'lang' => '', 'last' => null, 'titles' => [], 'error' => ''];
+    $r = ['feed' => $feed, 'items' => 0, 'lang' => '', 'last' => null, 'titles' => [], 'error' => '', 'title' => ''];
     $timeout = max(3, min(8, (int)cfg('sources_timeout_sec', 8)));
     $cands = [];
     if ($feed !== '') $cands[] = $feed;
@@ -87,6 +87,8 @@ function fprop_probar(string $feed, string $home): array {
             $r['last'] = $items[0]['pub_date'];
             $r['titles'] = array_map(fn($it) => mb_strimwidth((string)$it['title'], 0, 110, '…'), array_slice($items, 0, 5));
             $r['error'] = '';
+            // nombre del feed: su primer <title> (el del canal; los de las noticias van despues)
+            if (preg_match('#<title[^>]*>\s*(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?\s*</title>#si', $body, $tt)) $r['title'] = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($tt[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
             return $r;
         }
         // no es un feed: si es una pagina, buscar sus RSS anunciados; si no anuncia ninguno, probar /feed
@@ -121,6 +123,75 @@ function fprop_existe(PDO $pdo, string $feed, string $home): ?string {
         if (($f !== '' && fprop_norm((string)$s['feed']) === $f) || ($hm !== '' && fprop_norm((string)$s['home']) === $hm)) return (string)$s['name'];
     }
     return null;
+}
+
+/* ---- añadirse una fuente pegando su direccion (migra-108) -------------
+ * Desde «Mis medios / Mis substacks / Mis canales» (+ Añadir), quien tenga aura >= source_add_aura pega la direccion de la web, del RSS
+ * o del canal de YouTube. Si ya esta en Deltha, la sigue. Si no, se prueba: si el feed se lee, la fuente se crea al momento con
+ * listed = 0 (fuera del catalogo publico), el la sigue y queda una propuesta pendiente con source_id para que un moderador la publique
+ * en el catalogo (o la retire); si no se lee, queda la propuesta pendiente sin fuente y un moderador la añade a mano. */
+function fadd_puede(?array $u): bool {
+    if (!$u || !fuentes_on()) return false;
+    if (in_array($u['level'] ?? '', ['mod', 'admin'], true)) return true;
+    return (float)$u['aura'] >= (float)cfg('source_add_aura', 5);
+}
+/** Fuente que ya existe con ese RSS o esa web (este o no en el catalogo publico), o null. */
+function fadd_buscar(PDO $pdo, string $feed, string $home): ?array {
+    $f = fprop_norm($feed); $hm = fprop_norm($home);
+    foreach ($pdo->query("SELECT * FROM sources") as $s) {
+        if (($f !== '' && fprop_norm((string)$s['feed_portada']) === $f) || ($hm !== '' && fprop_norm((string)$s['home']) === $hm)) return $s;
+    }
+    return null;
+}
+/** Añade (o sigue) la fuente de $url para el usuario $u desde la pestaña $k. Devuelve [codigo, nombre]:
+ *  ok (creada y seguida) | ya (existia: seguida) | manual (no se pudo leer: propuesta para moderacion) | pend (ya esta pendiente)
+ *  | url | bloq (nombre = regla) | noyt | tope | off | aura. */
+function fadd_anadir(PDO $pdo, array $u, string $k, string $url): array {
+    if (!fadd_puede($u)) return ['aura', ''];
+    $uid = (int)$u['user_id'];
+    $url = trim($url);
+    if ($url !== '' && !preg_match('#^https?://#i', $url)) $url = 'https://' . $url;
+    if (mb_strlen($url) > 200 || !fprop_url_ok($url)) return ['url', ''];
+    if ($b = source_blocked($pdo, $url)) return ['bloq', (string)$b];
+    $host = strtolower((string)parse_url($url, PHP_URL_HOST));
+    $esYt = (bool)preg_match('/(^|\.)(youtube\.com|youtu\.be)$/', $host);
+    if ($esYt) { if (!youtube_on()) return ['url', '']; $kind = 'youtube'; }
+    elseif ($k === 'youtube') return ['noyt', ''];
+    else $kind = (str_ends_with($host, '.substack.com') || $k === 'newsletter') ? 'newsletter' : 'medio';
+    $dia = $pdo->prepare("SELECT COUNT(*) FROM source_proposals WHERE user_id = ? AND created > NOW() - INTERVAL 1 DAY"); $dia->execute([$uid]);
+    if ((int)$dia->fetchColumn() >= max(1, (int)cfg('source_add_per_day', 10)) && !in_array($u['level'] ?? '', ['mod', 'admin'], true)) return ['tope', ''];
+
+    $home = $url;
+    if ($ya = fadd_buscar($pdo, $url, $url)) return fadd_seguir($pdo, $uid, $ya);   // tal cual la han pegado, sin salir a internet
+    if ($kind === 'youtube') {
+        $e = null; $feed = youtube_feed_de($url, $e);
+        $r = $feed ? fprop_probar($feed, '') : ['feed' => $url, 'items' => 0, 'lang' => '', 'last' => null, 'titles' => [], 'title' => '', 'error' => (string)($e ?: 'no se ha podido sacar el feed del canal')];
+    } else {
+        $r = fprop_probar($url, '');
+        if ($r['items'] && fprop_norm($r['feed']) === fprop_norm($url)) $home = (parse_url($url, PHP_URL_SCHEME) ?: 'https') . '://' . $host;   // pegaron el RSS: la web es su dominio
+    }
+    if ($r['items'] && ($ya = fadd_buscar($pdo, (string)$r['feed'], $home))) return fadd_seguir($pdo, $uid, $ya);
+    if (fprop_existe($pdo, (string)$r['feed'], $home) !== null) return ['pend', ''];   // ya propuesta y pendiente de que la añadan a mano
+    $name = mb_substr(trim((string)($r['title'] ?? '')) ?: preg_replace('/^www\./', '', $host), 0, 48);
+    $feed = mb_substr($r['feed'] !== '' ? (string)$r['feed'] : $url, 0, 300);
+    $sid = null;
+    if ($r['items']) {
+        try {
+            $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured, listed, added_by) VALUES (?,?,?,?,NULL,?,'',NULL,?,'',?,'ok',0,0,?)")
+                ->execute([fprop_slug($pdo, $name), $kind, $name, mb_substr($home, 0, 200), (string)$r['lang'], $feed, $kind === 'youtube' ? 180 : ($kind === 'newsletter' ? 1440 : 60), $uid]);
+            $sid = (int)$pdo->lastInsertId();
+            fuente_fav_set($pdo, $uid, $sid, true);
+        } catch (Throwable $e) { $sid = null; $r['items'] = 0; $r['error'] = 'no se pudo crear la fuente: ' . $e->getMessage(); }
+    }
+    $pdo->prepare("INSERT INTO source_proposals (user_id, kind, name, home, feed, note, lang, test_items, test_info, source_id) VALUES (?,?,?,?,?,?,?,?,?,?)")
+        ->execute([$uid, $kind, $name, mb_substr($home, 0, 200), $feed, $sid ? 'Añadida por su cuenta desde «Mis medios»: ya la sigue, fuera del catálogo público.' : 'Intentó añadírsela desde «Mis medios» y no se pudo leer: hay que darla de alta a mano.', (string)$r['lang'], (int)$r['items'], fprop_info($r), $sid]);
+    return [$sid ? 'ok' : 'manual', $name, $kind];
+}
+/** La fuente ya existia: si esta activa y su tipo encendido, el usuario pasa a seguirla. */
+function fadd_seguir(PDO $pdo, int $uid, array $src): array {
+    if (($src['status'] ?? '') !== 'ok' || !fuente_kind_on((string)$src['kind'])) return ['off', (string)$src['name']];
+    fuente_fav_set($pdo, $uid, (int)$src['source_id'], true);
+    return ['ya', (string)$src['name'], (string)$src['kind']];
 }
 
 /** Slug libre a partir del nombre (a-z, 0-9 y guion, hasta 24). */
