@@ -693,4 +693,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Cerrar' => 'Itxi',
 'Ya sigues todos los del catálogo.' => 'Katalogoko guztiak jarraitzen dituzu jada.',
 'Añadir agregador' => 'Gehitu agregatzailea',
+'Moderadores' => 'Moderatzaileak',
+'Admins' => 'Adminak',
+'moderador' => 'moderatzailea',
 ];
