@@ -51,7 +51,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('comm_min_aura',       '6',    'Aura minima (estricta: mayor que) para poder crear comunidades'),
 ('comm_max_per_user',   '3',    'Comunidades que puede crear cada usuario'),
 ('comm_max_per_story',  '3',    'Comunidades en las que puede estar un mismo envio (contando la principal)'),
-('side_order',          'ciclo,temas,comunidades,votadas,agregadores,medios,substacks', 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta'),
+('side_order',          'ciclo,temas,comunidades,votadas,agregadores,medios,substacks,youtube', 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta'),
 ('sources_smf_per_run', '12',   'Foros SMF (Areopago): paginas de mensaje que se leen por pasada para sacar autor y numero del mensaje'),
 ('comment_edit_minutes','10',   'Minutos tras publicar en los que el autor puede editar su comentario'),
 ('comment_edit_min_aura','6',   'Aura minima (estricta: mayor que) para poder editar los comentarios propios'),
@@ -66,6 +66,9 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('curl_impersonate',    '/opt/curl-impersonate/curl_chrome116', 'Ruta a curl-impersonate (vacio = usar curl de PHP)'),
 ('sources_enabled',      '1',    '1 = fuentes externas visibles (/fuente.php) y lectura de sus RSS en el cron'),
 ('sources_agregadores',  '0',    '1 = los agregadores (Meneame, Mediatize, Renegados...) se ven y se leen; 0 = fuera de todo salvo admin > Fuentes'),
+('sources_youtube',      '1',    '1 = los canales de YouTube (fuentes de tipo youtube) se ven y se leen; 0 = fuera de todo salvo admin > Fuentes'),
+('youtube_shorts',       '0',    'Al dar de alta un canal de YouTube: 0 = feed solo de videos largos (sin shorts ni directos); 1 = feed completo del canal'),
+('yt_max_per_user',      '3',    'Canales de YouTube que salen en el menu de cada usuario («Mis canales»)'),
 ('sources_popular_hours','24',   'Fuentes: «populares» = nuevas de las ultimas N horas ordenadas por votos'),
 ('sources_popular_min_votes','5','Fuentes: votos minimos de una nueva para salir en «populares»'),
 ('sources_keep_days',    '7',    'Fuentes: dias que se guardan los items que ya no aparecen en los feeds'),
@@ -325,7 +328,7 @@ CREATE TABLE story_communities (
 CREATE TABLE sources (
     source_id    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     slug         VARCHAR(24) NOT NULL,                      -- /fuente.php?f=slug
-    kind         ENUM('agregador','medio','newsletter') NOT NULL DEFAULT 'medio',   -- agregador: fases y votos (Meneame) | medio: ultimas noticias, elegible en «Mis medios» | newsletter: idem, en «Mis substacks»
+    kind         ENUM('agregador','medio','newsletter','youtube') NOT NULL DEFAULT 'medio',   -- agregador: fases y votos (Meneame) | medio: ultimas noticias, elegible en «Mis medios» | newsletter: idem, en «Mis substacks» | youtube: canal, idem, en «Mis canales»
     name         VARCHAR(48) NOT NULL,
     home         VARCHAR(200) NOT NULL,                     -- web de la fuente
     descr        VARCHAR(200) DEFAULT NULL,

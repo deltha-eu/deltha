@@ -7,7 +7,7 @@ require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/fuentes.php';
 
 $k = (string)($_GET['k'] ?? 'newsletter');
-if (!isset(DDD_ULTIMO_KINDS[$k]) || ($k === 'agregador' && !agregadores_on())) $k = 'newsletter';   // agregadores apagados (config.sources_agregadores)
+if (!isset(DDD_ULTIMO_KINDS[$k]) || !fuente_kind_on($k)) $k = 'newsletter';   // agregadores (config.sources_agregadores) o YouTube (config.sources_youtube) apagados
 $u = user();
 $label = t(DDD_ULTIMO_KINDS[$k][0]);
 $fuentes = fuentes_on() ? ultimo_fuentes($pdo, $u, $k) : [];
@@ -24,7 +24,7 @@ $sent = $k === 'agregador' ? [] : fuente_ya_enviadas($pdo, array_column($rows, '
 header('Cache-Control: private, no-cache');   // depende de cookies (sesion, ddd_srclang): sin cache compartida ni de 60 s, o la casilla de idioma parece no hacer nada
 page_header($label, "ultimo:$k");
 echo "<nav class=\"sub\">";
-foreach (DDD_ULTIMO_KINDS as $kk => [$lbl]) if ($kk !== 'agregador' || agregadores_on()) echo "<a href=\"/ultimo.php?k=$kk\"" . ($kk === $k ? ' class="on"' : '') . ">" . h(t($lbl)) . "</a>";
+foreach (DDD_ULTIMO_KINDS as $kk => [$lbl]) if (fuente_kind_on($kk) && ($kk !== 'youtube' || $kk === $k || fuentes_activas($pdo, 'youtube'))) echo "<a href=\"/ultimo.php?k=$kk\"" . ($kk === $k ? ' class="on"' : '') . ">" . h(t($lbl)) . "</a>";
 echo "</nav>";
 
 $mias = (bool)mis_medios($pdo, $u, $k);

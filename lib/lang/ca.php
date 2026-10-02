@@ -708,4 +708,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'no pasó' => 'no va passar',
 'cuenta borrada' => 'compte esborrat',
 'borrada por no activar' => 'esborrat per no activar',
+'Mis canales' => 'Els meus canals',
+'Añadir canal' => 'Afegeix un canal',
+'Último en YouTube' => 'El més recent a YouTube',
 ];

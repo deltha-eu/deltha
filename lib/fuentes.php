@@ -9,6 +9,10 @@
  *    «enviar al radar» que abre /enviar.php prerrellenado. Cada usuario marca como favoritos los que quiera, sin
  *    limite (boton «Seguir» en el catalogo, en la fuente, en cada noticia y en el hilo; tabla user_media); en el rail salen
  *    los media_max_per_user que han publicado mas recientemente y en /mis-fuentes.php (pestañas del perfil), todos.
+ *  - newsletter (Substack): igual que un medio, en su grupo «Mis substacks».
+ *  - youtube (canal de YouTube): igual que un medio, en su grupo «Mis canales». El feed es el Atom publico del canal
+ *    (youtube.com/feeds/videos.xml, sin clave de API); cada item es un video, con su miniatura descargada a /media como
+ *    cualquier otra foto. No se incrusta el reproductor: el enlace lleva a YouTube. Se apagan todos con config.sources_youtube.
  *
  * El cron (promocionar.php, cada minuto) llama a fuentes_tick(): lee los feeds de cada fuente cuando vence su
  * interval_min y guarda los items en source_items, uno por id externo (meneame:link_id o guid), actualizando
@@ -28,6 +32,11 @@ function fuentes_on(): bool { return (string)cfg('sources_enabled', '1') === '1'
  *  fuentes_activas() no los devuelve, asi que desaparecen del catalogo, el rail, la franja, la columna derecha, el pie, /ultimo.php y /fuente.php,
  *  y el cron no lee sus RSS. Siguen en admin > Fuentes. */
 function agregadores_on(): bool { return (string)cfg('sources_agregadores', '0') === '1'; }
+/** Canales de YouTube (fuentes de tipo «youtube») activos? config.sources_youtube (migra-103). Apagados, igual que los agregadores:
+ *  fuera de todo salvo admin > Fuentes, y el cron no lee sus feeds. */
+function youtube_on(): bool { return (string)cfg('sources_youtube', '1') === '1'; }
+/** ¿Esta encendido este tipo de fuente? Medios y substacks, siempre; agregadores y YouTube tienen interruptor en Config. */
+function fuente_kind_on(string $kind): bool { return $kind === 'agregador' ? agregadores_on() : ($kind === 'youtube' ? youtube_on() : true); }
 
 /** Fuentes activas (cacheado por peticion). $kind: '' todas | agregador | medio */
 function fuentes_activas(PDO $pdo, string $kind = ''): array {
@@ -35,7 +44,7 @@ function fuentes_activas(PDO $pdo, string $kind = ''): array {
     if ($rows === null) {
         try { $rows = $pdo->query("SELECT * FROM sources WHERE status = 'ok' ORDER BY kind, name")->fetchAll(); }
         catch (Throwable $e) { $rows = []; }   // tabla aun sin crear
-        if (!agregadores_on()) $rows = array_values(array_filter($rows, fn($s) => ($s['kind'] ?? 'agregador') !== 'agregador'));   // agregadores apagados
+        $rows = array_values(array_filter($rows, fn($s) => fuente_kind_on((string)($s['kind'] ?? 'agregador'))));   // agregadores o YouTube apagados
     }
     if ($kind === '') return $rows;
     return array_values(array_filter($rows, fn($s) => ($s['kind'] ?? 'agregador') === $kind));
@@ -85,13 +94,13 @@ function fuente_by_slug(PDO $pdo, string $slug): ?array {
 function fuente_url(array $src, string $view = ''): string {
     return '/fuente.php?f=' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
 }
-function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar al radar»
+function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter', 'youtube'], true); }   // sin fases ni votos, con «enviar al radar»
 /** Grupos con favoritos del usuario: tipo => [clave de config de cuantos salen en el menu, etiqueta del grupo] */
-const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios'], 'newsletter' => ['news_max_per_user', 'Mis substacks'], 'agregador' => ['agg_max_per_user', 'Mis agregadores']];
+const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios'], 'newsletter' => ['news_max_per_user', 'Mis substacks'], 'youtube' => ['yt_max_per_user', 'Mis canales'], 'agregador' => ['agg_max_per_user', 'Mis agregadores']];
 /** ¿Se puede seguir? Medios y substacks siempre; agregadores, mientras esten encendidos (config.sources_agregadores). */
 function fuente_seguible(array $src): bool { return fuente_es_medio($src) || (($src['kind'] ?? '') === 'agregador' && agregadores_on()); }
 /** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con el boton «Seguir» (DDD_MEDIA_KINDS). */
-const DDD_ULTIMO_KINDS = ['medio' => ['Mis medios', 'news'], 'newsletter' => ['Mis substacks', 'letter'], 'agregador' => ['Mis agregadores', 'agg']];   // mismo orden que las portadas: Medios, Substacks
+const DDD_ULTIMO_KINDS = ['medio' => ['Mis medios', 'news'], 'newsletter' => ['Mis substacks', 'letter'], 'youtube' => ['Mis canales', 'play'], 'agregador' => ['Mis agregadores', 'agg']];   // mismo orden que las portadas: Medios, Substacks
 /** Fuentes de las que /ultimo.php saca las noticias de un grupo: TODOS los favoritos del usuario (sin limite) o, si no tiene
  *  ninguno / no tiene cuenta, las del menu (medios_menu(): las que han publicado mas recientemente; agregadores: los destacados). */
 function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array {
@@ -104,7 +113,7 @@ function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[
 /** Fuentes de un tipo que el usuario tiene como favoritas (en el orden en que las guardo). Vacio si no tiene. */
 function mis_medios(PDO $pdo, ?array $u, string $kind = 'medio'): array {
     static $cache = [];
-    if (!$u || ($kind === 'agregador' && !agregadores_on())) return [];
+    if (!$u || !fuente_kind_on($kind)) return [];
     $k = $u['user_id'] . '|' . $kind;
     if (isset($cache[$k])) return $cache[$k];
     try {
@@ -137,7 +146,7 @@ function fuente_por_dominio(PDO $pdo, string $dominio): ?array {
     static $map = null;
     if ($map === null) {
         $map = [];
-        foreach (fuentes_activas($pdo) as $s) if (fuente_es_medio($s) && ($d = (string)source_of((string)$s['home'])) !== '') $map[$d] ??= $s;
+        foreach (fuentes_activas($pdo) as $s) if (fuente_es_medio($s) && ($s['kind'] ?? '') !== 'youtube' && ($d = (string)source_of((string)$s['home'])) !== '') $map[$d] ??= $s;
     }
     return $map[strtolower($dominio)] ?? null;
 }
@@ -481,7 +490,12 @@ function fuentes_parse_atom(SimpleXMLElement $doc): array {
         $summary = (string)$e->summary;
         $md = $e->children('http://search.yahoo.com/mrss/');
         $thumb = '';
-        if (isset($md->content)) foreach ($md->content as $mc) { $u = trim((string)$mc->attributes()->url); if ($u !== '') { $thumb = $u; break; } }
+        if (isset($md->group)) {   // YouTube: miniatura y descripcion van dentro de <media:group> (su media:content es el video, no una foto)
+            $md = $md->group->children('http://search.yahoo.com/mrss/');
+            if ($summary === '' && $content === '') $summary = htmlspecialchars((string)$md->description, ENT_QUOTES, 'UTF-8');   // texto plano (se limpia como HTML mas abajo)
+            if (isset($md->thumbnail)) $thumb = trim((string)$md->thumbnail->attributes()->url);
+        }
+        if ($thumb === '' && isset($md->content)) foreach ($md->content as $mc) { $u = trim((string)$mc->attributes()->url); if ($u !== '') { $thumb = $u; break; } }
         if ($thumb === '' && isset($md->thumbnail)) $thumb = trim((string)$md->thumbnail->attributes()->url);
         if ($thumb === '') foreach ($e->link as $l) if ((string)$l->attributes()->rel === 'enclosure' && str_starts_with((string)$l->attributes()->type, 'image/')) { $thumb = trim((string)$l->attributes()->href); break; }
         if ($thumb === '' && preg_match("/<img[^>]+src=['\"]([^'\"]+)['\"]/i", $content . $summary, $m)) $thumb = html_entity_decode($m[1]);
@@ -507,10 +521,31 @@ function fuentes_parse_atom(SimpleXMLElement $doc): array {
             'thumb'      => preg_match('#^https?://#i', $thumb) ? $thumb : '',
             'votes' => 0, 'negatives' => 0, 'comments' => 0,
             'pub_date'   => date('Y-m-d H:i:s', $ts),
-            'smf'        => $smf,
+            'smf'        => null,
         ];
     }
     return $out;
+}
+
+/* ---- YouTube --------------------------------------------------------- */
+
+/** Feed de un canal a partir de lo que se pegue en admin: la URL del canal (/channel/UC…, /@nombre, /c/…, /user/…), su feed o el
+ *  id UC… a secas. Con /@nombre hay que abrir la pagina del canal para leer el id (una peticion, solo al guardar). Con
+ *  config.youtube_shorts = 0 (por defecto) se usa la lista «solo videos largos» del canal (UULF…), sin shorts ni directos;
+ *  con 1, el feed completo. null si no se pudo: $err dice por que. */
+function youtube_feed_de(string $url, ?string &$err = null): ?string {
+    $url = trim($url); $err = null;
+    if (preg_match('#^https?://(?:www\.)?youtube\.com/feeds/videos\.xml\?(?:channel_id|playlist_id|user)=[\w-]+$#', $url)) return $url;   // ya es un feed: tal cual
+    $id = '';
+    if (preg_match('#^(UC[\w-]{22})$#', $url, $m) || preg_match('#youtube\.com/channel/(UC[\w-]{22})#', $url, $m)) $id = $m[1];
+    elseif (preg_match('#^https?://(?:www\.|m\.)?youtube\.com/(?:@|c/|user/)[^\s]+$#', $url)) {
+        $html = http_get($url, max(3, (int)cfg('sources_timeout_sec', 8)), 4000000);
+        if ($html === null) { $err = 'YouTube no respondió al abrir el canal (' . implode(' · ', http_last()) . ')'; return null; }
+        if (preg_match('#feeds/videos\.xml\?channel_id=(UC[\w-]{22})#', $html, $m) || preg_match('#<link rel="canonical" href="https://www\.youtube\.com/channel/(UC[\w-]{22})"#', $html, $m)
+         || preg_match('#"(?:externalId|browseId)":"(UC[\w-]{22})"#', $html, $m)) $id = $m[1];
+        else { $err = 'no encuentro el id del canal en su página (¿pantalla de consentimiento de YouTube?)'; return null; }
+    } else { $err = 'no parece la dirección de un canal de YouTube'; return null; }
+    return 'https://www.youtube.com/feeds/videos.xml?' . ((string)cfg('youtube_shorts', '0') === '1' ? 'channel_id=' . $id : 'playlist_id=UULF' . substr($id, 2));
 }
 
 /** Diagnostico de la foto de una noticia (admin -> Fuentes -> «probar foto»): que paso falla al buscar la og:image. */
@@ -577,6 +612,7 @@ function fuente_ya_enviadas(PDO $pdo, array $urls): array {
  *  $sent: [url => story_id] de los ya enviados a Deltha (medios). */
 function fuente_post(array $src, array $i, string $mode = 'full', array $sent = []): void {
     $medio = fuente_es_medio($src);
+    $yt = ($src['kind'] ?? '') === 'youtube';   // canal de YouTube: la foto lleva el triangulo de «reproducir» y el enlace abre el video en YouTube
     $author = $i['author'] ?: $src['name'];
     $rel = 'rel="noopener nofollow"';
     echo "<article class=\"post $mode ext" . ($medio ? ' medio' : '') . "\" id=\"x{$i['item_id']}\">";
@@ -590,7 +626,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . implode(' · ', $meta) . "</span></div>";
     $isThumb = $i['image'] && str_starts_with($i['image'], 'fuentes/');
     if ($isThumb) echo "<a class=\"thumb\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a>";
-    $foto = ($i['image'] && !$isThumb) ? "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . "\"><a class=\"pic\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>" : '';
+    $foto = ($i['image'] && !$isThumb) ? "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . ($yt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>" : '';
     if (foco()) echo $foto;   // sin distracciones: la foto, antes del titular, flota a su derecha
     echo "<h2><a href=\"" . h($i['url']) . "\" $rel>" . h($i['title']) . "</a></h2>";
     if ($i['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($i['content'], 0, $mode === 'full' ? 240 : 160, '…')) . "</p>";
@@ -599,7 +635,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     if ($medio) {
         if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo.php?id=" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
         elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia al radar')) . "\">" . icon('plus') . "<span>" . t('enviar al radar') . "</span></a>";
-        echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h(t('leer en %s', $src['name'])) . "</span></a>";
+        echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h($yt ? t('ver en %s', 'YouTube') : t('leer en %s', $src['name'])) . "</span></a>";
         echo fuente_fav_form($src);   // «+ Seguir»: el medio o substack de esta noticia, a «Mis medios» / «Mis substacks»
     } else {
         echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";

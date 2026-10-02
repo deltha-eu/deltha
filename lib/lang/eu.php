@@ -708,4 +708,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'no pasó' => 'ez du gainditu',
 'cuenta borrada' => 'kontua ezabatuta',
 'borrada por no activar' => 'ez aktibatzeagatik ezabatuta',
+'Mis canales' => 'Nire kanalak',
+'Añadir canal' => 'Gehitu kanala',
+'Último en YouTube' => 'Azkena YouTuben',
 ];

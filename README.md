@@ -119,6 +119,8 @@ Por defecto sigue al sistema (`prefers-color-scheme`). Un registrado puede fijar
 
 ## Fuentes externas: Menéame y «Mis medios»
 **Agregadores apagados por defecto** (`config.sources_agregadores = 0`, `sql/migra-070-digg-y-agregadores-off.sql`, 25/09/2026): `fuentes_activas()` no devuelve las fuentes de tipo `agregador`, así que no salen en el catálogo, el rail, la franja de fuentes, la columna derecha, el pie ni `/ultimo.php`, `/fuente.php` responde 404 y el cron no lee sus RSS; siguen en admin → Fuentes por si se reactivan (`agregadores_on()`). En «¿Qué es Deltha?» la idea del agregador se atribuye a Digg (antes Menéame), en los nueve idiomas.
+**Canales de YouTube** (`sql/migra-103-canales-youtube.sql`, 02/10/2026): cuarto tipo de fuente, `sources.kind = 'youtube'`. Se da de alta en admin → Fuentes → YouTube pegando en «web» la dirección del canal (`https://www.youtube.com/@nombre`); el feed (`youtube.com/feeds/videos.xml`, sin clave de API) lo calcula `youtube_feed_de()` al guardar: solo vídeos largos (lista `UULF…`) salvo `config.youtube_shorts = 1`. Se comporta como un medio (`fuente_es_medio()`): «Seguir», «enviar al radar», grupo «Mis canales» en rail, franja, perfil, `/ultimo.php?k=youtube`, catálogo y módulo «Último en YouTube». La miniatura se guarda en `/media`; no se incrusta el reproductor (la CSP no admite marcos de terceros): el enlace abre el vídeo en YouTube. `config.sources_youtube = 0` los apaga (`fuente_kind_on()`). Los usuarios no pueden proponer canales: catálogo solo de admin.
+
 
 Sitios con RSS «pintados» con Deltha, solo lectura (`/fuente.php?f=slug`, catálogo en `/medios.php`, alta y edición en admin → Fuentes). Dos tipos (`sources.kind`):
 

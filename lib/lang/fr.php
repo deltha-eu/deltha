@@ -747,4 +747,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'no pasó' => 'n’est pas passée',
 'cuenta borrada' => 'compte supprimé',
 'borrada por no activar' => 'supprimée faute d’activation',
+'Mis canales' => 'Mes chaînes',
+'Añadir canal' => 'Ajouter une chaîne',
+'Último en YouTube' => 'Dernières vidéos sur YouTube',
 ];

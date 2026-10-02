@@ -62,9 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // alta / edicion de una fuente externa (Meneame, medios con RSS)
         $id = (int)post('source_id');
         $slug = strtolower(trim(post('slug')));
-        $kind = in_array(post('kind'), ['agregador', 'newsletter'], true) ? post('kind') : 'medio';
+        $kind = in_array(post('kind'), ['agregador', 'newsletter', 'youtube'], true) ? post('kind') : 'medio';
         $name = mb_substr(trim(post('name')), 0, 48);
         $home = trim(post('home')); $fp = trim(post('feed_portada')); $fn = trim(post('feed_nuevas'));
+        // canal de YouTube: basta la direccion del canal en «web» (o en «RSS»); el feed se saca de ahi (youtube_feed_de)
+        $yterr = null;
+        if ($kind === 'youtube') { $fn = ''; $fp = youtube_feed_de($fp !== '' ? $fp : $home, $yterr) ?? ''; }
         $skin = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
         $topic = (int)post('topic_id') ?: null;
         $iv = max(1, min(1440, (int)(post('interval_min') ?: 60)));
@@ -75,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($slang === '' && preg_match('#^https?://[^\s]+$#i', $fp) && ($x = http_get($fp, 8, 4000000)) !== null) $slang = fuentes_feed_lang($x);
         if (!preg_match('/^[a-z0-9\-]{2,24}$/', $slug)) $out[] = 'Slug no válido (2–24 letras minúsculas, números o guion).';
         elseif ($name === '') $out[] = 'Falta el nombre.';
+        elseif ($kind === 'youtube' && $fp === '') $out[] = 'Canal de YouTube: ' . h((string)$yterr) . '. Pega en «RSS» el feed a mano: https://www.youtube.com/feeds/videos.xml?channel_id=UC… (el id sale en YouTube → el canal → «Compartir canal» → «Copiar ID del canal»).';
         elseif (!preg_match('#^https?://[^\s]+$#i', $home) || !preg_match('#^https?://[^\s]+$#i', $fp) || ($fn !== '' && !preg_match('#^https?://[^\s]+$#i', $fn))) $out[] = 'Web y feeds deben ser URLs http(s).';
         else {
             try {
@@ -515,8 +519,8 @@ if ($tab === 'usuarios') {
     echo "<p><small>El bonus se <b>suma</b> al δ de los envíos del tema que tienen apoyo neto (con 0,3, un envío con un voto que cuenta vale 1,3 en vez de 1). Antes era un coeficiente multiplicador, que también amplificaba los votos negativos y el decaimiento; se cambió el 26/09/2026 (migra-080). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.php.</small></p>";
 
 } elseif ($tab === 'fuentes') {
-    // subpestañas por tipo de fuente: Substack (newsletter), Medios, Agregadores; los formularios vuelven a la subpestaña (campo oculto k)
-    $FK = ['newsletter' => 'Substack', 'medio' => 'Medios', 'agregador' => 'Agregadores'];
+    // subpestañas por tipo de fuente: Substack (newsletter), Medios, YouTube, Agregadores; los formularios vuelven a la subpestaña (campo oculto k)
+    $FK = ['newsletter' => 'Substack', 'medio' => 'Medios', 'youtube' => 'YouTube', 'agregador' => 'Agregadores'];
     $fk = (string)($_GET['k'] ?? $_POST['k'] ?? 'newsletter');
     if (in_array($_POST['act'] ?? '', ['fuente', 'fuente_nueva'], true) && isset($FK[$_POST['kind'] ?? ''])) $fk = $_POST['kind'];   // al guardar, a la subpestaña del tipo elegido
     if (!isset($FK[$fk])) $fk = 'newsletter';
@@ -529,9 +533,9 @@ if ($tab === 'usuarios') {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
         $h .= "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name'] ?? '') . "\"></td></tr>";
         $h .= "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\" placeholder=\"minúsculas, números o guion: sale en /fuente.php?f=slug\"></td></tr>";
-        $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"newsletter\"" . (($f['kind'] ?? '') === 'newsletter' ? ' selected' : '') . ">newsletter / Substack (igual que un medio, en «Mis substacks»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td></tr>";
+        $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"newsletter\"" . (($f['kind'] ?? '') === 'newsletter' ? ' selected' : '') . ">newsletter / Substack (igual que un medio, en «Mis substacks»)</option><option value=\"youtube\"" . (($f['kind'] ?? '') === 'youtube' ? ' selected' : '') . ">canal de YouTube (igual que un medio, en «Mis canales»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td></tr>";
         $h .= "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($f['home'] ?? '') . "\" placeholder=\"https://…\"></td></tr>";
-        $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" required value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/\"></td></tr>";
+        $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/ (canal de YouTube: vacío, se saca de la web)\"></td></tr>";
         $h .= "<tr><td>RSS de la cola</td><td><input type=\"url\" name=\"feed_nuevas\" value=\"" . h($f['feed_nuevas'] ?? '') . "\" placeholder=\"solo agregadores (vacío en un medio)\"></td></tr>";
         $h .= "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h($f['descr'] ?? '') . "\"></td></tr>";
         // idioma de la fuente, para «mostrar fuentes solo en mi idioma» del perfil. Vacio = se toma del RSS al guardar (y en cada lectura mientras falte)
@@ -552,7 +556,7 @@ if ($tab === 'usuarios') {
         $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
         return $h . "</table></form>";
     };
-    echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios.php\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, que los usuarios siguen con el botón «Seguir», sin límite («Mis medios»; en el menú salen los <code>media_max_per_user</code> más recientes), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
+    echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios.php\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, que los usuarios siguen con el botón «Seguir», sin límite («Mis medios»; en el menú salen los <code>media_max_per_user</code> más recientes), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Canal de YouTube</b>: igual que un medio, en el grupo «Mis canales»; en «web» va la dirección del canal (<code>https://www.youtube.com/@nombre</code>) y el RSS se deja vacío: se calcula al guardar (solo vídeos largos, sin shorts ni directos, salvo <code>youtube_shorts=1</code>). La miniatura se guarda en /media y el vídeo se ve en YouTube. <code>sources_youtube=0</code> los apaga todos. <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
     echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><button class=\"btn\">Leer todas las fuentes ahora</button><small>sin esperar al intervalo; tarda unos segundos por fuente (feeds e imágenes)</small></form>";
     $nk = $pdo->query("SELECT kind, COUNT(*) FROM sources GROUP BY kind")->fetchAll(PDO::FETCH_KEY_PAIR);
     echo "<nav class=\"sub\">";
