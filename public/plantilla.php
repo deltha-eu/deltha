@@ -11,7 +11,8 @@ $ok = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     save_skin_pref(post('skin'));
     save_theme_pref(post('theme', 'auto'));
-    redirect('/plantilla.php?ok=1');
+    header('Cache-Control: no-store');
+    redirect('/');   // a la portada, para ver la skin puesta (antes volvia a esta pantalla con «Skin guardada.»)
 }
 if (isset($_GET['ok'])) $ok = t('Skin guardada.');
 
