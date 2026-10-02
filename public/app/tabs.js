@@ -21,3 +21,8 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   var t; addEventListener('resize', function () { clearTimeout(t); t = setTimeout(fit, 120); });
 })();
+/* Franja de grupos (Mis medios, Mis substacks, Mis canales…): si no cabe se desliza de lado; que el activo quede a la vista. */
+(function () {
+  var n = document.querySelector('nav.tabs-fuentes'), on = n && n.querySelector('a.on');
+  if (on && n.scrollWidth > n.clientWidth + 1) n.scrollLeft = on.offsetLeft - (n.clientWidth - on.offsetWidth) / 2;
+})();

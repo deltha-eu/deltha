@@ -51,6 +51,13 @@ nav.tabs-fuentes a .i { width: 22px; height: 22px; }
 /* rotulos largos (ca «Els meus agregadors», eu «Erabiltzaileak»): pestañas de anchura igual, rotulo centrado y, si hace falta, en dos lineas */
 nav.tabs-fuentes a, nav.tabs-bottom a, nav.tabs-bottom .soon { flex: 1 1 0; min-width: 0; padding-left: 2px; padding-right: 2px; }
 nav.tabs-fuentes a span, nav.tabs-bottom a span, nav.tabs-bottom .soon span { display: block; max-width: 100%; text-align: center; line-height: 1.1; overflow-wrap: anywhere; }
+/* v151: con seis grupos (medios, substacks, canales, agregadores, temas, comunidades) no caben en un movil y los rotulos se partian
+   («Comunidade/s») y se pisaban. Cada uno ocupa lo que pide su rotulo, en una linea; si sobra sitio se reparten, si falta la franja
+   se desliza de lado (sin barra) y app/tabs.js deja a la vista el activo. */
+nav.tabs-fuentes { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+nav.tabs-fuentes::-webkit-scrollbar { display: none; }
+nav.tabs-fuentes a { flex: 1 0 auto; min-width: 60px; padding-left: 9px; padding-right: 9px; }
+nav.tabs-fuentes a span { white-space: nowrap; overflow-wrap: normal; max-width: none; }
 nav.tabs-fuentes a.on { color: var(--fg); }
 nav.tabs-fuentes a.on .i { stroke-width: 2.4; }
 @media (min-width: 1300px) { nav.tabs-fuentes { display: none; } }
