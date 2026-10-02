@@ -3085,16 +3085,18 @@ p.fz-add.on a::before { content: "× "; }
    solo se pinta en escritorio, donde esa franja no existe. ---- */
 @media (max-width: 1299px) { nav.sub.grupos { display: none; } }
 
-/* ---- movil y tablet (v154): 1) cabecera: la δ deja de ir centrada por su cuenta y pasa al grupo de la derecha, delante de la lupa y la
-   campana, los tres a la misma distancia (el hueco de la barra); 2) franja de iconos de grupos: en vez de repartirse todo el ancho,
-   los iconos van juntos y centrados. ---- */
+/* ---- movil y tablet (v155): 1) cabecera: la δ en el centro exacto de la barra, con la lupa a su izquierda y la campana a su derecha, a
+   la misma distancia. Rejilla de cinco columnas: titulo | lupa | δ | campana | usuario; las dos de los lados miden lo mismo (1fr) y las
+   de lupa y campana tambien (24px, aunque falte una de las dos), asi que la δ no se mueve del centro. 2) franja de iconos de grupos:
+   en vez de repartirse todo el ancho, los iconos van juntos y centrados. ---- */
 @media (max-width: 1299px) {
-  header.top { gap: 14px; }
-  header.top .ttl { order: 0; max-width: none; min-width: 0; }
-  header.top .logo { position: static; transform: none; order: 1; margin-left: auto; flex: none; }
-  header.top .lupa { order: 2; margin-left: 0; }
-  header.top .bell { order: 3; margin-left: 0; margin-right: 0; }
-  header.top .me { order: 4; margin-left: 0; }
+  header.top { display: grid; grid-template-columns: minmax(0, 1fr) 24px auto 24px minmax(0, 1fr); align-items: center; column-gap: 14px; }
+  header.top > * { grid-row: 1; }
+  header.top .ttl { grid-column: 1; max-width: none; min-width: 0; }
+  header.top .lupa { grid-column: 2; margin: 0; justify-self: center; }
+  header.top .logo { grid-column: 3; position: static; transform: none; }
+  header.top .bell { grid-column: 4; margin: 0; justify-self: center; }
+  header.top .me { grid-column: 5; margin-left: 0; justify-self: end; min-width: 0; max-width: 100%; overflow: hidden; }
   nav.tabs-fuentes { justify-content: center; }
   nav.tabs-fuentes a { flex: 0 1 58px; }
 }
