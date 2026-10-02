@@ -24,6 +24,7 @@ import html
 import json
 import logging
 import re
+import ssl
 import sys
 import time
 import urllib.error
@@ -73,24 +74,61 @@ def cargar_config() -> configparser.ConfigParser:
 
 
 # ---------------------------------------------------------------- HTTP
-def descargar(url: str, timeout: int, tope: int):
-    """Devuelve (bytes | None, texto del estado). Como un navegador; sigue redirecciones."""
+def contexto_ssl(verificar: bool = True) -> ssl.SSLContext:
+    """Certificados raíz: los de certifi si está instalado (pip install certifi), que van más al día que los del Python de Windows
+    (mediavida.com daba «certificate has expired»); si no, los del sistema. verificar=False: sin comprobar (solo para leer feeds)."""
+    if not verificar:
+        return ssl._create_unverified_context()
     try:
-        req = urllib.request.Request(url, headers=NAVEGADOR)
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            datos = r.read(tope + 1)
-            if len(datos) > tope:
-                return None, f"demasiado grande (> {tope} bytes)"
-            enc = (r.headers.get("Content-Encoding") or "").lower()
-            if enc == "gzip":
-                datos = gzip.decompress(datos)
-            elif enc == "deflate":
-                datos = zlib.decompress(datos, -zlib.MAX_WBITS) if not datos[:1] == b"\x78" else zlib.decompress(datos)
-            return datos, f"HTTP {r.status}, {len(datos)} bytes"
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
+SIN_VERIFICAR = set()   # hosts cuyo certificado no pudo comprobarse en esta ejecución: se leen sin verificar (ya avisado en el log)
+
+
+def descargar(url: str, timeout: int, tope: int):
+    """Devuelve (bytes | None, texto del estado). Como un navegador; sigue redirecciones. Si el certificado de la web no se puede
+    verificar con los certificados raíz de este Python, reintenta sin verificar y lo deja dicho en el log: es contenido público
+    que solo se lee; la entrega a Deltha (api) sigue verificada."""
+    host = urllib.parse.urlsplit(url).hostname or ""
+    try:
+        return _descargar(url, timeout, tope, contexto_ssl(host not in SIN_VERIFICAR))
+    except urllib.error.URLError as e:   # urlopen envuelve el fallo de certificado en URLError(reason=SSLCertVerificationError)
+        if isinstance(e, urllib.error.HTTPError):
+            return None, f"HTTP {e.code}"
+        if not isinstance(getattr(e, "reason", None), ssl.SSLCertVerificationError) and "CERTIFICATE_VERIFY_FAILED" not in str(e):
+            return None, f"{type(e).__name__}: {e}"
+        if host not in SIN_VERIFICAR:
+            SIN_VERIFICAR.add(host)
+            log.warning("%s: certificado no verificable con los certificados raíz de este Python (%s); se lee sin verificar. "
+                        "Para arreglarlo de verdad: pip install certifi", host, getattr(e.reason, "verify_message", e.reason))
+        try:
+            return _descargar(url, timeout, tope, contexto_ssl(False))
+        except urllib.error.HTTPError as e2:
+            return None, f"HTTP {e2.code}"
+        except Exception as e2:
+            return None, f"{type(e2).__name__}: {e2}"
     except urllib.error.HTTPError as e:
         return None, f"HTTP {e.code}"
-    except Exception as e:   # red caída, DNS, tiempo agotado, certificado…
+    except Exception as e:   # red caída, DNS, tiempo agotado…
         return None, f"{type(e).__name__}: {e}"
+
+
+def _descargar(url: str, timeout: int, tope: int, ctx: ssl.SSLContext):
+    req = urllib.request.Request(url, headers=NAVEGADOR)
+    with urllib.request.urlopen(req, timeout=timeout, context=ctx) as r:
+        datos = r.read(tope + 1)
+        if len(datos) > tope:
+            return None, f"demasiado grande (> {tope} bytes)"
+        enc = (r.headers.get("Content-Encoding") or "").lower()
+        if enc == "gzip":
+            datos = gzip.decompress(datos)
+        elif enc == "deflate":
+            datos = zlib.decompress(datos, -zlib.MAX_WBITS) if not datos[:1] == b"\x78" else zlib.decompress(datos)
+        return datos, f"HTTP {r.status}, {len(datos)} bytes"
 
 
 def api(cfg, act: str, cuerpo=None, extra: str = "", binario: bool = False):
