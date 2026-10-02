@@ -3304,5 +3304,7 @@ p.fz-add.on a::before { content: "× "; }
   [data-skin="pildora"] .rail nav a.on, [data-skin="pildora"] .rail details.rail-dd .list a.on { font-weight: 700; }
   [data-skin="pildora"] .rail form.rail-search { background: var(--hd); border: 0; }
   [data-skin="pildora"] .side .mod { border: 0; border-radius: 12px; }
-  [data-skin="pildora"] .side .mod h3 { border: 0; }
+  [data-skin="pildora"] .side .mod h3 { background: var(--bar); color: #fff; border: 0; }   /* cabecera blanca en la pagina, pero las cajas llevan la tinta #1F2837 */
+  [data-skin="pildora"] .side .mod h3 span, [data-skin="pildora"] .side .mod h3 a { color: #fff; }
+  [data-skin="pildora"] .side .mod { background: var(--card); }
 }
