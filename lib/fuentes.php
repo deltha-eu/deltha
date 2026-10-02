@@ -236,6 +236,12 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
         if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
         if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
+        if (fuente_feed_actividad($src, $items)) {   // foro XenForo 1 (ForoMTB): el feed va por actividad pero pubDate es la creacion del hilo
+            $t0 = time();
+            foreach ($items as $k => &$it) { $it['pub_date'] = date('Y-m-d H:i:s', $t0 - $k); $it['actividad'] = true; }   // la fecha de lectura, en el orden del feed
+            unset($it);
+            $log[] = "fuente {$src['slug']} $phase: feed por actividad con fechas de creacion; se usa la de lectura";
+        }
         if ((string)($src['lang'] ?? '') === '' && ($fl = fuentes_feed_lang($xml)) !== '') {   // idioma aun sin fijar: el que declare el feed
             $pdo->prepare("UPDATE sources SET lang = ? WHERE source_id = ? AND lang = ''")->execute([$fl, $src['source_id']]);
             $src['lang'] = $fl; $log[] = "fuente {$src['slug']}: idioma del feed «{$fl}»";
@@ -331,11 +337,19 @@ function fuente_renegados_completar(array &$items, int $timeout): int {
 /** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
  *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
  *  «burbuja» de votos en su pagina (skin Phantom), asi que se pinta el widget normal, a 0 hasta que su feed los incluya. */
-const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania)
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php', 'mediavida.com/foro'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania) · Mediavida (sin feed: se lee la tabla de /foro/spy)
 /** Foros XenForo y vBulletin: el feed trae el primer mensaje con sus fotos (emoticonos, capturas, anuncios de venta); no se descargan:
  *  el listado de un foro no lleva miniaturas. */
 function fuente_sin_fotos(array $src): bool {
-    foreach (['index.rss', 'external.php'] as $p) if (str_contains((string)$src['feed_portada'], $p)) return true;
+    foreach (['index.rss', 'external.php', 'mediavida.com/foro'] as $p) if (str_contains((string)$src['feed_portada'], $p)) return true;
+    return false;
+}
+/** ¿Es un feed de foro ordenado por actividad cuyo pubDate es la fecha de CREACION del hilo (XenForo 1: ForoMTB)? Se nota porque los
+ *  items no vienen en orden de fecha descendente. En XenForo 2 (ForoBeta, Burbuja) pubDate es el ultimo mensaje y el feed si va ordenado.
+ *  Solo se mira en feeds index.rss; para estos, el lector pone como fecha la de la lectura (el feed ya es «lo ultimo con actividad»). */
+function fuente_feed_actividad(array $src, array $items): bool {
+    if (!str_contains((string)$src['feed_portada'], 'index.rss') || count($items) < 3) return false;
+    for ($k = 1; $k < count($items); $k++) if ($items[$k]['pub_date'] > $items[$k - 1]['pub_date']) return true;
     return false;
 }
 function fuente_sin_votos(array $src): bool {
@@ -345,7 +359,7 @@ function fuente_sin_votos(array $src): bool {
 
 /** Upsert de los items de un feed. Devuelve [nuevos, actualizados]. */
 function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): array {
-    $sel = $pdo->prepare("SELECT item_id, phase, image FROM source_items WHERE source_id = ? AND ext_id = ?");
+    $sel = $pdo->prepare("SELECT item_id, phase, image, comments FROM source_items WHERE source_id = ? AND ext_id = ?");
     $ins = $pdo->prepare("INSERT INTO source_items (source_id, ext_id, phase, title, url, thread_url, source, topic, author, content, image, votes, negatives, comments, pub_date)
                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     // (la fecha nueva se decide en PHP: MySQL evalua los SET de izquierda a derecha y phase ya tendria el valor nuevo)
@@ -362,6 +376,7 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
         $img = ($row && $row['image']) ? null : fuente_imagen($src, $it);
         if ($row) {
             $newDate = $row['phase'] === $phase ? null : $it['pub_date'];   // cambio de fase (nuevas -> portada): fecha de publicacion
+            if (!empty($it['actividad']) && (int)$it['comments'] > (int)$row['comments']) $newDate = $it['pub_date'];   // feed por actividad: el hilo con respuestas nuevas sube
             $upd->execute([$phase, $it['title'], $it['url'], $it['thread_url'], $it['source'], $it['topic'], $it['content'], $it['content'], $img, $it['votes'], $it['negatives'], $it['comments'], $newDate, $row['item_id']]);
             $updated++;
         } else {
@@ -416,6 +431,7 @@ function fuentes_ns(SimpleXMLElement $i, string $uri): SimpleXMLElement {
     return $c;
 }
 function fuentes_parse_rss(string $xml): array {
+    if (str_contains($xml, 'id="tablatemas"')) return fuentes_parse_mediavida($xml);   // Mediavida: no hay feed, se lee la tabla de hilos
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     libxml_clear_errors(); libxml_use_internal_errors($prev);
@@ -490,6 +506,48 @@ function fuentes_parse_rss(string $xml): array {
             'comments'   => (int)($mn->comments ?? ($sl->comments ?? 0)),
             'pub_date'   => date('Y-m-d H:i:s', $ts),
             'smf'        => $smf,
+        ];
+    }
+    return $out;
+}
+
+/** Mediavida (sin RSS): la tabla #tablatemas de /foro/spy (hilos con actividad reciente; /foro/new son los hilos nuevos). Por fila:
+ *  <tr id="tNNN">, el subforo en td.autor-avatar a[original-title], el titulo en a.hb, las respuestas en span.num.reply[title="Este tema
+ *  tiene N respuestas…"], el ultimo autor en td.col-av img[alt] y la hora del ultimo mensaje en span.m_date[data-time] (epoch).
+ *  No trae extracto: content vacio. url = el hilo desde el principio; thread_url = el ultimo mensaje. Mismos campos que el RSS. */
+function fuentes_parse_mediavida(string $html): array {
+    $base = 'https://www.mediavida.com';
+    if (!preg_match('~<tbody[^>]*>(.*?)</tbody>~su', $html, $tb)) $tb = [1 => $html];
+    if (!preg_match_all('~<tr\s+id="t(\d+)"[^>]*>(.*?)</tr>~su', $tb[1], $trs, PREG_SET_ORDER)) return [];
+    $out = []; $now = time();
+    foreach ($trs as $tr) {
+        [$row, $id] = [$tr[2], (int)$tr[1]];
+        if (!preg_match('~<a\s+id="a\d+"[^>]*href="([^"]+)"[^>]*>(.*?)</a>~su', $row, $m)) continue;
+        $href = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (!str_starts_with($href, 'http')) $href = $base . $href;
+        $title = trim(html_entity_decode(strip_tags($m[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if ($title === '') continue;
+        $topic   = preg_match('~class="autor-avatar".*?original-title="([^"]*)"~su', $row, $t) ? trim(html_entity_decode($t[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : null;
+        $replies = preg_match('~class="num reply"[^>]*title="Este tema tiene (\d+)~u', $row, $r) ? (int)$r[1] : 0;
+        $author  = preg_match('~class="col-av[^"]*".*?<img[^>]*alt="([^"]*)"~su', $row, $a) ? trim(html_entity_decode($a[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : null;
+        $ts      = preg_match('~class="m_date[^"]*"[^>]*data-time="(\d+)"~u', $row, $d) ? (int)$d[1] : (preg_match('~data-time="(\d+)"~u', $row, $d) ? (int)$d[1] : $now);
+        $last    = preg_match('~class="last-av[^"]*".*?<a\s+href="([^"]+)"~su', $row, $l) ? html_entity_decode($l[1], ENT_QUOTES | ENT_HTML5, 'UTF-8') : $href;
+        if (!str_starts_with($last, 'http')) $last = $base . $last;
+        $out[] = [
+            'ext_id'     => 'mv:' . $id,
+            'title'      => mb_substr($title, 0, 200),
+            'url'        => mb_substr($href, 0, 600),
+            'thread_url' => mb_substr($last, 0, 600),
+            'source'     => null,
+            'topic'      => $topic ? mb_substr($topic, 0, 48) : null,
+            'author'     => $author ? mb_substr($author, 0, 64) : null,
+            'content'    => '',
+            'thumb'      => '',
+            'votes'      => 0,
+            'negatives'  => 0,
+            'comments'   => $replies,
+            'pub_date'   => date('Y-m-d H:i:s', $ts),
+            'smf'        => null,
         ];
     }
     return $out;
