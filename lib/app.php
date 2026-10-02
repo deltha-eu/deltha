@@ -320,9 +320,10 @@ function topic_delete(PDO $pdo, int $topic_id, int $to): ?string {
     } catch (PDOException $e) { $pdo->rollBack(); return 'No se pudo borrar el tema: ' . $e->getMessage(); }
     return null;
 }
-/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID */
+/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub (lo ultimo de Mis medios / Mis substacks, /ultimo.php) */
 function landing_url(PDO $pdo, ?array $u): string {
     $l = (string)($u['landing'] ?? '');
+    if ($l === 'u:medio' || $l === 'u:sub') return (string)cfg('sources_enabled', '1') === '1' ? '/ultimo.php?k=' . ($l === 'u:sub' ? 'newsletter' : 'medio') : '/';
     if (preg_match('/^t:(\d+)$/', $l, $m)) {
         $st = $pdo->prepare("SELECT 1 FROM topics WHERE topic_id = ?"); $st->execute([(int)$m[1]]);
         if ($st->fetchColumn()) return '/tema.php?t=' . (int)$m[1];
