@@ -13,7 +13,8 @@
  *  publicacion y tiene algun video publicable, el ciclo es suyo; si no, el ciclo sigue siendo de la portada del turno.
  *  MODO TEST (config.test_mode = 1, admin -> Ciclo): si el ciclo normal no publica nada y la ultima promocion tiene mas de
  *  TEST_MODE_MINUTES (60), publica de todos modos el enlace del radar con mas δ (primero la portada del turno, luego la otra),
- *  haya o no alcanzado la edad, los votos y el δ minimos. Para la beta, donde no hay gente para llenar la portada.
+ *  haya o no alcanzado la edad, los votos y el δ minimos. Para la beta, donde no hay gente para llenar la portada. Canales lleva
+ *  en modo test su propio reloj: si lleva mas de TEST_MODE_MINUTES sin publicar y tiene videos en el radar, el ciclo es suyo.
  *  El minuto de ejecucion dentro de cada ventana es imprevisible (ciclo_toca, lib/app.php). */
 declare(strict_types=1);
 require_once __DIR__ . '/aura.php';
@@ -70,15 +71,32 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
                               WHERE s.status = 'nuevas' AND s.portada = ? AND s.content_type = 'link'
                                 AND s.sent_date <= NOW() - INTERVAL ? MINUTE AND (s.eff_pos - s.eff_neg) >= ? AND s.delta >= ?
                               ORDER BY s.delta DESC, s.sent_date ASC LIMIT 200 FOR UPDATE");
+        // modo test: la de mayor δ de una portada, sin umbrales
+        $sf = $pdo->prepare("SELECT s.story_id, s.user_id, s.delta, s.sent_date,
+                                    (SELECT COUNT(*) FROM stories x WHERE x.status = 'nuevas' AND x.portada = ?) AS n_radar,
+                                    (SELECT COUNT(DISTINCT COALESCE(user_id, anon_key, comment_id))
+                                       FROM comments WHERE story_id = s.story_id AND status='ok') AS commenters
+                               FROM stories s
+                              WHERE s.status = 'nuevas' AND s.portada = ? AND s.content_type = 'link'
+                              ORDER BY s.delta DESC, s.sent_date ASC LIMIT 1 FOR UPDATE");
         $orden = [$turno];
         if (cfg('cycle_cede_turno', '1') === '1') $orden[] = $turno === 'medios' ? 'substacks' : 'medios';
+        $best = null; $donde = $turno; $cands = []; $test = false;
         // Canales: va primero solo si ya ha pasado su intervalo; si no tiene nada publicable, no gasta el ciclo
         if (portada_canales_on()) {
             $uc = $pdo->query("SELECT MAX(created) FROM promo_log WHERE portada = 'canales'")->fetchColumn();
+            $haceC = $uc ? intdiv($now - strtotime((string)$uc), 60) : PHP_INT_MAX;
             if (!$uc || $now - strtotime((string)$uc) >= canales_gap() * 60 - 30) array_unshift($orden, 'canales');
+            // modo test: Canales lleva su propio reloj. Sin votos (beta) nunca tiene un video publicable, y el modo test general no
+            // llega a ella: solo actua cuando el ciclo normal no publica nada, y Medios y Substacks casi siempre tienen algo. Si lleva
+            // mas de TEST_MODE_MINUTES sin publicar y tiene videos en el radar, el ciclo es suyo y sale el de mas δ, sin umbrales.
+            if (cfg('test_mode', '0') === '1' && $haceC >= TEST_MODE_MINUTES) {
+                $sf->execute(['canales', 'canales']);
+                $cands = $sf->fetchAll();
+                if ($cands) { $best = $cands[0]; $donde = 'canales'; $test = true; }
+            }
         }
-        $best = null; $donde = $turno; $cands = [];
-        foreach ($orden as $p) {
+        if (!$best) foreach ($orden as $p) {
             $st->execute([$p, $p, $minAge, delta_min_votes(), delta_minpub($p)]);
             $cands = $st->fetchAll();
             if ($cands) { $best = ciclo_elige($cands); $donde = $p; break; }
@@ -86,18 +104,10 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
             $log[] = "turno de $p: nada publicable (ninguna con >= $minAge min, >= " . delta_min_votes() . " votos que cuenten y delta >= " . num_es(delta_minpub($p)) . ")" . ($p === $turno && count($orden) > 1 ? " → se cede el turno" : "");
         }
         // modo test: sin nada publicable y con mas de TEST_MODE_MINUTES desde la ultima promocion, sale el de mas δ, sin umbrales
-        $test = false;
         if (!$best && cfg('test_mode', '0') === '1') {
             $ultima = $pdo->query("SELECT MAX(created) FROM promo_log")->fetchColumn();
             $hace   = $ultima ? intdiv($now - strtotime((string)$ultima), 60) : PHP_INT_MAX;
             if ($hace >= TEST_MODE_MINUTES) {
-                $sf = $pdo->prepare("SELECT s.story_id, s.user_id, s.delta, s.sent_date,
-                                            (SELECT COUNT(*) FROM stories x WHERE x.status = 'nuevas' AND x.portada = ?) AS n_radar,
-                                            (SELECT COUNT(DISTINCT COALESCE(user_id, anon_key, comment_id))
-                                               FROM comments WHERE story_id = s.story_id AND status='ok') AS commenters
-                                       FROM stories s
-                                      WHERE s.status = 'nuevas' AND s.portada = ? AND s.content_type = 'link'
-                                      ORDER BY s.delta DESC, s.sent_date ASC LIMIT 1 FOR UPDATE");
                 foreach (array_merge([$turno, $turno === 'medios' ? 'substacks' : 'medios'], portada_canales_on() ? ['canales'] : []) as $p) {
                     $sf->execute([$p, $p]);
                     $cands = $sf->fetchAll();
