@@ -688,4 +688,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'En los medios' => 'Hedabideetan',
 'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'Gai honetako hedabideen eta Substacken azkena, oraindik bidali gabe: %s. Albiste bakoitzak radarrera proposatzeko botoia du.',
 'En medios en mi idioma' => 'Nire hizkuntzako hedabideetan',
+'Añadir medio' => 'Gehitu hedabidea',
+'Añadir substack' => 'Gehitu substacka',
+'Cerrar' => 'Itxi',
+'Ya sigues todos los del catálogo.' => 'Katalogoko guztiak jarraitzen dituzu jada.',
 ];

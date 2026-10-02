@@ -725,4 +725,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'En los medios' => 'Nos meios',
 'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'O mais recente dos meios e newsletters deste tema, ainda por enviar: %s. Cada notícia tem um botão para a propor no radar.',
 'En medios en mi idioma' => 'Nos meios na minha língua',
+'Añadir medio' => 'Adicionar meio',
+'Añadir substack' => 'Adicionar substack',
+'Cerrar' => 'Fechar',
+'Ya sigues todos los del catálogo.' => 'Já segues todos os do catálogo.',
 ];

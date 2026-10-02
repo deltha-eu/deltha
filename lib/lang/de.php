@@ -689,4 +689,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'En los medios' => 'In den Medien',
 'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'Das Neueste aus den Medien und Substacks zu diesem Thema, noch nicht eingesendet: %s. Jede Meldung hat einen Button, um sie im Radar vorzuschlagen.',
 'En medios en mi idioma' => 'In Medien in meiner Sprache',
+'Añadir medio' => 'Medium hinzufügen',
+'Añadir substack' => 'Substack hinzufügen',
+'Cerrar' => 'Schließen',
+'Ya sigues todos los del catálogo.' => 'Du folgst bereits allen im Katalog.',
 ];

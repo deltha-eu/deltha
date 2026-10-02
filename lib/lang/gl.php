@@ -688,4 +688,8 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'En los medios' => 'Nos medios',
 'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'O último dos medios e Substacks deste tema, aínda sen enviar: %s. Cada noticia leva un botón para propoñela no radar.',
 'En medios en mi idioma' => 'Nos medios no meu idioma',
+'Añadir medio' => 'Engadir medio',
+'Añadir substack' => 'Engadir substack',
+'Cerrar' => 'Pechar',
+'Ya sigues todos los del catálogo.' => 'Xa segues todos os do catálogo.',
 ];

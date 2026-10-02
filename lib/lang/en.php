@@ -728,4 +728,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'En los medios' => 'In the media',
 'Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.' => 'The latest from the media and Substacks on this topic, not yet submitted: %s. Every story has a button to propose it on the radar.',
 'En medios en mi idioma' => 'In media in my language',
+'Añadir medio' => 'Add outlet',
+'Añadir substack' => 'Add Substack',
+'Cerrar' => 'Close',
+'Ya sigues todos los del catálogo.' => 'You already follow every one in the catalogue.',
 ];
