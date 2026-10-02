@@ -744,4 +744,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'enlace caducado' => 'link expired',
 'enlace enviado %s' => 'link sent %s',
 'Ningún registro en este periodo.' => 'No sign-ups in this period.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d sign-ups: %d activated, %d unfinished (email not confirmed) and %d that did not get past the form. Permanent history; only admins see this.',
+'no pasó' => 'did not get through',
+'cuenta borrada' => 'account deleted',
+'borrada por no activar' => 'deleted for not activating',
 ];

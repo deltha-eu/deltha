@@ -705,4 +705,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'enlace caducado' => 'Link abgelaufen',
 'enlace enviado %s' => 'Link gesendet %s',
 'Ningún registro en este periodo.' => 'Keine Registrierungen in diesem Zeitraum.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d Registrierungen: %d aktiviert, %d unvollständig (E-Mail nicht bestätigt) und %d, die am Formular gescheitert sind. Dauerhafter Verlauf; nur Admins sehen das.',
+'no pasó' => 'nicht durchgekommen',
+'cuenta borrada' => 'Konto gelöscht',
+'borrada por no activar' => 'wegen fehlender Aktivierung gelöscht',
 ];

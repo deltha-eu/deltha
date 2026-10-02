@@ -704,4 +704,8 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'enlace caducado' => 'enllaç caducat',
 'enlace enviado %s' => 'enllaç enviat %s',
 'Ningún registro en este periodo.' => 'Cap registre en aquest període.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d registres: %d activats, %d a mitges (sense confirmar el correu) i %d que no van passar del formulari. Històric permanent; només el veuen els admins.',
+'no pasó' => 'no va passar',
+'cuenta borrada' => 'compte esborrat',
+'borrada por no activar' => 'esborrat per no activar',
 ];

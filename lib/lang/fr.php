@@ -743,4 +743,8 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'enlace caducado' => 'lien expiré',
 'enlace enviado %s' => 'lien envoyé %s',
 'Ningún registro en este periodo.' => 'Aucune inscription sur cette période.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d inscriptions : %d activées, %d inachevées (e-mail non confirmé) et %d qui n’ont pas passé le formulaire. Historique permanent ; visible uniquement par les admins.',
+'no pasó' => 'n’est pas passée',
+'cuenta borrada' => 'compte supprimé',
+'borrada por no activar' => 'supprimée faute d’activation',
 ];

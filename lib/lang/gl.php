@@ -704,4 +704,8 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'enlace caducado' => 'ligazón caducada',
 'enlace enviado %s' => 'ligazón enviada %s',
 'Ningún registro en este periodo.' => 'Ningún rexistro neste período.',
+'%d registros: %d activados, %d a medias (sin confirmar el correo) y %d que no pasaron del formulario. Histórico permanente; solo lo ven los admins.' => '%d rexistros: %d activados, %d a medias (sen confirmar o correo) e %d que non pasaron do formulario. Histórico permanente; só o ven os admins.',
+'no pasó' => 'non pasou',
+'cuenta borrada' => 'conta borrada',
+'borrada por no activar' => 'borrada por non activar',
 ];
