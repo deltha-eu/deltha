@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 155);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 156);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -498,7 +498,13 @@ function page_body(array $pg): string {
  * Orden de preferencia: ?skin= en la URL (probar sin guardar) > communities.skin (en la comunidad y sus hilos) > users.skin > cookie ddd_skin (solo anonimos que eligieron) > config.skin_default. */
 const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delta' => 'Delta', 'flujo' => 'Flujo', 'retro' => 'Retrocomputer', 'manga' => 'Manga', 'punk' => 'Punk', 'popart' => 'Pop Art', 'zen' => 'Zen', 'orange' => 'Orange', 'foro' => 'Foro',
     'hyperpop' => 'Hyperpop / Y2K', 'neobrutal' => 'Neo-Brutal', 'stickerbomb' => 'Stickerbomb', 'riso' => 'Riso / Zine', 'aero' => 'Frutiger Aero', 'hud' => 'Game HUD', 'acid' => 'Acid Web', 'pixel' => 'Pixel / 16-bit', 'dopamine' => 'Dopamine', 'www1998' => 'WWW 1998', 'solarpunk' => 'Solarpunk',
-    'galactica' => 'Galáctica', 'impresionismo' => 'Impresionismo', 'grotesque' => 'Grotesque', 'phantom' => 'Phantom', 'bw' => 'B/W', 'surrealismo' => 'Surrealismo'];
+    'galactica' => 'Galáctica', 'impresionismo' => 'Impresionismo', 'grotesque' => 'Grotesque', 'phantom' => 'Phantom', 'bw' => 'B/W', 'surrealismo' => 'Surrealismo',
+    'marino' => 'Marino', 'acero' => 'Acero', 'sendero' => 'Sendero', 'pildora' => 'Píldora'];
+/** Familias de skins: una skin puede heredar toda la estructura de otra y cambiar solo colores, letra y detalles. Se emite en
+ *  <html data-fam="…">; el CSS de la skin base se escribe contra [data-fam="base"] y el de la derivada, despues, contra [data-skin="…"].
+ *  Las cuatro de foro (v156: Marino = Burbuja, Acero = HTCMania, Sendero = ForoMTB, Pildora = ForoBeta) heredan de Comunidad. */
+const DDD_SKIN_FAM = ['marino' => 'comunidad', 'acero' => 'comunidad', 'sendero' => 'comunidad', 'pildora' => 'comunidad'];
+function skin_fam(): string { return DDD_SKIN_FAM[skin()] ?? skin(); }
 /** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin.php) o en /plantilla.php. */
 const DDD_SKIN_COOKIE = 'ddd_skin';
 /** Cookie de preferencia (plantilla, tema, idioma) para quien no tiene cuenta: un año, y solo porque la persona la pidio; '' la borra. */
@@ -1014,7 +1020,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     ana_hit();                 // analitica propia: una fila por pagina vista (GET, sin bots, sin admin)
     $u = user();
     $theme = theme();   // null = sigue al sistema
-    echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\"" . (foco() ? ' data-foco="1"' : '') . "><head><meta charset=\"utf-8\">";
+    echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\" data-fam=\"" . skin_fam() . "\"" . (foco() ? ' data-foco="1"' : '') . "><head><meta charset=\"utf-8\">";
     echo "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">";
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
     echo "<link rel=\"icon\" href=\"" . icon_src(64) . "\"><link rel=\"apple-touch-icon\" href=\"" . icon_src(180) . "\">";
