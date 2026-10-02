@@ -11,7 +11,7 @@ require __DIR__ . '/../lib/propuestas.php';
 $u = user();
 if (!$u) redirect('/login.php');
 $k = (string)($_GET['k'] ?? 'medio');
-if (!isset(DDD_MEDIA_KINDS[$k])) $k = 'medio';
+if (!isset(DDD_MEDIA_KINDS[$k]) || ($k === 'agregador' && !agregadores_on())) $k = 'medio';   // agregadores apagados: no hay pestaña
 $label = t(DDD_MEDIA_KINDS[$k][1]);
 
 header('Cache-Control: private, no-cache');
@@ -40,7 +40,7 @@ if ($lista) {
 // «+ Añadir medio / substack»: los del catalogo que aun no sigue (respeta «solo en mi idioma»), el que ha publicado mas recientemente primero
 if (fuentes_on()) {
     $add = !empty($_GET['add']);
-    $txt = $k === 'newsletter' ? t('Añadir substack') : t('Añadir medio');
+    $txt = $k === 'newsletter' ? t('Añadir substack') : ($k === 'agregador' ? t('Añadir agregador') : t('Añadir medio'));
     echo "<p class=\"fz-add" . ($add ? ' on' : '') . "\" id=\"anadir\"><a href=\"/mis-fuentes.php?k=$k" . ($add ? '' : '&amp;add=1#anadir') . "\">" . h($add ? t('Cerrar') : $txt) . "</a></p>";
     if ($add) {
         $mias = array_column($lista, 'source_id');
@@ -54,7 +54,7 @@ if (fuentes_on()) {
             echo "<div class=\"fz medio\"><a class=\"fzl\" href=\"" . h(fuente_url($m)) . "\">" . avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . "</span><br><span class=\"meta\">" . $descr
                . (isset($ult[$m['source_id']]) ? " · " . h(hace($ult[$m['source_id']])) : '') . "</span></span></a>" . fuente_fav_form($m) . "</div>";
         }
-        if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', "/proponer-fuente.php?k=$k") . "</p>";
+        if ($k !== 'agregador' && fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', "/proponer-fuente.php?k=$k") . "</p>";
     }
 }
 page_footer();

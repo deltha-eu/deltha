@@ -729,4 +729,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Añadir substack' => 'Adicionar substack',
 'Cerrar' => 'Fechar',
 'Ya sigues todos los del catálogo.' => 'Já segues todos os do catálogo.',
+'Añadir agregador' => 'Adicionar agregador',
 ];

@@ -692,4 +692,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Añadir substack' => 'Engadir substack',
 'Cerrar' => 'Pechar',
 'Ya sigues todos los del catálogo.' => 'Xa segues todos os do catálogo.',
+'Añadir agregador' => 'Engadir agregador',
 ];

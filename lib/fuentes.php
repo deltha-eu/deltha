@@ -87,13 +87,15 @@ function fuente_url(array $src, string $view = ''): string {
 }
 function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter'], true); }   // sin fases ni votos, con «enviar al radar»
 /** Grupos con favoritos del usuario: tipo => [clave de config de cuantos salen en el menu, etiqueta del grupo] */
-const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios'], 'newsletter' => ['news_max_per_user', 'Mis substacks']];
+const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios'], 'newsletter' => ['news_max_per_user', 'Mis substacks'], 'agregador' => ['agg_max_per_user', 'Mis agregadores']];
+/** ¿Se puede seguir? Medios y substacks siempre; agregadores, mientras esten encendidos (config.sources_agregadores). */
+function fuente_seguible(array $src): bool { return fuente_es_medio($src) || (($src['kind'] ?? '') === 'agregador' && agregadores_on()); }
 /** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con el boton «Seguir» (DDD_MEDIA_KINDS). */
 const DDD_ULTIMO_KINDS = ['medio' => ['Mis medios', 'news'], 'newsletter' => ['Mis substacks', 'letter'], 'agregador' => ['Mis agregadores', 'agg']];   // mismo orden que las portadas: Medios, Substacks
 /** Fuentes de las que /ultimo.php saca las noticias de un grupo: TODOS los favoritos del usuario (sin limite) o, si no tiene
  *  ninguno / no tiene cuenta, las del menu (medios_menu(): las que han publicado mas recientemente; agregadores: los destacados). */
 function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array {
-    if ($kind !== 'agregador' && ($mias = mis_medios_recientes($pdo, $u, $kind))) return $mias;
+    if ($mias = mis_medios_recientes($pdo, $u, $kind)) return $mias;
     return medios_menu($pdo, $u, 0, $kind);
 }
 /** Cuantas fuentes de un grupo salen en el menu (no cuantas se pueden guardar: eso no tiene limite). */
@@ -102,7 +104,7 @@ function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[
 /** Fuentes de un tipo que el usuario tiene como favoritas (en el orden en que las guardo). Vacio si no tiene. */
 function mis_medios(PDO $pdo, ?array $u, string $kind = 'medio'): array {
     static $cache = [];
-    if (!$u) return [];
+    if (!$u || ($kind === 'agregador' && !agregadores_on())) return [];
     $k = $u['user_id'] . '|' . $kind;
     if (isset($cache[$k])) return $cache[$k];
     try {
@@ -143,7 +145,7 @@ function fuente_por_dominio(PDO $pdo, string $dominio): ?array {
  *  /fav-fuente.php que vuelve a la misma pagina. Pulsarlo cuando ya se sigue, deja de seguir. $nombre: «Seguir Jot Down» (pagina de la
  *  fuente, hilo: ahi no se ve a que medio se refiere); sin el, «Seguir» a secas (filas del catalogo y tarjetas, que ya llevan el nombre). */
 function fuente_fav_form(array $src, bool $nombre = false): string {
-    if (!user() || !fuente_es_medio($src)) return '';
+    if (!user() || !fuente_seguible($src)) return '';
     $on = fuente_es_fav($src);
     $title = h($on ? t('dejar de seguir %s', $src['name']) : t('Seguir %s', $src['name']));
     return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/fav-fuente.php\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$src['source_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
@@ -164,7 +166,7 @@ function fuentes_ultima_noticia(PDO $pdo): array {
 }
 function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
     $max = $max ?: medios_max($kind);
-    $list = $kind === 'agregador' ? [] : mis_medios_recientes($pdo, $u, $kind);   // «solo en mi idioma» tambien quita las favoritas en otro
+    $list = mis_medios_recientes($pdo, $u, $kind);   // «solo en mi idioma» tambien quita las favoritas en otro
     if (!$list && $kind !== 'agregador') {
         $ult = fuentes_ultima_noticia($pdo);
         $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => isset($ult[$m['source_id']])));

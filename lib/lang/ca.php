@@ -692,4 +692,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Añadir substack' => 'Afegeix un substack',
 'Cerrar' => 'Tanca',
 'Ya sigues todos los del catálogo.' => 'Ja segueixes tots els del catàleg.',
+'Añadir agregador' => 'Afegeix un agregador',
 ];

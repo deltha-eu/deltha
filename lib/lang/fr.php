@@ -731,4 +731,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Añadir substack' => 'Ajouter un substack',
 'Cerrar' => 'Fermer',
 'Ya sigues todos los del catálogo.' => 'Vous suivez déjà tous ceux du catalogue.',
+'Añadir agregador' => 'Ajouter un agrégateur',
 ];
