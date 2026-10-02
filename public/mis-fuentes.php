@@ -47,6 +47,26 @@ if (fuentes_on()) {
         $resto = array_values(array_filter(fuentes_visibles($pdo, $k), fn($m) => !in_array($m['source_id'], $mias)));
         usort($resto, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
         echo "<h3 class=\"sec\">" . h($txt) . "</h3>";
+        // añadirse una fuente que no esta en el catalogo pegando su direccion (migra-108, /anadir-fuente.php); arriba, el resultado del ultimo intento
+        if ($k !== 'agregador') {
+            $rn = h((string)($_GET['n'] ?? ''));
+            $R = ['ok'     => t('Añadido: ya sigues %s. Lo leeremos en unos minutos; al catálogo público entrará cuando lo revise un moderador.', "<b>$rn</b>"),
+                  'ya'     => t('Ya estaba en Deltha: ahora sigues %s.', "<b>$rn</b>"),
+                  'manual' => t('Ha habido un problema al incorporar esa fuente. Queda apuntada y un moderador la añadirá a mano; te avisará por mensaje.'),
+                  'pend'   => t('Esa fuente ya está pendiente de que un moderador la añada.'),
+                  'url'    => t('Esa dirección no es válida.'),
+                  'bloq'   => t('Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.', $rn),
+                  'noyt'   => t('Eso no es un canal de YouTube.'),
+                  'tope'   => t('Has propuesto muchas fuentes hoy; vuelve mañana.'),
+                  'off'    => t('Esa fuente está desactivada en este sitio.')];
+            $r = (string)($_GET['r'] ?? '');
+            if (isset($R[$r])) echo "<p class=\"" . (in_array($r, ['ok', 'ya', 'manual', 'pend'], true) ? 'notice' : 'error') . "\">" . $R[$r] . "</p>";
+            if (fadd_puede($u)) {
+                echo "<form class=\"plain\" method=\"post\" action=\"/anadir-fuente.php\"><input type=\"hidden\" name=\"k\" value=\"$k\">"
+                   . "<label>" . ($k === 'youtube' ? t('¿No está en el catálogo? Pega la dirección del canal y lo añadimos a los tuyos.') : t('¿No está en el catálogo? Pega la dirección de su web o de su RSS y lo añadimos a los tuyos.')) . "</label>"
+                   . "<input type=\"url\" name=\"url\" required maxlength=\"200\" placeholder=\"https://…\"><button>" . h($txt) . "</button></form>";
+            } else echo "<p class=\"notice\">" . t('Con aura %s o más podrás añadir aquí fuentes que no estén en el catálogo; la tuya es %s.', num_pg(lang(), cfg('source_add_aura', 5)), num_pg(lang(), round((float)$u['aura'], 1))) . "</p>";
+        }
         if (!$resto) echo "<p class=\"end\">" . t('Ya sigues todos los del catálogo.') . "</p>";
         foreach ($resto as $m) {
             $descr = h((string)$m['descr'] ?: source_of($m['home']));

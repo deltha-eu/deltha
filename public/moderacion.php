@@ -107,11 +107,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
     } elseif (post('act') === 'fprop_no') {
         $motivo = mb_substr(trim(post('reply')), 0, 300);
         $pdo->prepare("UPDATE source_proposals SET status = 'rejected', reply = ?, reviewed_by = ?, reviewed = NOW() WHERE prop_id = ?")->execute([$motivo ?: null, user()['user_id'], $p['prop_id']]);
-        fprop_avisar($pdo, (int)user()['user_id'], (int)$p['user_id'], "Hola. Tu propuesta de fuente «{$p['name']}» ({$p['home']}) no se ha añadido al catálogo." . ($motivo !== '' ? " Motivo: $motivo" : '') . " Gracias por proponerla.");
+        // la fuente ya existia (se la añadio el desde «Mis medios», migra-108): sigue siendo solo suya salvo que se marque «retirar»
+        $retirada = $p['source_id'] && post('retirar') === '1';
+        if ($retirada) $pdo->prepare("UPDATE sources SET status = 'off' WHERE source_id = ? AND listed = 0")->execute([(int)$p['source_id']]);
+        fprop_avisar($pdo, (int)user()['user_id'], (int)$p['user_id'], "Hola. Tu propuesta de fuente «{$p['name']}» ({$p['home']}) no se ha añadido al catálogo" . ($p['source_id'] ? ($retirada ? ' y se ha retirado de tus medios' : '; la sigues teniendo en tus medios') : '') . "." . ($motivo !== '' ? " Motivo: $motivo" : '') . " Gracias por proponerla.");
         $out[] = "«{$p['name']}» rechazada; se le ha avisado por mensaje.";
     } else {
         $slug = strtolower(trim(post('slug')));
-        $kind = post('kind') === 'newsletter' ? 'newsletter' : 'medio';
+        $kind = in_array(post('kind'), ['newsletter', 'youtube'], true) ? post('kind') : 'medio';
         $name = mb_substr(trim(post('name')), 0, 48);
         $home = trim(post('home')); $feed = trim(post('feed'));
         $descr = mb_substr(trim(post('descr')), 0, 200) ?: null;
@@ -123,11 +126,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
         elseif (!preg_match('#^https?://[^\s]+$#i', $home) || !preg_match('#^https?://[^\s]+$#i', $feed)) $out[] = 'Web y RSS deben ser URLs http(s).';
         else {
             try {
-                $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES (?,?,?,?,?,?,'',?,?,'',?,'ok',0)")
-                    ->execute([$slug, $kind, $name, $home, $descr, $slang, $topic, $feed, $iv]);
-                $sid = (int)$pdo->lastInsertId();
+                if ($p['source_id']) {   // ya creada por quien se la añadio (migra-108): se corrigen sus datos y pasa al catalogo publico
+                    $sid = (int)$p['source_id'];
+                    $pdo->prepare("UPDATE sources SET slug = ?, kind = ?, name = ?, home = ?, descr = ?, lang = ?, topic_id = ?, feed_portada = ?, interval_min = ?, status = 'ok', listed = 1 WHERE source_id = ?")
+                        ->execute([$slug, $kind, $name, $home, $descr, $slang, $topic, $feed, $iv, $sid]);
+                } else {
+                    $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES (?,?,?,?,?,?,'',?,?,'',?,'ok',0)")
+                        ->execute([$slug, $kind, $name, $home, $descr, $slang, $topic, $feed, $iv]);
+                    $sid = (int)$pdo->lastInsertId();
+                }
                 $pdo->prepare("UPDATE source_proposals SET status = 'ok', source_id = ?, reviewed_by = ?, reviewed = NOW() WHERE prop_id = ?")->execute([$sid, user()['user_id'], $p['prop_id']]);
-                fprop_avisar($pdo, (int)user()['user_id'], (int)$p['user_id'], "Hola. Tu propuesta «{$name}» ya está en el catálogo: /fuente.php?f={$slug} — puedes elegirla en tu perfil, en «" . ($kind === 'newsletter' ? 'Mis substacks' : 'Mis medios') . "». Gracias por proponerla.");
+                fprop_avisar($pdo, (int)user()['user_id'], (int)$p['user_id'], "Hola. Tu propuesta «{$name}» ya está en el catálogo: /fuente.php?f={$slug} — puedes elegirla en tu perfil, en «" . ($kind === 'newsletter' ? 'Mis substacks' : ($kind === 'youtube' ? 'Mis canales' : 'Mis medios')) . "». Gracias por proponerla.");
                 $out[] = "«{$name}» añadida al catálogo (/fuente.php?f={$slug}); el lector la leerá en los próximos minutos. Se le ha avisado por mensaje.";
             } catch (PDOException $e) { $out[] = 'Ese slug ya existe: elige otro.'; }
         }
@@ -218,12 +227,14 @@ foreach ($creps as $r) {
 /* ---- fuentes propuestas ---- */
 try { $props = $pdo->query("SELECT p.*, u.login, u.aura FROM source_proposals p JOIN users u ON u.user_id = p.user_id WHERE p.status = 'pending' ORDER BY p.created LIMIT 50")->fetchAll(); } catch (Throwable $e) { $props = []; }
 echo "<h3 id=\"fuentes\">Fuentes propuestas (" . count($props) . ")</h3>";
-echo "<p><small>Medios y substacks propuestos por cuentas con aura " . h((string)cfg('source_propose_aura', 6)) . " o más. Al proponerlos se prueba el RSS; compruébalo (títulos recientes, idioma, que sea el medio que dice) y apruébalo o recházalo. Al aprobar entra activo y sin destacar; en los dos casos quien lo propuso recibe un mensaje tuyo.</small></p>";
+echo "<p><small>Medios, substacks y canales propuestos (aura " . h((string)cfg('source_propose_aura', 6)) . " o más) o añadidos por su cuenta desde «Mis medios» (aura " . h((string)cfg('source_add_aura', 5)) . " o más): estos últimos ya funcionan para quien los añadió, pero no salen en el catálogo público hasta que los apruebes. Al proponerlos se prueba el RSS; compruébalo (títulos recientes, idioma, que sea el medio que dice) y apruébalo o recházalo. Al aprobar entra activo y sin destacar; en los dos casos quien lo propuso recibe un mensaje tuyo.</small></p>";
 if (!$props) echo "<p>No hay propuestas pendientes.</p>";
 else $ptopics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
 foreach ($props as $p) {
     $pid = (int)$p['prop_id']; $ok = (int)$p['test_items'] > 0;
-    echo "<div class=\"repitem fprop\"><div class=\"rephead\"><b>" . h($p['name']) . "</b> · " . ($p['kind'] === 'newsletter' ? 'substack/newsletter' : 'medio');
+    $pslug = '';
+    if ($p['source_id']) { $qs = $pdo->prepare("SELECT slug FROM sources WHERE source_id = ?"); $qs->execute([(int)$p['source_id']]); $pslug = (string)$qs->fetchColumn(); }
+    echo "<div class=\"repitem fprop\"><div class=\"rephead\"><b>" . h($p['name']) . "</b> · " . ($p['kind'] === 'newsletter' ? 'substack/newsletter' : ($p['kind'] === 'youtube' ? 'canal de YouTube' : 'medio')) . ($pslug !== '' ? " · <a href=\"/fuente.php?f=" . h($pslug) . "\">ya activa, fuera del catálogo</a>" : '');
     echo "<span class=\"meta\"> · propuesta por <a href=\"/u.php?u=" . rawurlencode($p['login']) . "\">" . h($p['login']) . "</a> (aura " . h(num_es(round((float)$p['aura'], 1))) . ") · " . h(hace($p['created'])) . "</span></div>";
     echo "<p class=\"meta\">web: <a href=\"" . h($p['home']) . "\" rel=\"nofollow noopener\" target=\"_blank\">" . h($p['home']) . "</a><br>RSS: <a href=\"" . h($p['feed']) . "\" rel=\"nofollow noopener\" target=\"_blank\">" . h($p['feed']) . "</a>" . ($p['descr'] ? "<br>" . h($p['descr']) : '') . "</p>";
     if ($p['note']) echo "<blockquote class=\"quote\">" . saltos(h($p['note'])) . "</blockquote>";
@@ -231,8 +242,8 @@ foreach ($props as $p) {
     // aprobar: datos editables, como en admin > Fuentes
     echo "<form method=\"post\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fprop_ok\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><table>";
     echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($p['name']) . "\"></td></tr>";
-    echo "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h(fprop_slug($pdo, $p['name'])) . "\"></td></tr>";
-    echo "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . ($p['kind'] === 'medio' ? ' selected' : '') . ">medio</option><option value=\"newsletter\"" . ($p['kind'] === 'newsletter' ? ' selected' : '') . ">substack/newsletter</option></select></td></tr>";
+    echo "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($pslug !== '' ? $pslug : fprop_slug($pdo, $p['name'])) . "\"></td></tr>";
+    echo "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . ($p['kind'] === 'medio' ? ' selected' : '') . ">medio</option><option value=\"newsletter\"" . ($p['kind'] === 'newsletter' ? ' selected' : '') . ">substack/newsletter</option><option value=\"youtube\"" . ($p['kind'] === 'youtube' ? ' selected' : '') . ">canal de YouTube</option></select></td></tr>";
     echo "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($p['home']) . "\"></td></tr>";
     echo "<tr><td>RSS</td><td><input type=\"url\" name=\"feed\" required value=\"" . h($p['feed']) . "\"> <button class=\"btn sm\" name=\"act\" value=\"fprop_probar\" formnovalidate title=\"volver a leer este RSS\">probar</button></td></tr>";
     echo "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h((string)$p['descr']) . "\"></td></tr>";
@@ -240,9 +251,9 @@ foreach ($props as $p) {
     foreach (DDD_LANGS as $lc => $ln) echo "<option value=\"$lc\"" . ($p['lang'] === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>";
     echo "</select></td></tr><tr><td>tema al enviar</td><td><select name=\"topic_id\"><option value=\"0\">— el que elija quien envía —</option>";
     foreach ($ptopics as $tp) echo "<option value=\"{$tp['topic_id']}\">" . h($tp['name']) . "</option>";
-    echo "</select></td></tr><tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . ($p['kind'] === 'newsletter' ? 1440 : 60) . "\"> minutos</td></tr>";
+    echo "</select></td></tr><tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . ($p['kind'] === 'newsletter' ? 1440 : ($p['kind'] === 'youtube' ? 180 : 60)) . "\"> minutos</td></tr>";
     echo "<tr><td></td><td><button class=\"btn\">Aprobar y añadir al catálogo</button></td></tr></table></form>";
-    echo "<form method=\"post\" class=\"repacts\"><input type=\"hidden\" name=\"act\" value=\"fprop_no\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><input type=\"text\" name=\"reply\" maxlength=\"300\" placeholder=\"motivo (se le envía)\" style=\"flex:1;min-width:180px\"> <button class=\"btn danger\">Rechazar</button></form></div>";
+    echo "<form method=\"post\" class=\"repacts\"><input type=\"hidden\" name=\"act\" value=\"fprop_no\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><input type=\"text\" name=\"reply\" maxlength=\"300\" placeholder=\"motivo (se le envía)\" style=\"flex:1;min-width:180px\"> " . ($pslug !== '' ? "<label><input type=\"checkbox\" name=\"retirar\" value=\"1\"> retirarla también de sus medios</label> " : '') . "<button class=\"btn danger\">" . ($pslug !== '' ? 'No al catálogo' : 'Rechazar') . "</button></form></div>";
 }
 /* ---- voto coordinado ---- */
 try { $vc = votos_coordinados($pdo); } catch (Throwable $e) { $vc = ['pares' => [], 'conexion' => []]; }   // sin la migracion 080
