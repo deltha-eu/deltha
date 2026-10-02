@@ -3263,3 +3263,46 @@ p.fz-add.on a::before { content: "× "; }
 [data-skin="pildora"] .msg.me .bubble { background: #FF4405; }
 @media (min-width: 1300px) { [data-skin="pildora"] header.top { border-radius: 12px; } }
 @media (min-width: 1300px) { [data-skin="pildora"] .rail .pub { background: #FF4405; color: #fff; border: 0; border-radius: 24px; font-weight: 600; } }
+
+/* ---- v157: aire entre el aviso y la casilla de idioma del catalogo (/medios.php). Muchas plantillas dejan el aviso sin margen
+        inferior (y algunas con sombra), y la casilla se le pegaba. ---- */
+.notice + form.srclang { padding-top: 14px; }
+[data-skin="neobrutal"] .notice + form.srclang, [data-skin="popart"] .notice + form.srclang, [data-skin="hyperpop"] .notice + form.srclang,
+[data-skin="stickerbomb"] .notice + form.srclang, [data-skin="pixel"] .notice + form.srclang, [data-skin="galactica"] .notice + form.srclang { padding-top: 22px; }
+
+/* ---- v157: el rail (columna izquierda) y la columna derecha de las cuatro skins de foro. Hasta ahora heredaban los de Comunidad
+        (pildoras grises, boton azul) y no se notaba el cambio de foro: ahora llevan la letra, la cabecera, el radio y el boton de cada uno. ---- */
+@media (min-width: 1300px) {
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail { font-family: var(--forum); }
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail nav a,
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail .bell,
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail details.rail-dd summary { font-size: 15px; }
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail nav a.on,
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail details.rail-dd .list a.on { background: var(--navon); color: var(--navonfg); }
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail nav a:hover:not(.on) { background: var(--hover); }
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail .pub { font-family: var(--forum); font-size: 14px; }
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .rail form.rail-search { background: var(--card); border-color: var(--line2); }
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .side .mod h3 { background: var(--hd); color: var(--hdfg); border-bottom: 1px solid var(--hdline); }
+  :is([data-skin="marino"], [data-skin="acero"], [data-skin="sendero"], [data-skin="pildora"]) .side .mod h3 span { color: var(--hdfg); }
+  /* Marino (Burbuja): cuadrados de 4 px, boton celeste */
+  [data-skin="marino"] .rail nav a, [data-skin="marino"] .rail .bell, [data-skin="marino"] .rail .me, [data-skin="marino"] .rail details.rail-dd summary, [data-skin="marino"] .rail details.rail-dd .list a, [data-skin="marino"] .rail form.rail-search { border-radius: 4px; }
+  [data-skin="marino"] .rail .pub { background: #47A7EB; color: #fff; border: 1px solid #5EB2ED; border-radius: 4px; }
+  [data-skin="marino"] .side .mod { border-radius: 4px; }
+  /* Acero (HTCMania): ni una esquina redondeada, barra azul pizarra */
+  [data-skin="acero"] .rail nav a, [data-skin="acero"] .rail .bell, [data-skin="acero"] .rail .me, [data-skin="acero"] .rail details.rail-dd summary, [data-skin="acero"] .rail details.rail-dd .list a, [data-skin="acero"] .rail form.rail-search { border-radius: 0; }
+  [data-skin="acero"] .rail nav a, [data-skin="acero"] .rail .bell, [data-skin="acero"] .rail details.rail-dd summary { font-size: 13px; }
+  [data-skin="acero"] .rail .pub { background: var(--hd); color: #fff; border: 1px solid var(--hdline); border-radius: 0; font-size: 13px; }
+  [data-skin="acero"] .side .mod { border-radius: 0; border-color: var(--line2); }
+  [data-skin="acero"] .side .mod h3 { font-size: 11px; }
+  /* Sendero (ForoMTB): pestañas pizarra con la activa celeste, boton azul de 7 px */
+  [data-skin="sendero"] .rail nav a, [data-skin="sendero"] .rail .bell, [data-skin="sendero"] .rail .me, [data-skin="sendero"] .rail details.rail-dd summary, [data-skin="sendero"] .rail details.rail-dd .list a, [data-skin="sendero"] .rail form.rail-search { border-radius: 5px; }
+  [data-skin="sendero"] .rail nav a, [data-skin="sendero"] .rail .bell, [data-skin="sendero"] .rail details.rail-dd summary { font-size: 14px; }
+  [data-skin="sendero"] .rail .pub { background: var(--hd); color: #fff; border: 1px solid var(--hdline); border-radius: 7px; }
+  [data-skin="sendero"] .side .mod { border-radius: 5px; }
+  /* Pildora (ForoBeta): todo en pildora, la activa lavanda y el boton naranja */
+  [data-skin="pildora"] .rail nav a, [data-skin="pildora"] .rail .bell, [data-skin="pildora"] .rail .me, [data-skin="pildora"] .rail details.rail-dd summary, [data-skin="pildora"] .rail details.rail-dd .list a { border-radius: 32px; font-weight: 600; }
+  [data-skin="pildora"] .rail nav a.on, [data-skin="pildora"] .rail details.rail-dd .list a.on { font-weight: 700; }
+  [data-skin="pildora"] .rail form.rail-search { background: var(--hd); border: 0; }
+  [data-skin="pildora"] .side .mod { border: 0; border-radius: 12px; }
+  [data-skin="pildora"] .side .mod h3 { border: 0; }
+}
