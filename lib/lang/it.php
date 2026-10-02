@@ -712,4 +712,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Mis canales' => 'I miei canali',
 'Añadir canal' => 'Aggiungi canale',
 'Último en YouTube' => 'Ultimi video su YouTube',
+'Canales' => 'Canali',
+'en Canales' => 'in Canali',
+'Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.' => 'Ancora niente in Canali. Qui viene pubblicato il video del radar con il δ più alto quando raggiunge il minimo.',
+'Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.' => 'I video di YouTube vanno nella prima pagina Canali, che occupa un ciclo solo quando uno di essi raggiunge il minimo (δ ≥ %s), e al massimo ogni %d min.',
 ];

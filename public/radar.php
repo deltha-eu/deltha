@@ -7,7 +7,7 @@ require __DIR__ . '/../lib/render.php';
 require_once __DIR__ . '/../lib/cola.php';
 
 $f = (string)($_GET['portada'] ?? '');
-if (!isset(DDD_PORTADAS[$f])) $f = '';
+if (!isset(portadas()[$f])) $f = '';
 $w = "s.status='nuevas' AND s.content_type='link'" . ($f ? " AND s.portada = " . $pdo->quote($f) : '') . stories_mylang_sql();   // «solo en mi idioma» (migra-092)
 $page = page_num();
 $total = (int)$pdo->query("SELECT COUNT(*) FROM stories s WHERE $w")->fetchColumn();
@@ -22,9 +22,10 @@ $DDD_ETA = cola_eta($all);
 
 page_header(t('Radar'), 'radar');
 echo "<nav class=\"sub\"><a href=\"/radar.php\"" . ($f === '' ? ' class="on"' : '') . ">" . t('Todo') . "</a>";
-foreach (DDD_PORTADAS as $k => $lbl) echo "<a href=\"/radar.php?portada=$k\"" . ($f === $k ? ' class="on"' : '') . ">" . h(mb_strtoupper(mb_substr($x = t('hacia %s', t($lbl)), 0, 1)) . mb_substr($x, 1)) . "</a>";
+foreach (portadas() as $k => $lbl) echo "<a href=\"/radar.php?portada=$k\"" . ($f === $k ? ' class="on"' : '') . ">" . h(mb_strtoupper(mb_substr($x = t('hacia %s', t($lbl)), 0, 1)) . mb_substr($x, 1)) . "</a>";
 echo "</nav>";
-echo "<p class=\"notice\">" . t('Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos.php">Procesos</a> está ordenado por δ, con la estimación de cada uno.', (int)cfg('cycle_minutes', 5), (int)cfg('delta_min_age_min', 30), h(num_es(delta_minpub('medios'))), h(num_es(delta_minpub('substacks')))) . "</p>";
+echo "<p class=\"notice\">" . t('Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos.php">Procesos</a> está ordenado por δ, con la estimación de cada uno.', (int)cfg('cycle_minutes', 5), (int)cfg('delta_min_age_min', 30), h(num_es(delta_minpub('medios'))), h(num_es(delta_minpub('substacks'))))
+   . (portada_canales_on() ? ' ' . t('Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.', h(num_es(delta_minpub('canales'))), canales_gap()) : '') . "</p>";
 $n = 0;
 foreach ($rows as $s) { story_post($pdo, $s, "compact"); $n++; }
 if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en el radar. <a href="/enviar.php">Envía algo</a>.') . "</p>";

@@ -12,7 +12,7 @@ $u = $pdo->query("SELECT COUNT(*) total,
                          SUM(created  >= CURDATE()) hoy,
                          SUM(created  >= NOW() - INTERVAL 7 DAY) semana
                     FROM users WHERE verified = 1")->fetch();
-$s = $pdo->query("SELECT SUM(status='destacadas' AND portada='medios') medios, SUM(status='destacadas' AND portada='substacks') substacks,
+$s = $pdo->query("SELECT SUM(status='destacadas' AND portada='medios') medios, SUM(status='destacadas' AND portada='substacks') substacks, SUM(status='destacadas' AND portada='canales') canales,
                          SUM(status='nuevas' AND content_type='link') radar,
                          SUM(published_date >= CURDATE()) publicadas_hoy,
                          SUM(status IN ('destacadas','archived')) publicadas_total
@@ -39,6 +39,7 @@ echo $tile($u['hoy'], t('registros hoy'), '/usuarios.php?v=hoy');
 echo $tile($u['semana'], t('registros últimos 7 días'), '/usuarios.php?v=7d');
 echo $tile($s['medios'], t('en Medios'), '/?portada=medios');
 echo $tile($s['substacks'], t('en Substacks'), '/?portada=substacks');
+if (portada_canales_on()) echo $tile($s['canales'], t('en Canales'), '/?portada=canales');
 echo $tile($s['radar'], t('en el radar'), '/radar.php');
 echo $tile($s['publicadas_hoy'], t('publicadas hoy'), '/procesos.php?v=portadas&d=hoy');
 echo $tile($s['publicadas_total'], t('publicadas en total'), '/procesos.php?v=portadas&d=todo');

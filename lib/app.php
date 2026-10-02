@@ -561,9 +561,11 @@ function skin(): string {
  * decaimiento). El decaimiento empieza a contar cuando el envio es elegible (delta_min_age_min), no al enviarse, y es distinto por
  * portada (Substacks mas lento: lo suyo no caduca con la actualidad). Misma formula en SQL (delta_sql) y en PHP (delta_live). */
 function delta_decay(?string $portada): float {
+    if ($portada === 'canales') return (float)cfg('decay_canales', 0.02);   // un video, como un Substack, no caduca con la actualidad
     return (float)cfg($portada === 'substacks' ? 'decay_substacks' : 'decay_medios', $portada === 'substacks' ? 0.02 : 0.05);
 }
 function delta_minpub(?string $portada): float {
+    if ($portada === 'canales') return (float)cfg('delta_min_publish_canales', 1);
     return (float)cfg($portada === 'substacks' ? 'delta_min_publish_substacks' : 'delta_min_publish_medios', 1);
 }
 /** Votos netos que cuentan necesarios para ser candidato (migra-083). Con la raiz, un voto da δ = 1 y alcanzaba el umbral: la puerta
@@ -581,10 +583,10 @@ function delta_live(array $s): float {
 }
 /** Expresion SQL del delta en vivo (tablas: stories s, topics t). La usan el ciclo (para guardarlo) y las listas (para ordenar/mostrar). */
 function delta_sql(): string {
-    $dm = number_format(delta_decay('medios'), 4, '.', ''); $ds = number_format(delta_decay('substacks'), 4, '.', '');
+    $dm = number_format(delta_decay('medios'), 4, '.', ''); $ds = number_format(delta_decay('substacks'), 4, '.', ''); $dc = number_format(delta_decay('canales'), 4, '.', '');
     $n  = "(s.eff_pos - s.eff_neg)";
     $hh = "GREATEST(0, FLOOR(TIMESTAMPDIFF(MINUTE, s.sent_date, NOW()) / 30) - " . delta_hh_min() . ")";
-    return "(SIGN($n) * SQRT(ABS($n)) + IF($n > 0, t.bonus, 0) - (CASE WHEN s.portada = 'substacks' THEN $ds ELSE $dm END) * $hh)";
+    return "(SIGN($n) * SQRT(ABS($n)) + IF($n > 0, t.bonus, 0) - (CASE s.portada WHEN 'substacks' THEN $ds WHEN 'canales' THEN $dc ELSE $dm END) * $hh)";
 }
 /** Huella de un voto: la misma para todas las cuentas que voten el mismo envio desde la misma conexion. HMAC truncado con el secreto
  *  del sitio y el id del envio dentro: no se guarda la IP y la huella de un envio no sirve para enlazar votos en otro. */
@@ -632,8 +634,24 @@ function ciclo_antes_de(int $ventana): int { return $ventana + max(1, (int)cfg('
  * Un enlace va a Substacks si su dominio es *.substack.com o el de una fuente del catalogo marcada como newsletter
  * (asi entran los Substacks con dominio propio); todo lo demas va a Medios. Los originales (content_type = article)
  * no van a ninguna portada: se quedan en su pestaña. El ciclo alterna: cada cycle_minutes publica en una portada,
- * y la otra espera al siguiente, asi que cada portada recibe como mucho una cada 2 × cycle_minutes. */
-const DDD_PORTADAS = ['medios' => 'Medios', 'substacks' => 'Substacks'];
+ * y la otra espera al siguiente, asi que cada portada recibe como mucho una cada 2 × cycle_minutes.
+ * Tercera portada, Canales (migra-106): los enlaces a YouTube. No entra en la alternancia: tiene TURNO CONDICIONADO. Un ciclo es
+ * suyo solo si tiene algun video publicable y han pasado canales_gap_min desde su ultima publicacion; si no, el ciclo es de
+ * Medios o Substacks como siempre (portada_turno no cambia). Se apaga con config.portada_canales = 0 (YouTube vuelve a Medios). */
+const DDD_PORTADAS = ['medios' => 'Medios', 'substacks' => 'Substacks', 'canales' => 'Canales'];
+const DDD_YOUTUBE_HOSTS = ['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be'];
+function portada_canales_on(): bool { return (string)cfg('portada_canales', '1') === '1'; }
+/** Portadas en uso, en su orden: clave => etiqueta (sin Canales si esta apagada). */
+function portadas(): array { $p = DDD_PORTADAS; if (!portada_canales_on()) unset($p['canales']); return $p; }
+/** Minutos minimos entre dos publicaciones en Canales. */
+function canales_gap(): int { return max(1, (int)cfg('canales_gap_min', 15)); }
+/** Instante de la ultima publicacion en Canales (0 = nunca). */
+function canales_ultima(PDO $pdo): int {
+    static $t = null;
+    if ($t !== null) return $t;
+    try { $c = $pdo->query("SELECT MAX(created) FROM promo_log WHERE portada = 'canales'")->fetchColumn(); } catch (Throwable $e) { $c = null; }
+    return $t = $c ? (int)strtotime((string)$c) : 0;
+}
 const DDD_PORTADA_COOKIE = 'ddd_portada';
 /** Dominios (sin www.) de las fuentes del catalogo de tipo newsletter. */
 function newsletter_hosts(PDO $pdo): array {
@@ -644,11 +662,12 @@ function newsletter_hosts(PDO $pdo): array {
     catch (Throwable $e) { /* tabla aun sin crear */ }
     return $h;
 }
-/** Portada a la que va un envio: 'medios' | 'substacks'; null para los originales. */
+/** Portada a la que va un envio: 'medios' | 'substacks' | 'canales' (YouTube); null para los originales. */
 function portada_de(PDO $pdo, array $s): ?string {
     if (($s['content_type'] ?? 'link') === 'article') return null;
     $d = strtolower((string)($s['source'] ?? '')) ?: (string)source_of((string)($s['url'] ?? ''));
     if ($d === '') return 'medios';
+    if (in_array($d, DDD_YOUTUBE_HOSTS, true) && portada_canales_on()) return 'canales';
     return ($d === 'substack.com' || str_ends_with($d, '.substack.com') || isset(newsletter_hosts($pdo)[$d])) ? 'substacks' : 'medios';
 }
 /** Portada que publica en el ciclo que empieza en $ts (minuto multiplo de cycle_minutes): alternan medios, substacks, medios... */
@@ -662,12 +681,12 @@ function portada_actual(): string {
     static $p = null;
     if ($p !== null) return $p;
     $q = (string)($_GET['portada'] ?? '');
-    if (isset(DDD_PORTADAS[$q])) {
+    if (isset(portadas()[$q])) {
         if (($_COOKIE[DDD_PORTADA_COOKIE] ?? '') !== $q && !headers_sent()) pref_cookie(DDD_PORTADA_COOKIE, $q);
         return $p = $q;
     }
     $c = (string)($_COOKIE[DDD_PORTADA_COOKIE] ?? '');
-    return $p = isset(DDD_PORTADAS[$c]) ? $c : 'substacks';   // quien llega por primera vez ve Substacks, lo propio de Deltha
+    return $p = isset(portadas()[$c]) ? $c : 'substacks';   // quien llega por primera vez ve Substacks, lo propio de Deltha
 }
 function delta_explica(array $s): string {
     $n = (int)($s['eff_pos'] ?? 0) - (int)($s['eff_neg'] ?? 0);
@@ -1022,6 +1041,7 @@ function nav_tabs(string $tab, string $cls): void {
     $tabs = in_array($cls, ['tabs-top', 'rail-top'], true) ? [
         'medios'       => ['/?portada=medios', t('Medios'), 'news'],
         'substacks'    => ['/?portada=substacks', t('Substacks'), 'letter'],
+        'canales'      => ['/?portada=canales', t('Canales'), 'play'],
         'radar'        => ['/radar.php', t('Radar'), 'radar'],
         'originales'   => ['/originales.php', t('Originales'), 'art'],
         'chat'         => ['/chat.php', t('Chat'), 'chat'],
@@ -1035,6 +1055,7 @@ function nav_tabs(string $tab, string $cls): void {
         'analitica'    => ['/analitica.php', t('Analítica'), 'stats'],   // solo registrados y solo en el rail (en movil, desde Estadisticas)
         'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
     ];
+    if (!portada_canales_on()) unset($tabs['canales']);
     if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
     if ($cls !== 'rail-bottom') unset($tabs['temas'], $tabs['comunidades']);
     if (isset($tabs['analitica']) && ($cls === 'tabs-bottom' || !user() || !ana_on())) unset($tabs['analitica']);

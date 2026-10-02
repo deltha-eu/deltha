@@ -48,7 +48,7 @@ function media_block(array $s, string $cls = 'media', ?string $href = null): voi
     if ($s['image']) {
         $href = $href ?? "/hilo.php?id={$s['story_id']}";
         $ext = str_starts_with($href, 'http') ? ' rel="noopener nofollow"' : '';
-        echo "<div class=\"$cls\"><a class=\"pic\" href=\"" . h($href) . "\"$ext style=\"background-image:url('/media/" . h($s['image']) . "')\"></a>";
+        echo "<div class=\"$cls" . (($s['portada'] ?? '') === 'canales' ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($href) . "\"$ext style=\"background-image:url('/media/" . h($s['image']) . "')\"></a>";
         echo topic_tag($s) . "</div>";
     }
 }

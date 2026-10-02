@@ -20,6 +20,10 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('decay_substacks',     '0.02', 'Decremento de delta por media hora de espera en Substacks (mas lento: lo suyo no caduca con la actualidad)'),
 ('delta_min_publish_medios',    '1', 'Delta minimo para publicar en Medios'),
 ('delta_min_publish_substacks', '1', 'Delta minimo para publicar en Substacks'),
+('delta_min_publish_canales', '1', 'Delta minimo para publicar en Canales'),
+('decay_canales',       '0.02', 'Decremento de delta por media hora de espera en Canales'),
+('portada_canales',     '1',    '1 = los enlaces a YouTube van a la portada Canales (turno condicionado); 0 = van a Medios y la pestaña no se ve'),
+('canales_gap_min',     '15',   'Minutos minimos entre dos publicaciones en Canales'),
 ('delta_min_votes',      '2',    'Votos netos que cuentan necesarios para ser candidato a portada; el bonus del tema no sustituye a ninguno'),
 ('vote_quarantine_hours', '24', 'Horas desde que se crea una cuenta hasta que sus votos cuentan en el delta (se ven desde el principio)'),
 ('cycle_lottery',       '1',    '1 = entre las que superan el minimo se sortea con probabilidad proporcional al delta; 0 = gana la de mayor delta'),
@@ -137,7 +141,7 @@ CREATE TABLE stories (
     image           VARCHAR(64) DEFAULT NULL,        -- nombre de fichero en /media
     status          ENUM('pending_mod','rejected','nuevas','destacadas','archived','discard')
                     NOT NULL DEFAULT 'nuevas',        -- nuevas = en el radar; destacadas = en una portada
-    portada         ENUM('medios','substacks') DEFAULT NULL,   -- portada de destino de un enlace; NULL = original (articulo)
+    portada         ENUM('medios','substacks','canales') DEFAULT NULL,   -- portada de destino de un enlace; NULL = original (articulo)
     sent_date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at       DATETIME DEFAULT NULL,           -- ultima edicion (autor en plazo o moderacion)
     indexable       TINYINT(1) NOT NULL DEFAULT 0,   -- articulo abierto a buscadores por su autor (migra-049)
@@ -244,7 +248,7 @@ CREATE TABLE mod_queue (
 CREATE TABLE promo_log (
     id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     story_id    INT UNSIGNED NOT NULL,
-    portada     ENUM('medios','substacks') DEFAULT NULL,  -- portada en la que se publico
+    portada     ENUM('medios','substacks','canales') DEFAULT NULL,  -- portada en la que se publico
     delta       DECIMAL(8,3) NOT NULL,
     candidates  SMALLINT UNSIGNED NOT NULL,              -- enlaces que habia en el radar de esa portada
     commenters  SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- comentaristas unicos en el momento de publicar (instrumentacion)
