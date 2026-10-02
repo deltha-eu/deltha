@@ -517,6 +517,7 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-acero { --s1: #D9DADA; --s2: #415989; }
 .sw-sendero { --s1: #F9D9B0; --s2: #176093; }
 .sw-pildora { --s1: #EAECF5; --s2: #FF4405; }
+.sw-brasa { --s1: #2C2926; --s2: #EC7309; }
 /* /plantilla.php: lista de casillas (una sola marcada), con muestra, nombre, descripcion y «ver» */
 form.plain.skinform { gap: 6px; }
 .skinlist { display: flex; flex-direction: column; margin: 0 0 8px; }
@@ -2492,6 +2493,7 @@ details.editbox form.plain { padding-top: 0; }
   .rail .sw-acero { --s1: #D9DADA; --s2: #415989; }
   .rail .sw-sendero { --s1: #F9D9B0; --s2: #176093; }
   .rail .sw-pildora { --s1: #EAECF5; --s2: #FF4405; }
+  .rail .sw-brasa { --s1: #2C2926; --s2: #EC7309; }
   [data-skin="grotesque"] .side .mod { border: 1px solid var(--line); border-radius: 0; }
   [data-skin="grotesque"] .side .mod h3 { font-family: var(--grot); font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: -.01em; }
   [data-skin="grotesque"] .rail nav a { border-radius: 4px; font-size: 15px; text-transform: lowercase; font-weight: 700; }
@@ -3307,4 +3309,59 @@ p.fz-add.on a::before { content: "× "; }
   [data-skin="pildora"] .side .mod h3 { background: var(--bar); color: #fff; border: 0; }   /* cabecera blanca en la pagina, pero las cajas llevan la tinta #1F2837 */
   [data-skin="pildora"] .side .mod h3 span, [data-skin="pildora"] .side .mod h3 a { color: #fff; }
   [data-skin="pildora"] .side .mod { background: var(--card); }
+}
+
+/* ---- BRASA (Mediavida): barra carbón #2C2926 con la letra blanca al 65 % (activa al 95 %), página gris cálido #EBE8E5, tarjetas
+        casi blancas #FBFAF9 con borde #D8D7D4 y 3 px de radio, tinta #262422, naranja #EC7309 en enlaces y en el subforo (mayúsculas
+        pequeñas), botones en degradado naranja #FF9300 → #E6720E, cabeceras laterales en mayúsculas finas #4C4A48. Proxima Nova. v158. ---- */
+[data-skin="brasa"] { --blue: #2C2926; --blue2: #262422; --blue3: #EC7309; --card: #FBFAF9; --row: #F3F1EF; --bar: #2C2926; --forum: proxima-nova, "Proxima Nova", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif; --bg: #EBE8E5; --fg: #262422; --muted: #7A7672; --line: #D8D7D4; --line2: #D8D7D4; --hover: #FFFFFF; --halo: #EC7309; --neg: #8A8784; --hd: #2C2926; --hdfg: #FFFCFA; --hdline: #1D1C1B; --nav: #2C2926; --navfg: #FFFFFFA6; --navon: #3A3734; --navonfg: #FFFCFA; --navline: #1D1C1B; --title: #262422; --link: #EC7309; --strip: #FBFAF9; --stripfg: #4C4A48; --stripline: #D8D7D4; --ember: linear-gradient(#FF9300, #E6720E); --sidehd: #4C4A48; --accent: var(--link); --life: var(--blue3); color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  [data-skin="brasa"]:not([data-theme="light"]) { --blue: #1D1C1B; --blue2: #E8E4E0; --blue3: #EC7309; --card: #2C2926; --row: #262422; --bar: #1D1C1B; --bg: #161514; --fg: #E8E4E0; --muted: #A09B96; --line: #3A3734; --line2: #454240; --hover: #353230; --halo: #FF9300; --neg: #A09B96; --hd: #1D1C1B; --hdfg: #FFFCFA; --hdline: #0E0D0D; --nav: #1D1C1B; --navfg: #FFFFFFA6; --navon: #2C2926; --navonfg: #FFFCFA; --navline: #0E0D0D; --title: #F2EEEA; --link: #FF9300; --strip: #2C2926; --stripfg: #D0CBC6; --stripline: #3A3734; --sidehd: #D0CBC6; color-scheme: dark; }
+}
+[data-skin="brasa"][data-theme="dark"] { --blue: #1D1C1B; --blue2: #E8E4E0; --blue3: #EC7309; --card: #2C2926; --row: #262422; --bar: #1D1C1B; --bg: #161514; --fg: #E8E4E0; --muted: #A09B96; --line: #3A3734; --line2: #454240; --hover: #353230; --halo: #FF9300; --neg: #A09B96; --hd: #1D1C1B; --hdfg: #FFFCFA; --hdline: #0E0D0D; --nav: #1D1C1B; --navfg: #FFFFFFA6; --navon: #2C2926; --navonfg: #FFFCFA; --navline: #0E0D0D; --title: #F2EEEA; --link: #FF9300; --strip: #2C2926; --stripfg: #D0CBC6; --stripline: #3A3734; --sidehd: #D0CBC6; color-scheme: dark; }
+[data-skin="brasa"] a { color: var(--link); }
+[data-skin="brasa"] header.top { background: var(--hd); border-bottom-color: var(--hdline); color: var(--hdfg); }
+[data-skin="brasa"] header.top .ttl { font-family: var(--forum); font-weight: 700; color: var(--hdfg); }
+[data-skin="brasa"] header.top a, [data-skin="brasa"] header.top .me { color: var(--hdfg); }
+[data-skin="brasa"] nav.tabs-top { background: var(--nav); border-bottom-color: var(--navline); }
+[data-skin="brasa"] nav.tabs-top a { color: var(--navfg); }
+[data-skin="brasa"] nav.tabs-top a.on { background: transparent; color: var(--navonfg); box-shadow: inset 0 -3px 0 #EC7309; }
+[data-skin="brasa"] .post h2 a, [data-skin="brasa"] .hilo .main h2 { color: var(--title); }
+[data-skin="brasa"] .post .l1 .meta .sep + a, [data-skin="brasa"] .post .l1 .meta a[href^="/comunidad.php"] { color: var(--link); text-transform: uppercase; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+[data-skin="brasa"] .notice { background: var(--strip); color: var(--stripfg); border-color: var(--stripline); }
+[data-skin="brasa"] .notice a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+[data-skin="brasa"] :is(.post.full, .post.compact):not(.medio) .actions > a:first-child span { color: var(--title); }
+@media (min-width: 1300px) { [data-skin="brasa"] header.top { border-color: var(--hdline); border-radius: 3px; } }
+[data-skin="brasa"] body { font-size: 13px; }
+[data-skin="brasa"] nav.tabs-top { border-bottom-width: 1px; padding: 0 8px; gap: 2px; }
+[data-skin="brasa"] nav.tabs-top a { text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 400; border-radius: 0; padding: 10px 6px; }
+[data-skin="brasa"] nav.tabs-top a:hover:not(.on) { background: transparent; color: var(--navonfg); }
+[data-skin="brasa"] main:has(> .post), [data-skin="brasa"] main:not(:has(> .post)), [data-skin="brasa"] .notice, [data-skin="brasa"] .error { border-radius: 3px; border: 1px solid var(--line); }
+[data-skin="brasa"] .notice { font-size: 13px; }
+[data-skin="brasa"] .post.full, [data-skin="brasa"] .post.compact { background: var(--card); padding-top: 12px; padding-bottom: 12px; }
+[data-skin="brasa"] .post.full:nth-of-type(even), [data-skin="brasa"] .post.compact:nth-of-type(even) { background: var(--card); }
+[data-skin="brasa"] .post.full:hover, [data-skin="brasa"] .post.compact:hover { background: var(--hover); }
+[data-skin="brasa"] .post h2 { font-size: 18px; font-weight: 700; line-height: 1.25; }
+[data-skin="brasa"] .post .l1 { font-size: 12px; }
+[data-skin="brasa"] .lead { font-size: 13px; color: var(--fg); }
+[data-skin="brasa"] :is(.post.full, .post.compact):not(.medio) .actions > a:first-child { background: var(--row); border-left-color: var(--line); height: 100%; right: 0; width: 104px; }
+[data-skin="brasa"] :is(.post.full, .post.compact):not(.medio) .actions > a:first-child span { font-size: 20px; font-weight: 700; }
+[data-skin="brasa"] .composer button, [data-skin="brasa"] form.plain button, [data-skin="brasa"] .newmsg button, [data-skin="brasa"] .modbar .btn, [data-skin="brasa"] .fab { background: var(--ember); color: #FFFCFA; border: 1px solid #C1600B; border-radius: 3px; text-shadow: none; font-weight: 400; }
+[data-skin="brasa"] .tag, [data-skin="brasa"] .media .tag { background: #EC7309; color: #FFFCFA; border-radius: 3px; }
+[data-skin="brasa"] .hilo .stats { border-color: var(--bar); }
+[data-skin="brasa"] .msg.me .bubble { background: #EC7309; }
+@media (min-width: 1300px) {
+  [data-skin="brasa"] .rail { font-family: var(--forum); }
+  [data-skin="brasa"] .rail nav a, [data-skin="brasa"] .rail .bell, [data-skin="brasa"] .rail details.rail-dd summary { font-size: 15px; }
+  [data-skin="brasa"] .rail nav a, [data-skin="brasa"] .rail .bell, [data-skin="brasa"] .rail .me, [data-skin="brasa"] .rail details.rail-dd summary, [data-skin="brasa"] .rail details.rail-dd .list a, [data-skin="brasa"] .rail form.rail-search { border-radius: 3px; }
+  [data-skin="brasa"] .rail nav a.on, [data-skin="brasa"] .rail details.rail-dd .list a.on { background: var(--card); color: var(--link); font-weight: 700; }
+  [data-skin="brasa"] .rail nav a:hover:not(.on) { background: var(--hover); }
+  [data-skin="brasa"] .rail .pub { background: var(--ember); color: #FFFCFA; border: 1px solid #C1600B; border-radius: 3px; font-family: var(--forum); font-size: 14px; font-weight: 400; }
+  [data-skin="brasa"] .rail form.rail-search { background: var(--card); border-color: var(--line2); }
+  /* columna derecha como la de Mediavida: sin caja, cabecera en mayúsculas finas con raya debajo, filas separadas por rayas */
+  [data-skin="brasa"] .side .mod { background: transparent; border: 0; border-radius: 0; padding: 0; }
+  [data-skin="brasa"] .side .mod h3 { background: transparent; color: var(--sidehd); font-family: var(--forum); font-size: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: 0; padding: 6px 0; margin: 0 0 4px; border-bottom: 1px solid var(--line); }
+  [data-skin="brasa"] .side .mod h3 span, [data-skin="brasa"] .side .mod h3 a { color: var(--sidehd); }
+  [data-skin="brasa"] .side .mod .row, [data-skin="brasa"] .side .mod .chips, [data-skin="brasa"] .side .mod p { margin-left: 0; margin-right: 0; }
+  [data-skin="brasa"] .side .mod .row, [data-skin="brasa"] .side .mod .row:nth-child(even) { background: transparent; border-bottom: 1px solid var(--line); }
 }

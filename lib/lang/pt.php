@@ -438,6 +438,7 @@ return [
 'Acero — foro clásico de tablas: gris acero, barras azul pizarra y letra pequeña' => 'Acero — fórum clássico de tabelas: cinza-aço, barras azul-ardósia e letra pequena',
 'Sendero — foro de la vieja escuela: azul, pestañas redondeadas y franjas color arena' => 'Sendero — fórum da velha guarda: azul, separadores arredondados e faixas cor de areia',
 'Píldora — foro actual: cajas lavanda redondeadas, tinta oscura y botones naranja en píldora' => 'Píldora — fórum atual: caixas lavanda arredondadas, tinta escura e botões laranja em pílula',
+'Brasa — foro carbón y naranja: barra oscura, tarjetas claras, titulares en negrita y botones en brasa' => 'Brasa — fórum carvão e laranja: barra escura, cartões claros, títulos a negrito e botões em brasa',
 'B/W — Editorial sin un solo color: fotos, avatares y laterales en blanco y negro' => 'B/W — Editorial sem uma única cor: fotos, avatares e laterais em preto e branco',
 'Surrealismo — cielo con nubes, cartas que flotan, marcos que se derriten y manzanas verdes' => 'Surrealismo — céu com nuvens, cartas que flutuam, molduras que derretem e maçãs verdes',
 '%d esta semana' => '%d esta semana',

@@ -401,6 +401,7 @@ return [
 'Acero — foro clásico de tablas: gris acero, barras azul pizarra y letra pequeña' => 'Acero — klassisches Tabellenforum: Stahlgrau, schieferblaue Leisten und kleine Schrift',
 'Sendero — foro de la vieja escuela: azul, pestañas redondeadas y franjas color arena' => 'Sendero — Forum der alten Schule: Blau, abgerundete Reiter und sandfarbene Streifen',
 'Píldora — foro actual: cajas lavanda redondeadas, tinta oscura y botones naranja en píldora' => 'Píldora — Forum von heute: abgerundete Lavendelkästen, dunkle Tinte und orange Pillen-Buttons',
+'Brasa — foro carbón y naranja: barra oscura, tarjetas claras, titulares en negrita y botones en brasa' => 'Brasa — Forum in Kohle und Orange: dunkle Leiste, helle Karten, fette Titel und glühende Buttons',
 'B/W — Editorial sin un solo color: fotos, avatares y laterales en blanco y negro' => 'B/W — Editorial ohne eine einzige Farbe: Fotos, Avatare und Seitenspalten in Schwarzweiß',
 'Surrealismo — cielo con nubes, cartas que flotan, marcos que se derriten y manzanas verdes' => 'Surrealismus — Himmel mit Wolken, schwebende Karten, schmelzende Rahmen und grüne Äpfel',
 '%d esta semana' => '%d diese Woche',
