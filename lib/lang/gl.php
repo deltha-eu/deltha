@@ -693,4 +693,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Cerrar' => 'Pechar',
 'Ya sigues todos los del catálogo.' => 'Xa segues todos os do catálogo.',
 'Añadir agregador' => 'Engadir agregador',
+'Moderadores' => 'Moderadores',
+'Admins' => 'Admins',
+'moderador' => 'moderador',
 ];

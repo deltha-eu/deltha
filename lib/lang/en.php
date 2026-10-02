@@ -733,4 +733,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Cerrar' => 'Close',
 'Ya sigues todos los del catálogo.' => 'You already follow every one in the catalogue.',
 'Añadir agregador' => 'Add aggregator',
+'Moderadores' => 'Moderators',
+'Admins' => 'Admins',
+'moderador' => 'moderator',
 ];

@@ -694,4 +694,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Cerrar' => 'Schließen',
 'Ya sigues todos los del catálogo.' => 'Du folgst bereits allen im Katalog.',
 'Añadir agregador' => 'Aggregator hinzufügen',
+'Moderadores' => 'Moderatoren',
+'Admins' => 'Admins',
+'moderador' => 'Moderator',
 ];

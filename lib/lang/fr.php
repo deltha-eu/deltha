@@ -732,4 +732,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Cerrar' => 'Fermer',
 'Ya sigues todos los del catálogo.' => 'Vous suivez déjà tous ceux du catalogue.',
 'Añadir agregador' => 'Ajouter un agrégateur',
+'Moderadores' => 'Modérateurs',
+'Admins' => 'Admins',
+'moderador' => 'modérateur',
 ];
