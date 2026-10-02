@@ -245,6 +245,10 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
             if ($n0 - count($items)) $log[] = "fuente {$src['slug']} $phase: " . ($n0 - count($items)) . " items de hace mas de $maxAge dias, descartados";
             if (!$items) { $err[] = "$phase: todo lo del feed tiene mas de $maxAge dias"; continue; }
         }
+        if (($src['kind'] ?? '') === 'youtube' && (string)cfg('youtube_titulares', '1') === '1') {   // titulares de YouTube: sin GRITOS ni emojis
+            foreach ($items as &$it) { $it['title'] = titular_normal($it['title']); $it['content'] = sin_emojis($it['content']); }
+            unset($it);
+        }
         if (!empty($items[0]['smf'])) { $k = fuente_smf_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']}: $k mensajes leidos del foro"; }
         if (str_contains($url, 'renegados.es')) { $k = fuente_renegados_completar($items, $timeout); if ($k) $log[] = "fuente {$src['slug']} $phase: votos y comentarios de la API para $k items"; }
         [$new, $upd] = fuente_guardar($pdo, $src, $phase, $items);
@@ -492,7 +496,7 @@ function fuentes_parse_atom(SimpleXMLElement $doc): array {
         $thumb = '';
         if (isset($md->group)) {   // YouTube: miniatura y descripcion van dentro de <media:group> (su media:content es el video, no una foto)
             $md = $md->group->children('http://search.yahoo.com/mrss/');
-            if ($summary === '' && $content === '') $summary = htmlspecialchars((string)$md->description, ENT_QUOTES, 'UTF-8');   // texto plano (se limpia como HTML mas abajo)
+            if ($summary === '' && $content === '') $summary = htmlspecialchars(youtube_descripcion((string)$md->description), ENT_QUOTES, 'UTF-8');   // texto plano (se limpia como HTML mas abajo)
             if (isset($md->thumbnail)) $thumb = trim((string)$md->thumbnail->attributes()->url);
         }
         if ($thumb === '' && isset($md->content)) foreach ($md->content as $mc) { $u = trim((string)$mc->attributes()->url); if ($u !== '') { $thumb = $u; break; } }
@@ -529,6 +533,50 @@ function fuentes_parse_atom(SimpleXMLElement $doc): array {
 
 /* ---- YouTube --------------------------------------------------------- */
 
+/** Quita emojis y pictogramas (👉 🔥 ✅ ▶ …) y deja un solo espacio donde estaban. */
+function sin_emojis(string $s): string {
+    $s = preg_replace('/[\x{1F000}-\x{1FAFF}\x{2190}-\x{21FF}\x{2300}-\x{23FF}\x{25A0}-\x{27BF}\x{2B00}-\x{2BFF}\x{2600}-\x{26FF}\x{FE00}-\x{FE0F}\x{200D}\x{20E3}\x{E0020}-\x{E007F}]+/u', ' ', $s) ?? $s;
+    return trim(preg_replace('/\s{2,}/u', ' ', $s) ?? $s);
+}
+/** Titular «5 MISTERIOS de la HUMANIDAD que siguen dando MIEDO» -> «5 misterios de la humanidad que siguen dando miedo».
+ *  Sin emojis; las palabras escritas enteras en mayusculas pasan a minusculas, salvo las siglas: las de DDD_SIGLAS y, en un titular
+ *  que no va todo en mayusculas, cualquier palabra de hasta 4 letras que no sea una palabra corriente (NASA, ADN, IA, N26 se quedan).
+ *  Primera letra del titular, y la que sigue a un punto, interrogacion o exclamacion, en mayuscula. No sabe de nombres propios:
+ *  «EINSTEIN» queda «einstein» (eso solo lo arregla una persona o un modelo de lenguaje). */
+const DDD_SIGLAS = ['NASA', 'ESA', 'ADN', 'ARN', 'IA', 'AI', 'GPT', 'UE', 'EEUU', 'USA', 'URSS', 'ONU', 'OTAN', 'OMS', 'CERN', 'CSIC', 'MIT', 'DNA', 'RNA', 'TV', 'PC', 'CPU', 'GPU', 'LHC', 'JWST', 'VIH', 'SIDA', 'COVID', 'UNESCO', 'OVNI', 'OVNIS', 'CEO', 'RAE', 'DIY', 'FAQ', 'II', 'III', 'IV', 'VI', 'VII', 'VIII', 'IX', 'XI', 'XII', 'XIX', 'XX', 'XXI'];
+const DDD_CORTAS = ['QUE', 'QUÉ', 'POR', 'PARA', 'CON', 'SIN', 'LOS', 'LAS', 'UNA', 'UNO', 'UNOS', 'DEL', 'MÁS', 'MAS', 'MUY', 'TODO', 'TODA', 'NADA', 'ESTO', 'ESTE', 'ESTA', 'ESO', 'ESA', 'ASÍ', 'MAL', 'BIEN', 'NO', 'SÍ', 'SI', 'HOY', 'YA', 'CASI', 'SOLO', 'TAN', 'GRAN', 'PEOR', 'ES', 'EL', 'LA', 'DE', 'EN', 'UN', 'SE', 'TE', 'TU', 'MI', 'ME', 'LO', 'LE', 'AL', 'HA', 'HE', 'VA', 'VS', 'COMO', 'CÓMO', 'AQUÍ', 'FIN', 'MIL', 'DOS', 'TRES', 'AÑO', 'AÑOS', 'DÍA', 'DÍAS', 'VIDA', 'VER', 'SER', 'HAY', 'SON', 'FUE', 'ERA', 'TÚ', 'YO', 'NI', 'NOS', 'SUS', 'SU', 'MIS', 'TUS', 'ESE', 'ESOS', 'ESAS', 'ELLA', 'ELLO', 'PERO', 'CADA', 'TRAS', 'ANTE', 'BAJO', 'CASO', 'COSA', 'ALGO', 'AHORA', 'NUNCA', 'FAKE', 'TOP', 'NEW', 'THE', 'AND', 'OF', 'IS', 'WHY', 'HOW', 'OTRA', 'OTRO', 'MEJOR', 'REAL', 'CERO', 'LUZ', 'SOL', 'MAR', 'FE', 'OJO', 'VOZ', 'PAZ', 'LEY', 'REY', 'DIOS', 'ARTE', 'CINE', 'ROCK', 'JAZZ', 'ÉPICO', 'MITO', 'MITOS', 'RARO', 'RARA', 'LOCO', 'LOCA', 'MIEDO', 'CAOS', 'ODIO', 'AMOR', 'OJOS', 'NADIE', 'TODOS'];
+function titular_normal(string $t): string {
+    $t = sin_emojis($t);
+    if ($t === '') return $t;
+    $letras = preg_replace('/[^\p{L}]/u', '', $t);
+    $todo = $letras !== '' && mb_strtoupper($letras) === $letras;   // el titular entero va en mayusculas
+    $t = preg_replace_callback('/[\p{L}\p{N}]+/u', function ($m) use ($todo) {
+        $w = $m[0];
+        if (mb_strlen($w) < 2 || mb_strtoupper($w) !== $w || !preg_match('/\p{Lu}/u', $w)) return $w;   // no va en mayusculas (o es una letra o un numero)
+        if (in_array($w, DDD_SIGLAS, true) || preg_match('/\d/', $w)) return $w;                           // sigla conocida o con cifras (N26, 4K)
+        if (!$todo && mb_strlen($w) <= 4 && !in_array($w, DDD_CORTAS, true)) return $w;                    // corta y desconocida: sera una sigla
+        return mb_strtolower($w);
+    }, $t) ?? $t;
+    // mayuscula inicial, y tras . ? ! (y sus aperturas ¿ ¡ y comillas)
+    return preg_replace_callback('/(^|[.?!]\s+)([¿¡«"“(]*)(\p{Ll})/u', fn($m) => $m[1] . $m[2] . mb_strtoupper($m[3]), $t) ?? $t;
+}
+/** Descripcion de un video sin la morralla: las descripciones de YouTube mezclan el resumen con patrocinios, codigos de descuento,
+ *  enlaces de afiliado, redes sociales e indices de capitulos. Se quitan las lineas con una URL, las de capitulos (0:00 …), las de
+ *  etiquetas (#…) y las que quedan tras un «Redes / Sígueme / Suscríbete…»; de lo que queda, las primeras lineas con texto. */
+function youtube_descripcion(string $d): string {
+    $out = [];
+    foreach (preg_split('/\R/u', $d) as $l) {
+        $l = trim($l);
+        if ($l === '') continue;
+        if (preg_match('/^(redes|s[ií]gueme|s[ií]guenos|suscr[ií]bete|mis redes|contacto|cr[eé]ditos|fuentes|referencias|bibliograf[ií]a|m[uú]sica|cap[ií]tulos|[ií]ndice)\b/iu', $l)) break;   // de aqui en adelante, pie del video
+        if (preg_match('#https?://|www\.|\b[\w-]+\.(com|es|net|org|io|tv|me|ly)/#i', $l)) continue;      // enlaces: patrocinios, afiliados, redes
+        if (preg_match('/^\(?\d{1,2}:\d{2}/', $l) || preg_match('/^(#[\p{L}\d_]+\s*)+$/u', $l)) continue;   // capitulos y etiquetas
+        if (preg_match('/\b(c[oó]digo|cup[oó]n|descuento|patrocin|sponsor|afiliad)/iu', $l)) continue;     // promociones sin enlace
+        $out[] = $l;
+        if (count($out) >= 3) break;
+    }
+    return implode(' ', $out);
+}
 /** Feed de un canal a partir de lo que se pegue en admin: la URL del canal (/channel/UC…, /@nombre, /c/…, /user/…), su feed o el
  *  id UC… a secas. Con /@nombre hay que abrir la pagina del canal para leer el id (una peticion, solo al guardar). Con
  *  config.youtube_shorts = 0 (por defecto) se usa la lista «solo videos largos» del canal (UULF…), sin shorts ni directos;
