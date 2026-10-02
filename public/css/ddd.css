@@ -3041,3 +3041,9 @@ p.fz-add.on a::before { content: "× "; }
 @media (min-width: 1300px) {
   [data-skin="comunidad"] header.top { border-radius: 6px; margin: 10px 8px 0; border: 1px solid var(--blue2); }
 }
+
+/* ---- skin Grotesque, escritorio (v146): la barra negra del titulo, despegada de arriba (10px), como en Comunidad; al hacer scroll se sigue
+   quedando pegada. En movil no cambia. ---- */
+@media (min-width: 1300px) {
+  [data-skin="grotesque"] header.top { margin-top: 10px; }
+}
