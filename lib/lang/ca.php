@@ -401,6 +401,7 @@ return [
 'Acero — foro clásico de tablas: gris acero, barras azul pizarra y letra pequeña' => 'Acero — fòrum clàssic de taules: gris acer, barres blau pissarra i lletra petita',
 'Sendero — foro de la vieja escuela: azul, pestañas redondeadas y franjas color arena' => 'Sendero — fòrum de la vella escola: blau, pestanyes arrodonides i franges color sorra',
 'Píldora — foro actual: cajas lavanda redondeadas, tinta oscura y botones naranja en píldora' => 'Píldora — fòrum actual: caixes lavanda arrodonides, tinta fosca i botons taronja en píndola',
+'Brasa — foro carbón y naranja: barra oscura, tarjetas claras, titulares en negrita y botones en brasa' => 'Brasa — fòrum carbó i taronja: barra fosca, targetes clares, titulars en negreta i botons en brasa',
 'B/W — Editorial sin un solo color: fotos, avatares y laterales en blanco y negro' => 'B/W — Editorial sense cap color: fotos, avatars i laterals en blanc i negre',
 'Surrealismo — cielo con nubes, cartas que flotan, marcos que se derriten y manzanas verdes' => 'Surrealisme — cel amb núvols, cartes que suren, marcs que es fonen i pomes verdes',
 '%d esta semana' => '%d aquesta setmana',

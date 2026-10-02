@@ -401,6 +401,7 @@ return [
 'Acero — foro clásico de tablas: gris acero, barras azul pizarra y letra pequeña' => 'Acero — taula bidezko foro klasikoa: altzairu-grisa, arbel-urdineko barrak eta letra txikia',
 'Sendero — foro de la vieja escuela: azul, pestañas redondeadas y franjas color arena' => 'Sendero — eskola zaharreko foroa: urdina, fitxa biribilduak eta hondar-koloreko zerrendak',
 'Píldora — foro actual: cajas lavanda redondeadas, tinta oscura y botones naranja en píldora' => 'Píldora — gaur egungo foroa: izpiliku-koloreko kutxa biribilduak, tinta iluna eta pilula-formako botoi laranjak',
+'Brasa — foro carbón y naranja: barra oscura, tarjetas claras, titulares en negrita y botones en brasa' => 'Brasa — ikatz eta laranja koloreko foroa: barra iluna, txartel argiak, titular lodiak eta txingar-botoiak',
 'B/W — Editorial sin un solo color: fotos, avatares y laterales en blanco y negro' => 'B/W — Editorial kolore bakar bat gabe: argazkiak, avatarrak eta alboak zuri-beltzean',
 'Surrealismo — cielo con nubes, cartas que flotan, marcos que se derriten y manzanas verdes' => 'Surrealismoa — zerua hodeiekin, karta flotatzaileak, urtzen diren markoak eta sagar berdeak',
 '%d esta semana' => '%d aste honetan',
