@@ -715,4 +715,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'en Canales' => 'a Canals',
 'Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.' => 'Encara no hi ha res a Canals. Aquí es publica el vídeo del radar amb més δ quan arriba al mínim.',
 'Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.' => 'Els vídeos de YouTube van a la portada Canals, que només ocupa un cicle quan algun arriba al mínim (δ ≥ %s) i com a molt cada %d min.',
+'reproducir aquí' => 'reprodueix aquí',
 ];

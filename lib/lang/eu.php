@@ -715,4 +715,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'en Canales' => 'Kanalak atalean',
 'Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.' => 'Oraindik ez dago ezer Kanalak atalean. Hemen argitaratzen da radarreko δ handieneko bideoa, gutxienekora iristen denean.',
 'Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.' => 'YouTubeko bideoak Kanalak azalera doaz; ziklo bat bakarrik hartzen du bideoren bat gutxienekora iristen denean (δ ≥ %s), eta gehienez %d minututik behin.',
+'reproducir aquí' => 'erreproduzitu hemen',
 ];

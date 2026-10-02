@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 149);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 150);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -640,6 +640,18 @@ function ciclo_antes_de(int $ventana): int { return $ventana + max(1, (int)cfg('
  * Medios o Substacks como siempre (portada_turno no cambia). Se apaga con config.portada_canales = 0 (YouTube vuelve a Medios). */
 const DDD_PORTADAS = ['medios' => 'Medios', 'substacks' => 'Substacks', 'canales' => 'Canales'];
 const DDD_YOUTUBE_HOSTS = ['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be'];
+/** Id del video de una URL de YouTube (watch?v=, /shorts/, /live/, /embed/, youtu.be/); '' si no lo es. */
+function youtube_video_id(?string $url): string {
+    return preg_match('#^https?://(?:www\.|m\.|music\.)?(?:youtube\.com/(?:watch\?(?:[^\#]*&)?v=|shorts/|live/|embed/)|youtu\.be/)([A-Za-z0-9_-]{11})#', (string)$url, $m) ? $m[1] : '';
+}
+/** Reproducir los videos dentro de Deltha (config.youtube_embed, migra-107): la miniatura sigue siendo la copia local y nada de
+ *  YouTube se carga hasta que se pulsa; entonces /app/video.js cambia la foto por el reproductor de youtube-nocookie.com.
+ *  Hace falta «frame-src https://www.youtube-nocookie.com» en la CSP (apache.conf.example); sin ella o sin JS, el enlace abre YouTube. */
+function youtube_embed_on(): bool { return (string)cfg('youtube_embed', '1') === '1'; }
+/** Atributo data-yt="ID" para el enlace de la foto de un video (vacio si la URL no es de YouTube o la reproduccion esta apagada). */
+function youtube_attr(?string $url): string {
+    return youtube_embed_on() && ($id = youtube_video_id($url)) !== '' ? ' data-yt="' . $id . '" title="' . h(t('reproducir aquí')) . '"' : '';
+}
 function portada_canales_on(): bool { return (string)cfg('portada_canales', '1') === '1'; }
 /** Portadas en uso, en su orden: clave => etiqueta (sin Canales si esta apagada). */
 function portadas(): array { $p = DDD_PORTADAS; if (!portada_canales_on()) unset($p['canales']); return $p; }
@@ -1117,6 +1129,7 @@ function page_footer(): void {
     echo "<div class=\"dock\">";
     nav_tabs(current_tab(), 'tabs-bottom');
     echo "<footer class=\"docked\"><p>" . footer_links() . "</p></footer></div>";
+    if (youtube_embed_on()) echo "<script src=\"/app/video.js?v=" . DDD_CSS_VER . "\" defer></script>";   // videos de YouTube: al pulsar la miniatura, el reproductor en su sitio; sin JS el enlace abre YouTube
     echo "<script src=\"/app/share.js?v=" . DDD_CSS_VER . "\" defer></script>";   // «compartir»: copia el enlace (o abre el menu nativo); sin JS el enlace lleva al hilo
     echo "</body></html>";
 }

@@ -43,7 +43,7 @@
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "interest-cohort=(), browsing-topics=(), geolocation=(), camera=(), microphone=()"
-    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'"
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; frame-src https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'"
 
     # --- estáticos: caché larga ---
     <Directory /var/www/deltha/public/media>

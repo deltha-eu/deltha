@@ -70,6 +70,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('curl_impersonate',    '/opt/curl-impersonate/curl_chrome116', 'Ruta a curl-impersonate (vacio = usar curl de PHP)'),
 ('sources_enabled',      '1',    '1 = fuentes externas visibles (/fuente.php) y lectura de sus RSS en el cron'),
 ('sources_agregadores',  '0',    '1 = los agregadores (Meneame, Mediatize, Renegados...) se ven y se leen; 0 = fuera de todo salvo admin > Fuentes'),
+('youtube_embed',        '1',    '1 = los videos de YouTube se reproducen dentro de Deltha al pulsar la miniatura (youtube-nocookie.com); 0 = el enlace abre YouTube'),
 ('sources_youtube',      '1',    '1 = los canales de YouTube (fuentes de tipo youtube) se ven y se leen; 0 = fuera de todo salvo admin > Fuentes'),
 ('youtube_shorts',       '0',    'Al dar de alta un canal de YouTube: 0 = feed solo de videos largos (sin shorts ni directos); 1 = feed completo del canal'),
 ('yt_max_per_user',      '3',    'Canales de YouTube que salen en el menu de cada usuario («Mis canales»)'),

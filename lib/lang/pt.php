@@ -752,4 +752,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'en Canales' => 'em Canais',
 'Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.' => 'Ainda não há nada em Canais. Aqui é publicado o vídeo do radar com maior δ quando atinge o mínimo.',
 'Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.' => 'Os vídeos do YouTube vão para a capa Canais, que só ocupa um ciclo quando algum atinge o mínimo (δ ≥ %s) e no máximo a cada %d min.',
+'reproducir aquí' => 'reproduzir aqui',
 ];

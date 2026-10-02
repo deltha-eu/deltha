@@ -48,7 +48,8 @@ function media_block(array $s, string $cls = 'media', ?string $href = null): voi
     if ($s['image']) {
         $href = $href ?? "/hilo.php?id={$s['story_id']}";
         $ext = str_starts_with($href, 'http') ? ' rel="noopener nofollow"' : '';
-        echo "<div class=\"$cls" . (($s['portada'] ?? '') === 'canales' ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($href) . "\"$ext style=\"background-image:url('/media/" . h($s['image']) . "')\"></a>";
+        $esYt = ($s['portada'] ?? '') === 'canales' || youtube_video_id($s['url'] ?? '') !== '';   // video: triangulo de reproducir y, con youtube_embed, se ve aqui mismo
+        echo "<div class=\"$cls" . ($esYt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($href) . "\"$ext" . youtube_attr($s['url'] ?? '') . " style=\"background-image:url('/media/" . h($s['image']) . "')\"></a>";
         echo topic_tag($s) . "</div>";
     }
 }
