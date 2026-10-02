@@ -3035,8 +3035,9 @@ p.fz-add a:hover { opacity: .85; }
 p.fz-add.on a { background: none; border-color: var(--line2); color: var(--muted); font-weight: 600; }
 p.fz-add.on a::before { content: "× "; }
 
-/* ---- skin Comunidad, escritorio (v144): la barra del titulo con las esquinas redondeadas (6px, como las tarjetas y las cajas del lateral);
-   en movil sigue de lado a lado, recta. ---- */
+/* ---- skin Comunidad, escritorio (v145): la barra del titulo es una caja mas de la columna: esquinas redondeadas (6px), el mismo ancho que
+   las tarjetas (8px de margen a cada lado, como main) y despegada de arriba (10px, el hueco que hay entre cajas); al hacer scroll se sigue
+   quedando pegada arriba. En movil sigue de lado a lado, recta. ---- */
 @media (min-width: 1300px) {
-  [data-skin="comunidad"] header.top { border-radius: 6px; }
+  [data-skin="comunidad"] header.top { border-radius: 6px; margin: 10px 8px 0; border: 1px solid var(--blue2); }
 }
