@@ -98,7 +98,7 @@ if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
 echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>";
 // «+ Seguir <medio>»: el medio o substack del envio (solo si su dominio es de una fuente del catalogo)
 if (user() && $s['content_type'] !== 'article' && $s['source']) { require_once __DIR__ . '/../lib/fuentes.php'; if (fuentes_on() && ($fsrc = fuente_por_dominio($pdo, (string)$s['source']))) echo fuente_fav_form($fsrc, true); }
-echo fav_link($s) . share_link($s) . "</div>";
+echo fav_link($s) . share_link($s) . pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), $s['status'] === 'destacadas') . "</div>";   // «Destacar» (migra-111)
 if (is_mod()) {   // moderadores y admin: cambiar el tema y la comunidad principal del envio
     echo "<form class=\"modbar\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><label>Tema</label><select name=\"topic\">";
     foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) {

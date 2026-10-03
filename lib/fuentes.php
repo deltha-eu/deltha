@@ -740,7 +740,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     $author = $i['author'] ?: $src['name'];
     $rel = 'rel="noopener nofollow"';
     global $pdo;
-    $pin = pins_kind($src) ? pin_de($pdo, (int)$i['item_id']) : null;   // destacada (migra-111): halo y etiqueta
+    $pin = pin_grupo_item($src) ? pin_de($pdo, 'item', (int)$i['item_id']) : null;   // destacada (migra-111): halo y etiqueta
     echo "<article class=\"post $mode ext" . ($medio ? ' medio' : '') . ($pin ? ' pinned' : '') . "\" id=\"x{$i['item_id']}\">";
     echo avatar((float)cfg('aura_anon', 5), $author);
     echo "<div class=\"pc\">";
@@ -764,7 +764,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
         elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia al radar')) . "\">" . icon('plus') . "<span>" . t('enviar al radar') . "</span></a>";
         echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h($yt ? t('ver en %s', 'YouTube') : t('leer en %s', $src['name'])) . "</span></a>";
         echo fuente_fav_form($src);   // «+ Seguir»: el medio o substack de esta noticia, a «Mis medios» / «Mis substacks»
-        echo pin_form($pdo, $src, $i);   // «Destacar» (admin; usuarios con destacados) / «Destacada» para quitarla (migra-111)
+        echo pin_form($pdo, 'item', (int)$i['item_id'], pin_grupo_item($src));   // «Destacar» (admin; usuarios con destacados) / «Destacada» para quitarla (migra-111)
     } else {
         echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
         if (!fuente_sin_votos($src)) echo "<span class=\"vote\"><span>" . icon('up') . "<span>" . (int)$i['votes'] . "</span></span><span>" . icon('down') . "<span>" . (int)$i['negatives'] . "</span></span></span>";

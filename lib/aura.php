@@ -19,9 +19,10 @@ function aura_add(PDO $pdo, int $user_id, float $amount, string $reason, ?int $r
     $antes = (float)$st->fetchColumn();
     $pdo->prepare("UPDATE users SET aura = LEAST(aura + ?, ?) WHERE user_id = ?")->execute([$add, $max, $user_id]);
     $pdo->prepare("INSERT INTO aura_log (user_id, amount, reason, ref_id) VALUES (?,?,?,?)")->execute([$user_id, $add, $reason, $ref]);
-    // destacados (migra-111): cada unidad entera que sube el aura (6,9 -> 7,0) da un «destacar noticia» (lib/destacar.php)
-    $saltos = (int)floor(min($antes + $add, $max)) - (int)floor($antes);
-    if ($saltos > 0) { try { $pdo->prepare("UPDATE users SET pin_credits = pin_credits + ? WHERE user_id = ?")->execute([$saltos, $user_id]); } catch (Throwable $e) { /* sin migra-111 */ } }
+    // destacados (migra-111): cada unidad entera NUEVA que alcanza el aura (6,9 -> 7,0) da un «destacar noticia» (lib/destacar.php).
+    // Se compara con el maximo entero ya alcanzado (users.pin_mark): llegar a 6, bajar a 5,5 por el decaimiento y volver a 6 no da otro.
+    $tope = (int)floor(min($antes + $add, $max));
+    try { $pdo->prepare("UPDATE users SET pin_credits = pin_credits + (? - pin_mark), pin_mark = ? WHERE user_id = ? AND pin_mark < ?")->execute([$tope, $tope, $user_id, $tope]); } catch (Throwable $e) { /* sin migra-111 */ }
     return $add;
 }
 
