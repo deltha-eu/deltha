@@ -10,7 +10,7 @@
 --    Una activa por usuario: destacar otra sustituye la anterior (y gasta otro). Quitarla a mano no devuelve el destacado.
 SET NAMES utf8mb4;
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_mark SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER pin_credits;   -- maximo entero de aura ya alcanzado (no se repite el premio)
+ALTER TABLE users ADD COLUMN pin_mark SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER pin_credits;   -- maximo entero de aura ya alcanzado (no se repite el premio). Sin IF NOT EXISTS: el droplet es MySQL
 UPDATE users SET pin_mark = FLOOR(aura);   -- se empieza a contar desde el aura de hoy
 
 DROP TABLE IF EXISTS source_pins;   -- de migra-111 (solo noticias RSS); nunca llego a usarse
