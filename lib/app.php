@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 159);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 160);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1078,14 +1078,19 @@ function nav_tabs(string $tab, string $cls): void {
     if ($cls !== 'rail-bottom') unset($tabs['temas'], $tabs['comunidades']);
     if (isset($tabs['analitica']) && ($cls === 'tabs-bottom' || !user() || !ana_on())) unset($tabs['analitica']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
-    echo "<nav class=\"$cls\">";
+    // pestañas de arriba: Radar va en el centro exacto en movil (v160). Lo de antes y lo de despues se envuelve en dos grupos
+    // (span.g, display: contents salvo en movil) que ocupan mitades iguales; Radar lleva la clase «radar» y se destaca un poco.
+    $keys = array_keys($tabs); $ri = $cls === 'tabs-top' ? array_search('radar', $keys, true) : false;
+    $ctr = $ri !== false && $ri > 0 && $ri < count($keys) - 1;
+    echo "<nav class=\"$cls" . ($ctr ? ' ctr' : '') . "\">" . ($ctr ? '<span class="g l">' : '');
     foreach ($tabs as $k => [$href, $label, $ic]) {
         $on = $k === $tab ? ' class="on"' : '';
+        if ($ctr && $k === 'radar') { echo "</span><a class=\"radar" . ($k === $tab ? ' on' : '') . "\" href=\"" . h($href) . "\">" . icon($ic) . "<span>" . h($label) . "</span></a><span class=\"g r\">"; continue; }
         if ($href === null) { echo "<span class=\"soon\" title=\"" . t('pronto') . "\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
         $badge = ($k === 'mensajes' && ($n = unread_msgs()) > 0) ? "<i class=\"badge\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
         echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . $badge . "<span>" . h($label) . "</span></a>";
     }
-    echo "</nav>";
+    echo ($ctr ? '</span>' : '') . "</nav>";
 }
 /** Franja bajo las pestañas, solo cuando no hay rail (movil y tablet, < 1100 px): lo que en escritorio esta en el rail y en la columna
  *  derecha — Mis substacks, Mis medios y Mis agregadores (/ultimo.php), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
