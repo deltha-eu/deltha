@@ -103,6 +103,7 @@ CREATE TABLE users (
     lang        VARCHAR(5) NOT NULL DEFAULT '',    -- idioma de la interfaz: '' navegador | es | en | fr
     src_mylang  TINYINT(1) NOT NULL DEFAULT 0,     -- 1 = mostrar solo fuentes en mi idioma (migra-051)
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,
+    pin_credits SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- «destacados» disponibles: uno por cada unidad entera que sube el aura (migra-111)
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_login (login),
     UNIQUE KEY uq_email (email)
@@ -407,6 +408,23 @@ CREATE TABLE user_media (
     PRIMARY KEY (user_id, source_id),
     CONSTRAINT fk_um_user   FOREIGN KEY (user_id)   REFERENCES users(user_id)     ON DELETE CASCADE,
     CONSTRAINT fk_um_source FOREIGN KEY (source_id) REFERENCES sources(source_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Noticias destacadas de medios y substacks (migra-111): salen las primeras en /ultimo.php?k=medio|newsletter con halo.
+-- Admin: una por grupo, sin caducidad. Usuarios: una activa por usuario, caduca a los pin_user_minutes; cuesta un pin_credit.
+CREATE TABLE source_pins (
+    pin_id      INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    item_id     INT UNSIGNED NOT NULL,
+    kind        VARCHAR(16) NOT NULL,                  -- medio | newsletter
+    user_id     INT UNSIGNED NOT NULL,
+    by_admin    TINYINT(1) NOT NULL DEFAULT 0,
+    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires     DATETIME DEFAULT NULL,                 -- NULL = no caduca (admin)
+    UNIQUE KEY uq_item (item_id),
+    KEY idx_kind (kind, by_admin, expires),
+    KEY idx_user (user_id),
+    CONSTRAINT fk_sp_item FOREIGN KEY (item_id) REFERENCES source_items(item_id) ON DELETE CASCADE,
+    CONSTRAINT fk_sp_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Favoritos: envios y articulos guardados por cada usuario desde el hilo; pestaña Favoritos del perfil. Migracion 043.
