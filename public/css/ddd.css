@@ -3418,7 +3418,7 @@ nav.tabs-top a.radar.on { font-weight: 700; }
   html[data-skin]:not([data-fam="comunidad"]) nav.tabs-top.ctr:not(:has(.g > a:nth-child(3))) { padding-left: 12px; padding-right: 12px; }
 }
 
-/* ---- destacar noticias (migra-111, v165): el admin (sin caducidad, una por grupo) o un usuario con «destacados» (media hora) ponen
+/* ---- destacar noticias (migra-111, v166): el admin (sin caducidad, una por grupo) o un usuario con «destacados» (media hora) ponen
    un envio el primero de su portada, o una noticia RSS la primera en «Mis medios» / «Mis substacks». Halo ligero con el color del aura (--halo), etiqueta
    «destacada» en la fila de meta y boton «Destacar» / «Destacada» (form.pin) junto a «Seguir». */
 .post.pinned { position: relative; background: color-mix(in srgb, var(--halo) 6%, var(--bg));
@@ -3438,3 +3438,15 @@ form.pin.on button:hover { background: color-mix(in srgb, var(--halo) 12%, var(-
 /* la barra de cifras del hilo se salia por la derecha en escritorio (con «+ Seguir <medio>» y ahora «Destacar» no cabe en una linea): que salte de linea */
 .hilo .stats { flex-wrap: wrap; row-gap: 8px; }
 .hilo .stats > *, .hilo .stats form.pin, .hilo .stats form.seguir { flex: none; }   /* ningun elemento se encoge: si no cabe, salta de linea entero */
+/* movil: la fila de acciones de un envio (0 · ↑0 ↓0 · editar · compartir · Destacar) no cabia y ensanchaba la pagina entera. Que salte de linea
+   si hace falta, con menos aire entre elementos; el boton de destacar, mas prieto y solo con la chincheta en pantallas estrechas. */
+@media (max-width: 600px) {
+  .post .actions { flex-wrap: wrap; row-gap: 6px; column-gap: 14px; }
+  .post .actions > a, .post .actions > form, .post .actions > span, .post .actions button { white-space: nowrap; flex: none; }
+  .post .actions form.pin button { padding: 3px 8px; }
+}
+@media (max-width: 420px) {
+  .post .actions form.pin button { padding: 3px 6px; gap: 0; }
+  .post .actions form.pin button span { display: none; }   /* solo la chincheta; el title lo explica */
+  .post .actions form.pin.on button .i { fill: currentColor; }
+}
