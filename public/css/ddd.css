@@ -3398,6 +3398,7 @@ nav.tabs-top a.radar.on { font-weight: 700; }
 [data-fam="comunidad"] nav.tabs-top a.radar:not(.on) { color: #fff; }   /* sobre la barra de color, el texto oscuro no se leia */
 @media (max-width: 640px) {
   html[data-skin] nav.tabs-top.ctr { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0; overflow-x: hidden; }
+  html[data-skin] nav.tabs-top.ctr { padding-left: 16px; padding-right: 16px; }   /* v161: Medios y Chat, mas lejos de los bordes */
   html[data-skin] nav.tabs-top.ctr .g { display: flex; min-width: 0; }
   html[data-skin] nav.tabs-top.ctr .g a { flex: 1 1 auto; min-width: 0; padding-left: 3px; padding-right: 3px; overflow: hidden; text-overflow: ellipsis; }
   html[data-skin] nav.tabs-top.ctr a.radar { padding-left: 10px; padding-right: 10px; }
@@ -3408,4 +3409,11 @@ nav.tabs-top a.radar.on { font-weight: 700; }
   html[data-skin] nav.tabs-top.ctr:has(.g > a:nth-child(3)) a { font-size: 12px; letter-spacing: 0; padding-left: 2px; padding-right: 2px; }
   html[data-skin] nav.tabs-top.ctr:has(.g > a:nth-child(3)) a.radar { padding-left: 6px; padding-right: 6px; }
   html[data-skin] nav.tabs-top.ctr:has(.g > a:nth-child(3)) a.radar .i { display: none; }
+  html[data-skin] nav.tabs-top.ctr:has(.g > a:nth-child(3)) { padding-left: 8px; padding-right: 8px; }
+}
+/* moviles estrechos (v161): con el margen lateral, las skins de letra ancha (Orange, Pop Art…) recortaban «Medios» y «Substacks» */
+@media (max-width: 400px) {
+  html[data-skin]:not([data-fam="comunidad"]) nav.tabs-top.ctr:not(:has(.g > a:nth-child(3))) a { font-size: 13px; letter-spacing: 0; padding-left: 2px; padding-right: 2px; }
+  html[data-skin]:not([data-fam="comunidad"]) nav.tabs-top.ctr:not(:has(.g > a:nth-child(3))) a.radar { padding-left: 6px; padding-right: 6px; }
+  html[data-skin]:not([data-fam="comunidad"]) nav.tabs-top.ctr:not(:has(.g > a:nth-child(3))) { padding-left: 12px; padding-right: 12px; }
 }
