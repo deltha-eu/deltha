@@ -3109,9 +3109,9 @@ p.fz-add.on a::before { content: "× "; }
   header.top .logo { grid-column: 3; position: static; transform: none; }
   header.top .bell { grid-column: 4; margin: 0; justify-self: center; }
   header.top .me { grid-column: 5; margin-left: 0; justify-self: end; min-width: 0; max-width: 100%; overflow: hidden; }
-  nav.tabs-fuentes { justify-content: center; column-gap: 10px; padding: 0 10px; }   /* v159: mas aire entre grupos, ahora con rotulo */
+  nav.tabs-fuentes { justify-content: center; column-gap: 10px; padding: 0 24px; }   /* v159: mas aire entre grupos, ahora con rotulo */
   nav.tabs-fuentes a { flex: 0 1 92px; }
-  nav.tabs-fuentes:has(a:nth-child(5)) { column-gap: 0; padding: 0 2px; }
+  nav.tabs-fuentes:has(a:nth-child(5)) { column-gap: 0; padding: 0 8px; }
 }
 
 /* =====================================================================
@@ -3384,4 +3384,28 @@ p.fz-add.on a::before { content: "× "; }
   .hilo .stats form.seguir { order: 9; flex: 0 0 100%; }
   .hilo .stats form.seguir button { max-width: 100%; }
   html:not([data-skin="foro"]):not([data-fam="comunidad"]) .post.reply .actions { column-gap: 16px; }
+}
+
+/* ---- Radar en el centro de las pestañas de arriba y un poco destacado (v160). nav_tabs() envuelve lo de antes y lo de despues de Radar
+   en span.g: fuera del movil no pintan caja (display: contents) y las skins siguen viendo sus pestañas como siempre. En movil la barra
+   es una rejilla de tres columnas, mitad | Radar | mitad, con las dos mitades iguales: Radar queda en el centro exacto de la pantalla
+   haya las pestañas que haya a cada lado (ya no se desliza de lado: si un rotulo no cabe, se recorta con puntos suspensivos).
+   Destacado: Radar lleva su icono junto al rotulo, el color del texto y algo mas de peso. ---- */
+nav.tabs-top .g { display: contents; }
+nav.tabs-top a.radar { color: var(--fg); font-weight: 600; }
+nav.tabs-top a.radar .i { display: inline-block; width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; }
+nav.tabs-top a.radar.on { font-weight: 700; }
+[data-fam="comunidad"] nav.tabs-top a.radar:not(.on) { color: #fff; }   /* sobre la barra de color, el texto oscuro no se leia */
+@media (max-width: 640px) {
+  html[data-skin] nav.tabs-top.ctr { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0; overflow-x: hidden; }
+  html[data-skin] nav.tabs-top.ctr .g { display: flex; min-width: 0; }
+  html[data-skin] nav.tabs-top.ctr .g a { flex: 1 1 auto; min-width: 0; padding-left: 3px; padding-right: 3px; overflow: hidden; text-overflow: ellipsis; }
+  html[data-skin] nav.tabs-top.ctr a.radar { padding-left: 10px; padding-right: 10px; }
+  html[data-fam="comunidad"] nav.tabs-top.ctr a { font-size: 11px; letter-spacing: 0; }   /* mayusculas en negrita: mas anchas */
+  html[data-fam="comunidad"] nav.tabs-top.ctr a.radar { padding-left: 5px; padding-right: 5px; }
+  html[data-fam="comunidad"] nav.tabs-top.ctr a.radar .i { display: none; }
+  /* tres pestañas a un lado (con la portada Canales encendida): letra algo menor para que quepan sin recortarse */
+  html[data-skin] nav.tabs-top.ctr:has(.g > a:nth-child(3)) a { font-size: 12px; letter-spacing: 0; padding-left: 2px; padding-right: 2px; }
+  html[data-skin] nav.tabs-top.ctr:has(.g > a:nth-child(3)) a.radar { padding-left: 6px; padding-right: 6px; }
+  html[data-skin] nav.tabs-top.ctr:has(.g > a:nth-child(3)) a.radar .i { display: none; }
 }
