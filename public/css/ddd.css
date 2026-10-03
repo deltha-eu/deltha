@@ -51,12 +51,13 @@ nav.tabs-fuentes a .i { width: 22px; height: 22px; }
 /* rotulos largos (ca «Els meus agregadors», eu «Erabiltzaileak»): pestañas de anchura igual, rotulo centrado y, si hace falta, en dos lineas */
 nav.tabs-fuentes a, nav.tabs-bottom a, nav.tabs-bottom .soon { flex: 1 1 0; min-width: 0; padding-left: 2px; padding-right: 2px; }
 nav.tabs-fuentes a span, nav.tabs-bottom a span, nav.tabs-bottom .soon span { display: block; max-width: 100%; text-align: center; line-height: 1.1; overflow-wrap: anywhere; }
-/* v152: solo iconos. Con seis grupos (medios, substacks, canales, agregadores, temas, comunidades) los rotulos no cabian en un movil
-   y se partian («Comunidade/s»). El rotulo sigue en el HTML para lectores de pantalla (y en title/aria-label), pero no se pinta;
-   los iconos, algo mayores, se reparten el ancho a partes iguales. */
-nav.tabs-fuentes a { padding: 10px 2px 9px; }
+/* v159: vuelven los rotulos bajo los iconos (en la v152 se habian ocultado porque con seis grupos no cabian). La primera version sale
+   sin «Mis canales» ni «Mis agregadores» (config.sources_youtube / sources_agregadores = 0), asi que quedan cuatro y caben de sobra.
+   El rotulo parte solo por los espacios («Mis / substacks»), nunca a mitad de palabra; con cinco o seis grupos la letra baja un punto. */
+nav.tabs-fuentes a { padding: 10px 4px 8px; gap: 4px; justify-content: flex-start; }
 nav.tabs-fuentes a .i { width: 24px; height: 24px; }
-nav.tabs-fuentes a span { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+nav.tabs-fuentes a span { overflow-wrap: normal; word-break: normal; hyphens: none; }
+nav.tabs-fuentes:has(a:nth-child(5)) a { font-size: 9px; padding-left: 1px; padding-right: 1px; }
 nav.tabs-fuentes a.on { color: var(--fg); }
 nav.tabs-fuentes a.on .i { stroke-width: 2.4; }
 @media (min-width: 1300px) { nav.tabs-fuentes { display: none; } }
@@ -3108,8 +3109,9 @@ p.fz-add.on a::before { content: "× "; }
   header.top .logo { grid-column: 3; position: static; transform: none; }
   header.top .bell { grid-column: 4; margin: 0; justify-self: center; }
   header.top .me { grid-column: 5; margin-left: 0; justify-self: end; min-width: 0; max-width: 100%; overflow: hidden; }
-  nav.tabs-fuentes { justify-content: center; }
-  nav.tabs-fuentes a { flex: 0 1 58px; }
+  nav.tabs-fuentes { justify-content: center; column-gap: 10px; padding: 0 10px; }   /* v159: mas aire entre grupos, ahora con rotulo */
+  nav.tabs-fuentes a { flex: 0 1 92px; }
+  nav.tabs-fuentes:has(a:nth-child(5)) { column-gap: 0; padding: 0 2px; }
 }
 
 /* =====================================================================
@@ -3364,4 +3366,22 @@ p.fz-add.on a::before { content: "× "; }
   [data-skin="brasa"] .side .mod h3 span, [data-skin="brasa"] .side .mod h3 a { color: var(--sidehd); }
   [data-skin="brasa"] .side .mod .row, [data-skin="brasa"] .side .mod .chips, [data-skin="brasa"] .side .mod p { margin-left: 0; margin-right: 0; }
   [data-skin="brasa"] .side .mod .row, [data-skin="brasa"] .side .mod .row:nth-child(even) { background: transparent; border-bottom: 1px solid var(--line); }
+}
+
+/* ---- movil (v159): dos descuadres del hilo.
+   1) Barra de cifras (.hilo .stats): es una sola linea sin saltos y, desde que lleva «+ Seguir <medio>», no cabia en un movil: ensanchaba
+      la pagina entera (todo el hilo se desplazaba de lado). En pantallas estrechas «guardar» y «compartir» quedan en icono y el boton
+      de seguir baja a una segunda linea.
+   2) Acciones de un comentario (.post.reply .actions): .post .pc lleva overflow-wrap: anywhere (v149, para titulares y enlaces largos) y
+      las acciones lo heredaban, de modo que al faltar sitio se partian letra a letra («Resp/onde/r»). Ahora no se parten nunca: si no
+      caben, la fila salta de linea entera. ---- */
+.actions, .hilo .stats, form.modbar { overflow-wrap: normal; word-break: normal; }
+.post.reply .actions > a, .post.reply .actions > form, .post.reply .actions > span, .post.reply .actions button { white-space: nowrap; flex: none; }
+.post.reply .actions { flex-wrap: wrap; row-gap: 6px; }
+@media (max-width: 600px) {
+  .hilo .stats { flex-wrap: wrap; row-gap: 8px; }
+  .hilo .stats .fav span, .hilo .stats .share span { display: none; }
+  .hilo .stats form.seguir { order: 9; flex: 0 0 100%; }
+  .hilo .stats form.seguir button { max-width: 100%; }
+  html:not([data-skin="foro"]):not([data-fam="comunidad"]) .post.reply .actions { column-gap: 16px; }
 }

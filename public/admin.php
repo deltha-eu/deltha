@@ -1,5 +1,10 @@
 <?php
 require __DIR__ . '/../lib/app.php';
+/** Grupos de fuentes con interruptor en admin > Config: clave => [rotulo, descripcion, valor por defecto si la clave aun no existe]. */
+const DDD_CFG_GRUPOS = [
+    'sources_youtube'     => ['Canales (YouTube)', '«Mis canales»: activado = los canales de YouTube se ven y se leen; desactivado = fuera de todo salvo admin > Fuentes. La portada Canales va aparte (admin > Ciclo).', '1'],
+    'sources_agregadores' => ['Agregadores', '«Mis agregadores»: activado = los agregadores (Menéame, Mediatize, Renegados…) se ven y se leen; desactivado = fuera de todo salvo admin > Fuentes.', '0'],
+];
 require __DIR__ . '/../lib/ciclo.php';
 require __DIR__ . '/../lib/fuentes.php';
 if (!is_admin()) { http_response_code(403); exit('Solo admin'); }
@@ -12,6 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = post('act');
     if ($act === 'config') {
         $st = $pdo->prepare("UPDATE config SET cvalue = ? WHERE ckey = ?");
+        // interruptores de grupos de fuentes («Mis canales», «Mis agregadores»): se crean si aun no existen (migra-070 / 103 sin aplicar)
+        $up = $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES (?,?,?) ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)");
+        foreach (DDD_CFG_GRUPOS as $k => [, $descr]) if (isset($_POST['cfg'][$k])) { $up->execute([$k, $_POST['cfg'][$k] === '1' ? '1' : '0', $descr]); unset($_POST['cfg'][$k]); }
         foreach (($_POST['cfg'] ?? []) as $k => $v) {
             if ($k === 'skin_default' && !isset(DDD_SKINS[(string)$v])) $v = 'editorial';   // solo skins existentes
             $st->execute([trim((string)$v), (string)$k]);
@@ -455,8 +463,16 @@ if ($tab === 'usuarios') {
     echo "</table>";
 
 } elseif ($tab === 'config') {
-    echo "<h3>Config</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"config\"><table>";
+    echo "<h3>Config</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"config\">";
+    // grupos de fuentes que se pueden apagar enteros: desactivado = fuera del menu, la franja de iconos, el catalogo, el perfil y el pie
+    echo "<h4>Grupos de fuentes</h4><table>";
+    foreach (DDD_CFG_GRUPOS as $k => [$label, $descr, $def]) {
+        $on = (string)cfg($k, $def) === '1';
+        echo "<tr><td><b>" . h($label) . "</b> <code>$k</code><br><small>" . h($descr) . "</small></td><td style=\"width:45%\"><select name=\"cfg[$k]\"><option value=\"1\"" . ($on ? ' selected' : '') . ">activado</option><option value=\"0\"" . ($on ? '' : ' selected') . ">desactivado</option></select></td></tr>";
+    }
+    echo "</table><h4>Resto</h4><table>";
     foreach ($pdo->query("SELECT * FROM config ORDER BY ckey") as $c) {
+        if (isset(DDD_CFG_GRUPOS[$c['ckey']])) continue;   // van arriba, como interruptores
         if (str_starts_with($c['ckey'], 'logo_')) continue;   // se gestiona en la pestaña Logo (logo_light, logo_dark, logo_icon)
         if ($c['ckey'] === 'skin_default') {   // la skin por defecto se elige entre todas las que hay (DDD_SKINS)
             echo "<tr><td><code>skin_default</code><br><small>Skin por defecto (anónimos y quien no elija): cualquiera de las " . count(DDD_SKINS) . "</small></td><td style=\"width:45%\"><select name=\"cfg[skin_default]\">";
