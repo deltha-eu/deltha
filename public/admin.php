@@ -2,7 +2,7 @@
 require __DIR__ . '/../lib/app.php';
 /** Grupos de fuentes con interruptor en admin > Config: clave => [rotulo, descripcion, valor por defecto si la clave aun no existe]. */
 const DDD_CFG_GRUPOS = [
-    'sources_youtube'     => ['Canales (YouTube)', '«Mis canales»: activado = los canales de YouTube se ven y se leen; desactivado = fuera de todo salvo admin > Fuentes. La portada Canales va aparte (admin > Ciclo).', '1'],
+    'sources_youtube'     => ['Canales (YouTube)', '«Mis canales»: activado = los canales de YouTube se ven y se leen; desactivado = fuera de todo salvo admin > Fuentes, y tampoco hay portada Canales (los vídeos de YouTube van a Medios).', '1'],
     'sources_agregadores' => ['Agregadores', '«Mis agregadores»: activado = los agregadores (Menéame, Mediatize, Renegados…) se ven y se leen; desactivado = fuera de todo salvo admin > Fuentes.', '0'],
 ];
 require __DIR__ . '/../lib/ciclo.php';

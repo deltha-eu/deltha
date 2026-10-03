@@ -658,7 +658,7 @@ function youtube_embed_on(): bool { return (string)cfg('youtube_embed', '1') ===
 function youtube_attr(?string $url): string {
     return youtube_embed_on() && ($id = youtube_video_id($url)) !== '' ? ' data-yt="' . $id . '" title="' . h(t('reproducir aquí')) . '"' : '';
 }
-function portada_canales_on(): bool { return (string)cfg('portada_canales', '1') === '1'; }
+function portada_canales_on(): bool { return (string)cfg('portada_canales', '1') === '1' && (string)cfg('sources_youtube', '1') === '1'; }   // con los canales apagados (admin > Config) tampoco hay portada Canales
 /** Portadas en uso, en su orden: clave => etiqueta (sin Canales si esta apagada). */
 function portadas(): array { $p = DDD_PORTADAS; if (!portada_canales_on()) unset($p['canales']); return $p; }
 /** Minutos minimos entre dos publicaciones en Canales. */
