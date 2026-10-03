@@ -74,11 +74,12 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     $hrefC = $href . '#comentarios';                       // el hilo, ya bajado a los comentarios
     $when = $s['status'] === 'destacadas' && $s['published_date'] ? hace($s['published_date']) : hace($s['sent_date']);
 
-    echo "<article class=\"post $mode\" id=\"s{$s['story_id']}\">";
+    $pin = pin_grupo_story($s) ? pin_de($pdo, 'story', (int)$s['story_id']) : null;   // destacada (migra-111): halo, etiqueta y la primera de su portada
+    echo "<article class=\"post $mode" . ($pin ? ' pinned' : '') . "\" id=\"s{$s['story_id']}\">";
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
     $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('original') : ($s['source'] ? " · " . source_link($s) : '');
-    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span></div>";
+    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . ($pin ? " · " . pin_tag($pin) : "") . "</span></div>";
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     if (foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');   // sin distracciones: la foto va antes del titular para flotar a su derecha
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
@@ -117,6 +118,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo mod_edit_link($s) . own_edit_link($s);   // mods y admin: «editar» a un clic; el autor, en plazo, tambien
     if (is_fav((int)$s['story_id'])) echo fav_link($s);   // en el feed solo si ya esta guardado: marca y permite quitarlo (se guarda desde el hilo)
     echo share_link($s);
+    echo pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), $s['status'] === 'destacadas');   // «Destacar» (migra-111)
     echo "</div>";
     echo "</div></article>";
 }
