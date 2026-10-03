@@ -3418,12 +3418,12 @@ nav.tabs-top a.radar.on { font-weight: 700; }
   html[data-skin]:not([data-fam="comunidad"]) nav.tabs-top.ctr:not(:has(.g > a:nth-child(3))) { padding-left: 12px; padding-right: 12px; }
 }
 
-/* ---- destacar noticias (migra-111, v163): el admin (sin caducidad, una por grupo) o un usuario con «destacados» (media hora) ponen
+/* ---- destacar noticias (migra-111, v164): el admin (sin caducidad, una por grupo) o un usuario con «destacados» (media hora) ponen
    un envio el primero de su portada, o una noticia RSS la primera en «Mis medios» / «Mis substacks». Halo ligero con el color del aura (--halo), etiqueta
    «destacada» en la fila de meta y boton «Destacar» / «Destacada» (form.pin) junto a «Seguir». */
 .post.pinned { position: relative; background: color-mix(in srgb, var(--halo) 6%, var(--bg));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--halo) 35%, transparent), inset 0 0 22px color-mix(in srgb, var(--halo) 12%, transparent); }
-.post.pinned::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: color-mix(in srgb, var(--halo) 70%, transparent); }
+.post.pinned::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--halo) 45%, transparent); }   /* raya fina, sin llegar a las esquinas (en tarjetas redondeadas quedaba gorda) */
 .post .meta .pintag { color: var(--halo); font-weight: 600; }
 .post .meta .pintag a { color: inherit; }
 form.pin { display: inline-flex; align-items: center; margin: 0; flex: none; }
