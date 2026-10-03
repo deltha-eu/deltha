@@ -3417,3 +3417,21 @@ nav.tabs-top a.radar.on { font-weight: 700; }
   html[data-skin]:not([data-fam="comunidad"]) nav.tabs-top.ctr:not(:has(.g > a:nth-child(3))) a.radar { padding-left: 6px; padding-right: 6px; }
   html[data-skin]:not([data-fam="comunidad"]) nav.tabs-top.ctr:not(:has(.g > a:nth-child(3))) { padding-left: 12px; padding-right: 12px; }
 }
+
+/* ---- destacar noticias de medios y substacks (migra-111, v162): el admin (sin caducidad, una por grupo) o un usuario con «destacados»
+   (media hora) ponen una noticia la primera en «Mis medios» / «Mis substacks». Halo ligero con el color del aura (--halo), etiqueta
+   «destacada» en la fila de meta y boton «Destacar» / «Destacada» (form.pin) junto a «Seguir». */
+.post.ext.pinned { position: relative; background: color-mix(in srgb, var(--halo) 6%, var(--bg));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--halo) 35%, transparent), inset 0 0 22px color-mix(in srgb, var(--halo) 12%, transparent); }
+.post.ext.pinned::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: color-mix(in srgb, var(--halo) 70%, transparent); }
+.post .meta .pintag { color: var(--halo); font-weight: 600; }
+.post .meta .pintag a { color: inherit; }
+form.pin { display: inline-flex; align-items: center; margin: 0; flex: none; }
+form.pin button { font: inherit; font-family: var(--sans); font-size: 12px; font-weight: 700; line-height: 1.2; white-space: nowrap; cursor: pointer; padding: 4px 11px 4px 8px;
+  border: 1px solid var(--line2); border-radius: 999px; background: none; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+form.pin button .i { width: 15px; height: 15px; }
+form.pin button small { font-weight: 600; opacity: .8; }
+form.pin button:hover { border-color: var(--halo); color: var(--halo); }
+form.pin.on button { border-color: color-mix(in srgb, var(--halo) 60%, transparent); color: var(--halo); }
+form.pin.on button .i { fill: currentColor; }
+form.pin.on button:hover { background: color-mix(in srgb, var(--halo) 12%, var(--bg)); }

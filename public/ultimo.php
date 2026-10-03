@@ -15,9 +15,13 @@ $fuentes = fuentes_on() ? ultimo_fuentes($pdo, $u, $k) : [];
 $porId = array_column($fuentes, null, 'source_id');
 $rows = []; $total = 0;
 $DIAS = max(1, (int)cfg('ultimo_days', 7)); $per = (int)cfg('per_page', 20); $page = page_num();
+// destacadas (migra-111): las primeras en la pagina 1, con halo, aunque sean de fuentes que el usuario no sigue; mientras esten
+// destacadas no salen tambien en su sitio por fecha (al quitarlas vuelven a el)
+$pins = ($k === 'medio' || $k === 'newsletter') ? pins_primero($pdo, $k) : [];
+$pinIds = array_map(fn($p) => (int)$p[1]['item_id'], $pins);
 if ($porId) {
     $in = implode(',', array_fill(0, count($porId), '?'));
-    $w = "i.source_id IN ($in)" . ($k === 'agregador' ? " AND i.phase = 'portada'" : "");
+    $w = "i.source_id IN ($in)" . ($k === 'agregador' ? " AND i.phase = 'portada'" : "") . ($pinIds ? " AND i.item_id NOT IN (" . implode(',', $pinIds) . ")" : "");
     $cn = $pdo->prepare("SELECT COUNT(*) FROM source_items i WHERE $w AND i.pub_date >= NOW() - INTERVAL $DIAS DAY");
     $cn->execute(array_keys($porId));
     $total = (int)$cn->fetchColumn();
@@ -26,7 +30,7 @@ if ($porId) {
     $st->execute(array_keys($porId));
     $rows = $st->fetchAll();
 }
-$sent = $k === 'agregador' ? [] : fuente_ya_enviadas($pdo, array_column($rows, 'url'));
+$sent = $k === 'agregador' ? [] : fuente_ya_enviadas($pdo, array_merge(array_column($rows, 'url'), array_map(fn($p) => $p[1]['url'], $pins)));
 
 header('Cache-Control: private, no-cache');   // depende de cookies (sesion, ddd_srclang): sin cache compartida ni de 60 s, o la casilla de idioma parece no hacer nada
 page_header($label, "ultimo:$k");
@@ -43,7 +47,8 @@ $intro .= ' <a href="/medios.php?k=' . $k . '">' . h(mb_strtoupper(mb_substr($ca
 echo "<p class=\"notice\">$intro</p>";
 echo fuentes_casilla_idioma();   // la misma casilla que en el perfil
 
+if ($page === 1) foreach ($pins as [$psrc, $pi]) fuente_post($psrc, $pi, 'full', $sent);   // destacadas, las primeras
 foreach ($rows as $i) fuente_post($porId[$i['source_id']], $i, 'full', $sent);
-if ($fuentes && !$rows) echo "<p class=\"end\">" . t('El lector aún no ha pasado por esta fuente.') . "</p>";
+if ($fuentes && !$rows && !$pins) echo "<p class=\"end\">" . t('El lector aún no ha pasado por esta fuente.') . "</p>";
 if ($total) paginate("/ultimo.php?k=$k", $page, $total);
 page_footer();
