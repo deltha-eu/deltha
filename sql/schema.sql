@@ -421,6 +421,7 @@ CREATE TABLE pins (
     user_id     INT UNSIGNED NOT NULL,
     by_admin    TINYINT(1) NOT NULL DEFAULT 0,
     created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    starts      DATETIME DEFAULT NULL,                  -- cuando empieza a verse (migra-114); NULL o pasado = en marcha; futuro = en cola tras la destacada de usuario anterior del grupo
     expires     DATETIME DEFAULT NULL,                  -- NULL = no caduca (admin)
     UNIQUE KEY uq_ref (what, ref_id),
     KEY idx_grupo (what, grupo, by_admin, expires),

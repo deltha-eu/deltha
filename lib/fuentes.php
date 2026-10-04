@@ -741,7 +741,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     $rel = 'rel="noopener nofollow"';
     global $pdo;
     $pin = pin_grupo_item($src) ? pin_de($pdo, 'item', (int)$i['item_id']) : null;   // destacada (migra-111): halo y etiqueta
-    $halo = $pin || pin_halo_primera();   // sin destacadas en el grupo, la primera tarjeta lleva el halo igualmente (sin etiqueta)
+    $halo = ($pin && pin_activo($pin)) || pin_halo_primera();   // sin destacadas en el grupo, la primera tarjeta lleva el halo igualmente (sin etiqueta); en cola no lleva halo
     echo "<article class=\"post $mode ext" . ($medio ? ' medio' : '') . ($halo ? ' pinned' : '') . "\" id=\"x{$i['item_id']}\">";
     echo avatar((float)cfg('aura_anon', 5), $author);
     echo "<div class=\"pc\">";
@@ -750,7 +750,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     if ($i['topic'])  $meta[] = h($i['topic']);
     if (!$medio && $i['source']) $meta[] = h($i['source']);
     $meta[] = h(hace($i['pub_date']));
-    if ($pin) $meta[] = pin_tag($pin);
+    if ($pin && pin_tag($pin) !== '') $meta[] = pin_tag($pin);
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . implode(' · ', $meta) . "</span></div>";
     $isThumb = $i['image'] && str_starts_with($i['image'], 'fuentes/');
     if ($isThumb) echo "<a class=\"thumb\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a>";
