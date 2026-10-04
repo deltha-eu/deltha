@@ -112,6 +112,17 @@ function pin_poner(PDO $pdo, array $u, string $what, int $ref, string $grupo, bo
         $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, expires) VALUES (?,?,?,?,1,NULL)")->execute([$what, $ref, $grupo, $uid]);
         // un envio del radar pasa a su portada ahora (con la fecha de ahora: al quitar el destacado cae donde le toque por ella)
         if ($what === 'story' && !$enPortada) $pdo->prepare("UPDATE stories SET status = 'destacadas', published_date = NOW() WHERE story_id = ? AND status = 'nuevas'")->execute([$ref]);
+        // una noticia RSS que ya esta en Deltha («en Deltha» en la tarjeta): el admin destaca tambien su envio en la portada que le toca
+        // (Medios / Substacks), sustituyendo la destacada del admin que hubiera alli; si el envio esta en el radar, pasa a portada.
+        if ($what === 'item' && ($s = pin_story_de_item($pdo, $ref))) {
+            $g = pin_grupo_story($s);
+            if ($g !== '') {
+                $sid = (int)$s['story_id'];
+                $pdo->prepare("DELETE FROM pins WHERE what = 'story' AND (ref_id = ? OR (by_admin = 1 AND grupo = ?))")->execute([$sid, $g]);
+                $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, expires) VALUES ('story',?,?,?,1,NULL)")->execute([$sid, $g, $uid]);
+                if ($s['status'] === 'nuevas') $pdo->prepare("UPDATE stories SET status = 'destacadas', published_date = NOW() WHERE story_id = ? AND status = 'nuevas'")->execute([$sid]);
+            }
+        }
         return '';
     }
     if (!$enPortada) return t('Esta noticia no se puede destacar.');
@@ -132,7 +143,16 @@ function pin_quitar(PDO $pdo, array $u, string $what, int $ref): bool {
     $pin = pin_de($pdo, $what, $ref);
     if (!$pin || (!is_admin() && (int)$pin['user_id'] !== (int)$u['user_id'])) return false;
     $pdo->prepare("DELETE FROM pins WHERE what = ? AND ref_id = ?")->execute([$what, $ref]);
+    // el admin quita una noticia RSS: tambien el destacado (suyo) del envio correspondiente en portada
+    if (is_admin() && $what === 'item' && ($s = pin_story_de_item($pdo, $ref))) $pdo->prepare("DELETE FROM pins WHERE what = 'story' AND ref_id = ? AND by_admin = 1")->execute([(int)$s['story_id']]);
     return true;
+}
+/** El envio en Deltha de una noticia RSS (misma URL, en el radar o en portada, ultimos 30 dias), o null. */
+function pin_story_de_item(PDO $pdo, int $itemId): ?array {
+    $st = $pdo->prepare("SELECT s.* FROM source_items i JOIN stories s ON s.url = i.url WHERE i.item_id = ? AND s.status IN ('nuevas','destacadas') AND s.sent_date > NOW() - INTERVAL 30 DAY ORDER BY s.status = 'destacadas' DESC, s.sent_date DESC LIMIT 1");
+    $st->execute([$itemId]);
+    $s = $st->fetch();
+    return $s ?: null;
 }
 /** Ids destacados en marcha de un grupo, en su orden (admin antes, luego por fecha de empezar). Las que esperan en cola no cuentan. */
 function pins_ids(PDO $pdo, string $what, string $grupo): array {
