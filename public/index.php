@@ -29,8 +29,10 @@ if (isset($_GET['bienvenida']) && user()) {
     echo "<p class=\"notice\">" . t('Bienvenido, <b>') . "" . h(user()['login']) . "</b>: " . t('tu cuenta está creada y ya has entrado. Publicas en modo Ghost (alias durante %d min) y puedes votar. En <a href="/perfil.php">tu perfil</a> puedes poner foto, una frase y elegir tema claro u oscuro.', (int)cfg('ghost_minutes', 30)) . "</p>";
 }
 $n = 0;
+pin_halo_primera($page === 1 && !$pins);   // sin destacadas: la primera tarjeta lleva el halo igualmente
 if ($page === 1) foreach ($pins as $s) { story_post($pdo, $s, "full"); $n++; }   // destacadas, las primeras
 foreach ($st as $s) { story_post($pdo, $s, "full"); $n++; }
+pin_halo_primera(false);
 if ($n === 0) echo "<p class=\"end\">" . ($p === 'canales' ? t('Nada en Canales todavía. Aquí se publica el vídeo del radar con mayor δ cuando llega al mínimo.') : ($p === 'substacks'
     ? t('Nada en Substacks todavía. Cada dos ciclos se publica aquí el Substack del radar con mayor δ, si llega al mínimo.')
     : t('Nada en Medios todavía. Cada dos ciclos se publica aquí la noticia del radar con mayor δ, si llega al mínimo.'))) . "</p>";

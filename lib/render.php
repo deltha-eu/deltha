@@ -75,7 +75,8 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     $when = $s['status'] === 'destacadas' && $s['published_date'] ? hace($s['published_date']) : hace($s['sent_date']);
 
     $pin = pin_grupo_story($s) ? pin_de($pdo, 'story', (int)$s['story_id']) : null;   // destacada (migra-111): halo, etiqueta y la primera de su portada
-    echo "<article class=\"post $mode" . ($pin ? ' pinned' : '') . "\" id=\"s{$s['story_id']}\">";
+    $halo = $pin || pin_halo_primera();   // sin destacadas en la portada, la primera tarjeta lleva el halo igualmente (sin etiqueta)
+    echo "<article class=\"post $mode" . ($halo ? ' pinned' : '') . "\" id=\"s{$s['story_id']}\">";
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
     $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('original') : ($s['source'] ? " · " . source_link($s) : '');

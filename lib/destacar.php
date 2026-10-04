@@ -41,6 +41,16 @@ function pins_activos(PDO $pdo): array {
     return $pins;
 }
 function pin_de(PDO $pdo, string $what, int $ref): ?array { return pins_activos($pdo)["$what:$ref"] ?? null; }
+/** Sin ninguna destacada en el grupo, la primera tarjeta de la lista lleva el halo igualmente (la tarjeta queda bien y marca por
+ *  donde empezar), sin etiqueta y con su boton «Destacar» normal. index.php y ultimo.php lo encienden en la pagina 1 cuando no hay
+ *  destacadas; story_post() / fuente_post() lo consumen en la primera tarjeta que pintan (y lo apagan). pin_halo_primera(false) lo apaga. */
+function pin_halo_primera(?bool $set = null): bool {
+    static $on = false;
+    if ($set !== null) return $on = $set && pins_on();
+    if (!$on) return false;
+    $on = false;
+    return true;
+}
 /** Destacados que le quedan al usuario actual (los gana al subir de unidad de aura). Una consulta por peticion, solo si hace falta
  *  (no va en el SELECT de user() para que el sitio no se rompa entre subir el codigo y aplicar la migracion). */
 function pin_credits(): int {
