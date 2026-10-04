@@ -47,8 +47,10 @@ $intro .= ' <a href="/medios.php?k=' . $k . '">' . h(mb_strtoupper(mb_substr($ca
 echo "<p class=\"notice\">$intro</p>";
 echo fuentes_casilla_idioma();   // la misma casilla que en el perfil
 
+pin_halo_primera($page === 1 && !$pins && ($k === 'medio' || $k === 'newsletter'));   // sin destacadas: la primera tarjeta lleva el halo igualmente
 if ($page === 1) foreach ($pins as [$psrc, $pi]) fuente_post($psrc, $pi, 'full', $sent);   // destacadas, las primeras
 foreach ($rows as $i) fuente_post($porId[$i['source_id']], $i, 'full', $sent);
+pin_halo_primera(false);
 if ($fuentes && !$rows && !$pins) echo "<p class=\"end\">" . t('El lector aún no ha pasado por esta fuente.') . "</p>";
 if ($total) paginate("/ultimo.php?k=$k", $page, $total);
 page_footer();

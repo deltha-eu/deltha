@@ -741,7 +741,8 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     $rel = 'rel="noopener nofollow"';
     global $pdo;
     $pin = pin_grupo_item($src) ? pin_de($pdo, 'item', (int)$i['item_id']) : null;   // destacada (migra-111): halo y etiqueta
-    echo "<article class=\"post $mode ext" . ($medio ? ' medio' : '') . ($pin ? ' pinned' : '') . "\" id=\"x{$i['item_id']}\">";
+    $halo = $pin || pin_halo_primera();   // sin destacadas en el grupo, la primera tarjeta lleva el halo igualmente (sin etiqueta)
+    echo "<article class=\"post $mode ext" . ($medio ? ' medio' : '') . ($halo ? ' pinned' : '') . "\" id=\"x{$i['item_id']}\">";
     echo avatar((float)cfg('aura_anon', 5), $author);
     echo "<div class=\"pc\">";
     $meta = [];
