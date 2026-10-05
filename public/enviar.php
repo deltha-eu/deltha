@@ -45,10 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $q = $pdo->prepare("SELECT image FROM source_items WHERE item_id = ? AND url = ?");
                 $q->execute([$preX, $f['url']]);
                 $img = (string)$q->fetchColumn();
-                if (preg_match('/^[a-f0-9]{24}\.jpg$/', $img) && is_file(DDD_MEDIA_DIR . '/' . $img)) {
-                    $copia = bin2hex(random_bytes(12)) . '.jpg';
-                    if (@copy(DDD_MEDIA_DIR . '/' . $img, DDD_MEDIA_DIR . '/' . $copia)) $pre['image'] = $copia;
-                }
+                if ($copia = imagen_copiar($img)) $pre['image'] = $copia;
             }
             $m = extraer_meta($f['url'], empty($pre['image']));   // con foto del RSS no hace falta bajar la og:image
             $f['title'] = $m['title']; $f['content'] = $m['description'];

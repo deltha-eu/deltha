@@ -310,9 +310,9 @@ function agent_submit_item(PDO $pdo, array $a, array $i): int {
     if ($topic <= 0) $topic = (int)$pdo->query("SELECT topic_id FROM topics ORDER BY topic_id LIMIT 1")->fetchColumn();
     // foto: copia de la del feed (la del item se borra cuando caduca), como hace enviar.php con ?x=
     $image = null;
-    if (!empty($i['image']) && preg_match('/^[a-f0-9]{24}\.jpg$/', (string)$i['image']) && is_file(DDD_MEDIA_DIR . '/' . $i['image'])) {
-        $copia = bin2hex(random_bytes(12)) . '.jpg';
-        if (@copy(DDD_MEDIA_DIR . '/' . $i['image'], DDD_MEDIA_DIR . '/' . $copia)) $image = $copia;
+    if (!empty($i['image'])) {
+        require_once __DIR__ . '/imagen.php';
+        $image = imagen_copiar((string)$i['image']);   // apunta la copia: si la foto resulta ser la generica del medio, se retira tambien
     }
     require_once __DIR__ . '/moderacion.php';
     $title = mb_substr(trim((string)$i['title']), 0, 200);
