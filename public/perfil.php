@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$err) {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ?, src_mylang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $mylang, $u['user_id']]);
         try { $pdo->prepare("UPDATE users SET twofa = ? WHERE user_id = ?")->execute([post('twofa') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-095 sin aplicar */ }
+        try { $pdo->prepare("UPDATE users SET show_follows = ? WHERE user_id = ?")->execute([post('show_follows') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-116 sin aplicar */ }
         redirect('/perfil.php?ok=1');
     }
 }
@@ -66,6 +67,8 @@ echo "<label>" . t('Idioma') . "</label><select name=\"ulang\"><option value=\"\
 foreach (DDD_LANGS as $k => $v) echo "<option value=\"$k\"" . (($u['lang'] ?? '') === $k ? ' selected' : '') . ">$v</option>";
 echo "</select>";
 if (fuentes_on()) echo "<label id=\"fuentes-idioma\"><input type=\"checkbox\" name=\"src_mylang\" value=\"1\"" . (!empty($u['src_mylang']) ? ' checked' : '') . "> " . t('Mostrar fuentes y envíos solo en mi idioma') . "</label><small class=\"hint\">" . t('Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.') . "</small>";
+// medios y substacks que sigo, visibles en mi ficha publica (migra-116): por defecto si
+if (fuentes_on()) echo "<label id=\"ficha-fuentes\"><input type=\"checkbox\" name=\"show_follows\" value=\"1\"" . (show_follows($pdo, (int)$u['user_id']) ? ' checked' : '') . "> " . t('Mostrar en mi ficha los medios y substacks que sigo') . "</label><small class=\"hint\">" . t('Cualquiera que abra tu perfil público verá la lista, como quien mira a quién sigues, y podrá seguirlos también. Si la desmarcas, solo la ves tú.') . "</small>";
 // verificacion en dos pasos por correo (lib/twofa.php): casilla; a los administradores se les puede exigir desde admin -> Config (twofa_admin)
 try {
     require_once __DIR__ . '/../lib/twofa.php';
