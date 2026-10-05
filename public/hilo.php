@@ -99,20 +99,20 @@ echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>";
 // «+ Seguir <medio>»: el medio o substack del envio (solo si su dominio es de una fuente del catalogo)
 if (user() && $s['content_type'] !== 'article' && $s['source']) { require_once __DIR__ . '/../lib/fuentes.php'; if (fuentes_on() && ($fsrc = fuente_por_dominio($pdo, (string)$s['source']))) echo fuente_fav_form($fsrc, true); }
 echo fav_link($s) . share_link($s) . pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), $s['status'] === 'destacadas') . "</div>";   // «Destacar» (migra-111)
-if (is_mod()) {   // moderadores y admin: cambiar el tema y la comunidad principal del envio
-    echo "<form class=\"modbar\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><label>Tema</label><select name=\"topic\">";
-    foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) {
-        echo "<option value=\"{$t['topic_id']}\"" . ((int)$t['topic_id'] === (int)$s['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
-    }
-    echo "</select><label>Comunidad principal</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
-    foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) {
-        echo "<option value=\"{$co['community_id']}\"" . ((int)$co['community_id'] === (int)$s['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
-    }
-    echo "</select><button class=\"btn\">Cambiar</button> <a href=\"/editar.php?id=$id\">editar · eliminar</a></form>";
+// Herramientas del envio (05/10/2026): una sola caja plegada bajo la barra, en vez de dos barras con todo seguido. Moderadores y admin:
+// tema, comunidad principal y «editar · eliminar»; dueños de comunidad (y moderadores): en que comunidades esta el envio. Cada cosa en su fila.
+$u = user();
+$rows = [];
+if (is_mod()) {
+    $f = "<form class=\"inl\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><select name=\"topic\" title=\"" . h(t('Tema')) . "\">";
+    foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) $f .= "<option value=\"{$t['topic_id']}\"" . ((int)$t['topic_id'] === (int)$s['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
+    $f .= "</select><select name=\"community\" title=\"" . h(t('Comunidad principal')) . "\"><option value=\"0\">" . t('sin comunidad principal') . "</option>";
+    foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) $f .= "<option value=\"{$co['community_id']}\"" . ((int)$co['community_id'] === (int)$s['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
+    $f .= "</select><button class=\"btn\">" . t('Guardar') . "</button></form>";
+    $rows[] = [t('Tema'), $f];
 }
 // comunidades del envio: cualquier dueño de comunidad puede añadir aqui un envio publico (radar, portada o archivado)
 // a la suya y quitarlo; los moderadores arbitran (añaden y quitan en cualquiera). El autor no interviene.
-$u = user();
 if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
     $inComms = story_communities($pdo, $id);
     $mine = my_communities($pdo, $u);
@@ -122,21 +122,28 @@ if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
     $canRemoveAny = false;
     foreach ($inComms as $c) if (is_mod() || (int)$c['owner_id'] === (int)$u['user_id']) $canRemoveAny = true;
     if ($canRemoveAny || ($addable && count($inComms) < $max)) {
-        echo "<div class=\"modbar comms\"><label>" . t('Comunidades') . "</label>";
+        $f = '';
         foreach ($inComms as $c) {
-            echo "<span class=\"chip\" style=\"--cc:" . h($c['color']) . "\"><i class=\"dot\"></i><a href=\"/comunidad.php?c=" . rawurlencode($c['slug']) . "\">" . h($c['name']) . "</a>";
-            if ($c['main']) echo " <small>(" . t('principal') . ")</small>";
+            $f .= "<span class=\"chip\" style=\"--cc:" . h($c['color']) . "\"><i class=\"dot\"></i><a href=\"/comunidad.php?c=" . rawurlencode($c['slug']) . "\">" . h($c['name']) . "</a>";
+            if ($c['main']) $f .= " <small>(" . t('principal') . ")</small>";
             if (is_mod() || (int)$c['owner_id'] === (int)$u['user_id'])
-                echo "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"community\" value=\"{$c['community_id']}\"><input type=\"hidden\" name=\"act\" value=\"quitar\"><button class=\"x\" title=\"" . t('quitar de esta comunidad') . "\">×</button></form>";
-            echo "</span>";
+                $f .= "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"community\" value=\"{$c['community_id']}\"><input type=\"hidden\" name=\"act\" value=\"quitar\"><button class=\"x\" title=\"" . t('quitar de esta comunidad') . "\">×</button></form>";
+            $f .= "</span>";
         }
         if ($addable && count($inComms) < $max) {
-            echo "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"añadir\"><select name=\"community\">";
-            foreach ($addable as $c) echo "<option value=\"{$c['community_id']}\">" . h($c['name']) . "</option>";
-            echo "</select><button class=\"btn\">" . t('Añadir a la comunidad') . "</button></form>";
-        } elseif ($addable) echo "<small>" . t('Un envío puede estar como mucho en %d comunidades.', $max) . "</small>";
-        echo "</div>";
+            $f .= "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"añadir\"><select name=\"community\">";
+            foreach ($addable as $c) $f .= "<option value=\"{$c['community_id']}\">" . h($c['name']) . "</option>";
+            $f .= "</select><button class=\"btn\">" . t('Añadir a la comunidad') . "</button></form>";
+        } elseif ($addable) $f .= "<small>" . t('Un envío puede estar como mucho en %d comunidades.', $max) . "</small>";
+        $rows[] = [t('Comunidades'), $f];
     }
+}
+if ($rows) {
+    // abierta si se acaba de guardar algo (?comm=), para ver el aviso; si no, plegada
+    echo "<details class=\"modtools\"" . (isset($_GET['comm']) ? ' open' : '') . "><summary>" . icon('edit') . "<span>" . (is_mod() ? t('Editar envío') : t('Comunidades')) . "</span>"
+       . (is_mod() ? "<a href=\"/editar.php?id=$id\">" . t('editar · eliminar') . "</a>" : '') . "</summary>";
+    foreach ($rows as [$lbl, $html]) echo "<div class=\"row\"><label>" . h($lbl) . "</label><div>$html</div></div>";
+    echo "</details>";
 }
 if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice' : 'error') . "\">" . h((string)$_GET['comm'] === 'ok' ? t('Guardado.') : (string)$_GET['comm']) . "</p>";
 
