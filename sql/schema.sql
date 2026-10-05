@@ -102,6 +102,7 @@ CREATE TABLE users (
     landing     VARCHAR(24) NOT NULL DEFAULT '',   -- aterrizaje: '' portada | t:ID tema | c:ID comunidad
     lang        VARCHAR(5) NOT NULL DEFAULT '',    -- idioma de la interfaz: '' navegador | es | en | fr
     src_mylang  TINYINT(1) NOT NULL DEFAULT 0,     -- 1 = mostrar solo fuentes en mi idioma (migra-051)
+    show_follows TINYINT(1) NOT NULL DEFAULT 1,    -- 1 = los medios y substacks que sigue se ven en su ficha publica (migra-116)
     aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,
     pin_credits SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- «destacados» disponibles: uno por cada unidad entera NUEVA que alcanza el aura (migra-111)
     pin_mark    SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- maximo entero de aura ya alcanzado: no se vuelve a premiar la misma unidad

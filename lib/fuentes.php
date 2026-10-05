@@ -126,6 +126,14 @@ function mis_medios(PDO $pdo, ?array $u, string $kind = 'medio'): array {
         return $cache[$k] = $st->fetchAll();
     } catch (Throwable $e) { return $cache[$k] = []; }
 }
+/** ¿Enseña este usuario en su ficha los medios y substacks que sigue? (users.show_follows, migra-116; por defecto si). Consulta aparte,
+ *  en try, para que nada se rompa entre subir el codigo y aplicar la migracion. */
+function show_follows(PDO $pdo, int $uid): bool {
+    static $c = [];
+    if (isset($c[$uid])) return $c[$uid];
+    try { $st = $pdo->prepare("SELECT show_follows FROM users WHERE user_id = ?"); $st->execute([$uid]); return $c[$uid] = (int)$st->fetchColumn() === 1; }
+    catch (Throwable $e) { return $c[$uid] = true; }
+}
 /** Añade o quita una fuente de los favoritos del usuario (sin limite). */
 function fuente_fav_set(PDO $pdo, int $uid, int $sid, bool $on): void {
     if ($on) $pdo->prepare("INSERT IGNORE INTO user_media (user_id, source_id, pos) SELECT ?, ?, LEAST(COALESCE(MAX(pos), 0) + 1, 65535) FROM user_media WHERE user_id = ?")->execute([$uid, $sid, $uid]);
