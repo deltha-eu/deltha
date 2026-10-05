@@ -1033,6 +1033,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<script src=\"/app/register.js?v=" . DDD_CSS_VER . "\" data-v=\"" . DDD_CSS_VER . "\" defer></script>";
     echo "<script src=\"/app/tabs.js?v=" . DDD_CSS_VER . "\" defer></script>";   // encaja las pestañas de arriba en movil
     echo "<script src=\"/app/scroll.js?v=" . DDD_CSS_VER . "\" defer></script>";   // votar/guardar/comentar: vuelve al punto de scroll en que estabas (sin JS, manda el ancla)
+    echo "<script src=\"/app/foto.js?v=" . DDD_CSS_VER . "\" defer></script>";   // previsualiza la foto elegida antes de enviar (enviar, articulo, editar)
     echo "<script src=\"/app/escribir.js?v=" . DDD_CSS_VER . "\" defer></script>";   // cursor detras del «#N» y refresco del Chat que no se lleva lo escrito
     if ($u && avisos_on() && (int)cfg('notif_poll_sec', 60) > 0) echo "<script src=\"/app/avisos.js?v=" . DDD_CSS_VER . "\" data-every=\"" . (int)cfg('notif_poll_sec', 60) . "\" defer></script>";   // refresca la burbuja de avisos sin recargar
     echo "<title>" . h($doc ?: $title) . " · " . h(cfg('site_name')) . "</title>";
