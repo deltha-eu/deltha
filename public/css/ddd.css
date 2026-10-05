@@ -329,6 +329,35 @@ nav.sub.langs small { opacity: .7; }
 .modbar.comms .chip .x:hover { color: var(--fg); }
 .modbar a { font-size: 13px; color: var(--accent); white-space: nowrap; }
 .modbar a:first-of-type { margin-left: auto; }
+/* Herramientas del envio en el hilo (05/10/2026): una caja plegada bajo la barra de cifras; sustituye a las dos barras .modbar seguidas */
+.modtools { border-bottom: 1px solid var(--line); font-family: var(--sans); font-size: 13px; color: var(--muted); }
+.modtools > summary { display: flex; align-items: center; gap: 8px; padding: 7px 16px; cursor: pointer; list-style: none; user-select: none; }
+.modtools > summary::-webkit-details-marker { display: none; }
+.modtools > summary .i { width: 15px; height: 15px; flex: none; }
+.modtools > summary > span { font-weight: 600; color: var(--fg); }
+.modtools > summary > span::after { content: "▸"; margin-left: 6px; font-size: 11px; color: var(--muted); }
+.modtools[open] > summary > span::after { content: "▾"; }
+.modtools > summary > a { margin-left: auto; color: var(--accent); white-space: nowrap; }
+.modtools .row { display: grid; grid-template-columns: 96px 1fr; gap: 6px 10px; align-items: center; padding: 3px 16px; }
+.modtools .row:last-child { padding-bottom: 10px; }
+.modtools .row > label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.modtools .row > div { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; min-width: 0; }
+.modtools form.inl { display: inline-flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.modtools select { flex: 0 1 auto; min-width: 0; max-width: 200px; font: inherit; font-size: 13px; padding: 4px 8px; border: 1px solid var(--line2); border-radius: 8px; background: var(--bg); color: var(--fg); }
+.modtools .btn { font: inherit; font-size: 12px; font-weight: 600; border: 1px solid var(--line2); background: none; color: var(--fg); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.modtools .btn:hover { background: var(--hover); }
+.modtools .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1px solid var(--line2); border-radius: 999px; font-size: 13px; }
+.modtools .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc, var(--accent)); flex: none; }
+.modtools .chip a { color: var(--fg); text-decoration: none; font-weight: 600; }
+.modtools .chip small { color: var(--muted); }
+.modtools .chip .x { background: none; border: 0; padding: 0 2px; cursor: pointer; color: var(--muted); font: inherit; font-size: 15px; line-height: 1; }
+.modtools .chip .x:hover { color: var(--fg); }
+@media (max-width: 480px) { .modtools .row { grid-template-columns: 1fr; gap: 2px; } }
+/* Perfil publico: pestañas Envios / Comentarios (05/10/2026) y la lista de comentarios con el hilo encima de cada uno */
+.profile .meta a.cnt { color: inherit; text-decoration: underline; text-decoration-color: var(--line2); text-underline-offset: 3px; }
+.ucoms .hilotit { padding: 10px 16px 0; font-size: 13px; color: var(--muted); }
+.ucoms .hilotit a { color: var(--fg); font-weight: 600; }
+.ucoms .post.reply { border-top: 0; }
 .admin input[type=color] { width: 44px; height: 32px; padding: 0; border: 1px solid var(--line2); border-radius: 6px; background: none; }
 form.plain button.danger { background: none; color: var(--fg); border: 1px solid var(--line2); }
 form.plain button.danger:hover { background: var(--hover); }
@@ -641,6 +670,7 @@ form.plain.skinform { gap: 6px; }
 [data-fam="comunidad"] .hilo .stats > span:first-child { text-transform: uppercase; letter-spacing: .03em; }
 [data-fam="comunidad"] .hilo .stats b, [data-fam="comunidad"] .hilo .stats .share, [data-fam="comunidad"] .hilo .stats .vote > span, [data-fam="comunidad"] .hilo .stats .vote button { color: #fff; }
 [data-fam="comunidad"] .hilo .modbar { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
+[data-fam="comunidad"] .hilo .modtools { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
 [data-fam="comunidad"] .hilo .thread { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; padding: 0; }
 [data-fam="comunidad"] .hilo .thread:last-of-type { border-radius: 0 0 6px 6px; margin-bottom: 10px; }
 [data-fam="comunidad"] .post.reply { display: grid; grid-template-columns: 64px 1fr; gap: 0 12px; padding: 12px 12px; border-bottom: 1px solid var(--line); }
@@ -663,7 +693,7 @@ form.plain.skinform { gap: 6px; }
 [data-fam="comunidad"] .composer { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; padding: 12px 14px; }
 [data-fam="comunidad"] .composer.inreply { border-top: 1px solid var(--line); }
 [data-fam="comunidad"] .composer textarea { border: 1px solid var(--line2); border-radius: 3px; background: var(--row); padding: 8px; font-size: 13px; font-family: var(--forum); }
-[data-fam="comunidad"] .composer button, [data-fam="comunidad"] form.plain button, [data-fam="comunidad"] .newmsg button, [data-fam="comunidad"] .modbar .btn { background: var(--bar); color: #fff; border: 1px solid var(--blue2); border-radius: 3px; font-family: var(--forum); font-size: 12px; font-weight: 700; padding: 6px 14px; text-shadow: 0 1px 0 rgba(0,0,0,.2); }
+[data-fam="comunidad"] .composer button, [data-fam="comunidad"] form.plain button, [data-fam="comunidad"] .newmsg button, [data-fam="comunidad"] .modbar .btn, [data-fam="comunidad"] .modtools .btn { background: var(--bar); color: #fff; border: 1px solid var(--blue2); border-radius: 3px; font-family: var(--forum); font-size: 12px; font-weight: 700; padding: 6px 14px; text-shadow: 0 1px 0 rgba(0,0,0,.2); }
 [data-fam="comunidad"] .hilo .end, [data-fam="comunidad"] .hilo > .end { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; }
 /* paginas sin feed: caja con barra azul de titulo */
 [data-fam="comunidad"] main:not(:has(> .post)) { background: var(--card); border: 1px solid var(--line2); border-radius: 6px; margin: 10px 8px 0; overflow: hidden; padding-bottom: 12px; }
