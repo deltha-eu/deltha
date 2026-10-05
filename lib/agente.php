@@ -13,7 +13,7 @@
 declare(strict_types=1);
 
 const AGENT_DEFAULTS = ['enabled' => 0, 'persona' => '', 'per_day' => 4, 'min_age_min' => 20, 'max_age_h' => 24, 'max_comments' => 6, 'replies' => 0, 'skip_users' => '', 'topics' => '',
-                        'submits_per_day' => 0, 'submit_kinds' => 'ambos', 'submit_topics' => '', 'submit_langs' => ''];
+                        'submits_per_day' => 0, 'submit_kinds' => 'ambos', 'submit_topics' => '', 'submit_langs' => '', 'submit_review' => 0, 'submit_brief' => ''];
 
 /** Tabla creada (migra-089). */
 function agents_on(): bool {
@@ -47,6 +47,13 @@ function agent_save(PDO $pdo, int $uid, array $f): void {
                    submits_per_day = VALUES(submits_per_day), submit_kinds = VALUES(submit_kinds), submit_topics = VALUES(submit_topics), submit_langs = VALUES(submit_langs)")
         ->execute([$uid, $f['enabled'], $f['persona'], $f['per_day'], $f['min_age_min'], $f['max_age_h'], $f['max_comments'], $f['replies'], $f['skip_users'], $f['topics'],
                    $f['submits_per_day'], $f['submit_kinds'], $f['submit_topics'], $f['submit_langs']]);
+    if (agent_review_on()) $pdo->prepare("UPDATE agents SET submit_review = ?, submit_brief = ? WHERE user_id = ?")->execute([(int)($f['submit_review'] ?? 0), (string)($f['submit_brief'] ?? ''), $uid]);
+}
+/** Columnas y tabla de la evaluacion de envios (migra-117). */
+function agent_review_on(): bool {
+    static $on = null; global $pdo;
+    if ($on !== null) return $on;
+    try { $pdo->query("SELECT submit_review FROM agents LIMIT 1"); $pdo->query("SELECT 1 FROM agent_item_seen LIMIT 1"); return $on = true; } catch (Throwable $e) { return $on = false; }
 }
 function agent_delete(PDO $pdo, int $uid): void {
     $pdo->prepare("DELETE FROM agents WHERE user_id = ?")->execute([$uid]);
@@ -62,7 +69,8 @@ function agent_from_post(): array {
             'max_comments' => $n('ag_max_comments', 6, 0, 250), 'replies' => post('ag_replies') === '1' ? 1 : 0, 'skip_users' => mb_substr($skip, 0, 300), 'topics' => mb_substr($topics, 0, 120),
             'submits_per_day' => $n('ag_submits_per_day', 0, 0, 48), 'submit_kinds' => in_array(post('ag_submit_kinds'), ['medio', 'newsletter', 'ambos'], true) ? post('ag_submit_kinds') : 'ambos',
             'submit_topics' => mb_substr($stopics, 0, 120),
-            'submit_langs' => mb_substr(implode(',', array_values(array_filter(array_map('strval', (array)($_POST['ag_submit_langs'] ?? [])), fn($x) => isset(DDD_LANGS[$x])))), 0, 40)];
+            'submit_langs' => mb_substr(implode(',', array_values(array_filter(array_map('strval', (array)($_POST['ag_submit_langs'] ?? [])), fn($x) => isset(DDD_LANGS[$x])))), 0, 40),
+            'submit_review' => post('ag_submit_review') === '1' ? 1 : 0, 'submit_brief' => mb_substr(trim(post('ag_submit_brief')), 0, 4000)];
 }
 
 /** Seccion «Agente» de la ficha de moderacion (solo admin). $a = agent_get() o null. */
@@ -101,13 +109,21 @@ function agent_form(PDO $pdo, int $uid, ?array $a): string {
     $lsel = agent_list((string)$v['submit_langs']);
     $h .= "<label>Idiomas de las fuentes de las que envía (ninguno marcado = todos)</label><div class=\"agtopics\">";
     foreach (DDD_LANGS as $k => $name) $h .= "<label><input type=\"checkbox\" name=\"ag_submit_langs[]\" value=\"$k\"" . (in_array($k, $lsel, true) ? ' checked' : '') . "> " . h($name) . "</label>";
-    $h .= "</div><small class=\"hint\">0 = no envía. Con N al día, uno cada 24/N horas más o menos (con azar), entre las noticias de las últimas " . (int)cfg('agent_submit_max_age_h', 24) . " h que nadie haya enviado. El agente no comenta lo que envía él.</small>";
+    $h .= "</div>";
+    if (agent_review_on()) {
+        $h .= "<label><input type=\"checkbox\" name=\"ag_submit_review\" value=\"1\"" . ((int)($v['submit_review'] ?? 0) ? ' checked' : '') . "> <b>la IA local evalúa lo que envía</b> (pone nota a las candidatas y solo se envía la mejor si llega a " . (int)cfg('agent_review_min', 7) . " sobre 10; sin marcar, elige al azar como antes)</label>";
+        $h .= "<label>Criterio de envío: qué es una buena noticia para este agente (temas, qué puntuar alto y qué bajo)</label>";
+        $h .= "<textarea name=\"ag_submit_brief\" rows=\"5\" placeholder=\"Ciencia y tecnología: … Puntúa alto … Puntúa bajo …\">" . h((string)($v['submit_brief'] ?? '')) . "</textarea>";
+        $h .= "<small class=\"hint\">Con la evaluación marcada los envíos los decide el worker del PC de la redacción: si está apagado, este agente no envía. Vacío = solo el criterio general de calidad (relevancia, sustancia, nada de publicidad ni cebos).</small>";
+    }
+    $h .= "<small class=\"hint\">0 = no envía. Con N al día, uno cada 24/N horas más o menos (con azar), entre las noticias de las últimas " . (int)cfg('agent_submit_max_age_h', 24) . " h que nadie haya enviado. El agente no comenta lo que envía él.</small>";
     if ($a) {
         try { $q = $pdo->prepare("SELECT COUNT(*) FROM agent_sent WHERE user_id = ? AND created >= CURDATE()"); $q->execute([$uid]); $envHoy = (int)$q->fetchColumn(); } catch (Throwable $e) { $envHoy = 0; }
         $st = $pdo->prepare("SELECT result, COUNT(*) n FROM agent_seen WHERE user_id = ? GROUP BY result"); $st->execute([$uid]);
         $c = array_column($st->fetchAll(), 'n', 'result');
         $hoy = agent_today($pdo, $uid);
         $h .= "<p class=\"meta\" style=\"padding:0\">Hoy " . $hoy . " de " . (int)$v['per_day'] . " comentarios · " . $envHoy . " de " . (int)$v['submits_per_day'] . " envíos" . (!empty($a['next_submit']) && (int)$v['submits_per_day'] > 0 ? " (próximo hacia las " . date('H:i', strtotime((string)$a['next_submit'])) . ")" : "") . " · vistos: " . (int)($c['comment'] ?? 0) . " comentados, " . (int)($c['skip'] ?? 0) . " pasados, " . (int)($c['fail'] ?? 0) . " fallos"
+            . agent_review_resumen($pdo, $uid, $v)
             . " · worker visto " . h((string)cfg('agent_worker_seen', '') ?: 'nunca') . " · <a href=\"/admin.php?t=agentes&amp;a=$uid\">registro</a></p>";
     }
     $h .= "</details>";
@@ -219,18 +235,28 @@ function agentes_tick(PDO $pdo): array {
     try { $ags = $pdo->query("SELECT a.*, u.login, u.aura FROM agents a JOIN users u ON u.user_id = a.user_id WHERE a.enabled = 1 AND u.verified = 1 AND a.submits_per_day > 0 AND (a.next_submit IS NULL OR a.next_submit <= NOW())")->fetchAll(); }
     catch (Throwable $e) { return ["agentes: " . $e->getMessage()]; }   // sin migra-091
     foreach ($ags as $a) {
+        if (agent_reviews($a)) continue;   // migra-117: sus envios los decide el worker con el modelo (/api/agente.php?act=submit_lease)
         try { $log[] = agent_submit_one($pdo, $a); }
         catch (Throwable $e) { $log[] = "agente {$a['login']}: ERROR " . $e->getMessage(); }
     }
     return $log;
 }
 
-/** Envia una noticia por el agente (o no, si no hay candidatas) y programa la siguiente. Devuelve la linea de log. */
-function agent_submit_one(PDO $pdo, array $a): string {
-    $uid = (int)$a['user_id'];
+/** ¿Este agente pasa sus envios por la IA local? (migra-117) */
+function agent_reviews(array $a): bool { return (int)($a['submit_review'] ?? 0) === 1; }
+
+/** Intervalo al azar hasta el siguiente envio: 24/N horas por un factor entre 0,7 y 1,4 (minimo 30 min de base). */
+function agent_next_gap(array $a): int {
     $gapMin = max(30, (int)round(1440 / max(1, (int)$a['submits_per_day'])));
-    $next = (int)round($gapMin * (0.7 + random_int(0, 700) / 1000));   // 0,7–1,4 veces el intervalo
-    $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL ? MINUTE WHERE user_id = ?")->execute([$next, $uid]);
+    return (int)round($gapMin * (0.7 + random_int(0, 700) / 1000));
+}
+
+/** Noticias que el agente podria enviar ahora, de la mas reciente a la mas antigua: de fuentes activas del tipo, los temas y los
+ *  idiomas de su ficha, de las ultimas agent_submit_max_age_h horas, no enviadas por nadie, de medio no bloqueado y con titular.
+ *  Con $review, ademas: fuera las que este agente ya suspendio (agent_item_seen por debajo de la nota minima) y fuera las que
+ *  lang_detect() ve claramente en un idioma que no es de los suyos (una fuente «es» que publica una pieza en ingles). */
+function agent_submit_cands(PDO $pdo, array $a, int $limit, bool $review = false): array {
+    $uid = (int)$a['user_id'];
     $maxAge = max(1, (int)cfg('agent_submit_max_age_h', 24));
     $kinds = $a['submit_kinds'] === 'ambos' ? ['medio', 'newsletter'] : [$a['submit_kinds']];
     $topics = array_filter(array_map('intval', agent_list((string)$a['submit_topics'])));
@@ -241,18 +267,45 @@ function agent_submit_one(PDO $pdo, array $a): string {
     if ($topics) $w[] = "s.topic_id IN (" . implode(',', $topics) . ")";
     $langs = array_values(array_filter(agent_list((string)($a['submit_langs'] ?? '')), fn($x) => isset(DDD_LANGS[$x])));
     if ($langs) { $w[] = "s.lang IN (" . implode(',', array_fill(0, count($langs), '?')) . ")"; $p = array_merge($p, $langs); }
-    $st = $pdo->prepare("SELECT i.item_id, i.title, i.url, i.content, i.image, i.pub_date, s.name AS src_name, s.topic_id, s.lang AS src_lang
-                           FROM source_items i JOIN sources s ON s.source_id = i.source_id
-                          WHERE " . implode(' AND ', $w) . " ORDER BY i.pub_date DESC LIMIT 12");
+    if ($review) $w[] = "NOT EXISTS (SELECT 1 FROM agent_item_seen z WHERE z.user_id = $uid AND z.item_id = i.item_id AND z.score < " . agent_review_min() . ")";
+    $st = $pdo->prepare("SELECT i.item_id, i.title, i.url, i.content, i.image, i.pub_date, s.name AS src_name, s.kind AS src_kind, s.topic_id, s.lang AS src_lang, t.name AS topic
+                           FROM source_items i JOIN sources s ON s.source_id = i.source_id LEFT JOIN topics t ON t.topic_id = s.topic_id
+                          WHERE " . implode(' AND ', $w) . " ORDER BY i.pub_date DESC LIMIT " . max(1, min(120, $limit * ($review ? 3 : 1))));
     $st->execute($p);
-    $cands = $st->fetchAll();
-    // sin medios bloqueados (lib/bloqueos.php) y con titular
-    $cands = array_values(array_filter($cands, fn($i) => mb_strlen((string)$i['title']) >= 8 && !(function_exists('source_blocked') && source_blocked($pdo, (string)$i['url']))));
+    $out = [];
+    foreach ($st->fetchAll() as $i) {
+        if (mb_strlen((string)$i['title']) < 8) continue;
+        if (function_exists('source_blocked') && source_blocked($pdo, (string)$i['url'])) continue;   // medios bloqueados (lib/bloqueos.php)
+        if ($review && $langs) {
+            $l = lang_detect((string)$i['title'] . ' ' . mb_substr((string)$i['content'], 0, 600));
+            if ($l !== '' && $l !== '??' && !in_array($l, $langs, true)) continue;
+        }
+        $out[] = $i;
+        if (count($out) >= $limit) break;
+    }
+    return $out;
+}
+
+/** Envia una noticia por el agente (o no, si no hay candidatas) y programa la siguiente. Devuelve la linea de log.
+ *  Es el camino sin modelo (al azar entre las 12 mas recientes); con submit_review = 1 no se usa (ver agent_review_*). */
+function agent_submit_one(PDO $pdo, array $a): string {
+    $uid = (int)$a['user_id'];
+    $next = agent_next_gap($a);
+    $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL ? MINUTE WHERE user_id = ?")->execute([$next, $uid]);
+    $cands = agent_submit_cands($pdo, $a, 12);
     if (!$cands) {   // nada que enviar ahora: volver a mirar en media hora, no dentro de todo el intervalo
         $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL 30 MINUTE WHERE user_id = ?")->execute([$uid]);
         return "agente {$a['login']}: sin noticias nuevas que enviar (vuelve a mirar en 30 min)";
     }
     $i = $cands[random_int(0, count($cands) - 1)];
+    $sid = agent_submit_item($pdo, $a, $i);
+    return "agente {$a['login']}: enviada #$sid «" . mb_strimwidth((string)$i['title'], 0, 60, '…') . "» ({$i['src_name']}; próximo en $next min)";
+}
+
+/** Inserta en el radar la noticia $i (fila de agent_submit_cands) a nombre del agente, tal cual llega del feed. Devuelve story_id. */
+function agent_submit_item(PDO $pdo, array $a, array $i): int {
+    $uid = (int)$a['user_id'];
+    $topics = array_values(array_filter(array_map('intval', agent_list((string)$a['submit_topics']))));
     $topic = (int)($i['topic_id'] ?: ($topics[0] ?? 0));
     if ($topic <= 0) $topic = (int)$pdo->query("SELECT topic_id FROM topics ORDER BY topic_id LIMIT 1")->fetchColumn();
     // foto: copia de la del feed (la del item se borra cuando caduca), como hace enviar.php con ?x=
@@ -274,5 +327,78 @@ function agent_submit_one(PDO $pdo, array $a): string {
     mod_enqueue($pdo, 'story', $sid);
     $pdo->prepare("INSERT INTO agent_sent (item_id, user_id, story_id) VALUES (?, ?, ?)")->execute([(int)$i['item_id'], $uid, $sid]);
     $pdo->commit();
-    return "agente {$a['login']}: enviada #$sid «" . mb_strimwidth($title, 0, 60, '…') . "» ({$i['src_name']}; próximo en $next min)";
+    return $sid;
+}
+
+/* ---- envios evaluados por la IA local (migra-117) ---------------------------------------------------------------
+ * Con agents.submit_review = 1 el cron no envia por ese agente. El worker del PC pide trabajo (agent_review_lease): por cada
+ * agente al que le toca enviar, sus candidatas (titular, entradilla, fuente, tema) y su criterio. El modelo pone nota de 0 a 10
+ * a cada una y el worker devuelve las notas y la elegida (agent_review_pick). Deltha apunta las notas en agent_item_seen,
+ * comprueba que la elegida llega a agent_review_min y sigue siendo enviable, y la envia. Si ninguna llega, nada: se vuelve a
+ * mirar en 30 min con noticias nuevas (las suspendidas no se le vuelven a ofrecer). El servidor nunca llama al PC. */
+function agent_review_min(): int { return max(1, min(10, (int)cfg('agent_review_min', 7))); }
+
+/** Trabajo de evaluacion para el worker. $dry = prueba: todos los agentes con evaluacion, les toque o no, sin reservar nada. */
+function agent_review_lease(PDO $pdo, array $agents, bool $dry = false): array {
+    if (!agent_review_on()) return [];
+    $n = max(5, min(40, (int)cfg('agent_review_cands', 20)));
+    $jobs = [];
+    foreach ($agents as $a) {
+        if (!agent_reviews($a) || (int)$a['submits_per_day'] <= 0) continue;
+        if (!$dry && !empty($a['next_submit']) && strtotime((string)$a['next_submit']) > time()) continue;
+        $cands = agent_submit_cands($pdo, $a, $n, true);
+        if (!$dry) {   // reserva: nadie mas lo pide mientras el modelo piensa; sin candidatas, a mirar en media hora
+            $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL ? MINUTE WHERE user_id = ?")->execute([$cands ? 15 : 30, (int)$a['user_id']]);
+        }
+        if (!$cands) continue;
+        $jobs[] = ['agent' => $a['login'], 'brief' => (string)($a['submit_brief'] ?? ''), 'min' => agent_review_min(),
+                   'langs' => agent_list((string)($a['submit_langs'] ?? '')),
+                   'items' => array_map(fn($i) => ['id' => (int)$i['item_id'], 'title' => (string)$i['title'], 'lead' => mb_substr(trim(preg_replace('/\s+/u', ' ', strip_tags((string)$i['content']))), 0, 400),
+                                                   'source' => (string)$i['src_name'], 'kind' => (string)$i['src_kind'], 'topic' => (string)($i['topic'] ?? ''), 'published' => (string)$i['pub_date']], $cands)];
+    }
+    return $jobs;
+}
+
+/** Resultado de una evaluacion. $scores = [{id, score, note}], $pick = item elegido (0 = ninguno). Devuelve [story_id, mensaje]. */
+function agent_review_pick(PDO $pdo, array $a, array $scores, int $pick, string $model, bool $fail = false): array {
+    $uid = (int)$a['user_id'];
+    $en30 = fn() => $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL 30 MINUTE WHERE user_id = ?")->execute([$uid]);
+    if (!agent_reviews($a)) return [0, 'el agente no tiene la evaluacion activada'];
+    if ($fail) { $en30(); return [0, 'fallo anotado; se reintenta en 30 min']; }
+    // solo valen notas de noticias que ahora mismo son candidatas suyas (el worker no puede colar otra cosa)
+    $cands = [];
+    foreach (agent_submit_cands($pdo, $a, 120, true) as $i) $cands[(int)$i['item_id']] = $i;
+    $nota = [];
+    $ins = $pdo->prepare("INSERT INTO agent_item_seen (user_id, item_id, score, note, title, source, model) VALUES (?,?,?,?,?,?,?)
+                          ON DUPLICATE KEY UPDATE score = VALUES(score), note = VALUES(note), model = VALUES(model), created = NOW()");
+    foreach ($scores as $s) {
+        $id = (int)($s['id'] ?? 0);
+        if (!isset($cands[$id]) || isset($nota[$id])) continue;
+        $nota[$id] = max(0, min(10, (int)round((float)($s['score'] ?? 0))));
+        $ins->execute([$uid, $id, $nota[$id], mb_substr((string)($s['note'] ?? ''), 0, 200), mb_substr((string)$cands[$id]['title'], 0, 200), mb_substr((string)$cands[$id]['src_name'], 0, 120), mb_substr($model, 0, 80) ?: null]);
+    }
+    $min = agent_review_min();
+    // si la elegida ya no vale (otro agente la acaba de enviar), la siguiente mejor de las que ha puntuado
+    if ($pick > 0 && !isset($nota[$pick]) && $nota) { arsort($nota); $pick = (int)array_key_first($nota); }
+    if ($pick <= 0 || !isset($nota[$pick]) || $nota[$pick] < $min) {
+        $en30();
+        return [0, 'ninguna llega a ' . $min . ' (' . count($nota) . ' evaluadas); se vuelve a mirar en 30 min'];
+    }
+    try { $q = $pdo->prepare("SELECT COUNT(*) FROM agent_sent WHERE user_id = ? AND created >= CURDATE()"); $q->execute([$uid]); $hoy = (int)$q->fetchColumn(); } catch (Throwable $e) { $hoy = 0; }
+    if ($hoy >= (int)$a['submits_per_day']) { $en30(); return [0, 'tope de envios de hoy alcanzado']; }
+    $sid = agent_submit_item($pdo, $a, $cands[$pick]);
+    $next = agent_next_gap($a);
+    $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL ? MINUTE WHERE user_id = ?")->execute([$next, $uid]);
+    $pdo->prepare("UPDATE agent_item_seen SET sent = 1 WHERE user_id = ? AND item_id = ?")->execute([$uid, $pick]);
+    return [$sid, "enviada #$sid con un {$nota[$pick]} (próximo en $next min)"];
+}
+
+/** Para la ficha: cuantas ha evaluado hoy y cuantas aprobaron. */
+function agent_review_resumen(PDO $pdo, int $uid, array $v): string {
+    if (!agent_review_on() || !(int)($v['submit_review'] ?? 0)) return '';
+    try {
+        $q = $pdo->prepare("SELECT COUNT(*) n, COALESCE(SUM(score >= ?), 0) ok FROM agent_item_seen WHERE user_id = ? AND created >= CURDATE()");
+        $q->execute([agent_review_min(), $uid]); $r = $q->fetch();
+        return " · evaluadas hoy: " . (int)$r['n'] . " (" . (int)$r['ok'] . " con nota para enviar)";
+    } catch (Throwable $e) { return ''; }
 }

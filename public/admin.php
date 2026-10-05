@@ -498,7 +498,7 @@ if ($tab === 'usuarios') {
             foreach ($ags as $a) {
                 $st = $pdo->prepare("SELECT result, COUNT(*) n FROM agent_seen WHERE user_id = ? GROUP BY result"); $st->execute([$a['user_id']]);
                 $c = array_column($st->fetchAll(), 'n', 'result');
-                $params = (int)$a['per_day'] . " com./día" . ((int)($a['submits_per_day'] ?? 0) > 0 ? " · " . (int)$a['submits_per_day'] . " envíos/día (" . h($a['submit_kinds'] ?? 'ambos') . ($a['submit_topics'] !== '' ? ", temas " . h($a['submit_topics']) : "") . (($a['submit_langs'] ?? '') !== '' ? ", idiomas " . h($a['submit_langs']) : "") . ")" : "") . " · " . (int)$a['min_age_min'] . " min–" . (int)$a['max_age_h'] . " h · ≤ " . (int)$a['max_comments'] . " com." . ((int)$a['replies'] ? " · responde" : "") . ($a['topics'] !== '' ? " · temas " . h($a['topics']) : "") . ($a['skip_users'] !== '' ? " · evita " . h($a['skip_users']) : "");
+                $params = (int)$a['per_day'] . " com./día" . ((int)($a['submits_per_day'] ?? 0) > 0 ? " · " . (int)$a['submits_per_day'] . " envíos/día (" . h($a['submit_kinds'] ?? 'ambos') . ($a['submit_topics'] !== '' ? ", temas " . h($a['submit_topics']) : "") . (($a['submit_langs'] ?? '') !== '' ? ", idiomas " . h($a['submit_langs']) : "") . ((int)($a['submit_review'] ?? 0) ? ", <b>evalúa la IA</b>" : ", al azar") . ")" : "") . " · " . (int)$a['min_age_min'] . " min–" . (int)$a['max_age_h'] . " h · ≤ " . (int)$a['max_comments'] . " com." . ((int)$a['replies'] ? " · responde" : "") . ($a['topics'] !== '' ? " · temas " . h($a['topics']) : "") . ($a['skip_users'] !== '' ? " · evita " . h($a['skip_users']) : "");
                 echo "<tr><td class=\"who\"><a href=\"/u.php?u=" . rawurlencode($a['login']) . "\">" . h($a['login']) . "</a><small>" . (trim((string)$a['persona']) === '' ? 'sin personalidad (usa personalidad.md)' : mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['persona']), 0, 90, '…')) . "</small></td>"
                    . "<td>" . ((int)$a['enabled'] ? '<b>activo</b>' : 'apagado') . ((int)$a['verified'] ? '' : ' (cuenta sin validar)') . "</td><td class=\"num\">" . agent_today($pdo, (int)$a['user_id']) . "</td>"
                    . "<td class=\"num\">" . (int)($c['comment'] ?? 0) . " com. · " . (int)($c['skip'] ?? 0) . " pasa · " . (int)($c['fail'] ?? 0) . " fallo</td><td><small>$params</small></td>"
@@ -511,6 +511,18 @@ if ($tab === 'usuarios') {
             echo "<h3>Registro</h3><table class=\"users\"><tr><th>cuándo</th><th>hilo</th><th>resultado</th><th>nota del modelo</th></tr>";
             foreach ($st->fetchAll() as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\"><a href=\"/hilo.php?id={$r['story_id']}" . ($r['comment_id'] ? "#c{$r['comment_id']}" : "") . "\">" . h(mb_strimwidth((string)$r['title'], 0, 70, '…')) . "</a></td><td>" . h($r['result']) . "</td><td><small>" . h((string)$r['note']) . ($r['model'] ? " · " . h($r['model']) : "") . "</small></td></tr>";
             echo "</table>";
+            if (agent_review_on()) {   // migra-117: lo que la IA local ha puntuado para sus envios
+                $st = $pdo->prepare("SELECT z.*, x.story_id FROM agent_item_seen z LEFT JOIN agent_sent x ON x.item_id = z.item_id AND x.user_id = z.user_id WHERE z.user_id = ? ORDER BY z.created DESC, z.score DESC LIMIT 150"); $st->execute([$aid]);
+                $rows = $st->fetchAll();
+                echo "<h3>Envíos evaluados por la IA</h3>";
+                if (!$rows) echo "<p class=\"end\">Todavía no ha evaluado ninguna noticia para este agente.</p>";
+                else {
+                    echo "<p class=\"meta\">Nota mínima para enviar: <b>" . agent_review_min() . "</b> (Config → <code>agent_review_min</code>). Las suspendidas no se le vuelven a ofrecer.</p>";
+                    echo "<table class=\"users\"><tr><th>cuándo</th><th>noticia</th><th>nota</th><th>motivo del modelo</th><th></th></tr>";
+                    foreach ($rows as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\">" . h(mb_strimwidth((string)$r['title'], 0, 80, '…')) . "<small>" . h((string)$r['source']) . "</small></td><td class=\"num\">" . ((int)$r['score'] >= agent_review_min() ? '<b>' . (int)$r['score'] . '</b>' : (int)$r['score']) . "</td><td><small>" . h((string)$r['note']) . "</small></td><td>" . ((int)$r['sent'] ? ($r['story_id'] ? "<a href=\"/hilo.php?id=" . (int)$r['story_id'] . "\">enviada</a>" : 'enviada') : '') . "</td></tr>";
+                    echo "</table>";
+                }
+            }
         }
     }
 } elseif ($tab === 'analitica') {
