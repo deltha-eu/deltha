@@ -15,6 +15,9 @@ temperatura = 0.7
 max_tokens  = 400
 ; caracteres del articulo que se le pasan al modelo (unos 2.500 tokens; el contexto del moderador es de 8192)
 max_articulo = 9000
+; evaluar envíos sí es clasificar: temperatura baja. Tokens de la respuesta (unas 20 notas con su motivo)
+temperatura_envios = 0.1
+max_tokens_envios  = 2000
 
 [worker]
 ; hilos que pide en cada pasada, segundos entre pasadas (el tope diario esta en Deltha: agent_per_day) y tras un error
@@ -23,3 +26,5 @@ espera       = 600
 espera_error = 120
 ; personalidad de ejemplo: se usa si la ficha del agente en Deltha deja la suya vacia (se relee en cada pasada)
 personalidad = personalidad.md
+; 1 = además evalúa los envíos al radar de los agentes que lo tienen marcado en su ficha (migra-117); 0 = solo comenta
+envios       = 1

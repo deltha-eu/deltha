@@ -9,6 +9,11 @@
  *                                     (n hilos como mucho por agente activo con cupo; cada item lleva el nick del agente al que va)
  *   POST ?act=comment {"agent","story_id","content","parent"?,"model","note"}  -> {"ok":true,"comment_id":N,"left":n}
  *   POST ?act=skip    {"agent","story_id","note","model"?,"fail"?:true}         -> {"ok":true}
+ *
+ *  Envios evaluados por el modelo (migra-117; agentes con «la IA local evalua lo que envia»):
+ *   GET  ?act=submit_lease[&dry=1] -> {"jobs":[{agent,brief,min,langs,items:[{id,title,lead,source,kind,topic,published}]}]}
+ *                                     (un trabajo por agente al que le toca enviar; dry=1: todos, sin reservar: para probar)
+ *   POST ?act=submit_pick {"agent","scores":[{"id","score","note"}],"pick":item_id|0,"model","fail"?:true} -> {"ok":true,"story_id":N,"msg":"…"}
  */
 define('DDD_PUBLIC', 1);   // sin la puerta de la clave de acceso: la protege el token
 require __DIR__ . '/../../lib/app.php';
@@ -67,6 +72,18 @@ if ($act === 'comment' || $act === 'skip') {
     [$cid, $err] = agent_comment($pdo, $a, $sid, (string)($body['content'] ?? ''), (int)($body['parent'] ?? 0) ?: null, (string)($body['model'] ?? ''), (string)($body['note'] ?? ''));
     if ($err) api_out(['error' => $err], 409);
     api_out(['ok' => true, 'comment_id' => $cid, 'left' => agent_quota_left($pdo, $a)]);
+}
+
+if ($act === 'submit_lease') {
+    api_out(['jobs' => agent_review_lease($pdo, $agents, !empty($_GET['dry'])), 'why' => agent_review_on() ? '' : 'falta la migracion 117']);
+}
+
+if ($act === 'submit_pick') {
+    $a = $byLogin[strtolower((string)($body['agent'] ?? ''))] ?? null;
+    if (!$a) api_out(['error' => 'agente desconocido o apagado: ' . mb_substr((string)($body['agent'] ?? ''), 0, 32)], 409);
+    if (!agent_review_on()) api_out(['error' => 'falta la migracion 117'], 409);
+    [$sid, $msg] = agent_review_pick($pdo, $a, is_array($body['scores'] ?? null) ? $body['scores'] : [], (int)($body['pick'] ?? 0), (string)($body['model'] ?? ''), !empty($body['fail']));
+    api_out(['ok' => true, 'story_id' => $sid, 'msg' => $msg]);
 }
 
 api_out(['error' => 'accion desconocida'], 400);
