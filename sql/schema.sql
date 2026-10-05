@@ -67,6 +67,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('img_h',               '900',  'Alto de la foto procesada (4:3)'),
 ('img_max_bytes',       '6000000', 'Tamano maximo de subida'),
 ('og_timeout_sec',      '3',    'Timeout para extraer og:image'),
+('img_generic_min',     '3',    'Foto de la pagina o del feed repetida en este numero de noticias distintas del mismo medio = generica (logo, relleno): no se usa. 0 = no mirar'),
 ('curl_impersonate',    '/opt/curl-impersonate/curl_chrome116', 'Ruta a curl-impersonate (vacio = usar curl de PHP)'),
 ('sources_enabled',      '1',    '1 = fuentes externas visibles (/fuente.php) y lectura de sus RSS en el cron'),
 ('sources_agregadores',  '0',    '1 = los agregadores (Meneame, Mediatize, Renegados...) se ven y se leen; 0 = fuera de todo salvo admin > Fuentes'),
@@ -504,4 +505,24 @@ CREATE TABLE reg_log (
     activated   DATETIME DEFAULT NULL,
     KEY idx_reglog_created (created),
     KEY idx_reglog_user (user_id)
+) ENGINE=InnoDB;
+
+-- Fotos genericas de los medios (migra-118): que imagen salio de que pagina, y las que han resultado ser logo o relleno.
+CREATE TABLE image_seen (
+    seen_id  INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    domain   VARCHAR(120) NOT NULL,
+    hash     CHAR(40) NOT NULL,
+    page     CHAR(32) NOT NULL,
+    file     VARCHAR(40) DEFAULT NULL,
+    seen     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_imgseen_hash (domain, hash),
+    KEY idx_imgseen_file (file),
+    KEY idx_imgseen_seen (seen)
+) ENGINE=InnoDB;
+
+CREATE TABLE image_generic (
+    domain   VARCHAR(120) NOT NULL,
+    hash     CHAR(40) NOT NULL,
+    created  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (domain, hash)
 ) ENGINE=InnoDB;

@@ -103,6 +103,74 @@ function imagen_desde_subida(array $file): ?string {
     return $bytes === false ? null : imagen_desde_bytes($bytes);
 }
 
+/* ---- fotos genericas de los medios (migra-118) -----------------------------------------------------------------
+ * Cuando una noticia no tiene foto propia, muchos medios ponen de og:image su logo o una imagen de relleno. Dos señales:
+ *   1) la misma imagen (sha1 de los bytes originales) en config.img_generic_min paginas distintas del mismo dominio;
+ *   2) el nombre del fichero (logo, default, placeholder, fallback, og-image…).
+ * La noticia queda sin foto. Solo pasa por aqui lo que Deltha saca de la pagina o del feed, nunca lo que sube una persona. */
+
+/** ¿El nombre del fichero de la imagen delata un logo o un relleno? Solo el ultimo tramo de la ruta: «/sites/default/files/»
+ *  es la carpeta de cualquier Drupal, y «hqdefault.jpg» (YouTube) no cuenta porque «default» va pegado a otras letras. */
+function imagen_nombre_generico(string $imgUrl): bool {
+    $base = strtolower(basename(rawurldecode((string)parse_url($imgUrl, PHP_URL_PATH))));
+    if ($base === '') return false;
+    return preg_match('/(?:^|[^a-z])(?:logo|logotipo|placeholder|fallback|default|no[-_]?image|sin[-_]?(?:imagen|foto)|og[-_]?(?:image|img|default)|(?:share|social)[-_]?(?:image|img|default|card))(?:[^a-z]|$)/', $base) === 1;
+}
+
+/** Foto sacada de una pagina o de un feed: como imagen_desde_bytes(), pero devuelve null si es la generica del medio.
+ *  $pageUrl: la noticia; $imgUrl: de donde salio la imagen, si se sabe. Si la tabla aun no existe o la BD falla, se guarda sin mirar. */
+function imagen_de_pagina(string $bytes, string $pageUrl, string $imgUrl = ''): ?string {
+    global $pdo;
+    $min = (int)cfg('img_generic_min', 3);
+    $dom = source_of($pageUrl);
+    if ($min <= 0 || !$dom || !($pdo instanceof PDO)) return imagen_desde_bytes($bytes);
+    if ($imgUrl !== '' && imagen_nombre_generico($imgUrl)) return null;
+    $hash = sha1($bytes);
+    try {
+        $q = $pdo->prepare("SELECT 1 FROM image_generic WHERE domain = ? AND hash = ?");
+        $q->execute([$dom, $hash]);
+        if ($q->fetchColumn()) return null;
+    } catch (Throwable $e) { return imagen_desde_bytes($bytes); }
+
+    $name = imagen_desde_bytes($bytes);
+    if (!$name) return null;
+    try {
+        $pdo->prepare("INSERT INTO image_seen (domain, hash, page, file, seen) VALUES (?,?,?,?,?)")->execute([$dom, $hash, md5($pageUrl), $name, date('Y-m-d H:i:s')]);
+        if (random_int(1, 200) === 1) $pdo->prepare("DELETE FROM image_seen WHERE seen < ?")->execute([date('Y-m-d H:i:s', time() - 30 * 86400)]);
+        $q = $pdo->prepare("SELECT COUNT(DISTINCT page) FROM image_seen WHERE domain = ? AND hash = ?");
+        $q->execute([$dom, $hash]);
+        if ((int)$q->fetchColumn() < $min) return $name;
+
+        // generica: se apunta y se retira de todo lo que ya la llevaba (envios, noticias de fuentes y sus copias)
+        try { $pdo->prepare("INSERT INTO image_generic (domain, hash, created) VALUES (?,?,?)")->execute([$dom, $hash, date('Y-m-d H:i:s')]); } catch (Throwable $e) {}   // ya apuntada
+        $q = $pdo->prepare("SELECT DISTINCT file FROM image_seen WHERE domain = ? AND hash = ? AND file IS NOT NULL");
+        $q->execute([$dom, $hash]);
+        foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $f) {
+            if (!preg_match('/^[a-f0-9]{24}\.jpg$/', (string)$f)) continue;
+            $pdo->prepare("UPDATE stories SET image = NULL WHERE image = ?")->execute([$f]);
+            $pdo->prepare("UPDATE source_items SET image = NULL WHERE image = ?")->execute([$f]);
+            @unlink(DDD_MEDIA_DIR . '/' . $f);
+        }
+        $pdo->prepare("UPDATE image_seen SET file = NULL WHERE domain = ? AND hash = ?")->execute([$dom, $hash]);
+        return null;
+    } catch (Throwable $e) { return $name; }
+}
+
+/** Copia una foto de /media con nombre nuevo (la de una noticia de fuente pasa a un envio) y apunta la copia junto a la
+ *  original, para que tambien se retire si la imagen resulta ser la generica del medio. Devuelve el nombre nuevo o null. */
+function imagen_copiar(string $orig): ?string {
+    global $pdo;
+    if (!preg_match('/^[a-f0-9]{24}\.jpg$/', $orig) || !is_file(DDD_MEDIA_DIR . '/' . $orig)) return null;
+    $copia = bin2hex(random_bytes(12)) . '.jpg';
+    if (!@copy(DDD_MEDIA_DIR . '/' . $orig, DDD_MEDIA_DIR . '/' . $copia)) return null;
+    try {
+        $q = $pdo->prepare("SELECT domain, hash, page, seen FROM image_seen WHERE file = ? LIMIT 1");
+        $q->execute([$orig]);
+        if ($r = $q->fetch(PDO::FETCH_ASSOC)) $pdo->prepare("INSERT INTO image_seen (domain, hash, page, file, seen) VALUES (?,?,?,?,?)")->execute([$r['domain'], $r['hash'], $r['page'], $copia, $r['seen']]);
+    } catch (Throwable $e) {}
+    return $copia;
+}
+
 /** Ruta al curl-impersonate si esta instalado (huella TLS de Chrome: pasa Cloudflare/Akamai). */
 function curl_impersonate_bin(): ?string {
     static $bin = false;
@@ -198,7 +266,7 @@ function imagen_desde_og(string $url, ?string $html = null): ?string {
         $p = parse_url($url); $img = $p['scheme'] . '://' . $p['host'] . (isset($p['port']) ? ':' . $p['port'] : '') . $img;
     }
     $bytes = http_get($img, $t);
-    return $bytes ? imagen_desde_bytes($bytes) : null;
+    return $bytes ? imagen_de_pagina($bytes, $url, $img) : null;   // null tambien si es la generica del medio
 }
 
 /** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null).

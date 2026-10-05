@@ -71,14 +71,14 @@ if ($act === 'feed' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($act === 'image' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = (int)($_GET['item'] ?? 0);
-    $st = $pdo->prepare("SELECT i.item_id, i.image FROM source_items i JOIN sources s ON s.source_id = i.source_id WHERE i.item_id = ? AND s.relay = 1");
+    $st = $pdo->prepare("SELECT i.item_id, i.image, i.url FROM source_items i JOIN sources s ON s.source_id = i.source_id WHERE i.item_id = ? AND s.relay = 1");
     $st->execute([$id]);
     $row = $st->fetch();
     if (!$row) api_out(['error' => 'esa noticia no es de una fuente de lector local'], 404);
     if ($row['image']) api_out(['ok' => true, 'ya' => true]);
     $bytes = (string)file_get_contents('php://input', false, null, 0, (int)cfg('img_max_bytes', 6000000) + 1);
-    $name = imagen_desde_bytes($bytes);   // misma receta que un envio: recorte y JPEG limpio en /media
-    if (!$name) api_out(['ok' => false, 'error' => 'imagen no valida o demasiado pequeña']);
+    $name = imagen_de_pagina($bytes, (string)$row['url']);   // misma receta que un envio: recorte y JPEG limpio en /media; sin la generica del medio
+    if (!$name) api_out(['ok' => false, 'error' => 'imagen no valida, demasiado pequeña o generica del medio']);
     $pdo->prepare("UPDATE source_items SET image = ? WHERE item_id = ? AND image IS NULL")->execute([$name, $id]);
     api_out(['ok' => true, 'image' => $name]);
 }

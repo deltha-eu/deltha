@@ -422,7 +422,7 @@ function fuente_imagen(array $src, array $it, bool $reset = false): ?string {
     if (!empty($it['thumb'])) {
         $bytes = http_get($it['thumb'], 3, (int)cfg('img_max_bytes', 6000000));
         if ($bytes === null) $fails++;
-        elseif ($n = imagen_desde_bytes($bytes)) return $n;
+        elseif ($n = imagen_de_pagina($bytes, (string)$it['url'], (string)$it['thumb'])) return $n;   // sin la generica del medio (logo, relleno)
     }
     if ((string)cfg('sources_og_image', '1') === '1' && $og < max(0, (int)cfg('sources_og_per_run', 10))) {
         $og++;
