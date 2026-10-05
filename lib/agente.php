@@ -343,9 +343,11 @@ function agent_review_lease(PDO $pdo, array $agents, bool $dry = false): array {
     if (!agent_review_on()) return [];
     $n = max(5, min(40, (int)cfg('agent_review_cands', 20)));
     $jobs = [];
+    // a quien le toca lo dice la base de datos (NOW()), no el reloj de PHP: pueden estar en husos distintos
+    $toca = array_map('intval', $pdo->query("SELECT user_id FROM agents WHERE next_submit IS NULL OR next_submit <= NOW()")->fetchAll(PDO::FETCH_COLUMN));
     foreach ($agents as $a) {
         if (!agent_reviews($a) || (int)$a['submits_per_day'] <= 0) continue;
-        if (!$dry && !empty($a['next_submit']) && strtotime((string)$a['next_submit']) > time()) continue;
+        if (!$dry && !in_array((int)$a['user_id'], $toca, true)) continue;
         $cands = agent_submit_cands($pdo, $a, $n, true);
         if (!$dry) {   // reserva: nadie mas lo pide mientras el modelo piensa; sin candidatas, a mirar en media hora
             $pdo->prepare("UPDATE agents SET next_submit = NOW() + INTERVAL ? MINUTE WHERE user_id = ?")->execute([$cands ? 15 : 30, (int)$a['user_id']]);
