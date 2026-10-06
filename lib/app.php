@@ -100,10 +100,10 @@ require_once __DIR__ . '/cache.php';     // cache Redis opcional: si Redis no es
 require_once __DIR__ . '/i18n.php';
 i18n_load();
 require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
-require_once __DIR__ . '/avisos';     // campanita: menciones, respuestas y privados
+require_once __DIR__ . '/avisos.php';     // campanita: menciones, respuestas y privados
 require_once __DIR__ . '/ghost.php';      // «Ghostear» a un usuario: velo simetrico, comentarios plegados (user_ghosts)
-require_once __DIR__ . '/destacar';   // «Destacar»: envios y noticias RSS los primeros de su lista, con halo (migra-111)
-require_once __DIR__ . '/analitica';  // analitica propia sin cookies (hits, ana_daily)
+require_once __DIR__ . '/destacar.php';   // «Destacar»: envios y noticias RSS los primeros de su lista, con halo (migra-111)
+require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
  * guardada unos minutos, solo para contar visitantes en /estadisticas.
