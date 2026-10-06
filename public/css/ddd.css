@@ -586,7 +586,7 @@ form.plain.skinform { gap: 6px; }
 [data-skin="editorial"] .lead { font-size: 15px; line-height: 1.45; color: color-mix(in srgb, var(--fg) 80%, var(--bg)); margin-bottom: 12px; }
 [data-skin="editorial"] .media { border-radius: 10px; border: 0; margin: 12px 0 14px; }
 [data-skin="editorial"] .post.full .life, [data-skin="editorial"] .post.compact .life { display: none; }   /* la barra de vida, fuera: queda el «muere en» del hilo */
-[data-skin="editorial"] .actions { gap: 32px; margin-top: 4px; font-size: 13px; }
+[data-skin="editorial"] .actions { gap: 22px; margin-top: 4px; font-size: 13px; }   /* 32 -> 22 (v169): con lecturas y clics la fila se salia por la derecha */
 [data-skin="editorial"] .peek { border-left: 0; padding-left: 0; margin: 12px 0 4px; color: var(--muted); }
 [data-skin="editorial"] .delta { margin-top: 6px; }
 [data-skin="editorial"] .fz, [data-skin="editorial"] .end { padding-left: 24px; padding-right: 24px; }
@@ -3474,6 +3474,10 @@ form.pin.on button:hover { background: color-mix(in srgb, var(--halo) 12%, var(-
 .hilo .stats > *, .hilo .stats form.pin, .hilo .stats form.seguir { flex: none; }   /* ningun elemento se encoge: si no cabe, salta de linea entero */
 /* movil: la fila de acciones de un envio (0 · ↑0 ↓0 · editar · compartir · Destacar) no cabia y ensanchaba la pagina entera. Que salte de linea
    si hace falta, con menos aire entre elementos; el boton de destacar, mas prieto y solo con la chincheta en pantallas estrechas. */
+/* v169: con los contadores de lecturas y clics la fila tampoco cabia en escritorio («Destacada» se salia de la tarjeta): en cualquier
+   ancho, si no cabe, salta de linea entera en vez de desbordar. */
+.post .actions { flex-wrap: wrap; row-gap: 6px; }
+.post .actions > * { flex: none; white-space: nowrap; }
 @media (max-width: 600px) {
   .post .actions { flex-wrap: wrap; row-gap: 6px; column-gap: 14px; }
   .post .actions > a, .post .actions > form, .post .actions > span, .post .actions button { white-space: nowrap; flex: none; }
