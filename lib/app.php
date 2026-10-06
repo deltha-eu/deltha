@@ -95,6 +95,7 @@ if (isset($_COOKIE[DDD_SESSION])) {
         }
     }
 }
+require_once __DIR__ . '/cache.php';     // cache Redis opcional: si Redis no esta, todo sigue contra MySQL
 require_once __DIR__ . '/i18n.php';
 i18n_load();
 require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
