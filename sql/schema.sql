@@ -156,6 +156,8 @@ CREATE TABLE stories (
     eff_pos         INT NOT NULL DEFAULT 0,          -- votos que cuentan en el delta: uno por conexion (votes.fp) y solo de cuentas maduras (migra-080)
     eff_neg         INT NOT NULL DEFAULT 0,
     comments        INT NOT NULL DEFAULT 0,
+    views           INT UNSIGNED NOT NULL DEFAULT 0, -- entradas al hilo (migra-120)
+    clicks          INT UNSIGNED NOT NULL DEFAULT 0, -- salidas al medio por /ir.php (migra-120)
     delta           DECIMAL(8,3) NOT NULL DEFAULT 0.000,
     delta_calc      DATETIME DEFAULT NULL,
     KEY idx_status_sent (status, sent_date),

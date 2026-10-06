@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 167);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 168);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -95,6 +95,7 @@ if (isset($_COOKIE[DDD_SESSION])) {
         }
     }
 }
+require_once __DIR__ . '/contadores.php';   // lecturas y clics de cada envio (migra-120)
 require_once __DIR__ . '/cache.php';     // cache Redis opcional: si Redis no esta, todo sigue contra MySQL
 require_once __DIR__ . '/i18n.php';
 i18n_load();
@@ -948,6 +949,8 @@ function icon(string $n): string {
         'bell'   => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/>',   // avisos (campanita)
         'sun'    => '<circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',   // me gusta (comentarios)
         'tear'   => '<path d="M12 3.5c3.2 4.6 6 7.8 6 11.2a6 6 0 0 1-12 0c0-3.4 2.8-6.6 6-11.2z"/>',   // no me gusta (comentarios): lagrima; relleno via CSS cuando es la tuya
+        'eye'    => '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',   // lecturas del hilo (migra-120)
+        'out'    => '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',   // clics de salida al medio (migra-120)
         'search' => '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/>',   // lupa: buscador (/buscar.php, migra-085)
     ][$n] ?? '';
     return "<svg class=\"i\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">$p</svg>";

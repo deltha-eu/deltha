@@ -76,7 +76,8 @@ page_header(t('Hilo'), $tab, og_tags($s['title'], $s['content_type'] === 'articl
 echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
-$dest = $s['url'] ?: null;
+story_cuenta($pdo, $s, 'views');   // una lectura por persona y dia (lib/contadores.php)
+$dest = $s['url'] ? ir_url($s) : null;   // la salida al medio pasa por /ir.php, que cuenta el clic
 if (foco()) media_block($s, 'media', $s['content_type'] === 'article' ? null : $dest);   // sin distracciones: la foto, antes del titular, flota a su derecha
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
@@ -87,12 +88,12 @@ if ($s['content_type'] === 'article') {
     if ($s['content']) echo "<p class=\"lead\">" . saltos(h($s['content'])) . "</p>";
     if (!foco()) media_block($s, 'media', $dest);
 }
-if ($s['url']) echo "<a class=\"source\" href=\"" . h($s['url']) . "\" rel=\"noopener nofollow\">" . icon('link') . h($s['source']) . "</a>";
+if ($s['url']) echo "<a class=\"source\" href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . icon('link') . h($s['source']) . "</a>";
 if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
 if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h(t('en el radar, hacia %s', t(DDD_PORTADAS[portada_de($pdo, $s)]))) . "</div>";
 echo "</div></article>";
 
-echo "<div class=\"stats\" id=\"comentarios\"><span class=\"cmt\" title=\"" . count($all) . " " . t('comentarios') . "\">" . icon('reply') . "<b>" . count($all) . "</b></span>";   // icono + cifra, como en el feed: la palabra partia la barra en dos lineas
+echo "<div class=\"stats\" id=\"comentarios\"><span class=\"cmt\" title=\"" . count($all) . " " . t('comentarios') . "\">" . icon('reply') . "<b>" . count($all) . "</b></span>" . story_contadores($s);   // icono + cifra, como en el feed: la palabra partia la barra en dos lineas
 if ($s['status'] === 'destacadas') echo "<span>" . h(queda($s['published_date'])) . "</span>";
 if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
 echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>";
