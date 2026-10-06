@@ -47,7 +47,7 @@ function who_avatar(array $row, bool $revealed, float $aura, string $name): stri
 function media_block(array $s, string $cls = 'media', ?string $href = null): void {
     if ($s['image']) {
         $href = $href ?? "/hilo/{$s['story_id']}";
-        $ext = str_starts_with($href, 'http') ? ' rel="noopener nofollow"' : '';
+        $ext = (str_starts_with($href, 'http') || str_starts_with($href, '/ir?')) ? ' rel="noopener nofollow"' : '';
         $esYt = ($s['portada'] ?? '') === 'canales' || youtube_video_id($s['url'] ?? '') !== '';   // video: triangulo de reproducir y, con youtube_embed, se ve aqui mismo
         echo "<div class=\"$cls" . ($esYt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($href) . "\"$ext" . youtube_attr($s['url'] ?? '') . " style=\"background-image:url('/media/" . h($s['image']) . "')\"></a>";
         echo topic_tag($s) . "</div>";
@@ -84,7 +84,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     if (foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');   // sin distracciones: la foto va antes del titular para flotar a su derecha
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
-    if ($mode === 'full' && $s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content_type'] === 'article' ? md_plano($s['content']) : $s['content'], 0, 240, '…')) . "</p>";
+    if ($s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content_type'] === 'article' ? md_plano($s['content']) : $s['content'], 0, $mode === 'full' ? 240 : 140, '…')) . "</p>";   // tambien en el radar (compact), mas corto
     if (!foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');
     if ($s['status'] === 'destacadas' && $s['published_date']) {
         echo "<div class=\"life\" title=\"" . h(queda($s['published_date'])) . "\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
@@ -116,6 +116,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<div class=\"actions\">";
     echo "<a href=\"$hrefC\">" . icon('reply') . "<span>{$s['comments']}</span></a>";
     vote_widget($s);
+    echo story_contadores($s);   // lecturas y clics al medio (migra-120)
     echo mod_edit_link($s) . own_edit_link($s);   // mods y admin: «editar» a un clic; el autor, en plazo, tambien
     if (is_fav((int)$s['story_id'])) echo fav_link($s);   // en el feed solo si ya esta guardado: marca y permite quitarlo (se guarda desde el hilo)
     echo share_link($s);

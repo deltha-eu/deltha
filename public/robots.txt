@@ -37,6 +37,7 @@ User-agent: *
 Disallow: /admin
 Disallow: /moderacion
 Disallow: /votar
+Disallow: /ir
 Disallow: /comentar
 Disallow: /salir
 Disallow: /delta/clave.php

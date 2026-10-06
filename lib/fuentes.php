@@ -180,7 +180,7 @@ function fuente_fav_form(array $src, bool $nombre = false): string {
 function fuentes_ultima_noticia(PDO $pdo): array {
     static $r = null;
     if ($r === null) {
-        try { $r = $pdo->query("SELECT source_id, MAX(pub_date) FROM source_items GROUP BY source_id")->fetchAll(PDO::FETCH_KEY_PAIR); }
+        try { $r = cache_remember('fuentes:ultima', 60, fn() => $pdo->query("SELECT source_id, MAX(pub_date) FROM source_items GROUP BY source_id")->fetchAll(PDO::FETCH_KEY_PAIR)); }   // Redis, 60 s (lib/cache.php)
         catch (Throwable $e) { $r = []; }
     }
     return $r;
