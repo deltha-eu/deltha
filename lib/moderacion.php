@@ -8,7 +8,7 @@
  *
  * Estados de mod_queue:
  *   queued -> processing (reservado por el worker hasta leased_until) -> ok | flag | hidden | needs_human
- *   flag / hidden / needs_human -> human_ok | human_removed   (lo cierra un moderador en /moderacion.php#ia)
+ *   flag / hidden / needs_human -> human_ok | human_removed   (lo cierra un moderador en /moderacion#ia)
  *
  * La IA nunca borra: como mucho oculta provisionalmente (mod_auto_hide) y siempre decide una persona.
  */

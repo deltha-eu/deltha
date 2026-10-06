@@ -6,7 +6,7 @@
  */
 require __DIR__ . '/../lib/app.php';
 $u = user();
-if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login.php');
+if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login');
 $id = (int)post('id'); $v = (int)post('v');
 if (!in_array($v, [1, -1], true)) redirect('/');
 
@@ -44,5 +44,5 @@ try {
 } catch (Throwable $e) { $pdo->rollBack(); }
 // volver al hilo, al comentario votado (ancla c{id})
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
-if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = $story ? "/hilo.php?id=$story" : '/';
+if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = $story ? "/hilo/$story" : '/';
 redirect($back . (isset($_POST['js']) ? '' : "#c$id"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll

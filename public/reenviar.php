@@ -1,5 +1,5 @@
 <?php
-/** /reenviar.php — vuelve a enviar el enlace de activacion (una vez cada 10 min por cuenta). Visible sin clave. */
+/** /reenviar — vuelve a enviar el enlace de activacion (una vez cada 10 min por cuenta). Visible sin clave. */
 define('DDD_PUBLIC', true);
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/mail.php';

@@ -24,9 +24,12 @@ $st->bindValue(2, (int)cfg('per_page', 20), PDO::PARAM_INT);
 $st->bindValue(3, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 
-page_header(t(DDD_PORTADAS[$p]), $p);
+// autodescubrimiento del RSS de cada portada (/rss?portada=…), la actual primero: los lectores de feeds lo cogen de aqui
+$rss = '';
+foreach (array_unique(array_merge([$p], array_keys(portadas()))) as $k) $rss .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"" . h(cfg('site_name', 'Deltha') . ' · ' . t(DDD_PORTADAS[$k])) . "\" href=\"/rss?portada=$k\">";
+page_header(t(DDD_PORTADAS[$p]), $p, $rss);
 if (isset($_GET['bienvenida']) && user()) {
-    echo "<p class=\"notice\">" . t('Bienvenido, <b>') . "" . h(user()['login']) . "</b>: " . t('tu cuenta está creada y ya has entrado. Publicas en modo Ghost (alias durante %d min) y puedes votar. En <a href="/perfil.php">tu perfil</a> puedes poner foto, una frase y elegir tema claro u oscuro.', (int)cfg('ghost_minutes', 30)) . "</p>";
+    echo "<p class=\"notice\">" . t('Bienvenido, <b>') . "" . h(user()['login']) . "</b>: " . t('tu cuenta está creada y ya has entrado. Publicas en modo Ghost (alias durante %d min) y puedes votar. En <a href="/perfil">tu perfil</a> puedes poner foto, una frase y elegir tema claro u oscuro.', (int)cfg('ghost_minutes', 30)) . "</p>";
 }
 $n = 0;
 pin_halo_primera($page === 1 && !$pins);   // sin destacadas: la primera tarjeta lleva el halo igualmente

@@ -5,7 +5,7 @@
  *  (chincheta) en la tarjeta y la noticia sale la primera de su lista con un halo ligero (.post.pinned). Vale para dos cosas:
  *   - envios ('story'): las portadas Medios / Substacks / Canales (/, story_post()). Si el admin destaca uno del radar, pasa a su
  *     portada en ese momento (los usuarios solo destacan lo que ya esta en portada).
- *   - noticias RSS ('item'): «Mis medios» / «Mis substacks» (/ultimo.php, fuente_post()).
+ *   - noticias RSS ('item'): «Mis medios» / «Mis substacks» (/ultimo, fuente_post()).
  *  No baja hasta que se destaque otra del mismo grupo (la anterior se desmarca sola) o se quite en el mismo sitio: entonces vuelve a
  *  la posicion que le toca por fecha. Los usuarios tambien pueden: cada vez que su aura sube una unidad entera ganan un «destacado»
  *  (users.pin_credits, se cuenta en aura_add()), y gastarlo destaca una noticia durante pin_user_minutes (30); una activa por
@@ -70,7 +70,7 @@ function pin_credits(): int {
 }
 
 /** Boton de la tarjeta: «Destacar» (admin siempre; usuario con destacados, solo sobre lo que ya esta en portada) o «Destacada»
- *  (pulsar = quitar: el admin sobre cualquiera, el usuario sobre la suya). Sin JS: POST a /destacar.php (w=story|item, i=id,
+ *  (pulsar = quitar: el admin sobre cualquiera, el usuario sobre la suya). Sin JS: POST a /destacar (w=story|item, i=id,
  *  act=poner|quitar), que vuelve a la pagina de origen. $grupo '' = no se destaca. */
 function pin_form(PDO $pdo, string $what, int $ref, string $grupo, bool $enPortada = true): string {
     $u = user();
@@ -80,15 +80,15 @@ function pin_form(PDO $pdo, string $what, int $ref, string $grupo, bool $enPorta
     $hid = "<input type=\"hidden\" name=\"w\" value=\"$what\"><input type=\"hidden\" name=\"i\" value=\"$ref\">";
     if ($pin) {
         if (!is_admin() && !pin_mio($pin)) return '';   // destacada por otro: solo se ve el halo
-        if (!pin_activo($pin)) return "<form class=\"pin on cola\" method=\"post\" action=\"/destacar.php\">$hid<input type=\"hidden\" name=\"act\" value=\"quitar\">"
+        if (!pin_activo($pin)) return "<form class=\"pin on cola\" method=\"post\" action=\"/destacar\">$hid<input type=\"hidden\" name=\"act\" value=\"quitar\">"
              . "<button title=\"" . h(t('En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el destacado).', pin_min_hasta((string)$pin['starts']))) . "\">" . icon('pin') . "<span>" . t('En cola') . "</span></button></form>";
-        return "<form class=\"pin on\" method=\"post\" action=\"/destacar.php\">$hid<input type=\"hidden\" name=\"act\" value=\"quitar\">"
+        return "<form class=\"pin on\" method=\"post\" action=\"/destacar\">$hid<input type=\"hidden\" name=\"act\" value=\"quitar\">"
              . "<button title=\"" . h(t('quitar el destacado: vuelve a su sitio por fecha')) . "\">" . icon('pin') . "<span>" . t('Destacada') . "</span></button></form>";
     }
     if (is_admin()) $title = t('Destacar: irá la primera en %s hasta que destaques otra o la quites', $nombre);
     elseif ($enPortada && pin_credits() > 0) $title = t('Destacar: irá la primera en %s durante %d min. Te quedan %d destacados (ganas uno cada vez que tu aura sube una unidad).', $nombre, pin_minutos(), pin_credits());
     else return '';
-    return "<form class=\"pin\" method=\"post\" action=\"/destacar.php\">$hid<input type=\"hidden\" name=\"act\" value=\"poner\">"
+    return "<form class=\"pin\" method=\"post\" action=\"/destacar\">$hid<input type=\"hidden\" name=\"act\" value=\"poner\">"
          . "<button title=\"" . h($title) . "\">" . icon('pin') . "<span>" . t('Destacar') . (is_admin() ? '' : " <small>" . pin_credits() . "</small>") . "</span></button></form>";
 }
 /** Minutos que faltan hasta una fecha (minimo 1). */
@@ -99,7 +99,7 @@ function pin_tag(array $pin): string {
     if ((int)$pin['by_admin']) return "<span class=\"pintag\">" . t('destacada') . "</span>";
     if (!pin_activo($pin)) return (is_admin() || pin_mio($pin)) ? "<span class=\"pintag cola\">" . t('en cola · empieza en %d min', pin_min_hasta((string)$pin['starts'])) . "</span>" : '';
     $min = pin_min_hasta((string)$pin['expires']);
-    return "<span class=\"pintag\">" . t('destacada por %s', "<a href=\"/u.php?u=" . rawurlencode((string)$pin['login']) . "\">" . h((string)$pin['login']) . "</a>") . " · " . t('%d min', $min) . "</span>";
+    return "<span class=\"pintag\">" . t('destacada por %s', "<a href=\"/u/" . rawurlencode((string)$pin['login']) . "\">" . h((string)$pin['login']) . "</a>") . " · " . t('%d min', $min) . "</span>";
 }
 
 /** Destaca algo. Devuelve '' si bien o el motivo si no. $enPortada: false si es un envio del radar (solo el admin puede: lo publica). */
@@ -171,7 +171,7 @@ function pins_stories(PDO $pdo, string $portada): array {
     foreach ($ids as $id) if (isset($rows[$id])) $out[] = $rows[$id];
     return $out;
 }
-/** Noticias RSS destacadas de un grupo, para /ultimo.php (pagina 1): [[fuente, item], …]. Salen aunque el usuario no siga esa fuente
+/** Noticias RSS destacadas de un grupo, para /ultimo (pagina 1): [[fuente, item], …]. Salen aunque el usuario no siga esa fuente
  *  ni sea de su idioma: destacar es precisamente llevar la atencion a esa noticia. */
 function pins_primero(PDO $pdo, string $kind): array {
     $ids = pins_ids($pdo, 'item', $kind);

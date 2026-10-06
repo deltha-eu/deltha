@@ -1,5 +1,5 @@
 <?php
-/** /comunidades.php — todas las comunidades y, para quien puede, el formulario de crear una.
+/** /comunidades — todas las comunidades y, para quien puede, el formulario de crear una.
  *  Puede crear: aura > comm_min_aura (config), hasta comm_max_per_user por usuario. El admin, siempre. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $u) {
     else {
         try {
             $pdo->prepare("INSERT INTO communities (slug, name, descr, color, skin, owner_id) VALUES (?,?,?,?,?,?)")->execute([$slug, $name, $descr ?: null, $color, $skin, $u['user_id']]);
-            redirect('/comunidad.php?c=' . rawurlencode($slug) . '&nueva=1');
+            redirect('/comunidad/' . rawurlencode($slug) . '&nueva=1');
         } catch (PDOException $e) { $err = t('Ya existe una comunidad con ese nombre.'); }
     }
 }
@@ -30,7 +30,7 @@ $rows = $pdo->query("SELECT c.*, u.login AS owner, (SELECT COUNT(*) FROM story_c
                        FROM communities c JOIN users u ON u.user_id = c.owner_id WHERE c.status = 'ok' ORDER BY last DESC, c.created DESC")->fetchAll();
 
 page_header(t('Comunidades'), 'comunidades');
-echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad; además, quien creó una comunidad puede añadir a ella cualquier envío ya publicado desde su hilo (hasta %d comunidades por envío). Puede crear comunidades quien tenga aura mayor que %s (los moderadores, sin requisito de aura), hasta %d cada uno. Puedes elegir una como página de entrada en <a href="/perfil.php">tu perfil</a>.', h(cfg('site_name')), (int)cfg('comm_max_per_story', 3), h(num_es(cfg('comm_min_aura', 10))), (int)cfg('comm_max_per_user', 3)) . "</p>";
+echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad; además, quien creó una comunidad puede añadir a ella cualquier envío ya publicado desde su hilo (hasta %d comunidades por envío). Puede crear comunidades quien tenga aura mayor que %s (los moderadores, sin requisito de aura), hasta %d cada uno. Puedes elegir una como página de entrada en <a href="/perfil">tu perfil</a>.', h(cfg('site_name')), (int)cfg('comm_max_per_story', 3), h(num_es(cfg('comm_min_aura', 10))), (int)cfg('comm_max_per_user', 3)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($u && $quota > 0) {
     echo "<h3 id=\"crear\" style=\"padding:12px 16px 0\"" . t('>Crear una comunidad</h3>') . "<p class=\"meta\" style=\"padding:4px 16px 0\">" . ($quota > 3 ? t('Puedes crear las que quieras.') : t('Puedes crear %d más.', $quota)) . "</p>";
@@ -45,7 +45,7 @@ if ($u && $quota > 0) {
 echo "<h3 style=\"padding:20px 16px 0\"" . t('>Todas las comunidades</h3>') . "";
 if (!$rows) echo "<p class=\"end\">" . t('Todavía no hay comunidades.') . "</p>";
 foreach ($rows as $c) {
-    echo "<a class=\"fz comm\" href=\"/comunidad.php?c=" . rawurlencode($c['slug']) . "\"><span class=\"dot\" style=\"background:" . h($c['color']) . "\"></span><div class=\"fzt\"><b>" . h($c['name']) . "</b>";
+    echo "<a class=\"fz comm\" href=\"/comunidad/" . rawurlencode($c['slug']) . "\"><span class=\"dot\" style=\"background:" . h($c['color']) . "\"></span><div class=\"fzt\"><b>" . h($c['name']) . "</b>";
     echo "<span class=\"meta\"> · " . t('%d envíos', $c['n']) . " · " . t('de') . " " . h($c['owner']) . ($c['last'] ? " · " . h(hace($c['last'])) : '') . "</span>";
     if ($c['descr']) echo "<div class=\"prev\">" . h($c['descr']) . "</div>";
     echo "</div></a>";

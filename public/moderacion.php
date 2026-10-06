@@ -1,11 +1,11 @@
 <?php
-/** /moderacion.php — moderadores y admin: lo que ha señalado la IA local (posmoderacion, lib/moderacion.php), reportes, dominios, medios, temas y fuentes. */
+/** /moderacion — moderadores y admin: lo que ha señalado la IA local (posmoderacion, lib/moderacion.php), reportes, dominios, medios, temas y fuentes. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/chat.php';
 require __DIR__ . '/../lib/propuestas.php';
 require __DIR__ . '/../lib/moderacion.php';
 require_once __DIR__ . '/../lib/mail.php';   // listas de dominios de correo (email_domain_normalize)
-if (!user()) redirect('/login.php');
+if (!user()) redirect('/login');
 if (!is_mod()) { http_response_code(403); page_header('Moderación'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
 $out = [];
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['chat_borrar
     $mid = (int)post('mid');
     if (post('act') === 'chat_borrar') { chat_delete_mod($pdo, $mid); $out[] = "Mensaje #$mid del chat eliminado (texto sustituido por el aviso)."; }
     else { $pdo->prepare("UPDATE chat_reports SET status = 'dismissed', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([user()['user_id'], $mid]); $out[] = "Reportes del mensaje #$mid descartados."; }
-    if (post('back') === '1') redirect("/chat.php?m=$mid#m$mid");   // «eliminar» desde el propio chat
+    if (post('back') === '1') redirect("/chat?m=$mid#m$mid");   // «eliminar» desde el propio chat
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'ia') {   // decision humana sobre lo que ha señalado u ocultado la IA
     $item = (int)post('item');
@@ -136,8 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
                     $sid = (int)$pdo->lastInsertId();
                 }
                 $pdo->prepare("UPDATE source_proposals SET status = 'ok', source_id = ?, reviewed_by = ?, reviewed = NOW() WHERE prop_id = ?")->execute([$sid, user()['user_id'], $p['prop_id']]);
-                fprop_avisar($pdo, (int)user()['user_id'], (int)$p['user_id'], "Hola. Tu propuesta «{$name}» ya está en el catálogo: /fuente.php?f={$slug} — puedes elegirla en tu perfil, en «" . ($kind === 'newsletter' ? 'Mis substacks' : ($kind === 'youtube' ? 'Mis canales' : 'Mis medios')) . "». Gracias por proponerla.");
-                $out[] = "«{$name}» añadida al catálogo (/fuente.php?f={$slug}); el lector la leerá en los próximos minutos. Se le ha avisado por mensaje.";
+                fprop_avisar($pdo, (int)user()['user_id'], (int)$p['user_id'], "Hola. Tu propuesta «{$name}» ya está en el catálogo: /fuente/{$slug} — puedes elegirla en tu perfil, en «" . ($kind === 'newsletter' ? 'Mis substacks' : ($kind === 'youtube' ? 'Mis canales' : 'Mis medios')) . "». Gracias por proponerla.");
+                $out[] = "«{$name}» añadida al catálogo (/fuente/{$slug}); el lector la leerá en los próximos minutos. Se le ha avisado por mensaje.";
             } catch (PDOException $e) { $out[] = 'Ese slug ya existe: elige otro.'; }
         }
     }
@@ -161,7 +161,7 @@ try {
 page_header('Moderación');
 echo "<div class=\"admin\"><h1>Moderación</h1>";
 if (!mod_on()) echo "<p class=\"notice\">La IA moderadora está apagada (<code>mod_enabled = 0</code>): todo se publica y nada pasa por ella. Los reportes siguen llegando aquí.</p>";
-else echo "<p class=\"notice\">Todo se publica al momento. La IA local (en el PC de la redacción) lo revisa después con el criterio de las <a href=\"/normas.php\">normas de uso</a> y señala aquí lo dudoso" . (cfg('mod_auto_hide') === '1' ? "; lo muy claro lo oculta hasta que lo veáis" : "; no oculta nada (<code>mod_auto_hide = 0</code>)") . ". Decidís vosotros. " . h(mod_worker_line()) . "</p>";
+else echo "<p class=\"notice\">Todo se publica al momento. La IA local (en el PC de la redacción) lo revisa después con el criterio de las <a href=\"/normas\">normas de uso</a> y señala aquí lo dudoso" . (cfg('mod_auto_hide') === '1' ? "; lo muy claro lo oculta hasta que lo veáis" : "; no oculta nada (<code>mod_auto_hide = 0</code>)") . ". Decidís vosotros. " . h(mod_worker_line()) . "</p>";
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
 
 /* ---- revision de la IA local ---- */
@@ -170,7 +170,7 @@ echo "<h3 id=\"ia\">Señalado por la IA (" . count($q) . ")</h3>";
 if ($qstats) echo "<p><small>En cola: " . (int)$qstats['cola'] . " · últimas 24 h: " . (int)$qstats['ok24'] . " sin problemas, " . (int)$qstats['sen24'] . " señalados.</small></p>";
 if (!$q) echo "<p>Nada pendiente.</p>";
 foreach ($q as $m) {
-    $link = $m['item_type'] === 'chat' ? "/chat.php?m={$m['ref_id']}#m{$m['ref_id']}" : ($m['item_type'] === 'comment' ? "/hilo.php?id={$m['sid']}#c{$m['ref_id']}" : "/hilo.php?id={$m['ref_id']}");
+    $link = $m['item_type'] === 'chat' ? "/chat?m={$m['ref_id']}#m{$m['ref_id']}" : ($m['item_type'] === 'comment' ? "/hilo/{$m['sid']}#c{$m['ref_id']}" : "/hilo/{$m['ref_id']}");
     $v = json_decode((string)$m['verdict'], true) ?: [];
     $estado = ['hidden' => '<b>oculto provisionalmente</b>', 'flag' => 'visible, señalado', 'needs_human' => 'la IA no ha podido decidir'][$m['status']];
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . $TY[$m['item_type']] . " #{$m['ref_id']}</b> " . ($m['status'] !== 'hidden' ? "<a href=\"$link\">ver</a>" : "") . "<span class=\"meta\"> · $estado · " . h(hace($m['created'])) . ($m['priority'] ? " · reportado" : "") . "</span></div>";
@@ -196,13 +196,13 @@ if (!$reps) echo "<p>No hay reportes pendientes.</p>";
 foreach ($reps as $r) {
     $who = ($r['login'] && ghost_over($r['created'])) ? $r['login'] : $r['alias'];
     $motivos = implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', $r['reasons'])));
-    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($who) . "</b> en <a href=\"/hilo.php?id={$r['story_id']}#c{$r['comment_id']}\">" . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</a>";
+    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($who) . "</b> en <a href=\"/hilo/{$r['story_id']}#c{$r['comment_id']}\">" . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</a>";
     echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
     echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
     if ($nl = mod_note_line($notes[(int)$r['comment_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_borrar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar comentario</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_descartar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn\" title=\"el comentario se queda; los reportes se cierran\">Descartar reporte</button></form>";
-    echo "<a class=\"btn\" href=\"/editar-comentario.php?id={$r['comment_id']}\">editar</a></div></div>";
+    echo "<a class=\"btn\" href=\"/editar-comentario?id={$r['comment_id']}\">editar</a></div></div>";
 }
 /* ---- mensajes del chat reportados ---- */
 try {
@@ -217,7 +217,7 @@ echo "<h3 id=\"chat\">Mensajes del chat reportados (" . count($creps) . ")</h3>"
 if (!$creps) echo "<p>No hay reportes pendientes.</p>";
 foreach ($creps as $r) {
     $motivos = implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', $r['reasons'])));
-    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h(chat_who($r)) . "</b> <a href=\"/chat.php?m={$r['msg_id']}#m{$r['msg_id']}\">#{$r['msg_id']}</a>";
+    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h(chat_who($r)) . "</b> <a href=\"/chat?m={$r['msg_id']}#m{$r['msg_id']}\">#{$r['msg_id']}</a>";
     echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
     echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
     if ($nl = mod_note_line($cnotes[(int)$r['msg_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
@@ -234,8 +234,8 @@ foreach ($props as $p) {
     $pid = (int)$p['prop_id']; $ok = (int)$p['test_items'] > 0;
     $pslug = '';
     if ($p['source_id']) { $qs = $pdo->prepare("SELECT slug FROM sources WHERE source_id = ?"); $qs->execute([(int)$p['source_id']]); $pslug = (string)$qs->fetchColumn(); }
-    echo "<div class=\"repitem fprop\"><div class=\"rephead\"><b>" . h($p['name']) . "</b> · " . ($p['kind'] === 'newsletter' ? 'substack/newsletter' : ($p['kind'] === 'youtube' ? 'canal de YouTube' : 'medio')) . ($pslug !== '' ? " · <a href=\"/fuente.php?f=" . h($pslug) . "\">ya activa, fuera del catálogo</a>" : '');
-    echo "<span class=\"meta\"> · propuesta por <a href=\"/u.php?u=" . rawurlencode($p['login']) . "\">" . h($p['login']) . "</a> (aura " . h(num_es(round((float)$p['aura'], 1))) . ") · " . h(hace($p['created'])) . "</span></div>";
+    echo "<div class=\"repitem fprop\"><div class=\"rephead\"><b>" . h($p['name']) . "</b> · " . ($p['kind'] === 'newsletter' ? 'substack/newsletter' : ($p['kind'] === 'youtube' ? 'canal de YouTube' : 'medio')) . ($pslug !== '' ? " · <a href=\"/fuente/" . h($pslug) . "\">ya activa, fuera del catálogo</a>" : '');
+    echo "<span class=\"meta\"> · propuesta por <a href=\"/u/" . rawurlencode($p['login']) . "\">" . h($p['login']) . "</a> (aura " . h(num_es(round((float)$p['aura'], 1))) . ") · " . h(hace($p['created'])) . "</span></div>";
     echo "<p class=\"meta\">web: <a href=\"" . h($p['home']) . "\" rel=\"nofollow noopener\" target=\"_blank\">" . h($p['home']) . "</a><br>RSS: <a href=\"" . h($p['feed']) . "\" rel=\"nofollow noopener\" target=\"_blank\">" . h($p['feed']) . "</a>" . ($p['descr'] ? "<br>" . h($p['descr']) : '') . "</p>";
     if ($p['note']) echo "<blockquote class=\"quote\">" . saltos(h($p['note'])) . "</blockquote>";
     echo "<pre class=\"ftest " . ($ok ? 'ok' : 'err') . "\">" . ($ok ? "RSS leído: {$p['test_items']} noticias · " : '') . h((string)$p['test_info']) . "</pre>";
@@ -262,12 +262,12 @@ echo "<p><small>Última semana. Parejas de cuentas que coinciden en cuatro o má
 if (!$vc['pares']) echo "<p>Ninguna pareja llamativa.</p>";
 else {
     echo "<table><tr><th>cuentas</th><th>coincidencias</th><th>sentido</th><th>votos de cada una (7 d)</th><th>última</th></tr>";
-    foreach ($vc['pares'] as $r) echo "<tr><td><a href=\"/u.php?u=" . rawurlencode($r['la']) . "\">" . h($r['la']) . "</a> · <a href=\"/u.php?u=" . rawurlencode($r['lb']) . "\">" . h($r['lb']) . "</a></td><td class=\"num\"><b>{$r['n']}</b></td><td>{$r['pos']} ↑ · " . ($r['n'] - $r['pos']) . " ↓</td><td>{$r['na']} · {$r['nb']}</td><td>" . h(hace($r['hasta'])) . "</td></tr>";
+    foreach ($vc['pares'] as $r) echo "<tr><td><a href=\"/u/" . rawurlencode($r['la']) . "\">" . h($r['la']) . "</a> · <a href=\"/u/" . rawurlencode($r['lb']) . "\">" . h($r['lb']) . "</a></td><td class=\"num\"><b>{$r['n']}</b></td><td>{$r['pos']} ↑ · " . ($r['n'] - $r['pos']) . " ↓</td><td>{$r['na']} · {$r['nb']}</td><td>" . h(hace($r['hasta'])) . "</td></tr>";
     echo "</table>";
 }
 if ($vc['conexion']) {
     echo "<table><tr><th>envío</th><th>cuentas desde la misma conexión</th><th>último voto</th></tr>";
-    foreach ($vc['conexion'] as $r) echo "<tr><td><a href=\"/hilo.php?id={$r['story_id']}\">" . h(mb_strimwidth($r['title'], 0, 60, '…')) . "</a></td><td><b>{$r['cuentas']}</b>: " . h($r['logins']) . "</td><td>" . h(hace($r['ultimo'])) . "</td></tr>";
+    foreach ($vc['conexion'] as $r) echo "<tr><td><a href=\"/hilo/{$r['story_id']}\">" . h(mb_strimwidth($r['title'], 0, 60, '…')) . "</a></td><td><b>{$r['cuentas']}</b>: " . h($r['logins']) . "</td><td>" . h(hace($r['ultimo'])) . "</td></tr>";
     echo "</table>";
 }
 
@@ -277,7 +277,7 @@ echo "<table><tr><th>tema</th><th>envíos</th><th>color</th><th></th><th>borrar 
 foreach ($topics as $t) {
     echo "<tr><td><form method=\"post\" id=\"te{$t['topic_id']}\" style=\"display:flex;gap:6px;align-items:center\"><input type=\"hidden\" name=\"act\" value=\"tema_editar\"><input type=\"hidden\" name=\"topic_id\" value=\"{$t['topic_id']}\">";
     echo "<input type=\"text\" name=\"name\" value=\"" . h($t['name']) . "\" maxlength=\"32\" required style=\"width:150px\"></form></td>";
-    echo "<td class=\"num\"><a href=\"/tema.php?t={$t['topic_id']}\">{$t['n']}</a></td>";
+    echo "<td class=\"num\"><a href=\"/tema/{$t['topic_id']}\">{$t['n']}</a></td>";
     echo "<td><input type=\"color\" name=\"color\" form=\"te{$t['topic_id']}\" value=\"" . h($t['color']) . "\"></td><td><button class=\"btn\" form=\"te{$t['topic_id']}\">Guardar</button></td>";
     if (count($topics) > 1) {
         echo "<td><form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap\"><input type=\"hidden\" name=\"act\" value=\"tema_borrar\"><input type=\"hidden\" name=\"topic_id\" value=\"{$t['topic_id']}\"><select name=\"to\">";
@@ -306,7 +306,7 @@ if ($bd) {
     echo "</table></details>";
 }
 try { $wd = $pdo->query("SELECT w.*, u.login FROM allowed_domains w LEFT JOIN users u ON u.user_id = w.added_by ORDER BY w.domain")->fetchAll(); } catch (Throwable $e) { $wd = []; }
-echo "<form method=\"post\" action=\"/moderacion.php#probado\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0\"><input type=\"hidden\" name=\"act\" value=\"dominio_probar\"><input type=\"text\" name=\"domain\" placeholder=\"probar un dominio: iol.ie\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\" title=\"ver qué contesta su web desde el servidor, sin tocar las listas\">Probar</button></form>";
+echo "<form method=\"post\" action=\"/moderacion#probado\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0\"><input type=\"hidden\" name=\"act\" value=\"dominio_probar\"><input type=\"text\" name=\"domain\" placeholder=\"probar un dominio: iol.ie\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\" title=\"ver qué contesta su web desde el servidor, sin tocar las listas\">Probar</button></form>";
 if (!empty($probado)) echo "<pre id=\"probado\">" . h($probado) . "</pre>";
 echo "<h3 id=\"dominios-ok\">Dominios de correo admitidos — lista blanca (" . count($wd) . ")</h3>";
 echo "<p><small>Proveedores reconocidos (Gmail, Outlook, Yahoo, iCloud, Proton…) y dominios revisados a mano: se admiten, con sus subdominios, sin comprobar su web. La lista negra manda sobre esta.</small></p>";

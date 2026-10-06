@@ -1,17 +1,17 @@
 <?php
-/** /editar-chat.php?id=N — solo administradores: corregir el texto de un mensaje del Chat (los moderadores solo eliminan).
+/** /editar-chat?id=N — solo administradores: corregir el texto de un mensaje del Chat (los moderadores solo eliminan).
  *  El mensaje queda marcado como «editado» (chat.edited_at, migra-094); el texto original de la primera edicion se guarda
  *  en content_orig. Si cambia el primer #N citado, se actualiza reply_to (de el depende la vista por hilos). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/chat.php';
-if (!user()) redirect('/login.php');
+if (!user()) redirect('/login');
 $id = (int)($_GET['id'] ?? post('id'));
 $st = $pdo->prepare("SELECT * FROM chat WHERE msg_id = ? AND status = 'ok'");
 $st->execute([$id]);
 $m = $st->fetch();
 $titulo = 'Editar mensaje del Chat';
-$back = "/chat.php?m=$id#m$id";
-if (!$m) { http_response_code(404); page_header($titulo); echo "<p class=\"end\">Ese mensaje no existe. <a href=\"/chat.php\">Volver al Chat</a></p>"; page_footer(); exit; }
+$back = "/chat?m=$id#m$id";
+if (!$m) { http_response_code(404); page_header($titulo); echo "<p class=\"end\">Ese mensaje no existe. <a href=\"/chat\">Volver al Chat</a></p>"; page_footer(); exit; }
 if (!is_admin()) { http_response_code(403); page_header($titulo); echo "<p class=\"end\">Solo los administradores pueden editar mensajes del Chat. <a href=\"$back\">Volver al Chat</a></p>"; page_footer(); exit; }
 if ((int)$m['deleted'] === 1) { page_header($titulo); echo "<p class=\"end\">Ese mensaje lo eliminó moderación y ya no se edita. <a href=\"$back\">Volver al Chat</a></p>"; page_footer(); exit; }
 

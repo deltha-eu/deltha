@@ -1,7 +1,7 @@
 <?php
 /**
- * lib/usuarios.php — ficha de moderación de un usuario, la misma en su perfil público (/u.php, desplegable «Editar este perfil»)
- * y en /editar-usuario.php, que es quien guarda.
+ * lib/usuarios.php — ficha de moderación de un usuario, la misma en su perfil público (/u, desplegable «Editar este perfil»)
+ * y en /editar-usuario, que es quien guarda.
  *   Moderadores (sobre usuarios que no moderan) y admin (sobre cualquiera): nombre de usuario, frase y foto.
  *   Solo admin: correo, correo validado, nueva contraseña, nivel (normal / moderador / admin; el suyo propio no se toca) y aura
  *   a mano, con motivo; el cambio de aura queda en aura_log con reason «admin: motivo» y ref_id = el admin, y no cuenta para el
@@ -22,7 +22,7 @@ function modedit_puede(array $p): bool {
 /** Formulario de la ficha. $p: fila de users con user_id, login, email, level, aura, avatar, bio, verified. $back: 'u' = volver al perfil. */
 function modedit_form(PDO $pdo, array $p, string $back = ''): string {
     $id = (int)$p['user_id'];
-    $h = "<form class=\"plain modedit\" method=\"post\" action=\"/editar-usuario.php\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"id\" value=\"$id\">"
+    $h = "<form class=\"plain modedit\" method=\"post\" action=\"/editar-usuario\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"id\" value=\"$id\">"
        . ($back !== '' ? "<input type=\"hidden\" name=\"back\" value=\"" . h($back) . "\">" : "");
     $h .= "<label>Nombre de usuario</label><input type=\"text\" name=\"login\" required pattern=\"[A-Za-z0-9_\\-]{3,32}\" value=\"" . h($p['login']) . "\" autocomplete=\"off\">";
     $h .= "<label>Frase (hasta 160 caracteres)</label><input type=\"text\" name=\"bio\" maxlength=\"160\" value=\"" . h($p['bio'] ?? '') . "\">";
@@ -61,13 +61,13 @@ function modedit_form(PDO $pdo, array $p, string $back = ''): string {
             foreach ($rows as $r) $h .= "<tr><td class=\"num\">" . ((float)$r['amount'] > 0 ? '+' : '') . h(num_es($r['amount'])) . "</td><td>" . h($r['reason']) . ($r['login'] ? " <small>(" . h($r['login']) . ")</small>" : '') . "</td><td><small>" . h(hace($r['created'])) . "</small></td></tr>";
             $h .= "</table></details>";
         }
-        if ($p['level'] !== 'admin') $h .= "<p class=\"meta modedit-more\">Borrar la cuenta: <a href=\"/admin.php?t=usuarios&amp;q=" . rawurlencode($p['login']) . "\">en admin</a> (pide confirmación).</p>";
+        if ($p['level'] !== 'admin') $h .= "<p class=\"meta modedit-more\">Borrar la cuenta: <a href=\"/admin?t=usuarios&amp;q=" . rawurlencode($p['login']) . "\">en admin</a> (pide confirmación).</p>";
     }
     return $h;
 }
 
-/* ---- alta de usuarios por el admin (/crear-usuario.php; formulario en /usuarios.php y en admin > Usuarios) ----------------
- * Sin pasar por /registro.php: no comprueba el dominio del correo ni el tope por IP. Con «correo validado» la cuenta entra ya;
+/* ---- alta de usuarios por el admin (/crear-usuario; formulario en /usuarios y en admin > Usuarios) ----------------
+ * Sin pasar por /registro: no comprueba el dominio del correo ni el tope por IP. Con «correo validado» la cuenta entra ya;
  * sin marcar, se envia el correo de activacion normal. */
 
 /** Crea la cuenta. Devuelve [user_id, null] o [0, 'error']. $level: normal | mod | admin. */
@@ -95,7 +95,7 @@ function user_create_form(string $back): string {
     $open = isset($_GET['nuevo_err']) ? ' open' : '';
     $h = "<details class=\"editbox newuser\" id=\"nuevo-usuario\"$open><summary>+ Crear un usuario</summary>";
     if (isset($_GET['nuevo_err'])) $h .= "<p class=\"error\">" . h((string)$_GET['nuevo_err']) . "</p>";
-    $h .= "<form class=\"plain\" method=\"post\" action=\"/crear-usuario.php\"><input type=\"hidden\" name=\"back\" value=\"" . h($back) . "\">";
+    $h .= "<form class=\"plain\" method=\"post\" action=\"/crear-usuario\"><input type=\"hidden\" name=\"back\" value=\"" . h($back) . "\">";
     $h .= "<label>Nombre de usuario</label><input type=\"text\" name=\"login\" required pattern=\"[A-Za-z0-9_\\-]{3,32}\" autocomplete=\"off\" value=\"" . h((string)($_GET['nl'] ?? '')) . "\">";
     $h .= "<label>Correo</label><input type=\"email\" name=\"email\" required autocomplete=\"off\" value=\"" . h((string)($_GET['ne'] ?? '')) . "\"><small class=\"hint\">Obligatorio y único. Si la cuenta no va a recibir correo (una cuenta de revisión, por ejemplo), vale uno inventado y dejar marcado «correo validado».</small>";
     $h .= "<label>Contraseña</label><input type=\"password\" name=\"pass\" data-pw required minlength=\"8\" autocomplete=\"new-password\" placeholder=\"mínimo 8 caracteres\">";

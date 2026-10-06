@@ -1,6 +1,6 @@
 <?php
 /**
- * /procesos.php — la «fisgona» de Deltha.
+ * /procesos — la «fisgona» de Deltha.
  *
  *  ?v=cola          el radar ordenado por delta en vivo, con la estimacion de cuando
  *                   llega cada enlace a su portada (simulando el ciclo: una por ciclo,
@@ -12,7 +12,7 @@
  *  ?v=envios | comentarios | votos | portadas   flujo filtrado
  *  ?v=registros   SOLO ADMIN: historico permanente de registros (tabla reg_log, migra-102): cada intento de alta, la mas reciente primero,
  *                   con su correo y como acabo: activada, a medias (sin confirmar el correo, o borrada por no activar) o rechazada en el formulario.
- *  &d=hoy | todo    solo lo de hoy / sin ventana de dias (desde /estadisticas.php). «todo»
+ *  &d=hoy | todo    solo lo de hoy / sin ventana de dias (desde /estadisticas). «todo»
  *                   solo en las vistas de un tipo, no en ?v=todo: el UNION sin ventana no seria barato
  *
  * Los votantes aparecen con su alias Ghost del hilo (el mismo que tendrian al
@@ -51,12 +51,12 @@ require_once __DIR__ . '/../lib/cola.php';
 
 page_header(t('Procesos'), 'procesos', refresh_meta(60));
 echo "<nav class=\"sub\">";
-foreach ($VIEWS as $k => $label) echo "<a href=\"/procesos.php" . ($k === 'cola' ? '' : "?v=$k") . "\"" . ($k === $v ? ' class="on"' : '') . ">" . h($label) . "</a>";
+foreach ($VIEWS as $k => $label) echo "<a href=\"/procesos" . ($k === 'cola' ? '' : "?v=$k") . "\"" . ($k === $v ? ' class="on"' : '') . ">" . h($label) . "</a>";
 echo "</nav>";
 if ($v !== 'cola' && $v !== 'moderacion') {   // filtro de fecha: ventana normal / solo hoy / todo (este ultimo no en la vista mezclada)
     $F = ['' => t('últimos %d días', $DIAS), 'hoy' => t('Hoy')] + ($v === 'todo' ? [] : ['todo' => t('todo el histórico')]);
     echo "<nav class=\"sub fecha\">";
-    foreach ($F as $k => $label) echo "<a href=\"/procesos.php?v=$v" . ($k ? "&amp;d=$k" : '') . "\"" . ($k === $d ? ' class="on"' : '') . ">" . h($label) . "</a>";
+    foreach ($F as $k => $label) echo "<a href=\"/procesos?v=$v" . ($k ? "&amp;d=$k" : '') . "\"" . ($k === $d ? ' class="on"' : '') . ">" . h($label) . "</a>";
     echo "</nav>";
 }
 
@@ -77,20 +77,20 @@ if ($v === 'cola') {
         $pd = portada_de($pdo, $s);
         $etaTxt = isset($eta[$sid]) ? eta_txt($eta[$sid], $pd) : t('hacia %s', t(DDD_PORTADAS[$pd])) . ' · ' . radar_falta($s);
         echo "<div class=\"fz cola\" id=\"s$sid\"><span class=\"n\">$pos</span><div class=\"fzt\">";
-        echo "<a class=\"t\" href=\"/hilo.php?id=$sid\">" . h($s['title']) . "</a>";
+        echo "<a class=\"t\" href=\"/hilo/$sid\">" . h($s['title']) . "</a>";
         echo "<span class=\"meta\">" . h($who) . " · " . topic_link($s) . " · " . h(hace($s['sent_date'])) . "</span>";
         echo "<div class=\"delta\" title=\"" . h(delta_explica($s)) . "\">δ " . number_format((float)$s['delta_live'], 1, ',', '') . " · " . h($etaTxt) . "</div></div>";
         echo "<span class=\"vt\">" . icon('up') . (int)$s['votes_pos'] . " " . icon('down') . (int)$s['votes_neg'] . " " . icon('reply') . (int)$s['comments'] . "</span></div>";
         $n++;
     }
-    if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en el radar. <a href="/enviar.php">Envía algo</a>.') . "</p>";
-    paginate('/procesos.php', $page, $total);
+    if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en el radar. <a href="/enviar">Envía algo</a>.') . "</p>";
+    paginate('/procesos', $page, $total);
     page_footer();
     exit;
 }
 
 /* ---- moderacion a la vista: lo pendiente y el historico ---------------
- * Mismo contenido que /moderacion.php pero sin el texto senalado (aqui no se reproduce lo que se retiro
+ * Mismo contenido que /moderacion pero sin el texto senalado (aqui no se reproduce lo que se retiro
  * ni lo que esta oculto: se enlaza y punto) y con el historico, que se guarda entero: nada se borra.
  * Dos fuentes: lo que senala la IA (mod_queue) y lo que reporta la gente (comment_reports, chat_reports; quien decide y
  * cuando en decided_by / decided, migra-082). Un comentario reportado que ademas senalo la IA sale por las dos vias. */
@@ -100,9 +100,9 @@ if ($v === 'moderacion') {
     $EST = ['hidden' => t('oculto mientras lo miran'), 'flag' => t('a la vista, señalado'), 'needs_human' => t('la IA no ha podido decidir')];
     // enlace al origen: el hilo, el comentario dentro del hilo o el mensaje del Chat; lo oculto no se enlaza
     $enlace = function (array $m): string {
-        if ($m['item_type'] === 'chat')    return "/chat.php?m={$m['ref_id']}#m{$m['ref_id']}";
-        if ($m['item_type'] === 'comment') return $m['sid'] ? "/hilo.php?id={$m['sid']}#c{$m['ref_id']}" : '';
-        return "/hilo.php?id={$m['ref_id']}";
+        if ($m['item_type'] === 'chat')    return "/chat?m={$m['ref_id']}#m{$m['ref_id']}";
+        if ($m['item_type'] === 'comment') return $m['sid'] ? "/hilo/{$m['sid']}#c{$m['ref_id']}" : '';
+        return "/hilo/{$m['ref_id']}";
     };
     $SEL = "SELECT m.*, u.login AS modlogin, c.story_id AS sid
               FROM mod_queue m
@@ -138,7 +138,7 @@ if ($v === 'moderacion') {
         $hist = $hist->fetchAll();
     } catch (Throwable $e) { $hist = []; $total = 0; }
 
-    echo "<p class=\"notice\">" . t('Todo se publica al momento. Después, una IA que corre en un ordenador de la redacción lo revisa con el criterio de las <a href="/normas.php">normas de uso</a> y señala lo dudoso; <b>quien decide es siempre una persona</b>. Aquí está lo que espera y todo lo que ya se decidió, con quién lo hizo.') . "</p>";
+    echo "<p class=\"notice\">" . t('Todo se publica al momento. Después, una IA que corre en un ordenador de la redacción lo revisa con el criterio de las <a href="/normas">normas de uso</a> y señala lo dudoso; <b>quien decide es siempre una persona</b>. Aquí está lo que espera y todo lo que ya se decidió, con quién lo hizo.') . "</p>";
 
     echo "<h3 class=\"sec\">" . t('Pendiente (%d)', count($pend) + count($repPend)) . "</h3>";
     if (!$pend && !$repPend) echo "<p class=\"end\">" . t('Nada esperando a moderación.') . "</p>";
@@ -165,10 +165,10 @@ if ($v === 'moderacion') {
         echo "<div class=\"fz mod\"><span class=\"av sys\">" . icon($fuera ? 'down' : 'up') . "</span><div class=\"fzt\">";
         echo "<div class=\"t\">" . ($href ? "<a href=\"" . h($href) . "\">$que</a>" : $que) . " <span class=\"" . ($fuera ? 'neg' : 'pos') . "\">" . ($fuera ? t('retirado') : t('se queda')) . "</span>";
         $quien = $m['src'] === 'rep' ? t('reportado por %d personas', (int)$m['n']) : ((int)$m['priority'] ? t('reportado') : '');
-        echo "<span class=\"meta\">" . ($quien ? " · " . h($quien) : '') . " · " . ($m['modlogin'] ? t('decide %s', '<a href="/u.php?u=' . rawurlencode($m['modlogin']) . '">' . h($m['modlogin']) . '</a>') : t('decide un moderador')) . " · " . h(hace($m['ts'])) . "</span></div>";
+        echo "<span class=\"meta\">" . ($quien ? " · " . h($quien) : '') . " · " . ($m['modlogin'] ? t('decide %s', '<a href="/u/' . rawurlencode($m['modlogin']) . '">' . h($m['modlogin']) . '</a>') : t('decide un moderador')) . " · " . h(hace($m['ts'])) . "</span></div>";
         echo "<div class=\"prev\">" . h($m['src'] === 'rep' ? t('Motivos: %s', $motivos($m)) : mod_note_line($m)) . "</div></div></div>";
     }
-    paginate('/procesos.php?v=moderacion', $page, $total);
+    paginate('/procesos?v=moderacion', $page, $total);
     page_footer();
     exit;
 }
@@ -204,13 +204,13 @@ if ($v === 'registros') {
             if ($r['motivo'] !== '') $estado .= ' · ' . $r['motivo'];
         }
         $login = $viva ? (string)$r['ulogin'] : (string)$r['login'];
-        $nombre = $act ? "<a href=\"/u.php?u=" . rawurlencode($login) . "\">" . h($login) . "</a>" : h($login !== '' ? $login : '—');
+        $nombre = $act ? "<a href=\"/u/" . rawurlencode($login) . "\">" . h($login) . "</a>" : h($login !== '' ? $login : '—');
         echo "<div class=\"ulist\">" . avatar((float)($viva ? $r['aura'] : cfg('aura_anon', 5)), $login !== '' ? $login : '?', $viva ? $r['avatar'] : null) . "<div><b>$nombre</b>"
            . "<span class=\"meta\"> · " . h($r['email']) . " · " . h(t('registro %s', hace($r['created']))) . "</span>"
            . "<p class=\"bio\">" . ($act ? h($estado) : "<b>" . h($estado) . "</b>") . "</p></div></div>";
     }
     if (!$rows) echo "<p class=\"end\">" . t('Ningún registro en este periodo.') . "</p>";
-    paginate("/procesos.php?v=registros$qd", $page, $total);
+    paginate("/procesos?v=registros$qd", $page, $total);
     page_footer();
     exit;
 }
@@ -258,7 +258,7 @@ echo "<p class=\"notice\">" . t('Lo que pasa en el sitio, en orden (%s). Quien e
 if (!$ev) echo "<p class=\"end\">" . t('Todavía no hay actividad de este tipo.') . "</p>";
 foreach ($ev as $e) {
     $sid = (int)$e['story_id'];
-    $href = "/hilo.php?id=$sid";
+    $href = "/hilo/$sid";
     $title = "<a class=\"t\" href=\"$href\">" . h($e['title']) . "</a>";
     $u = $e['user_id'] ? ($U[(int)$e['user_id']] ?? null) : null;
     $aura = $u ? (float)$u['aura'] : (float)cfg('aura_anon', 5);
@@ -292,5 +292,5 @@ foreach ($ev as $e) {
     }
     echo "<div class=\"fz k-{$e['kind']}\">$lead<div class=\"fzt\">$txt<span class=\"meta\"> · " . h(hace($e['ts'])) . "</span></div>" . icon($ic) . "</div>";
 }
-paginate("/procesos.php?v=$v$qd", $page, $total);
+paginate("/procesos?v=$v$qd", $page, $total);
 page_footer();

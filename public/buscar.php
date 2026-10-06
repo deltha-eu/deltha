@@ -1,11 +1,11 @@
 <?php
-/** /buscar.php?q=texto[&en=hilos|comentarios|fuentes|usuarios][&p=N] — buscador interno (migra-085).
+/** /buscar?q=texto[&en=hilos|comentarios|fuentes|usuarios][&p=N] — buscador interno (migra-085).
  *  FULLTEXT de InnoDB en modo booleano sobre stories (title, content), comments (content) y source_items (title, content);
  *  usuarios por LIKE en el nick. Sin ?en= sale un resumen con los primeros de cada grupo y su total; con ?en= la lista
  *  paginada del grupo. Las palabras de menos de 3 letras (el minimo del indice: innodb_ft_min_token_size) se buscan con
  *  LIKE; una frase entre comillas se busca tal cual. La relevancia la da MATCH ... AGAINST; a igualdad, lo mas reciente.
  *  Solo lo visible: hilos en el radar, portadas o archivo (no pendientes ni rechazados), comentarios ok y no borrados,
- *  fuentes activas (y, si la persona marco «solo en mi idioma», solo esas). Usuarios: solo para quien tiene cuenta, como /usuarios.php. */
+ *  fuentes activas (y, si la persona marco «solo en mi idioma», solo esas). Usuarios: solo para quien tiene cuenta, como /usuarios. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/fuentes.php';
@@ -84,7 +84,7 @@ function buscar_extracto(string $txt, array $T, int $len = 220): string {
     $x = mb_substr($txt, $ini, $len);
     return buscar_marca(h(($ini > 0 ? '…' : '') . $x . (mb_strlen($txt) > $ini + $len ? '…' : '')), $T);
 }
-function buscar_url(string $q, string $en = ''): string { return '/buscar.php?q=' . rawurlencode($q) . ($en !== '' ? "&en=$en" : ''); }
+function buscar_url(string $q, string $en = ''): string { return '/buscar?q=' . rawurlencode($q) . ($en !== '' ? "&en=$en" : ''); }
 
 /* ---- consultas por grupo: [total, filas] ------------------------------------------------------------------- */
 function buscar_hilos(PDO $pdo, array $T, int $limit, int $offset): array {
@@ -133,17 +133,17 @@ function buscar_usuarios(PDO $pdo, array $T, int $limit, int $offset): array {
 function buscar_pinta_comentario(array $c, array $T): void {
     $rev = ghost_over($c['created']);
     $n = display_name($c, $rev);
-    $href = "/hilo.php?id={$c['story_id']}#c{$c['comment_id']}";
+    $href = "/hilo/{$c['story_id']}#c{$c['comment_id']}";
     echo "<article class=\"post reply root found\">" . who_avatar($c, $rev, (float)$c['aura'], $n) . "<div class=\"pc\">";
-    echo "<div class=\"l1\"><b>" . (shown($c, $rev) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n)) . "</b><span class=\"meta\"> · " . h(hace($c['created'])) . "</span></div>";
+    echo "<div class=\"l1\"><b>" . (shown($c, $rev) ? "<a href=\"/u/" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n)) . "</b><span class=\"meta\"> · " . h(hace($c['created'])) . "</span></div>";
     echo "<p>" . buscar_extracto($c['content'], $T) . "</p>";
     echo "<div class=\"actions\"><a href=\"" . h($href) . "\">" . icon('reply') . "<span>" . t('en «%s»', h(mb_strimwidth($c['story_title'], 0, 80, '…'))) . "</span></a>";
     if ((int)$c['likes'] > 0) echo "<span class=\"suns\">" . icon('sun') . "<span>" . (int)$c['likes'] . "</span></span>";
     echo "</div></div></article>";
 }
 function buscar_pinta_usuario(array $r, array $T): void {
-    echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u.php?u=' . rawurlencode($r['login']));
-    echo "<div><b><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . buscar_marca(h($r['login']), $T) . "</a></b>";
+    echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u/' . rawurlencode($r['login']));
+    echo "<div><b><a href=\"/u/" . rawurlencode($r['login']) . "\">" . buscar_marca(h($r['login']), $T) . "</a></b>";
     echo "<span class=\"meta\"> · " . t('aura') . " " . number_format((float)$r['aura'], 1, ',', '') . " · " . h(t('registro %s', hace($r['created']))) . "</span>";
     if ($r['bio']) echo "<p class=\"bio\">" . buscar_marca(h($r['bio']), $T) . "</p>";
     echo "</div></div>";
@@ -162,7 +162,7 @@ $BUSCA = ['hilos' => 'buscar_hilos', 'comentarios' => 'buscar_comentarios', 'fue
 
 header('Cache-Control: private, no-cache');
 page_header(t('Buscar'), 'buscar', '', $q !== '' ? t('Buscar') . ": $q" : '');
-echo "<form class=\"buscar\" action=\"/buscar.php\" method=\"get\" role=\"search\">";
+echo "<form class=\"buscar\" action=\"/buscar\" method=\"get\" role=\"search\">";
 echo "<input type=\"search\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"" . h(t('Buscar en %s', cfg('site_name'))) . "\" aria-label=\"" . t('Buscar') . "\" autofocus maxlength=\"80\">";
 if ($en !== '') echo "<input type=\"hidden\" name=\"en\" value=\"$en\">";
 echo "<button type=\"submit\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</button></form>";

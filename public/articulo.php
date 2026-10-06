@@ -4,7 +4,7 @@ require __DIR__ . '/../lib/imagen.php';
 require __DIR__ . '/../lib/aura.php';
 require __DIR__ . '/../lib/moderacion.php';
 
-if (!user() && cfg('anon_can_submit') !== '1') redirect('/login.php');
+if (!user() && cfg('anon_can_submit') !== '1') redirect('/login');
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();   // alfabetico, como en el resto de selectores
 $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
@@ -47,13 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mod_enqueue($pdo, 'story', $sid);
         if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
         $pdo->commit();
-        redirect("/hilo.php?id=$sid");
+        redirect("/hilo/$sid");
     }
 }
 
 page_header(t('Escribir un artículo'), 'originales');   // sin <h1>: el titulo ya va en la cabecera
 echo "<p class=\"notice\">" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', $maxWords) . "</p>";
-if (!user()) echo "<p class=\"notice\">" . t('Escribes como anónimo. Si <a href="/login.php">entras</a>, firmarás con un alias y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
+if (!user()) echo "<p class=\"notice\">" . t('Escribes como anónimo. Si <a href="/login">entras</a>, firmarás con un alias y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">";
 echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
@@ -65,7 +65,7 @@ foreach ($topics as $t) {
     echo "<option value=\"{$t['topic_id']}\"$sel>" . h($t['name']) . "</option>";
 }
 echo "</select>";
-if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades.php#crear">crea la primera</a>.') . "</p>";
+if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades#crear">crea la primera</a>.') . "</p>";
 if ($comms) {
     echo "" . t('<label>Comunidad (opcional)</label>') . "<select name=\"community\"><option value=\"0\"" . t('>— ninguna —</option>') . "";
     foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$f['community'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";

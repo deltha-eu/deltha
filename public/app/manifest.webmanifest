@@ -16,8 +16,8 @@
     { "src": "/app/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Candidatas", "url": "/candidatas.php?src=app", "icons": [{ "src": "/app/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Nuevas", "url": "/nuevas.php?src=app", "icons": [{ "src": "/app/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Enviar", "url": "/enviar.php?src=app", "icons": [{ "src": "/app/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Candidatas", "url": "/candidatas?src=app", "icons": [{ "src": "/app/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Nuevas", "url": "/nuevas?src=app", "icons": [{ "src": "/app/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Enviar", "url": "/enviar?src=app", "icons": [{ "src": "/app/icon-192.png", "sizes": "192x192" }] }
   ]
 }
