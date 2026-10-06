@@ -197,7 +197,7 @@ function agent_comment(PDO $pdo, array $a, int $story_id, string $content, ?int 
             if ($pr = $q->fetch()) $root = $pr['root_id'] ?: (int)$pr['comment_id']; else { $parent = null; $pr = null; }
         }
     }
-    require_once __DIR__ . '/moderacion';
+    require_once __DIR__ . '/moderacion.php';
     $alias = alias_user($pdo, $story_id, $uid);
     $pdo->beginTransaction();
     $pdo->prepare("INSERT INTO comments (story_id, parent_id, root_id, user_id, alias, anon_key, aura, content, status) VALUES (?,?,?,?,?,NULL,?,?,'ok')")
@@ -314,7 +314,7 @@ function agent_submit_item(PDO $pdo, array $a, array $i): int {
         require_once __DIR__ . '/imagen.php';
         $image = imagen_copiar((string)$i['image']);   // apunta la copia: si la foto resulta ser la generica del medio, se retira tambien
     }
-    require_once __DIR__ . '/moderacion';
+    require_once __DIR__ . '/moderacion.php';
     $title = mb_substr(trim((string)$i['title']), 0, 200);
     $lead = mb_substr(trim((string)$i['content']), 0, 2000) ?: null;
     $pdo->beginTransaction();

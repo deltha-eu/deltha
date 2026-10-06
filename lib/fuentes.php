@@ -24,7 +24,7 @@
  */
 declare(strict_types=1);
 require_once __DIR__ . '/imagen.php';   // http_get(), imagen_desde_bytes(), imagen_desde_og()
-require_once __DIR__ . '/destacar';  // destacar noticias de medios y substacks (source_pins, migra-111)
+require_once __DIR__ . '/destacar.php';  // destacar noticias de medios y substacks (source_pins, migra-111)
 
 const DDD_FUENTES_DIR = DDD_MEDIA_DIR . '/fuentes';
 
