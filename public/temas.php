@@ -1,5 +1,5 @@
 <?php
-/** /temas.php — todos los temas, con lo enviado esta semana y en total; cada uno lleva a /tema.php?t=ID. Enlazado desde la franja movil. */
+/** /temas — todos los temas, con lo enviado esta semana y en total; cada uno lleva a /tema/ID. Enlazado desde la franja movil. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
@@ -15,7 +15,7 @@ echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; todo envío lleva
 if (!$rows) echo "<p class=\"end\">" . t('Todavía no hay temas.') . "</p>";
 foreach ($rows as $r) {
     $bonus = (float)$r['bonus'];
-    echo "<a class=\"fz comm\" href=\"/tema.php?t=" . (int)$r['topic_id'] . "\"><span class=\"dot\" style=\"background:" . h($r['color']) . "\"></span><div class=\"fzt\"><b>" . h(ucfirst($r['name'])) . "</b>";
+    echo "<a class=\"fz comm\" href=\"/tema/" . (int)$r['topic_id'] . "\"><span class=\"dot\" style=\"background:" . h($r['color']) . "\"></span><div class=\"fzt\"><b>" . h(ucfirst($r['name'])) . "</b>";
     echo "<span class=\"meta\"> · " . t('%d esta semana', (int)$r['n']) . " · " . t('%d en total', (int)$r['total']) . ($r['last'] ? " · " . h(hace($r['last'])) : '') . ($bonus > 0 ? " · " . h(t('bonus %s en el δ', '+' . num_pg(lang(), $bonus))) : '') . "</span></div></a>";
 }
 page_footer();

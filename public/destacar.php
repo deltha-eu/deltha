@@ -1,12 +1,12 @@
 <?php
-/** /destacar.php — destacar o quitar una noticia (POST w=story|item, i=id, act=poner|quitar), migra-111. Envios de las portadas
+/** /destacar — destacar o quitar una noticia (POST w=story|item, i=id, act=poner|quitar), migra-111. Envios de las portadas
  *  (stories) y noticias RSS de «Mis medios» / «Mis substacks» (source_items). Sin JS: vuelve a la pagina de origen (la tarjeta queda
  *  con el halo o sin el). El boton lo pinta pin_form() (lib/destacar.php). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/fuentes.php';
 $u = user();
-if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login.php');
+if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login');
 $what = post('w') === 'item' ? 'item' : 'story';
 $id = (int)post('i');
 $err = '';

@@ -18,7 +18,7 @@ echo json_encode([
     ],
     'shortcuts' => [
         ['name' => t('Substacks'),  'url' => '/?portada=substacks&src=app', 'icons' => [['src' => $i192, 'sizes' => '192x192']]],
-        ['name' => t('Radar'),      'url' => '/radar.php?src=app',      'icons' => [['src' => $i192, 'sizes' => '192x192']]],
-        ['name' => t('Enviar'),     'url' => '/enviar.php?src=app',     'icons' => [['src' => $i192, 'sizes' => '192x192']]],
+        ['name' => t('Radar'),      'url' => '/radar?src=app',      'icons' => [['src' => $i192, 'sizes' => '192x192']]],
+        ['name' => t('Enviar'),     'url' => '/enviar?src=app',     'icons' => [['src' => $i192, 'sizes' => '192x192']]],
     ],
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

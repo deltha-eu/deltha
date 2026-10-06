@@ -1,5 +1,5 @@
 <?php
-/** /avisos.php — la lista de avisos (campanita): todos mezclados, del mas nuevo al mas viejo, paginados; dos colores (leido / sin leer).
+/** /avisos — la lista de avisos (campanita): todos mezclados, del mas nuevo al mas viejo, paginados; dos colores (leido / sin leer).
  *  Pulsar uno lo marca leido y lleva a su origen (?ir=N); «marcar todo como leído» arriba (POST). ?n=1 devuelve solo el numero
  *  de no leidos en JSON, para que /app/avisos.js refresque la burbuja sin recargar. Es el historico: nada se borra. lib/avisos.php */
 require __DIR__ . '/../lib/app.php';
@@ -9,20 +9,20 @@ if (isset($_GET['n'])) {   // contador para el sondeo desde JS (sin sesion: 0)
     header('Content-Type: application/json'); header('Cache-Control: no-store');
     echo json_encode(['n' => $me ? avisos_unread() : 0]); exit;
 }
-if (!$me) redirect('/login.php');
+if (!$me) redirect('/login');
 $myId = (int)$me['user_id'];
 if (!avisos_on()) { page_header(t('Avisos'), 'avisos'); echo "<p class=\"end\">" . t('Los avisos están desactivados.') . "</p>"; page_footer(); exit; }
 
 if (($ir = (int)($_GET['ir'] ?? 0)) > 0) {   // pulsado: leido y al origen
     $st = $pdo->prepare("SELECT n.*, u.login FROM notifications n LEFT JOIN users u ON u.user_id = n.from_id WHERE n.notif_id = ? AND n.user_id = ?");
     $st->execute([$ir, $myId]);
-    if (!($n = $st->fetch())) redirect('/avisos.php');
+    if (!($n = $st->fetch())) redirect('/avisos');
     $pdo->prepare("UPDATE notifications SET read_at = NOW() WHERE notif_id = ? AND read_at IS NULL")->execute([$ir]);
     redirect(aviso_href($n));
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'leidos') {
     $pdo->prepare("UPDATE notifications SET read_at = NOW() WHERE user_id = ? AND read_at IS NULL")->execute([$myId]);
-    redirect('/avisos.php');
+    redirect('/avisos');
 }
 
 $per = max(10, (int)cfg('notif_per_page', 30));
@@ -43,12 +43,12 @@ foreach ($rows as $n) {
     $read = !empty($n['read_at']);
     $who = aviso_who($n);
     $anon = empty($n['login']) || $who !== $n['login'];   // alias del hilo (Ghost) o anonimo del Chat: sin foto ni enlace al perfil
-    echo "<a class=\"fz aviso" . ($read ? ' leida' : ' nueva') . "\" href=\"/avisos.php?ir=" . (int)$n['notif_id'] . "\">";
+    echo "<a class=\"fz aviso" . ($read ? ' leida' : ' nueva') . "\" href=\"/avisos?ir=" . (int)$n['notif_id'] . "\">";
     echo $anon ? "<span class=\"av sys\">" . aviso_icon($n) . "</span>" : avatar((float)$n['aura'], (string)$n['login'], $n['avatar']);
     echo "<div class=\"fzt\"><div class=\"t\">" . aviso_text($n, h($who)) . "<span class=\"meta\"> · " . h(hace($n['created'])) . "</span></div>";
     if ($n['snippet'] !== '') echo "<div class=\"prev\">" . h($n['snippet']) . "</div>";
     echo "</div>" . aviso_icon($n) . "</a>";
 }
 echo "</div>";
-paginate('/avisos.php', $page, $total, $per);
+paginate('/avisos', $page, $total, $per);
 page_footer();

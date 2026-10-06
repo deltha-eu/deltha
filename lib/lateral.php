@@ -12,14 +12,14 @@ function rail(string $tab): void {
     $u = user();
     echo "<aside class=\"rail\">";
     echo "<a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
-    if (buscar_on()) echo "<form class=\"rail-search\" action=\"/buscar.php\" method=\"get\" role=\"search\"><input type=\"search\" name=\"q\" placeholder=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\" maxlength=\"80\"><button type=\"submit\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</button></form>";   // buscador (migra-085): solo escritorio; en movil, la lupa de la cabecera
+    if (buscar_on()) echo "<form class=\"rail-search\" action=\"/buscar\" method=\"get\" role=\"search\"><input type=\"search\" name=\"q\" placeholder=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\" maxlength=\"80\"><button type=\"submit\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</button></form>";   // buscador (migra-085): solo escritorio; en movil, la lupa de la cabecera
     nav_tabs($tab, 'rail-top');
     nav_tabs($tab, 'rail-bottom');
     rail_skins();
     rail_medios();
-    echo "<a class=\"pub\" href=\"/enviar.php\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>";
-    if ($u) echo "<a class=\"me\" href=\"/perfil.php\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>" . avisos_bell('rail-bell');   // la campanita, debajo del perfil
-    else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>";
+    echo "<a class=\"pub\" href=\"/enviar\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>";
+    if ($u) echo "<a class=\"me\" href=\"/perfil\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>" . avisos_bell('rail-bell');   // la campanita, debajo del perfil
+    else    echo "<a class=\"me\" href=\"/login\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>";
     // pie (¿Que es Deltha?, manifiesto, privacidad, normas...) al final del rail: asi las dos columnas laterales terminan igual
     echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
@@ -37,32 +37,32 @@ function rail_skins(): void {
     // plantilla
     $cur = skin();
     $items = [];
-    foreach (DDD_SKINS as $k => $v) $items[] = ["/cambiar-skin.php?s=$k", $v, $k === $cur, $k];
+    foreach (DDD_SKINS as $k => $v) $items[] = ["/cambiar-skin?s=$k", $v, $k === $cur, $k];
     $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');
-    if ($saved !== '') $items[] = ["/cambiar-skin.php?s=", t('la del sitio'), false, null, 'reset'];
+    if ($saved !== '') $items[] = ["/cambiar-skin?s=", t('la del sitio'), false, null, 'reset'];
     rail_dd('skin', t('Skin'), DDD_SKINS[$cur] ?? $cur, $items, 'skins');
     // aspecto: claro / oscuro / como el sistema
     $th = theme() ?? 'auto';
     $opts = ['auto' => t('Como el sistema'), 'light' => t('Claro'), 'dark' => t('Oscuro')];
     $items = [];
-    foreach ($opts as $k => $v) $items[] = ["/cambiar-skin.php?t=$k", $v, $k === $th, null];
+    foreach ($opts as $k => $v) $items[] = ["/cambiar-skin?t=$k", $v, $k === $th, null];
     rail_dd('theme', t('Aspecto'), $opts[$th], $items);
     // sin distracciones (escritorio): sin columna derecha, columna central ancha y fotos a la derecha del titular
     $fz = foco_pref();   // '' = solo en Originales (por defecto) | '1' = siempre | '0' = nunca
     $fo = ['' => t('Solo en Originales'), '1' => t('Siempre'), '0' => t('Nunca')];
     $items = [];
-    foreach ($fo as $k => $v) $items[] = ["/cambiar-skin.php?z=$k", $v, $k === $fz, null];
+    foreach ($fo as $k => $v) $items[] = ["/cambiar-skin?z=$k", $v, $k === $fz, null];
     rail_dd('focus', t('Sin distracciones'), $fo[$fz], $items, 'foco');
     // idioma
     $cl = lang();
     $items = [];
-    foreach (DDD_LANGS as $k => $v) $items[] = ["/cambiar-skin.php?l=$k", $v, $k === $cl, null];
+    foreach (DDD_LANGS as $k => $v) $items[] = ["/cambiar-skin?l=$k", $v, $k === $cl, null];
     rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
 }
 
 /** Cuarto grupo del rail: «Mis medios», «Mis substacks» y «Mis agregadores» como cabeceras (mismo aspecto que Plantilla / Aspecto / Idioma,
- *  sin flecha ni plegado), cada una pulsable → /ultimo.php?k=… (las diez ultimas noticias del grupo en formato normal), y debajo, siempre
- *  visibles, solo los nombres: de los favoritos del usuario, los tres que han publicado mas recientemente (y «todos» → /mis-fuentes.php si
+ *  sin flecha ni plegado), cada una pulsable → /ultimo?k=… (las diez ultimas noticias del grupo en formato normal), y debajo, siempre
+ *  visibles, solo los nombres: de los favoritos del usuario, los tres que han publicado mas recientemente (y «todos» → /mis-fuentes si
  *  tiene mas) o, sin favoritos / sin cuenta, los que han publicado mas recientemente del catalogo (agregadores: los destacados en admin). */
 function rail_medios(): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
@@ -72,9 +72,9 @@ function rail_medios(): void {
         if (!($list = medios_menu($pdo, $u, 0, $kind))) continue;
         $mias = count(mis_medios_recientes($pdo, $u, $kind));
         $on = current_tab() === "ultimo:$kind" ? ' class="on"' : '';
-        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo.php?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($mias ? t('%d elegidos', $mias) : ($kind === 'agregador' ? t('%d fuentes', count($list)) : t('recientes'))) . "</small></span></a></summary><div class=\"list\">";
+        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($mias ? t('%d elegidos', $mias) : ($kind === 'agregador' ? t('%d fuentes', count($list)) : t('recientes'))) . "</small></span></a></summary><div class=\"list\">";
         foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
-        if ($mias > count($list)) echo "<a class=\"more" . (current_tab() === "fuentes:$kind" ? ' on' : '') . "\" href=\"/mis-fuentes.php?k=$kind\">" . t('todos') . " · $mias</a>";
+        if ($mias > count($list)) echo "<a class=\"more" . (current_tab() === "fuentes:$kind" ? ' on' : '') . "\" href=\"/mis-fuentes?k=$kind\">" . t('todos') . " · $mias</a>";
         echo "</div></details>";
     }
 }
@@ -120,11 +120,11 @@ function side_ciclo(PDO $pdo): void {
     foreach ($rows as $s) {
         if (!isset($eta[(int)$s['story_id']])) continue;   // solo las que llegan al δ minimo
         $sid = (int)$s['story_id'];
-        echo "<a class=\"row\" href=\"/hilo.php?id=$sid\"><b>δ " . number_format((float)$s['delta_live'], 1, ',', '') . "</b><span class=\"t\">" . h(mb_strimwidth($s['title'], 0, 70, '…')) . "</span><small>" . h(eta_txt($eta[$sid], portada_de($pdo, $s))) . "</small></a>";
+        echo "<a class=\"row\" href=\"/hilo/$sid\"><b>δ " . number_format((float)$s['delta_live'], 1, ',', '') . "</b><span class=\"t\">" . h(mb_strimwidth($s['title'], 0, 70, '…')) . "</span><small>" . h(eta_txt($eta[$sid], portada_de($pdo, $s))) . "</small></a>";
         if (++$n >= 3) break;
     }
     if ($n === 0) echo "<p class=\"meta\">" . t('Nada llega aún al δ mínimo.') . "</p>";
-    echo "<p class=\"more\"><a href=\"/procesos.php\">" . t('ver el radar entero') . "</a></p></section>";
+    echo "<p class=\"more\"><a href=\"/procesos\">" . t('ver el radar entero') . "</a></p></section>";
 }
 
 /** Temas (las categorias que pone Deltha): pastillas con el color del tema y los envios de la ultima semana; el bonus, si lo hay. */
@@ -136,7 +136,7 @@ function side_temas(PDO $pdo): void {
     echo "<section class=\"mod temas\"><h3>" . t('Temas') . "<span>" . t('esta semana') . "</span></h3><div class=\"chips\">";
     foreach ($rows as $r) {
         $bonus = (float)$r['bonus'];
-        echo "<a class=\"chip\" href=\"/tema.php?t=" . (int)$r['topic_id'] . "\" style=\"--cc:" . h($r['color']) . "\" title=\"" . ($bonus > 0 ? h(t('bonus %s en el δ', num_es($bonus))) : '') . "\">" . h($r['name']) . "<b>" . (int)$r['n'] . "</b>" . ($bonus > 0 ? "<small>+" . num_es($bonus) . "</small>" : '') . "</a>";
+        echo "<a class=\"chip\" href=\"/tema/" . (int)$r['topic_id'] . "\" style=\"--cc:" . h($r['color']) . "\" title=\"" . ($bonus > 0 ? h(t('bonus %s en el δ', num_es($bonus))) : '') . "\">" . h($r['name']) . "<b>" . (int)$r['n'] . "</b>" . ($bonus > 0 ? "<small>+" . num_es($bonus) . "</small>" : '') . "</a>";
     }
     echo "</div></section>";
 }
@@ -154,7 +154,7 @@ function side_votadas(PDO $pdo): void {
     $i = 0;
     foreach ($rows as $r) {
         $i++;
-        echo "<a class=\"row\" href=\"/hilo.php?id=" . (int)$r['story_id'] . "\"><b><i>$i</i>" . icon('up') . (int)$r['votes_pos'] . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
+        echo "<a class=\"row\" href=\"/hilo/" . (int)$r['story_id'] . "\"><b><i>$i</i>" . icon('up') . (int)$r['votes_pos'] . "</b><span class=\"t\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</span></a>";
     }
     echo "</section>";
 }
@@ -168,9 +168,9 @@ function side_comunidades(PDO $pdo): void {
                           WHERE c.status = 'ok' ORDER BY s.sent_date DESC LIMIT 8")->fetchAll();
     if (!$rows) return;
     // «todas» en la cabecera, como en los modulos de substacks y medios
-    echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "<span><a href=\"/comunidades.php\">" . t('todas') . "</a></span></h3>";
+    echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "<span><a href=\"/comunidades\">" . t('todas') . "</a></span></h3>";
     foreach ($rows as $r) {
-        echo "<div class=\"row\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><a class=\"cm\" href=\"/comunidad.php?c=" . rawurlencode((string)$r['slug']) . "\"><b>" . h($r['name']) . "</b></a> <a href=\"/hilo.php?id=" . (int)$r['story_id'] . "\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</a></span></div>";
+        echo "<div class=\"row\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><a class=\"cm\" href=\"/comunidad/" . rawurlencode((string)$r['slug']) . "\"><b>" . h($r['name']) . "</b></a> <a href=\"/hilo/" . (int)$r['story_id'] . "\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</a></span></div>";
     }
     echo "</section>";
 }
@@ -198,9 +198,9 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
             if (count($rows) === 5) break;
         }
         if (!$rows) continue;
-        // «todos» lleva al catalogo filtrado por este grupo (/medios.php?k=medio|newsletter)
-        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios.php?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
-        // el enlace lleva a la pagina del medio en Deltha (/fuente.php?f=slug), no a la noticia
+        // «todos» lleva al catalogo filtrado por este grupo (/medios?k=medio|newsletter)
+        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
+        // el enlace lleva a la pagina del medio en Deltha (/fuente/slug), no a la noticia
         foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h(fuente_url(['slug' => $r['slug']])) . "\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
         echo "</section>";
     }

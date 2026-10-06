@@ -1,8 +1,8 @@
 <?php
-/** /editar-comentario.php?id=N — moderadores y admin: editar el texto de un comentario o eliminarlo. */
+/** /editar-comentario?id=N — moderadores y admin: editar el texto de un comentario o eliminarlo. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/moderacion.php';
-if (!user()) redirect('/login.php');
+if (!user()) redirect('/login');
 $id = (int)($_GET['id'] ?? post('id'));
 $st = $pdo->prepare("SELECT * FROM comments WHERE comment_id = ?");
 $st->execute([$id]);
@@ -12,10 +12,10 @@ $own = !is_mod() && can_edit_own_comment($c);   // el autor: aura > comment_edit
 if (!is_mod() && !$own) {
     http_response_code(403); page_header(t('Editar comentario'));
     $mine = (int)($c['user_id'] ?? 0) === (int)user()['user_id'];
-    echo "<p class=\"end\">" . ($mine ? t('Ya no se puede editar: el plazo es de %d minutos y hace falta aura mayor que %s.', (int)cfg('comment_edit_minutes', 10), h(num_es(cfg('comment_edit_min_aura', 10)))) : t('Solo el autor (en los primeros minutos) o los moderadores.')) . " <a href=\"/hilo.php?id={$c['story_id']}#c$id\">" . t('Volver al hilo') . "</a></p>";
+    echo "<p class=\"end\">" . ($mine ? t('Ya no se puede editar: el plazo es de %d minutos y hace falta aura mayor que %s.', (int)cfg('comment_edit_minutes', 10), h(num_es(cfg('comment_edit_min_aura', 10)))) : t('Solo el autor (en los primeros minutos) o los moderadores.')) . " <a href=\"/hilo/{$c['story_id']}#c$id\">" . t('Volver al hilo') . "</a></p>";
     page_footer(); exit;
 }
-$back = "/hilo.php?id={$c['story_id']}#c$id";
+$back = "/hilo/{$c['story_id']}#c$id";
 $err = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

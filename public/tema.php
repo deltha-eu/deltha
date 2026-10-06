@@ -1,5 +1,5 @@
 <?php
-/** /tema.php?t=ID[&v=deltha|medios] — la pagina de un tema, con dos subpestañas:
+/** /tema/ID[?v=deltha|medios] — la pagina de un tema, con dos subpestañas:
  *   · «En Deltha»: todo lo enviado en el tema (enlaces y originales, en cualquier fase), de mas reciente a mas antiguo;
  *   · «En los medios»: las ultimas noticias de los medios y substacks del catalogo que tienen este tema asignado (sources.topic_id),
  *     sin enviar todavia, cada una con su boton «enviar al radar». Es el «feed por tema» sin añadir nada al menu;
@@ -33,7 +33,7 @@ $v = (string)($_GET['v'] ?? '');
 if (!in_array($v, ['deltha', 'medios', 'idioma'], true)) $v = ($fuentes && $total < TEMA_POCO) ? 'medios' : 'deltha';
 if (!$fuentes) $v = 'deltha';
 if ($v === 'idioma' && !$hayIdioma) $v = 'medios';
-$base = "/tema.php?t=$tid";
+$base = "/tema/$tid";
 
 header('Cache-Control: private, no-cache');   // depende de la sesion y de «solo en mi idioma»
 page_header(ucfirst($topic['name']));

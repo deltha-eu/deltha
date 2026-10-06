@@ -1,8 +1,8 @@
 <?php
-/** /favorito.php — guardar o quitar un envio de los favoritos del usuario (POST id, act=guardar|quitar). Sin JS: vuelve a la pagina de origen. */
+/** /favorito — guardar o quitar un envio de los favoritos del usuario (POST id, act=guardar|quitar). Sin JS: vuelve a la pagina de origen. */
 require __DIR__ . '/../lib/app.php';
 $u = user();
-if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login.php');
+if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login');
 $id = (int)post('id');
 $act = post('act') === 'quitar' ? 'quitar' : 'guardar';
 
@@ -16,7 +16,7 @@ try {
     }
 } catch (Throwable $e) { /* tabla aun sin crear: no romper la navegacion */ }
 
-// volver a la misma pagina, al post (ancla s{id}); desde /favoritos.php, sin ancla (el post quitado ya no esta)
+// volver a la misma pagina, al post (ancla s{id}); desde /favoritos, sin ancla (el post quitado ya no esta)
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
-if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = "/hilo.php?id=$id";
-redirect($back . (str_contains($back, '/favoritos.php') || isset($_POST['js']) ? '' : "#s$id"));   // con JS (app/scroll.js) sin ancla
+if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = "/hilo/$id";
+redirect($back . (str_contains($back, '/favoritos') || isset($_POST['js']) ? '' : "#s$id"));   // con JS (app/scroll.js) sin ancla

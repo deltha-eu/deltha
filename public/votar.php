@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../lib/app.php';
 $u = user();
-if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login.php');
+if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login');
 $id = (int)post('id'); $v = (int)post('v');
 if (!in_array($v, [1, -1], true)) redirect('/');
 
@@ -16,7 +16,7 @@ try {
         $old = $prev->fetchColumn();
         if ($old === false) {
             $pdo->prepare("INSERT INTO votes (story_id, user_id, value, fp) VALUES (?,?,?,?)")->execute([$id, $u['user_id'], $v, vote_fp($id)]);   // huella: un voto por conexion y envio en el δ
-            alias_user($pdo, $id, (int)$u['user_id']);   // alias Ghost con el que se vera el voto en /procesos.php
+            alias_user($pdo, $id, (int)$u['user_id']);   // alias Ghost con el que se vera el voto en /procesos
             $col = $v === 1 ? 'votes_pos' : 'votes_neg';
             $pdo->prepare("UPDATE stories SET $col = $col + 1 WHERE story_id = ?")->execute([$id]);
         } elseif ((int)$old !== $v) {
@@ -32,5 +32,5 @@ try {
 } catch (Throwable $e) { $pdo->rollBack(); }
 // volver a la misma pagina, al post votado (ancla s{id}) en vez de arriba del todo
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
-if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = "/hilo.php?id=$id";
+if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = "/hilo/$id";
 redirect($back . (isset($_POST['js']) ? '' : "#s$id"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll

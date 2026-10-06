@@ -4,11 +4,11 @@
  *
  * Una fuente (tabla sources) es otro sitio con RSS. Dos tipos (sources.kind):
  *  - agregador (Menéame): feed de portada y feed de cola, fases nuevas -> portada, votos y comentarios de la
- *    fuente; se ve en /fuente.php?f=slug con Portada / Populares / Nuevas.
+ *    fuente; se ve en /fuente/slug con Portada / Populares / Nuevas.
  *  - medio (Jot Down, Revista Mercurio...): un solo feed, sin fases ni votos; cada noticia lleva un boton
- *    «enviar al radar» que abre /enviar.php prerrellenado. Cada usuario marca como favoritos los que quiera, sin
+ *    «enviar al radar» que abre /enviar prerrellenado. Cada usuario marca como favoritos los que quiera, sin
  *    limite (boton «Seguir» en el catalogo, en la fuente, en cada noticia y en el hilo; tabla user_media); en el rail salen
- *    los media_max_per_user que han publicado mas recientemente y en /mis-fuentes.php (pestañas del perfil), todos.
+ *    los media_max_per_user que han publicado mas recientemente y en /mis-fuentes (pestañas del perfil), todos.
  *  - newsletter (Substack): igual que un medio, en su grupo «Mis substacks».
  *  - youtube (canal de YouTube): igual que un medio, en su grupo «Mis canales». El feed es el Atom publico del canal
  *    (youtube.com/feeds/videos.xml, sin clave de API); cada item es un video, con su miniatura descargada a /media como
@@ -24,13 +24,13 @@
  */
 declare(strict_types=1);
 require_once __DIR__ . '/imagen.php';   // http_get(), imagen_desde_bytes(), imagen_desde_og()
-require_once __DIR__ . '/destacar.php';  // destacar noticias de medios y substacks (source_pins, migra-111)
+require_once __DIR__ . '/destacar';  // destacar noticias de medios y substacks (source_pins, migra-111)
 
 const DDD_FUENTES_DIR = DDD_MEDIA_DIR . '/fuentes';
 
 function fuentes_on(): bool { return (string)cfg('sources_enabled', '1') === '1'; }
 /** Agregadores (Meneame, Mediatize, Renegados, Burbuja, Areopago) activos? config.sources_agregadores, apagados por defecto (migra-070):
- *  fuentes_activas() no los devuelve, asi que desaparecen del catalogo, el rail, la franja, la columna derecha, el pie, /ultimo.php y /fuente.php,
+ *  fuentes_activas() no los devuelve, asi que desaparecen del catalogo, el rail, la franja, la columna derecha, el pie, /ultimo y /fuente,
  *  y el cron no lee sus RSS. Siguen en admin > Fuentes. */
 function agregadores_on(): bool { return (string)cfg('sources_agregadores', '0') === '1'; }
 /** Canales de YouTube (fuentes de tipo «youtube») activos? config.sources_youtube (migra-103). Apagados, igual que los agregadores:
@@ -54,14 +54,14 @@ function fuentes_activas(PDO $pdo, string $kind = ''): array {
  * sources.lang: codigo de dos letras (es, en, pt…); '' = sin saber. Se elige en admin -> Fuentes o, si se deja en «detectar», se toma del
  * propio RSS (<language>, dc:language o xml:lang del Atom) al darla de alta y en cada lectura mientras siga vacio.
  * users.src_mylang = 1: el usuario quiere ver solo fuentes en su idioma (el de la interfaz, lang()). Las de idioma desconocido se ven.
- * Filtra menus, listas y catalogo; la pagina de una fuente (/fuente.php) se sigue abriendo con su enlace. */
-/** ¿Solo fuentes en mi idioma? Con cuenta, users.src_mylang (perfil o casilla de /medios.php y /ultimo.php, es la misma);
+ * Filtra menus, listas y catalogo; la pagina de una fuente (/fuente) se sigue abriendo con su enlace. */
+/** ¿Solo fuentes en mi idioma? Con cuenta, users.src_mylang (perfil o casilla de /medios y /ultimo, es la misma);
  *  sin cuenta, cookie ddd_srclang que solo existe si la persona marca la casilla. */
 function fuentes_solo_mi_idioma(): bool { $u = user(); return $u ? !empty($u['src_mylang']) : ($_COOKIE['ddd_srclang'] ?? '') === '1'; }
-/** Casilla «Solo fuentes en mi idioma» para las listas de fuentes: cambia la misma preferencia que el perfil (via /cambiar-skin.php?m=)
+/** Casilla «Solo fuentes en mi idioma» para las listas de fuentes: cambia la misma preferencia que el perfil (via /cambiar-skin?m=)
  *  y vuelve a la pagina. Se guarda con el boton «Guardar» de al lado (no se envia sola al marcarla). */
 function fuentes_casilla_idioma(): string {
-    return "<form class=\"srclang\" method=\"get\" action=\"/cambiar-skin.php\" autocomplete=\"off\"><input type=\"hidden\" name=\"m\" value=\"0\"><label><input type=\"checkbox\" name=\"m\" value=\"1\""
+    return "<form class=\"srclang\" method=\"get\" action=\"/cambiar-skin\" autocomplete=\"off\"><input type=\"hidden\" name=\"m\" value=\"0\"><label><input type=\"checkbox\" name=\"m\" value=\"1\""
          . (fuentes_solo_mi_idioma() ? ' checked' : '') . "> " . t('Solo fuentes y envíos en mi idioma') . " <small>(" . h(DDD_LANGS[lang()] ?? lang()) . ")</small></label>"
          . " <button type=\"submit\">" . t('Guardar') . "</button></form>";
 }
@@ -96,16 +96,16 @@ function fuente_by_slug(PDO $pdo, string $slug): ?array {
     return null;
 }
 function fuente_url(array $src, string $view = ''): string {
-    return '/fuente.php?f=' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
+    return '/fuente/' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
 }
 function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter', 'youtube'], true); }   // sin fases ni votos, con «enviar al radar»
 /** Grupos con favoritos del usuario: tipo => [clave de config de cuantos salen en el menu, etiqueta del grupo] */
 const DDD_MEDIA_KINDS = ['medio' => ['media_max_per_user', 'Mis medios'], 'newsletter' => ['news_max_per_user', 'Mis substacks'], 'youtube' => ['yt_max_per_user', 'Mis canales'], 'agregador' => ['agg_max_per_user', 'Mis agregadores']];
 /** ¿Se puede seguir? Medios y substacks siempre; agregadores, mientras esten encendidos (config.sources_agregadores). */
 function fuente_seguible(array $src): bool { return fuente_es_medio($src) || (($src['kind'] ?? '') === 'agregador' && agregadores_on()); }
-/** Grupos del rail y de /ultimo.php, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con el boton «Seguir» (DDD_MEDIA_KINDS). */
+/** Grupos del rail y de /ultimo, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con el boton «Seguir» (DDD_MEDIA_KINDS). */
 const DDD_ULTIMO_KINDS = ['medio' => ['Mis medios', 'news'], 'newsletter' => ['Mis substacks', 'letter'], 'youtube' => ['Mis canales', 'play'], 'agregador' => ['Mis agregadores', 'agg']];   // mismo orden que las portadas: Medios, Substacks
-/** Fuentes de las que /ultimo.php saca las noticias de un grupo: TODOS los favoritos del usuario (sin limite) o, si no tiene
+/** Fuentes de las que /ultimo saca las noticias de un grupo: TODOS los favoritos del usuario (sin limite) o, si no tiene
  *  ninguno / no tiene cuenta, las del menu (medios_menu(): las que han publicado mas recientemente; agregadores: los destacados). */
 function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array {
     if ($mias = mis_medios_recientes($pdo, $u, $kind)) return $mias;
@@ -163,13 +163,13 @@ function fuente_por_dominio(PDO $pdo, string $dominio): ?array {
     return $map[strtolower($dominio)] ?? null;
 }
 /** Boton «+ Seguir» / «✓ Siguiendo» de un medio o substack (el + y el ✓ los pone el CSS), solo para registrados; sin JS: un POST a
- *  /fav-fuente.php que vuelve a la misma pagina. Pulsarlo cuando ya se sigue, deja de seguir. $nombre: «Seguir Jot Down» (pagina de la
+ *  /fav-fuente que vuelve a la misma pagina. Pulsarlo cuando ya se sigue, deja de seguir. $nombre: «Seguir Jot Down» (pagina de la
  *  fuente, hilo: ahi no se ve a que medio se refiere); sin el, «Seguir» a secas (filas del catalogo y tarjetas, que ya llevan el nombre). */
 function fuente_fav_form(array $src, bool $nombre = false): string {
     if (!user() || !fuente_seguible($src)) return '';
     $on = fuente_es_fav($src);
     $title = h($on ? t('dejar de seguir %s', $src['name']) : t('Seguir %s', $src['name']));
-    return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/fav-fuente.php\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$src['source_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
+    return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/fav-fuente\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$src['source_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
          . "<button title=\"$title\">" . h($on ? t('Siguiendo') : ($nombre ? t('Seguir %s', $src['name']) : t('Seguir'))) . "</button></form>";
 }
 /** Fuentes de un tipo que se ofrecen en el menu: de los favoritos del usuario, los que han publicado mas recientemente (una noticia
@@ -729,7 +729,7 @@ function fuente_enviar_url(array $src, array $i): string {
     $q = ['url' => $i['url'], 'title' => $i['title'], 'content' => mb_substr((string)$i['content'], 0, 600)];
     if (!empty($src['topic_id'])) $q['topic'] = (int)$src['topic_id'];
     if (!empty($i['image'])) $q['x'] = (int)$i['item_id'];   // enviar.php reutiliza la foto que ya se saco del RSS
-    return '/enviar.php?' . http_build_query($q);
+    return '/enviar?' . http_build_query($q);
 }
 /** story_id de los envios ya hechos con estas URLs (para marcar «ya enviada» y enlazar al hilo). */
 function fuente_ya_enviadas(PDO $pdo, array $urls): array {
@@ -767,7 +767,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     if (!foco()) echo $foto;
     echo "<div class=\"actions\">";
     if ($medio) {
-        if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo.php?id=" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
+        if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo/" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
         elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia al radar')) . "\">" . icon('plus') . "<span>" . t('enviar al radar') . "</span></a>";
         echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h($yt ? t('ver en %s', 'YouTube') : t('leer en %s', $src['name'])) . "</span></a>";
         echo fuente_fav_form($src);   // «+ Seguir»: el medio o substack de esta noticia, a «Mis medios» / «Mis substacks»

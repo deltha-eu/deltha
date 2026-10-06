@@ -1,5 +1,5 @@
 <?php
-/** /medio.php?m=dominio — todo lo enviado de un medio (por el dominio de la fuente), en cualquier fase, de más reciente a más antiguo.
+/** /medio/dominio — todo lo enviado de un medio (por el dominio de la fuente), en cualquier fase, de más reciente a más antiguo.
  *  Enlazado desde el nombre del medio en cada post, igual que el tema. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -23,5 +23,5 @@ $st->execute();
 page_header($m);
 echo "<p class=\"notice\">" . t('Todo lo enviado de %s, esté donde esté: en portada, en el radar o ya archivado. %d en total.', "<a href=\"https://" . h($m) . "/\" rel=\"noopener nofollow\"><b>" . h($m) . "</b></a>", $total) . "</p>";
 foreach ($st as $s) story_post($pdo, $s, "compact");
-paginate('/medio.php?m=' . rawurlencode($m), $page, $total);
+paginate('/medio/' . rawurlencode($m), $page, $total);
 page_footer();

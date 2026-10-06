@@ -1,10 +1,10 @@
 <?php
-/** /chat.php — pestaña Chat: un solo flujo de mensajes cortos, el mas reciente arriba, sin anidar (tipo Nótame).
+/** /chat — pestaña Chat: un solo flujo de mensajes cortos, el mas reciente arriba, sin anidar (tipo Nótame).
  *  Cuadro arriba; «responder» bajo cada mensaje abre el cuadro con «#ID » puesto; cada #N del texto enlaza al
  *  mensaje N y este enseña sus respuestas. @nick enlaza al perfil. Sin avatares: solo el nombre.
  *  Registrados con su nick; anonimos con alias estable por IP si chat_anon = 1. Borrado propio durante
- *  chat_delete_minutes; reportar → /reportar.php?chat=N; borrado de moderacion desde /moderacion.php; los administradores
- *  ademas pueden editar el texto (/editar-chat.php, queda «editado»).
+ *  chat_delete_minutes; reportar → /reportar?chat=N; borrado de moderacion desde /moderacion; los administradores
+ *  ademas pueden editar el texto (/editar-chat, queda «editado»).
  *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca)
  *  salvo cuando se esta escribiendo (?r=N) o se acaba de publicar. Con JS lo lleva /app/escribir.js, que cancela el
  *  refresco en cuanto hay algo escrito (antes se perdia el mensaje a medias); sin JS, el <noscript><meta refresh> de siempre.
@@ -23,7 +23,7 @@ $canWrite = $u || (string)cfg('chat_anon', '1') === '1';
 $maxLen = min(1000, max(50, (int)cfg('chat_max_len', 500)));
 $err = null;
 $hilos = (string)($_GET['v'] ?? '') !== 'tiempo';   // por hilos es la vista por defecto; ?v=tiempo, el flujo cronologico (?v=hilos de enlaces antiguos sigue valiendo)
-$base = '/chat.php' . ($hilos ? '' : '?v=tiempo');   // la vista elegida va en todos los enlaces y redirecciones
+$base = '/chat' . ($hilos ? '' : '?v=tiempo');   // la vista elegida va en todos los enlaces y redirecciones
 $amp = $hilos ? '?' : '&';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($m = $st->fetch()) && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $pdo->prepare("UPDATE chat SET status = 'gone' WHERE msg_id = ?")->execute([$id]);
         redirect($base);
     }
-    if (!$canWrite) redirect('/login.php');
+    if (!$canWrite) redirect('/login');
     $content = trim(preg_replace("/\r\n?/", "\n", post('content')));
     $content = mb_substr($content, 0, $maxLen);
     if (mb_strlen($content) < 1) redirect($base);
@@ -123,7 +123,7 @@ $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 
 $refresco = $writing ? 0 : max(0, (int)cfg('chat_refresh_sec', 60));   // 0 = no se recarga sola
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
-echo "<nav class=\"sub\"><a href=\"/chat.php\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat.php?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a></nav>";
+echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a></nav>";
 echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refresco ? " data-refresh=\"$refresco\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
 $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
@@ -136,7 +136,7 @@ $replyHere = $replyTo > 0 && isset($ids[$replyTo]);   // el mensaje respondido e
 if ($canWrite) {
     if (!$replyHere) $box($replyTo > 0);
 } else {
-    echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login.php\">" . t('entrar') . "</a></p>";
+    echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login\">" . t('entrar') . "</a></p>";
 }
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el mensaje queda avisado a los moderadores.') . "</p>";
@@ -147,21 +147,21 @@ foreach ($rows as $m) {
     $del = (int)$m['deleted'] === 1;
     echo "<article class=\"cm" . (isset($sangria[$id]) ? ' rep' : '') . (isset($cabeza[$id]) ? ' top' : '') . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\"" . (isset($sangria[$id]) ? " style=\"--lv:{$sangria[$id]}\"" : '') . ">";
     echo "<div class=\"ch\"><a class=\"num\" href=\"#m$id\">#$id</a> ";
-    echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u.php?u=" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
+    echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u/" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
     echo "<span class=\"meta\"> · " . h(hace($m['created'])) . (!empty($m['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
-    if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
+    if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
     else      echo "<p>" . chat_format($m['content'], $logins, $ids) . "</p>";
     $acts = [];
     if (!$del && $canWrite) $acts[] = "<a class=\"replylink\" href=\"" . h($base . $amp) . "r=$id#m$id\">" . icon('reply') . "<span>" . t('responder') . "</span></a>";
-    if (!$hilos && !empty($replies[$id])) $acts[] = "<span class=\"reps\">" . t('respuestas:') . " " . implode(' ', array_map(fn($r) => "<a class=\"ref\" href=\"" . (isset($ids[$r]) ? "#m$r" : "/chat.php?m=$r#m$r") . "\">#$r</a>", $replies[$id])) . "</span>";
+    if (!$hilos && !empty($replies[$id])) $acts[] = "<span class=\"reps\">" . t('respuestas:') . " " . implode(' ', array_map(fn($r) => "<a class=\"ref\" href=\"" . (isset($ids[$r]) ? "#m$r" : "/chat?m=$r#m$r") . "\">#$r</a>", $replies[$id])) . "</span>";
     if (!$del && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link\" title=\"" . h(t('solo durante %d min', (int)cfg('chat_delete_minutes', 5))) . "\">" . t('borrar') . "</button></form>";
-    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?chat=$id\">" . t('reportar') . "</a>";
-    if (is_admin() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-chat.php?id=$id\">" . t('editar') . "</a>";   // solo administradores (migra-094); los moderadores, solo eliminar
-    if (is_mod() && !$del) $acts[] = "<form method=\"post\" action=\"/moderacion.php\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"$id\"><input type=\"hidden\" name=\"back\" value=\"1\"><button class=\"link modlink\">" . t('eliminar') . "</button></form>";
+    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar?chat=$id\">" . t('reportar') . "</a>";
+    if (is_admin() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-chat?id=$id\">" . t('editar') . "</a>";   // solo administradores (migra-094); los moderadores, solo eliminar
+    if (is_mod() && !$del) $acts[] = "<form method=\"post\" action=\"/moderacion\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"$id\"><input type=\"hidden\" name=\"back\" value=\"1\"><button class=\"link modlink\">" . t('eliminar') . "</button></form>";
     if ($acts || !$del) {
         echo "<div class=\"actions\">" . implode('', $acts);
         // sol / lagrima: registrados sobre mensajes ajenos; el resto (y el autor) ve solo los contadores
-        if (!$del) comment_vote_widget($m, $u && (int)$m['user_id'] !== (int)$u['user_id'], '/votar-chat.php', 'msg_id');
+        if (!$del) comment_vote_widget($m, $u && (int)$m['user_id'] !== (int)$u['user_id'], '/votar-chat', 'msg_id');
         echo "</div>";
     }
     echo "</article>";

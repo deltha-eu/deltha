@@ -6,7 +6,7 @@
  *     ghost_minutes); en el Chat, las menciones @nick y los avisos, un alias estable por pareja (ghost_alias);
  *     sin foto ni enlace al perfil;
  *   - los comentarios de B se le pliegan a A (details cerrado, por si quiere leerlos);
- *   - ninguno puede ver el perfil del otro (/u.php → «no existe») ni escribirle un privado; no se avisan entre ellos;
+ *   - ninguno puede ver el perfil del otro (/u → «no existe») ni escribirle un privado; no se avisan entre ellos;
  *   - nadie recibe aviso, no hay listas publicas. Los votos no se tocan (los envios son de todos) y no se
  *     oculta nada al resto.
  *  El boton solo aparece cuando el nombre ya esta revelado (perfil o comentario pasados los ghost_minutes): antes
@@ -99,5 +99,5 @@ function ghost_list(PDO $pdo, int $me): array {
  *  ya revelado ($shown) y no velado todavia. $login = nick del otro. '' si no procede. */
 function ghost_link(?int $uid, ?string $login, bool $shown, string $cls = 'replink'): string {
     if (!ghost_on() || !user() || !$uid || !$login || !$shown || $uid === (int)user()['user_id'] || ghost_veiled($uid)) return '';
-    return "<a class=\"$cls ghostlink\" href=\"/ghostear.php?u=" . rawurlencode($login) . "\" title=\"" . h(t('dejar de ver a este usuario: para ti y para él seréis siempre Ghost')) . "\">" . t('ghostear') . "</a>";
+    return "<a class=\"$cls ghostlink\" href=\"/ghostear?u=" . rawurlencode($login) . "\" title=\"" . h(t('dejar de ver a este usuario: para ti y para él seréis siempre Ghost')) . "\">" . t('ghostear') . "</a>";
 }
