@@ -30,7 +30,7 @@ $sigue = [];
 if ($verF) foreach ($fk as $tt => $kk) if (fuente_kind_on($kk)) $sigue[$tt] = mis_medios($pdo, ['user_id' => $uid], $kk);
 $base = "/u/" . rawurlencode($p['login']);
 echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$p['aura'], 1, ',', '') . " · " . t('desde') . " " . date('M Y', strtotime($p['created'])) . ($p['last_seen'] ? " · " . h(t('último acceso %s', hace($p['last_seen']))) : '')
-   . " · <a class=\"cnt\" href=\"$base\">" . t('%d envíos', $nPub) . "</a> · <a class=\"cnt\" href=\"$base&amp;t=comentarios\">" . t('%d comentarios', $nCom) . "</a>";
+   . " · <a class=\"cnt\" href=\"$base\">" . t('%d envíos', $nPub) . "</a> · <a class=\"cnt\" href=\"$base?t=comentarios\">" . t('%d comentarios', $nCom) . "</a>";
 if ($own) echo " · " . t('<a href="/perfil">editar</a>') . "";
 if (!$own && user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes?u=" . rawurlencode($p['login']) . "\">" . t('enviar mensaje') . "</a>";
 $canMod = modedit_puede($p);   // moderadores: usuarios normales; admin: cualquiera (lib/usuarios.php)
@@ -46,9 +46,9 @@ if ($canMod) {
     echo "</details>";
 }
 
-echo "<nav class=\"sub\"><a href=\"$base\"" . ($tab === 'envios' ? ' class="on"' : '') . ">" . t('Envíos') . " <small>$nPub</small></a><a href=\"$base&amp;t=comentarios\"" . ($tab === 'comentarios' ? ' class="on"' : '') . ">" . t('Comentarios') . " <small>$nCom</small></a>"
-   . (isset($sigue['medios']) ? "<a href=\"$base&amp;t=medios\"" . ($tab === 'medios' ? ' class="on"' : '') . ">" . t('Medios') . " <small>" . count($sigue['medios']) . "</small></a>" : '')
-   . (isset($sigue['substacks']) ? "<a href=\"$base&amp;t=substacks\"" . ($tab === 'substacks' ? ' class="on"' : '') . ">" . t('Substacks') . " <small>" . count($sigue['substacks']) . "</small></a>" : '')
+echo "<nav class=\"sub\"><a href=\"$base\"" . ($tab === 'envios' ? ' class="on"' : '') . ">" . t('Envíos') . " <small>$nPub</small></a><a href=\"$base?t=comentarios\"" . ($tab === 'comentarios' ? ' class="on"' : '') . ">" . t('Comentarios') . " <small>$nCom</small></a>"
+   . (isset($sigue['medios']) ? "<a href=\"$base?t=medios\"" . ($tab === 'medios' ? ' class="on"' : '') . ">" . t('Medios') . " <small>" . count($sigue['medios']) . "</small></a>" : '')
+   . (isset($sigue['substacks']) ? "<a href=\"$base?t=substacks\"" . ($tab === 'substacks' ? ' class="on"' : '') . ">" . t('Substacks') . " <small>" . count($sigue['substacks']) . "</small></a>" : '')
    . "</nav>";
 $page = page_num(); $per = (int)cfg('per_page', 20);
 if ($tab === 'envios') {
@@ -92,6 +92,6 @@ if ($tab === 'envios') {
     }
     echo "</div>";
     if (!$rows) echo "<p class=\"end\">" . ($own ? t('Aún no has comentado.') : t('Nada revelado todavía: sus comentarios siguen vivos o no ha comentado.')) . "</p>";
-    elseif ($nCom > $per) paginate("$base&amp;t=comentarios", $page, $nCom);
+    elseif ($nCom > $per) paginate("$base?t=comentarios", $page, $nCom);
 }
 page_footer();
