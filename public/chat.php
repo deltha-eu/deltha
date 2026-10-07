@@ -149,9 +149,10 @@ if ($canWrite) {
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra-121): los tres ultimos, arriba del flujo, enlazados a su sitio
     $an = $pdo->query("SELECT c.msg_id, c.content, c.user_id, c.alias, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.anuncio = 1 AND c.deleted = 0 AND " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT 3")->fetchAll();
+    $an = array_filter($an, fn($a) => !isset($ids[(int)$a['msg_id']]));   // los que ya se ven en esta pagina no se repiten: la franja es para los que han quedado atras
     if ($an) {
         echo "<div class=\"anuncios\"><div class=\"ch\"><span class=\"anun\">" . icon('mega') . t('Mensajes a la comunidad') . "</span></div>";
-        foreach ($an as $a) echo "<p><a class=\"num\" href=\"" . (isset($ids[(int)$a['msg_id']]) ? "#m{$a['msg_id']}" : "/chat?m={$a['msg_id']}#m{$a['msg_id']}") . "\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> " . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</p>";
+        foreach ($an as $a) echo "<p><a class=\"num\" href=\"/chat?m={$a['msg_id']}#m{$a['msg_id']}\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> <span>" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</span></p>";
         echo "</div>";
     }
 }

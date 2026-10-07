@@ -503,6 +503,8 @@ header.top .bell > span { display: none; }
 .chat .anuncios { padding: 8px 16px 10px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 6%, var(--bg)); font-size: 14px; }
 .chat .anuncios p { margin: 4px 0 0; display: flex; gap: 6px; align-items: baseline; overflow-wrap: anywhere; }
 .chat .anuncios .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--accent); text-decoration: none; }
+.chat .anuncios .num, .chat .anuncios b { flex: none; white-space: nowrap; }
+.chat .anuncios p > span { min-width: 0; }
 .chat .cm .actions button.anunbtn { display: inline-flex; align-items: center; }
 .chat .cm .actions button.anunbtn.on { color: var(--accent); }
 .chat .cm .actions button.anunbtn.on .i { fill: currentColor; }
