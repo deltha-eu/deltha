@@ -1087,6 +1087,7 @@ function nav_tabs(string $tab, string $cls): void {
     if ($cls !== 'rail-bottom') unset($tabs['temas'], $tabs['comunidades']);
     if (isset($tabs['analitica']) && ($cls === 'tabs-bottom' || !user() || !ana_on())) unset($tabs['analitica']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
+    if (isset($tabs['chat']) && $cls === 'rail-top') $tabs['chat'][1] = t('Chat / Ayuda');   // en escritorio (rail) la pestaña anuncia tambien la ayuda; en movil sigue «Chat», que no cabe mas (07/10/2026)
     // pestañas de arriba: Radar va en el centro exacto en movil (v160). Lo de antes y lo de despues se envuelve en dos grupos
     // (span.g, display: contents salvo en movil) que ocupan mitades iguales; Radar lleva la clase «radar» y se destaca un poco.
     $keys = array_keys($tabs); $ri = $cls === 'tabs-top' ? array_search('radar', $keys, true) : false;

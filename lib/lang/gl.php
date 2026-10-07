@@ -767,4 +767,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'marcar como mensaje a la comunidad' => 'marcar como mensaxe á comunidade',
 'quitar la marca de mensaje a la comunidad' => 'quitar a marca de mensaxe á comunidade',
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'o teu voto · preme outra vez para anulalo (%d min)',
+'Chat / Ayuda' => 'Chat / Axuda',
 ];
