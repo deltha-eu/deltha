@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 173);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 174);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -202,7 +202,7 @@ function queda(string $published): string {
     $ttl = (int)cfg('thread_ttl_hours', 48) * 3600;
     $s = strtotime($published) + $ttl - time();
     if ($s <= 0) return t('archivado');
-    return $s < 3600 ? t('muere en %d min', intdiv($s, 60)) : t('muere en %d h', intdiv($s, 3600));
+    return $s < 3600 ? t('se archiva en %d min', intdiv($s, 60)) : t('se archiva en %d h', intdiv($s, 3600));   // antes «muere en» (cambiado el 07/10/2026 a peticion de Angel)
 }
 function vida_pct(string $published): int {
     $ttl = (int)cfg('thread_ttl_hours', 48) * 3600;
