@@ -226,7 +226,8 @@ form.plain .showpw label { display: flex; align-items: center; gap: 6px; }
 .choice:hover { background: var(--hover); }
 .or { text-align: center; color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
 .notice { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
-.error { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--neg) 12%, var(--bg)); color: var(--neg); }
+.error { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--neg) 12%, var(--bg)); color: var(--fg); font-weight: 600; border: 1px solid var(--neg); }   /* --neg es gris en casi todas las skins: sin negrita ni borde se confundia con un .notice (07/10/2026) */
+.error::before { content: "⚠ "; }
 .end { text-align: center; color: var(--muted); font-size: 14px; padding: 28px 16px; }
 nav.pages { display: flex; justify-content: space-between; padding: 14px 16px; font-size: 14px; color: var(--muted); }
 footer.inflow { padding: 12px 16px calc(var(--bottom-h) + 20px + env(safe-area-inset-bottom)); font-size: 12px; color: var(--muted); align-items: center; gap: 12px; }
