@@ -762,4 +762,9 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Esa noticia no existe.' => 'Aquesta notícia no existeix.',
 'No se ha podido destacar.' => 'No s\'ha pogut destacar.',
 'Volver' => 'Tornar',
+'Mensaje a la comunidad' => 'Missatge a la comunitat',
+'Mensajes a la comunidad' => 'Missatges a la comunitat',
+'marcar como mensaje a la comunidad' => 'marcar com a missatge a la comunitat',
+'quitar la marca de mensaje a la comunidad' => 'treure la marca de missatge a la comunitat',
+'tu voto · pulsa otra vez para anularlo (%d min)' => 'el teu vot · prem un altre cop per anul·lar-lo (%d min)',
 ];

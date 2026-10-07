@@ -763,4 +763,9 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Esa noticia no existe.' => 'Diese Meldung gibt es nicht.',
 'No se ha podido destacar.' => 'Sie konnte nicht hervorgehoben werden.',
 'Volver' => 'Zurück',
+'Mensaje a la comunidad' => 'Nachricht an die Community',
+'Mensajes a la comunidad' => 'Nachrichten an die Community',
+'marcar como mensaje a la comunidad' => 'als Nachricht an die Community markieren',
+'quitar la marca de mensaje a la comunidad' => 'Markierung als Nachricht an die Community entfernen',
+'tu voto · pulsa otra vez para anularlo (%d min)' => 'deine Stimme · noch einmal drücken, um sie zurückzunehmen (%d Min.)',
 ];

@@ -33,6 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($m = $st->fetch()) && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $pdo->prepare("UPDATE chat SET status = 'gone' WHERE msg_id = ?")->execute([$id]);
         redirect($base);
     }
+    if (post('act') === 'anuncio') {   // admin/mod: marcar o quitar «mensaje a la comunidad» (migra-121)
+        $id = (int)post('id');
+        if (is_mod()) $pdo->prepare("UPDATE chat SET anuncio = 1 - anuncio WHERE msg_id = ? AND status = 'ok' AND deleted = 0")->execute([$id]);
+        redirect($base . $amp . "m=$id" . (isset($_POST['js']) ? '' : "#m$id"));
+    }
     if (!$canWrite) redirect('/login');
     $content = trim(preg_replace("/\r\n?/", "\n", post('content')));
     $content = mb_substr($content, 0, $maxLen);
@@ -42,8 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else {
         $ref = chat_first_ref($content);
         if ($ref) { $q = $pdo->prepare("SELECT 1 FROM chat WHERE msg_id = ? AND status = 'ok'"); $q->execute([$ref]); if (!$q->fetchColumn()) $ref = null; }
-        $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content) VALUES (?,?,?,?,?)")
-            ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content]);
+        $anuncio = is_mod() && post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad: solo admin/mod (migra-121)
+        $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,?)")
+            ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content, $anuncio]);
         $mid = (int)$pdo->lastInsertId();
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
         avisos_chat($pdo, $mid, $u ? (int)$u['user_id'] : null, $u ? (string)$u['login'] : $anonAlias, $content, $ref);   // @mencionados y autor del #N citado
@@ -130,7 +136,9 @@ $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
     echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\">";
     $ph = $u ? t('Escribe como %s', $u['login']) : t('Escribes como %s (anónimo). Con cuenta, con tu nombre.', $anonAlias);
     echo "<textarea name=\"content\" maxlength=\"$maxLen\" rows=\"2\" placeholder=\"" . h($ph) . "\" required" . ($reply ? " autofocus" : "") . ">" . ($reply ? "#$replyTo " : "") . "</textarea>";
-    echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($reply ? " · <a href=\"" . h($base) . "\">" . t('cancelar') . "</a>" : "") . "</small><button>" . t('Enviar') . "</button></div></form>";
+    echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($reply ? " · <a href=\"" . h($base) . "\">" . t('cancelar') . "</a>" : "") . "</small>";
+    if (is_mod()) echo "<label class=\"anuncio\" title=\"" . h(t('marcar como mensaje a la comunidad')) . "\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\">" . icon('mega') . "<span>" . t('Mensaje a la comunidad') . "</span></label>";   // admin/mod (migra-121)
+    echo "<button>" . t('Enviar') . "</button></div></form>";
 };
 $replyHere = $replyTo > 0 && isset($ids[$replyTo]);   // el mensaje respondido esta en esta pagina: el cuadro va debajo de el
 if ($canWrite) {
@@ -139,16 +147,25 @@ if ($canWrite) {
     echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login\">" . t('entrar') . "</a></p>";
 }
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
+if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra-121): los tres ultimos, arriba del flujo, enlazados a su sitio
+    $an = $pdo->query("SELECT c.msg_id, c.content, c.user_id, c.alias, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.anuncio = 1 AND c.deleted = 0 AND " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT 3")->fetchAll();
+    if ($an) {
+        echo "<div class=\"anuncios\"><div class=\"ch\"><span class=\"anun\">" . icon('mega') . t('Mensajes a la comunidad') . "</span></div>";
+        foreach ($an as $a) echo "<p><a class=\"num\" href=\"" . (isset($ids[(int)$a['msg_id']]) ? "#m{$a['msg_id']}" : "/chat?m={$a['msg_id']}#m{$a['msg_id']}") . "\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> " . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</p>";
+        echo "</div>";
+    }
+}
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el mensaje queda avisado a los moderadores.') . "</p>";
 if (!$rows) echo "<p class=\"end\">" . t('Nadie ha dicho nada todavía. Empieza tú.') . "</p>";
 foreach ($rows as $m) {
     $id = (int)$m['msg_id'];
     $who = chat_who($m);
     $del = (int)$m['deleted'] === 1;
-    echo "<article class=\"cm" . (isset($sangria[$id]) ? ' rep' : '') . (isset($cabeza[$id]) ? ' top' : '') . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\"" . (isset($sangria[$id]) ? " style=\"--lv:{$sangria[$id]}\"" : '') . ">";
+    $anun = !$del && (int)($m['anuncio'] ?? 0) === 1;   // mensaje a la comunidad (migra-121): resaltado y con etiqueta
+    echo "<article class=\"cm" . ($anun ? ' anuncio' : '') . (isset($sangria[$id]) ? ' rep' : '') . (isset($cabeza[$id]) ? ' top' : '') . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\"" . (isset($sangria[$id]) ? " style=\"--lv:{$sangria[$id]}\"" : '') . ">";
     echo "<div class=\"ch\"><a class=\"num\" href=\"#m$id\">#$id</a> ";
     echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u/" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
-    echo "<span class=\"meta\"> · " . h(hace($m['created'])) . (!empty($m['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
+    echo "<span class=\"meta\"> · " . h(hace($m['created'])) . (!empty($m['edited_at']) && !$del ? " · " . t('editado') : "") . "</span>" . ($anun ? " <span class=\"anun\">" . icon('mega') . t('Mensaje a la comunidad') . "</span>" : "") . "</div>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
     else      echo "<p>" . chat_format($m['content'], $logins, $ids) . "</p>";
     $acts = [];
@@ -157,6 +174,7 @@ foreach ($rows as $m) {
     if (!$del && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link\" title=\"" . h(t('solo durante %d min', (int)cfg('chat_delete_minutes', 5))) . "\">" . t('borrar') . "</button></form>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar?chat=$id\">" . t('reportar') . "</a>";
     if (is_admin() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-chat?id=$id\">" . t('editar') . "</a>";   // solo administradores (migra-094); los moderadores, solo eliminar
+    if (is_mod() && !$del) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"anuncio\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link anunbtn" . ($anun ? ' on' : '') . "\" title=\"" . h($anun ? t('quitar la marca de mensaje a la comunidad') : t('marcar como mensaje a la comunidad')) . "\" aria-label=\"" . h(t('Mensaje a la comunidad')) . "\">" . icon('mega') . "</button></form>";   // megafono: mensaje a la comunidad (migra-121)
     if (is_mod() && !$del) $acts[] = "<form method=\"post\" action=\"/moderacion\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"$id\"><input type=\"hidden\" name=\"back\" value=\"1\"><button class=\"link modlink\">" . t('eliminar') . "</button></form>";
     if ($acts || !$del) {
         echo "<div class=\"actions\">" . implode('', $acts);

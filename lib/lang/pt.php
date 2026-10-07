@@ -799,4 +799,9 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Esa noticia no existe.' => 'Essa notícia não existe.',
 'No se ha podido destacar.' => 'Não foi possível destacar.',
 'Volver' => 'Voltar',
+'Mensaje a la comunidad' => 'Mensagem à comunidade',
+'Mensajes a la comunidad' => 'Mensagens à comunidade',
+'marcar como mensaje a la comunidad' => 'marcar como mensagem à comunidade',
+'quitar la marca de mensaje a la comunidad' => 'retirar a marca de mensagem à comunidade',
+'tu voto · pulsa otra vez para anularlo (%d min)' => 'o teu voto · carrega outra vez para o anular (%d min)',
 ];

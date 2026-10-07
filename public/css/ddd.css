@@ -496,6 +496,20 @@ header.top .bell > span { display: none; }
 .chat .cm p a.ref:hover { background: color-mix(in srgb, var(--accent) 20%, var(--bg)); }
 .chat .cm p a.at { text-decoration: none; font-weight: 600; }
 .chat .cm.deleted .delmsg { color: var(--muted); }
+/* mensaje a la comunidad (admin/mod, migra-121): resaltado en su sitio, etiqueta con megafono y franja con los ultimos arriba del Chat */
+.chat .cm.anuncio { background: color-mix(in srgb, var(--accent) 8%, var(--bg)); box-shadow: inset 3px 0 0 var(--accent); }
+.chat .ch .anun { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--accent); }
+.chat .ch .anun .i { width: 14px; height: 14px; }
+.chat .anuncios { padding: 8px 16px 10px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 6%, var(--bg)); font-size: 14px; }
+.chat .anuncios p { margin: 4px 0 0; display: flex; gap: 6px; align-items: baseline; overflow-wrap: anywhere; }
+.chat .anuncios .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--accent); text-decoration: none; }
+.chat .cm .actions button.anunbtn { display: inline-flex; align-items: center; }
+.chat .cm .actions button.anunbtn.on { color: var(--accent); }
+.chat .cm .actions button.anunbtn.on .i { fill: currentColor; }
+.chatbox label.anuncio { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); cursor: pointer; margin-left: auto; }
+.chatbox label.anuncio .i { width: 15px; height: 15px; }
+.chatbox label.anuncio:has(input:checked) { color: var(--accent); font-weight: 600; }
+.chatbox label.anuncio:has(input:checked) .i { fill: currentColor; }
 .chat .cm .actions { margin-top: 4px; gap: 14px; font-size: 12px; flex-wrap: wrap; }
 .chat .cm .actions .i { width: 15px; height: 15px; }
 .chat .cm .actions .reps { color: var(--muted); display: inline-flex; gap: 4px; align-items: center; }
