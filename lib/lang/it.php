@@ -768,4 +768,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'marcar como mensaje a la comunidad' => 'segna come messaggio alla comunità',
 'quitar la marca de mensaje a la comunidad' => 'togli il segno di messaggio alla comunità',
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'il tuo voto · premi di nuovo per annullarlo (%d min)',
+'Chat / Ayuda' => 'Chat / Aiuto',
 ];

@@ -767,4 +767,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'marcar como mensaje a la comunidad' => 'komunitateari mezu gisa markatu',
 'quitar la marca de mensaje a la comunidad' => 'komunitateari mezuaren marka kendu',
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'zure botoa · sakatu berriro baliogabetzeko (%d min)',
+'Chat / Ayuda' => 'Txata / Laguntza',
 ];

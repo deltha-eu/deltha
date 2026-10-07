@@ -804,4 +804,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'marcar como mensaje a la comunidad' => 'marcar como mensagem à comunidade',
 'quitar la marca de mensaje a la comunidad' => 'retirar a marca de mensagem à comunidade',
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'o teu voto · carrega outra vez para o anular (%d min)',
+'Chat / Ayuda' => 'Chat / Ajuda',
 ];
