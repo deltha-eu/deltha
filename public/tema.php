@@ -38,9 +38,9 @@ $base = "/tema/$tid";
 header('Cache-Control: private, no-cache');   // depende de la sesion y de «solo en mi idioma»
 page_header(ucfirst($topic['name']));
 if ($fuentes) {
-    echo "<nav class=\"sub\"><a href=\"$base&amp;v=deltha\"" . ($v === 'deltha' ? ' class="on"' : '') . ">" . t('En Deltha') . " <small>$total</small></a>"
-       . "<a href=\"$base&amp;v=medios\"" . ($v === 'medios' ? ' class="on"' : '') . ">" . t('En los medios') . " <small>" . count($fuentes) . "</small></a>"
-       . ($hayIdioma ? "<a href=\"$base&amp;v=idioma\"" . ($v === 'idioma' ? ' class="on"' : '') . ">" . t('En medios en mi idioma') . " <small>" . count($mias) . "</small></a>" : '') . "</nav>";
+    echo "<nav class=\"sub\"><a href=\"$base?v=deltha\"" . ($v === 'deltha' ? ' class="on"' : '') . ">" . t('En Deltha') . " <small>$total</small></a>"
+       . "<a href=\"$base?v=medios\"" . ($v === 'medios' ? ' class="on"' : '') . ">" . t('En los medios') . " <small>" . count($fuentes) . "</small></a>"
+       . ($hayIdioma ? "<a href=\"$base?v=idioma\"" . ($v === 'idioma' ? ' class="on"' : '') . ">" . t('En medios en mi idioma') . " <small>" . count($mias) . "</small></a>" : '') . "</nav>";
 }
 
 if ($v === 'medios' || $v === 'idioma') {
@@ -58,7 +58,7 @@ if ($v === 'medios' || $v === 'idioma') {
     echo "<p class=\"notice\">" . t('Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.', $nombres) . "</p>";
     foreach ($rows as $i) fuente_post($porId[$i['source_id']], $i, 'full', $sent);
     if (!$rows) echo "<p class=\"end\">" . t('El lector aún no ha pasado por esta fuente.') . "</p>";
-    paginate("$base&amp;v=$v", $page, $totalM, $per);
+    paginate("$base?v=$v", $page, $totalM, $per);
 } else {
     $st = $pdo->prepare(story_query_base() . " WHERE s.topic_id = ? AND s.status IN ('nuevas','destacadas','archived')$ml
                                                 ORDER BY s.sent_date DESC LIMIT ? OFFSET ?");
@@ -70,6 +70,6 @@ if ($v === 'medios' || $v === 'idioma') {
     $n = 0;
     foreach ($st as $s) { story_post($pdo, $s, "compact"); $n++; }
     if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay nada en este tema.') . "</p>";
-    paginate($fuentes ? "$base&amp;v=deltha" : $base, $page, $total, $per);
+    paginate($fuentes ? "$base?v=deltha" : $base, $page, $total, $per);
 }
 page_footer();
