@@ -503,8 +503,6 @@ header.top .bell > span { display: none; }
 .chat .anuncios { padding: 8px 16px 10px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 6%, var(--bg)); font-size: 14px; }
 .chat .anuncios p { margin: 4px 0 0; display: flex; gap: 6px; align-items: baseline; overflow-wrap: anywhere; }
 .chat .anuncios .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--accent); text-decoration: none; }
-.chat .anuncios .num, .chat .anuncios b { flex: none; white-space: nowrap; }
-.chat .anuncios p > span { min-width: 0; }
 .chat .cm .actions button.anunbtn { display: inline-flex; align-items: center; }
 .chat .cm .actions button.anunbtn.on { color: var(--accent); }
 .chat .cm .actions button.anunbtn.on .i { fill: currentColor; }
@@ -690,6 +688,10 @@ form.plain.skinform { gap: 6px; }
 [data-fam="comunidad"] .hilo .stats { margin: 0 8px; background: var(--bar); color: #fff; border: 1px solid var(--blue2); border-top: 0; font-size: 12px; font-weight: 700; padding: 7px 12px; gap: 12px; }
 [data-fam="comunidad"] .hilo .stats > span:first-child { text-transform: uppercase; letter-spacing: .03em; }
 [data-fam="comunidad"] .hilo .stats b, [data-fam="comunidad"] .hilo .stats .share, [data-fam="comunidad"] .hilo .stats .vote > span, [data-fam="comunidad"] .hilo .stats .vote button { color: #fff; }
+/* (07/10/2026) la barra es azul con letra blanca, pero lo añadido despues (lecturas y clics .cnt, comentarios .cmt, guardar, Seguir, Destacar) traia su gris --muted y no se veia */
+[data-fam="comunidad"] .hilo .stats :is(span, a, b, button, .cnt, .cmt, .share, form.fav button) { color: #fff; }
+[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir button) { color: #fff; background: transparent; border-color: rgba(255,255,255,.7); }
+[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir button):hover { background: rgba(255,255,255,.15); }
 [data-fam="comunidad"] .hilo .modbar { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
 [data-fam="comunidad"] .hilo .modtools { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
 [data-fam="comunidad"] .hilo .thread { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; padding: 0; }
@@ -1232,6 +1234,13 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 10px 14px 8px; background: var(--bg); }
 [data-skin="orange"] .hilo .main h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; }
 [data-skin="orange"] .hilo .main .media { border: 0; border-radius: 5px; }
+/* (07/10/2026) la foto del hilo heredaba los 96 px de la tarjeta y, sin la rejilla de esta, caia debajo del texto. Aqui el .pc es una rejilla
+   de dos columnas: todo en la primera, la foto en la segunda (140 px, 4:3) a la altura del autor, titular y entradilla. En modo sin distracciones flota como siempre. */
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { display: grid; grid-template-columns: minmax(0, 1fr) 140px; column-gap: 14px; align-items: start; }
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > * { grid-column: 1; min-width: 0; }
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { grid-column: 2; grid-row: 1 / span 3; width: 140px; margin: 0; }
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .life, .delta) { grid-column: 1 / -1; }
+@media (max-width: 600px) { html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { grid-template-columns: minmax(0, 1fr) 96px; } html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { width: 96px; } }
 [data-skin="orange"] .hilo .stats { margin: 0 12px; border: 0; font-size: 13px; }
 [data-skin="orange"] .hilo .stats form.vote, [data-skin="orange"] .hilo .stats span.vote { gap: 4px; background: var(--or2); border-radius: 6px; padding: 3px 4px 3px 8px; }
 [data-skin="orange"] .hilo .stats .vote button[value="1"], [data-skin="orange"] .hilo .stats .vote > span:first-child { color: var(--or); font-weight: 800; padding-right: 8px; }
