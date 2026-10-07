@@ -19,6 +19,8 @@ $maxLen = min(1000, max(50, (int)cfg('chat_max_len', 500)));
 $err = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $txt = mb_substr(trim(preg_replace("/\r\n?/", "\n", post('content'))), 0, $maxLen);
+    $anuncio = post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad (migra-121): se cambia sin que cuente como edicion del texto
+    if ($anuncio !== (int)$m['anuncio']) $pdo->prepare("UPDATE chat SET anuncio = ? WHERE msg_id = ?")->execute([$anuncio, $id]);
     if (mb_strlen($txt) < 1) $err = 'El mensaje no puede quedar vacío.';
     elseif ($txt !== (string)$m['content']) {
         $ref = chat_first_ref($txt);
@@ -34,5 +36,6 @@ echo "<p class=\"notice\">Edición de administración: el mensaje de <b>" . h(ch
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
 echo "<label>Texto</label><textarea name=\"content\" rows=\"5\" maxlength=\"$maxLen\" required>" . h((string)$m['content']) . "</textarea>";
+echo "<label class=\"check\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\"" . ((int)$m['anuncio'] === 1 ? ' checked' : '') . "> Mensaje a la comunidad (sale resaltado y arriba del Chat)</label>";
 echo "<button>Guardar</button></form>";
 page_footer();

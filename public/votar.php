@@ -11,15 +11,23 @@ try {
     $st->execute([$id]);
     $s = $st->fetch();
     if ($s && in_array($s['status'], ['nuevas','destacadas'], true) && (int)$s['user_id'] !== (int)$u['user_id']) {
-        $prev = $pdo->prepare("SELECT value FROM votes WHERE story_id=? AND user_id=?");
+        $prev = $pdo->prepare("SELECT value, created FROM votes WHERE story_id=? AND user_id=?");
         $prev->execute([$id, $u['user_id']]);
-        $old = $prev->fetchColumn();
+        $pv = $prev->fetch();
+        $old = $pv ? $pv['value'] : false;
+        $undo = max(0, (int)cfg('vote_undo_minutes', 5));   // anular el voto: la misma flecha otra vez, durante vote_undo_minutes (migra-121)
         if ($old === false) {
             $pdo->prepare("INSERT INTO votes (story_id, user_id, value, fp) VALUES (?,?,?,?)")->execute([$id, $u['user_id'], $v, vote_fp($id)]);   // huella: un voto por conexion y envio en el δ
             alias_user($pdo, $id, (int)$u['user_id']);   // alias Ghost con el que se vera el voto en /procesos
             $col = $v === 1 ? 'votes_pos' : 'votes_neg';
             $pdo->prepare("UPDATE stories SET $col = $col + 1 WHERE story_id = ?")->execute([$id]);
-        } elseif ((int)$old !== $v) {
+        } elseif ((int)$old === $v) {
+            if ($undo > 0 && time() - strtotime((string)$pv['created']) < $undo * 60) {   // misma flecha dentro del plazo: se retira el voto
+                $pdo->prepare("DELETE FROM votes WHERE story_id=? AND user_id=?")->execute([$id, $u['user_id']]);
+                $col = $v === 1 ? 'votes_pos' : 'votes_neg';
+                $pdo->prepare("UPDATE stories SET $col = GREATEST(0, $col - 1) WHERE story_id = ?")->execute([$id]);
+            }
+        } else {
             // cambio de sentido
             $pdo->prepare("UPDATE votes SET value=? WHERE story_id=? AND user_id=?")->execute([$v, $id, $u['user_id']]);
             $pdo->prepare($v === 1

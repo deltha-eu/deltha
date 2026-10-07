@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 170);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 171);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -947,6 +947,7 @@ function icon(string $n): string {
         'play'   => '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z" fill="currentColor" stroke="none"/>',   // canales de YouTube: pantalla con triangulo (generico, no el logotipo)
         'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
         'bell'   => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/>',   // avisos (campanita)
+        'mega'   => '<path d="M3 10v4h3l7 4V6l-7 4z"/><path d="M17 9a4.5 4.5 0 0 1 0 6"/><path d="M6 14v4h2"/>',   // megafono: mensaje a la comunidad en el Chat (migra-121)
         'sun'    => '<circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',   // me gusta (comentarios)
         'tear'   => '<path d="M12 3.5c3.2 4.6 6 7.8 6 11.2a6 6 0 0 1-12 0c0-3.4 2.8-6.6 6-11.2z"/>',   // no me gusta (comentarios): lagrima; relleno via CSS cuando es la tuya
         'eye'    => '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',   // lecturas del hilo (migra-120)
