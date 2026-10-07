@@ -496,6 +496,10 @@ header.top .bell > span { display: none; }
 .chat .cm p a.ref:hover { background: color-mix(in srgb, var(--accent) 20%, var(--bg)); }
 .chat .cm p a.at { text-decoration: none; font-weight: 600; }
 .chat .cm.deleted .delmsg { color: var(--muted); }
+/* refresco del Chat sin recargar (app/escribir.js, 07/10/2026): lo que acaba de llegar se realza un segundo y se apaga */
+@keyframes ddd-nuevo { from { background-color: color-mix(in srgb, var(--accent) 18%, var(--bg)); } to { background-color: transparent; } }
+.chat .cm.nuevo { animation: ddd-nuevo 1.6s ease-out; }
+@media (prefers-reduced-motion: reduce) { .chat .cm.nuevo { animation: none; } }
 /* mensaje a la comunidad (admin/mod, migra-121): resaltado en su sitio, etiqueta con megafono y franja con los ultimos arriba del Chat */
 .chat .cm.anuncio { background: color-mix(in srgb, var(--accent) 8%, var(--bg)); box-shadow: inset 3px 0 0 var(--accent); }
 .chat .ch .anun { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--accent); }

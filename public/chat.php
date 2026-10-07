@@ -5,9 +5,11 @@
  *  Registrados con su nick; anonimos con alias estable por IP si chat_anon = 1. Borrado propio durante
  *  chat_delete_minutes; reportar → /reportar?chat=N; borrado de moderacion desde /moderacion; los administradores
  *  ademas pueden editar el texto (/editar-chat, queda «editado»).
- *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca)
- *  salvo cuando se esta escribiendo (?r=N) o se acaba de publicar. Con JS lo lleva /app/escribir.js, que cancela el
- *  refresco en cuanto hay algo escrito (antes se perdia el mensaje a medias); sin JS, el <noscript><meta refresh> de siempre.
+ *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca).
+ *  Con JS lo lleva /app/escribir.js (07/10/2026): pide esta misma pagina con fetch (auto=1) y cambia solo el bloque .chat, sin
+ *  recargar: no se mueve el scroll ni se pierde lo escrito, y lo nuevo llega con un realce; por eso con JS se refresca tambien
+ *  mientras se escribe. Sin JS, el <noscript><meta refresh> de siempre, que no se pone mientras se escribe (?r=N, ok=1, error)
+ *  para no perder el texto a medias.
  *  Dos vistas (subpestañas «Por hilos» / «Por tiempo»): por hilos, la de por defecto, agrupa cada mensaje con sus respuestas
  *  (reply_to: el primer #N citado), el hilo con actividad mas reciente arriba y, dentro, del mas antiguo al mas nuevo con las respuestas
  *  sangradas segun a quien responden (sin rayas entre mensajes); ?v=tiempo es el flujo cronologico de antes, el mas reciente arriba. La vista viaja en la URL (no hay cookie): responder, publicar, borrar, paginar y el refresco la conservan. */
@@ -127,10 +129,11 @@ if ($mentions) {
 $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 
-$refresco = $writing ? 0 : max(0, (int)cfg('chat_refresh_sec', 60));   // 0 = no se recarga sola
+$refrescoJs = max(0, (int)cfg('chat_refresh_sec', 60));   // con JS (fetch, sin recargar): siempre; 0 = nunca
+$refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta refresh): no mientras se escribe
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
 echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a></nav>";
-echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refresco ? " data-refresh=\"$refresco\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
+echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refrescoJs ? " data-refresh=\"$refrescoJs\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
 $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
     echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\">";
