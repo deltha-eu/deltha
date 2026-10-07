@@ -1231,13 +1231,13 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { font-size: 17px; }
 }
 /* el hilo: misma caja, sin rejilla */
-[data-skin="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 10px 14px 8px; background: var(--bg); }
+[data-skin="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 12px 14px 12px; background: var(--bg); }   /* 12 abajo (antes 8): el enlace al medio quedaba pegado al borde */
 [data-skin="orange"] .hilo .main h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; }
 [data-skin="orange"] .hilo .main .media { border: 0; border-radius: 5px; }
 /* (07/10/2026) la foto del hilo heredaba los 96 px de la tarjeta y, sin la rejilla de esta, caia debajo del texto. Aqui el .pc es una rejilla
    de dos columnas: todo en la primera, la foto en la segunda (140 px, 4:3) a la altura del autor, titular y entradilla. En modo sin distracciones flota como siempre. */
-html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { display: grid; grid-template-columns: minmax(0, 1fr) 140px; column-gap: 14px; align-items: start; }
-html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > * { grid-column: 1; min-width: 0; }
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { display: grid; grid-template-columns: minmax(0, 1fr) 140px; column-gap: 14px; row-gap: 6px; align-items: start; }
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > * { grid-area: auto; grid-column: 1; min-width: 0; margin-top: 0; margin-bottom: 0; }   /* grid-area: auto anula el «lead» de la tarjeta, que colaba la entradilla antes del titular; el aire lo pone row-gap */
 html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { grid-column: 2; grid-row: 1 / span 3; width: 140px; margin: 0; }
 html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .life, .delta) { grid-column: 1 / -1; }
 @media (max-width: 600px) { html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { grid-template-columns: minmax(0, 1fr) 96px; } html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { width: 96px; } }
