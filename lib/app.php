@@ -176,6 +176,16 @@ function saltos(string $html): string {
     $html = preg_replace('/\n{3,}/', "\n\n", trim(str_replace(["\r\n", "\r"], "\n", $html)));
     return str_replace("\n", '<br>', $html);
 }
+/** URLs sueltas del texto (ya escapado con h()) → enlaces (nofollow, recortados a 60 caracteres). Lo usan los comentarios y el Chat.
+ *  No toca lo que ya es un atributo o va dentro de una etiqueta (lookbehind de comillas y >); la puntuacion final se queda fuera del enlace. */
+function enlaces(string $html): string {
+    if (!str_contains($html, '://')) return $html;
+    return preg_replace_callback('~(?<![">=/])\bhttps?://[^\s<]+~', function ($m) {
+        $url = rtrim(preg_split('~&(?:quot|lt|gt|#0?39);~', $m[0])[0], '.,;:)');   // una comilla o < > escritos por el usuario (ya escapados) cierran la URL
+        $tail = substr($m[0], strlen($url));
+        return "<a href=\"$url\" rel=\"noopener nofollow\">" . h(mb_strimwidth(html_entity_decode($url, ENT_QUOTES), 0, 60, '…')) . "</a>$tail";
+    }, $html);
+}
 function redirect(string $to): never { header("Location: $to"); exit; }
 // Los navegadores envian los textarea con CRLF: se normaliza a LF, que es lo que esperan los parrafos (\n\n) al pintar.
 function post(string $k, string $d = ''): string { return trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST[$k] ?? $d))); }

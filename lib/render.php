@@ -178,7 +178,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     }
     if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has ghosteado') . " · <a href=\"/perfil#ghost\">" . t('deshacer') . "</a></summary>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
-    else      echo "<p>" . saltos(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content'])) . "</p>";
+    else      echo "<p>" . saltos(enlaces(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content']))) . "</p>";   // @nick → perfil, URLs → enlaces (07/10/2026)
     if ($fold) echo "</details>";
     $acts = [];
     if ($can_reply && !$del) $acts[] = "<a href=\"/hilo/{$c['story_id']}" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "&amp;v=$hv" : '') . "&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
