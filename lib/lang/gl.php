@@ -772,4 +772,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'retirar' => 'retirar',
 'mientras esté en el radar y nadie lo haya comentado' => 'mentres estea no radar e ninguén o comentase',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'O prazo para corrixilo pasou, pero mentres siga no radar e ninguén o comentase podes retiralo.',
+'detectar automáticamente' => 'detectar automaticamente',
+'otro idioma' => 'outro idioma',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Só serve para quen marca «só no meu idioma» no seu perfil.',
 ];

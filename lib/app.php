@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 176);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 177);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -914,6 +914,21 @@ function lang_detect(string $text): string {
     return $best;
 }
 /** Idioma para un envio nuevo: el de la fuente del catalogo si el dominio esta (sources.lang), si no, detectado del texto. */
+/** <select name="lang"> para elegir el idioma de un envio (enviar, editar): «detectar» ('' → lang_for_story al guardar), los nueve
+ *  idiomas y «otro» ('??'). $value: el actual o el detectado para proponerlo (08/10/2026). */
+function lang_select(string $value = '', string $name = 'lang'): string {
+    $h = "<select name=\"" . h($name) . "\"><option value=\"\"" . ($value === '' ? ' selected' : '') . ">" . t('detectar automáticamente') . "</option>";
+    foreach (DDD_LANGS as $c => $n) $h .= "<option value=\"$c\"" . ($value === $c ? ' selected' : '') . ">" . h($n) . "</option>";
+    return $h . "<option value=\"??\"" . ($value === '??' ? ' selected' : '') . ">" . t('otro idioma') . "</option></select>";
+}
+/** Idioma elegido en un formulario: un codigo de DDD_LANGS o '??'; cualquier otra cosa → '' (detectar). */
+function lang_post(string $name = 'lang'): string { $v = post($name); return (isset(DDD_LANGS[$v]) || $v === '??') ? $v : ''; }
+/** Etiqueta con el idioma de un envio en la fila de meta, solo cuando se sabe y no es el de la interfaz (asi no hace ruido). */
+function lang_tag(array $s): string {
+    $l = (string)($s['lang'] ?? '');
+    if ($l === '' || $l === '??' || $l === lang() || !isset(DDD_LANGS[$l])) return '';
+    return " · <span class=\"lang\" title=\"" . h(t('Idioma') . ': ' . DDD_LANGS[$l]) . "\">" . $l . "</span>";
+}
 function lang_for_story(PDO $pdo, ?string $url, string $title, ?string $content): string {
     $host = source_of($url);
     if ($host) {

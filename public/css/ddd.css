@@ -499,6 +499,8 @@ header.top .bell > span { display: none; }
 .chat .cm p a.ref:hover { background: color-mix(in srgb, var(--accent) 20%, var(--bg)); }
 .chat .cm p a.at { text-decoration: none; font-weight: 600; }
 .chat .cm.deleted .delmsg { color: var(--muted); }
+/* idioma del envio en la fila de meta, solo si no es el de la interfaz (lang_tag, 08/10/2026) */
+.l1 .meta .lang { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; border: 1px solid var(--line2); border-radius: 4px; padding: 0 4px; color: var(--muted); }
 /* refresco del Chat sin recargar (app/escribir.js, 07/10/2026): lo que acaba de llegar se realza un segundo y se apaga */
 @keyframes ddd-nuevo { from { background-color: color-mix(in srgb, var(--accent) 18%, var(--bg)); } to { background-color: transparent; } }
 .chat .cm.nuevo { animation: ddd-nuevo 1.6s ease-out; }

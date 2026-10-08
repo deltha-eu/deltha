@@ -809,4 +809,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'retirar' => 'retirar',
 'mientras esté en el radar y nadie lo haya comentado' => 'enquanto estiver no radar e ninguém o tiver comentado',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'O prazo para o corrigir passou, mas enquanto continuar no radar e ninguém o tiver comentado podes retirá-lo.',
+'detectar automáticamente' => 'detetar automaticamente',
+'otro idioma' => 'outro idioma',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Só serve para quem marca «só no meu idioma» no perfil.',
 ];

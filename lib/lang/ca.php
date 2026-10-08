@@ -772,4 +772,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'retirar' => 'retirar',
 'mientras esté en el radar y nadie lo haya comentado' => 'mentre sigui al radar i ningú no l\'hagi comentat',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'El termini per corregir-lo ha passat, però mentre segueixi al radar i ningú no l\'hagi comentat pots retirar-lo.',
+'detectar automáticamente' => 'detectar automàticament',
+'otro idioma' => 'un altre idioma',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Només serveix per a qui marca «només en el meu idioma» al seu perfil.',
 ];

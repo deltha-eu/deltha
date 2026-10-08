@@ -80,7 +80,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<article class=\"post $mode" . ($halo ? ' pinned' : '') . "\" id=\"s{$s['story_id']}\">";
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
-    $srcLbl = $s['content_type'] === 'article' ? ' · ' . t('original') : ($s['source'] ? " · " . source_link($s) : '');
+    $srcLbl = ($s['content_type'] === 'article' ? ' · ' . t('original') : ($s['source'] ? " · " . source_link($s) : '')) . lang_tag($s);   // + idioma si no es el de la interfaz (08/10/2026)
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . ($pin && pin_tag($pin) !== '' ? " · " . pin_tag($pin) : "") . "</span></div>";
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     if (foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');   // sin distracciones: la foto va antes del titular para flotar a su derecha

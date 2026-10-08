@@ -772,4 +772,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'retirar' => 'kendu',
 'mientras esté en el radar y nadie lo haya comentado' => 'radarrean dagoen bitartean eta inork komentatu ez badu',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Zuzentzeko epea pasa da, baina radarrean dagoen bitartean eta inork komentatu ez badu kendu dezakezu.',
+'detectar automáticamente' => 'automatikoki antzeman',
+'otro idioma' => 'beste hizkuntza bat',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Profilean «nire hizkuntzan bakarrik» markatzen dutenentzat baino ez du balio.',
 ];

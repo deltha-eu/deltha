@@ -812,4 +812,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'retirar' => 'withdraw',
 'mientras esté en el radar y nadie lo haya comentado' => 'while it is in the radar and nobody has commented',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'The time to correct it has passed, but while it stays in the radar and nobody has commented you can withdraw it.',
+'detectar automáticamente' => 'detect automatically',
+'otro idioma' => 'other language',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Only used by people who tick "only in my language" in their profile.',
 ];

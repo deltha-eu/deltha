@@ -773,4 +773,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'retirar' => 'zurückziehen',
 'mientras esté en el radar y nadie lo haya comentado' => 'solange er im Radar ist und niemand kommentiert hat',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Die Frist zum Korrigieren ist vorbei, aber solange er im Radar bleibt und niemand kommentiert hat, kannst du ihn zurückziehen.',
+'detectar automáticamente' => 'automatisch erkennen',
+'otro idioma' => 'andere Sprache',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Wirkt nur bei Leuten, die im Profil „nur in meiner Sprache“ angekreuzt haben.',
 ];
