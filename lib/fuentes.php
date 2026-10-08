@@ -403,7 +403,7 @@ function fuente_renegados_completar(array &$items, int $timeout): int {
 /** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
  *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
  *  «burbuja» de votos en su pagina (skin Phantom), asi que se pinta el widget normal, a 0 hasta que su feed los incluya. */
-const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php', 'mediavida.com/foro'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania) · Mediavida (sin feed: se lee la tabla de /foro/spy)
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php', 'mediavida.com/foro', 'press.asimov.com/articles', 'pagint.onrender.com'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania) · Mediavida (sin feed: se lee la tabla de /foro/spy)
 /** Foros XenForo y vBulletin: el feed trae el primer mensaje con sus fotos (emoticonos, capturas, anuncios de venta); no se descargan:
  *  el listado de un foro no lleva miniaturas. */
 function fuente_sin_fotos(array $src): bool {
@@ -499,6 +499,8 @@ function fuentes_ns(SimpleXMLElement $i, string $uri): SimpleXMLElement {
 }
 function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'id="tablatemas"')) return fuentes_parse_mediavida($xml);   // Mediavida: no hay feed, se lee la tabla de hilos
+    if (str_contains($xml, 'class="ap-card"')) return fuentes_parse_asimov($xml);        // Asimov Press: sin feed, se lee /articles (migra-130)
+    if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"slugSeccion"')) return fuentes_parse_pagint($xml);   // Página Internacional: su API JSON (migra-130)
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     libxml_clear_errors(); libxml_use_internal_errors($prev);
@@ -620,6 +622,60 @@ function fuentes_parse_mediavida(string $html): array {
             'pub_date'   => date('Y-m-d H:i:s', $ts),
             'smf'        => null,
         ];
+    }
+    return $out;
+}
+
+/** Asimov Press (sin RSS, migra-130): la lista de https://press.asimov.com/articles. Cada articulo es <a href="/articles/slug" class="ap-card">
+ *  con la categoria y la fecha («September 28, 2026») en .ap-card__kicker, el titulo en h2.ap-card__title, el extracto en p.ap-card__excerpt,
+ *  el autor en .ap-card__author strong y la foto en .ap-card__media img. Sin votos ni comentarios. */
+function fuentes_parse_asimov(string $html): array {
+    $base = 'https://press.asimov.com';
+    if (!preg_match_all('~<a\s+href="([^"]+)"\s+class="ap-card"[^>]*>(.*?)</a>~su', $html, $cards, PREG_SET_ORDER)) return [];
+    $out = [];
+    $dec = fn(string $v): string => trim(html_entity_decode(strip_tags($v), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    foreach ($cards as $c) {
+        [$href, $card] = [$c[1], $c[2]];
+        if (!str_starts_with($href, 'http')) $href = $base . $href;
+        if (!preg_match('~<h2[^>]*class="ap-card__title"[^>]*>(.*?)</h2>~su', $card, $t)) continue;
+        $title = $dec($t[1]);
+        if ($title === '') continue;
+        $excerpt = preg_match('~<p[^>]*class="ap-card__excerpt"[^>]*>(.*?)</p>~su', $card, $e) ? $dec($e[1]) : '';
+        $author  = preg_match('~class="ap-card__author"[^>]*>.*?<strong[^>]*>(.*?)</strong>~su', $card, $a) ? $dec($a[1]) : null;
+        $img     = preg_match('~<img[^>]+src="([^"]+)"~u', $card, $i) ? html_entity_decode($i[1], ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+        if ($img !== '' && !str_starts_with($img, 'http')) $img = $base . $img;
+        $topic = null; $ts = time();
+        if (preg_match('~class="ap-card__kicker"[^>]*>(.*?)</div>~su', $card, $k)) {
+            $partes = array_values(array_filter(array_map($dec, preg_split('~<span[^>]*class="ap-card__dot"[^>]*>.*?</span>~su', $k[1]) ?: [])));
+            if (isset($partes[0]) && $partes[0] !== '') $topic = $partes[0];
+            foreach ($partes as $px) if (($t2 = strtotime($px)) !== false && $t2 > 946684800) $ts = $t2;
+        }
+        $out[] = ['ext_id' => $href, 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($href, 0, 600), 'thread_url' => null, 'source' => null,
+                  'topic' => $topic ? mb_substr($topic, 0, 48) : null, 'author' => $author ? mb_substr($author, 0, 64) : null, 'content' => mb_substr($excerpt, 0, 2000),
+                  'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ts), 'smf' => null];
+    }
+    return $out;
+}
+
+/** Página Internacional (sin RSS, migra-130): la web es una aplicacion Flutter sin HTML util, pero su API publica (Strapi en
+ *  pagint.onrender.com) devuelve la portada en JSON: id, titulo, subtitulo, autor, fecha, imagen, medio (el periodico original: NYT,
+ *  Economist…), slugSeccion / tituloSeccion. El articulo esta en https://paginainternacional.com/articulo/ID/slug. Sin votos ni comentarios. */
+function fuentes_parse_pagint(string $json): array {
+    $data = json_decode($json, true);
+    if (!is_array($data)) return [];
+    $out = [];
+    foreach ($data as $a) {
+        if (!is_array($a) || empty($a['titulo']) || empty($a['id'])) continue;
+        $url = 'https://paginainternacional.com/articulo/' . (int)$a['id'] . '/' . rawurlencode((string)($a['slug'] ?? ''));
+        $ts = !empty($a['fecha']) ? strtotime((string)$a['fecha']) : false;
+        $sub = trim((string)($a['subtitulo'] ?? ''));
+        $medio = trim((string)($a['medio'] ?? ''));
+        $out[] = ['ext_id' => 'pi:' . (int)$a['id'], 'title' => mb_substr(trim((string)$a['titulo']), 0, 200), 'url' => mb_substr($url, 0, 600), 'thread_url' => null,
+                  'source' => null,   // el periodico original ($a['medio']: NYT, Economist…) se añade al extracto, que es donde se lee
+                  'topic' => !empty($a['tituloSeccion']) ? mb_substr((string)$a['tituloSeccion'], 0, 48) : null,
+                  'author' => !empty($a['autor']) ? mb_substr(trim((string)$a['autor']), 0, 64) : null,
+                  'content' => mb_substr(($medio !== '' && $medio !== 'Página Internacional' ? $medio . ' · ' : '') . $sub, 0, 2000), 'thumb' => (string)($a['imagenMedium'] ?? $a['imagen'] ?? ''),
+                  'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ts ?: time()), 'smf' => null];
     }
     return $out;
 }
