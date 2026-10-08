@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 182);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 183);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -395,7 +395,7 @@ function topic_delete(PDO $pdo, int $topic_id, int $to): ?string {
 /** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub / u:yt / u:agg (lo ultimo de Mis medios / Mis substacks / Mis canales / Mis agregadores, /ultimo) */
 function landing_url(PDO $pdo, ?array $u): string {
     $l = (string)($u['landing'] ?? '');
-    if ($l === 'u:medio' || $l === 'u:sub') return (string)cfg('sources_enabled', '1') === '1' ? '/ultimo?k=' . ($l === 'u:sub' ? 'newsletter' : 'medio') : '/';
+    if ($l === 'u:medio' || $l === 'u:sub') return (string)cfg('sources_enabled', '1') === '1' ? '/mis-fuentes?k=' . ($l === 'u:sub' ? 'newsletter' : 'medio') : '/';
     if (preg_match('/^t:(\d+)$/', $l, $m)) {
         $st = $pdo->prepare("SELECT 1 FROM topics WHERE topic_id = ?"); $st->execute([(int)$m[1]]);
         if ($st->fetchColumn()) return '/tema/' . (int)$m[1];
@@ -403,8 +403,8 @@ function landing_url(PDO $pdo, ?array $u): string {
         $st = $pdo->prepare("SELECT slug FROM communities WHERE community_id = ? AND status = 'ok'"); $st->execute([(int)$m[1]]);
         if ($slug = $st->fetchColumn()) return '/comunidad/' . rawurlencode($slug);
     }
-    if ($l === 'u:agg' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_agregadores', '0') === '1') return '/ultimo?k=agregador';
-    if ($l === 'u:yt' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_youtube', '1') === '1') return '/ultimo?k=youtube';
+    if ($l === 'u:agg' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_agregadores', '0') === '1') return '/mis-fuentes?k=agregador';
+    if ($l === 'u:yt' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_youtube', '1') === '1') return '/mis-fuentes?k=youtube';
     return '/';
 }
 
@@ -1183,11 +1183,11 @@ function nav_tabs(string $tab, string $cls): void {
     echo ($ctr ? '</span>' : '') . "</nav>";
 }
 /** Franja bajo las pestañas, solo cuando no hay rail (movil y tablet, < 1100 px): lo que en escritorio esta en el rail y en la columna
- *  derecha — Mis substacks, Mis medios y Mis agregadores (/ultimo), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
+ *  derecha — Mis fuentes y Todas las fuentes (08/10/2026; antes una entrada por tipo), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
 function nav_fuentes(string $tab): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     $tabs = [];
-    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_visibles($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo?k=$k", t(DDD_ULTIMO_KINDS[$k][0]), $ic];   // «Mis substacks», «Mis medios»: como en el rail, para no confundirlos con las portadas
+    if (fuentes_on() && fuentes_tipos($pdo)) { $tabs['misfuentes'] = ['/mis-fuentes', t('Mis fuentes'), 'news']; $tabs['fuentes'] = ['/fuentes', t('Todas las fuentes'), 'agg']; }
     $tabs['temas'] = ['/temas', t('Temas'), 'tag'];
     $tabs['comunidades'] = ['/comunidades', t('Comunidades'), 'comm'];
     echo "<nav class=\"tabs-fuentes\">";
@@ -1207,11 +1207,9 @@ function unread_msgs(): int {
 }
 function footer_links(): string {
     $h  = "<a href=\"/que-es\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"/empezar\">" . t('Cómo empezar') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad\">" . t('Privacidad y contacto') . "</a> · <a href=\"/cookies\">" . t('Cookies y JavaScript') . "</a> · <a href=\"/normas\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades\">" . t('Comunidades') . "</a>";
-    // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios?k=…), no uno por agregador
+    // fuentes externas pintadas con Deltha: el catalogo entero (/fuentes, «Todas las fuentes»; antes un enlace por tipo)
     global $pdo; require_once __DIR__ . '/fuentes.php';
-    if (fuentes_on()) {
-        foreach (['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'youtube' => 'YouTube', 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios?k=$k\">" . h($label) . "</a>";
-    }
+    if (fuentes_on() && fuentes_tipos($pdo)) $h .= " · <a href=\"/fuentes\">" . t('Todas las fuentes') . "</a>";
     $h .= " · <a href=\"/rss?portada=" . portada_actual() . "\" type=\"application/rss+xml\">RSS</a>";   // el feed de la portada que se esta viendo (o la ultima elegida)
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema, idioma y portada, si los eliges) · sin rastreo · sin algoritmo oculto');
     if (is_mod())   $h .= " · <a href=\"/moderacion\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
