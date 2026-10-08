@@ -808,4 +808,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'votre vote · appuyez encore pour l’annuler (%d min)',
 'Chat / Ayuda' => 'Chat / Aide',
 'Cómo empezar' => 'Pour commencer',
+'retirar' => 'retirer',
+'mientras esté en el radar y nadie lo haya comentado' => 'tant qu\'il est dans le radar et que personne ne l\'a commenté',
+'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Le délai pour le corriger est passé, mais tant qu\'il reste dans le radar et que personne ne l\'a commenté vous pouvez le retirer.',
 ];

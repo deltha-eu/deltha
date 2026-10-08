@@ -809,4 +809,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'your vote · press again to undo it (%d min)',
 'Chat / Ayuda' => 'Chat / Help',
 'Cómo empezar' => 'Getting started',
+'retirar' => 'withdraw',
+'mientras esté en el radar y nadie lo haya comentado' => 'while it is in the radar and nobody has commented',
+'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'The time to correct it has passed, but while it stays in the radar and nobody has commented you can withdraw it.',
 ];

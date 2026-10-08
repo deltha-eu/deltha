@@ -770,4 +770,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'il tuo voto · premi di nuovo per annullarlo (%d min)',
 'Chat / Ayuda' => 'Chat / Aiuto',
 'Cómo empezar' => 'Per cominciare',
+'retirar' => 'ritirare',
+'mientras esté en el radar y nadie lo haya comentado' => 'finché è nel radar e nessuno l\'ha commentato',
+'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Il tempo per correggerlo è passato, ma finché resta nel radar e nessuno l\'ha commentato puoi ritirarlo.',
 ];

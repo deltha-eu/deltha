@@ -769,4 +769,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'zure botoa · sakatu berriro baliogabetzeko (%d min)',
 'Chat / Ayuda' => 'Txata / Laguntza',
 'Cómo empezar' => 'Nola hasi',
+'retirar' => 'kendu',
+'mientras esté en el radar y nadie lo haya comentado' => 'radarrean dagoen bitartean eta inork komentatu ez badu',
+'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Zuzentzeko epea pasa da, baina radarrean dagoen bitartean eta inork komentatu ez badu kendu dezakezu.',
 ];

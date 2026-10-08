@@ -1006,10 +1006,20 @@ function mod_edit_link(array $s): string {
     if (!is_mod()) return '';
     return "<a class=\"modlink\" href=\"/editar?id={$s['story_id']}\" title=\"" . t('editar (moderación)') . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
 }
-/** Enlace «editar» para el autor de un envío dentro del plazo (misma pagina /editar, campos limitados). '' si no procede. */
+/** El autor puede RETIRAR su envio (sin editarlo) fuera del plazo de edicion: mientras siga en el radar (o pendiente de moderacion)
+ *  y nadie lo haya comentado. Sin limite de tiempo ni de aura: un error no deberia quedarse ahi una semana (migra-123, 08/10/2026). */
+function can_retire_own_story(array $s): bool {
+    $u = user();
+    if (!$u || empty($s['user_id']) || (int)$s['user_id'] !== (int)$u['user_id']) return false;
+    return in_array($s['status'], ['pending_mod', 'nuevas'], true) && (int)($s['comments'] ?? 0) === 0;
+}
+/** Enlace «editar» para el autor de un envío dentro del plazo (misma pagina /editar, campos limitados); pasado el plazo, «retirar»
+ *  si aun puede (can_retire_own_story). '' si no procede. */
 function own_edit_link(array $s): string {
-    if (is_mod() || !can_edit_own_story($s)) return '';
-    return "<a class=\"modlink\" href=\"/editar?id={$s['story_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('story_edit_minutes', 15)) . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
+    if (is_mod()) return '';
+    if (can_edit_own_story($s)) return "<a class=\"modlink\" href=\"/editar?id={$s['story_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('story_edit_minutes', 15)) . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
+    if (can_retire_own_story($s)) return "<a class=\"modlink\" href=\"/editar?id={$s['story_id']}\" title=\"" . t('mientras esté en el radar y nadie lo haya comentado') . "\">" . icon('edit') . "<span>" . t('retirar') . "</span></a>";
+    return '';
 }
 
 /* ---- layout (estilo timeline) -------------------------------------- */
