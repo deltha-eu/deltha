@@ -785,4 +785,13 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Ezin izan da irudia irakurri (JPG, PNG, WebP edo AVIF, %d MB arte).',
 'Dueño' => 'Jabea',
 'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'jabe berriaren ezizena; mod ez bazara, ezingo duzu gehiago editatu',
+'Borrar mi cuenta' => 'Nire kontua ezabatu',
+'Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.' => 'Zure kontua, posta, argazkia, botoak, gogokoak eta mezu pribatuak ezabatzen dira; ezizena libre geratzen da. Idatzitakoa anonimo gisa gordetzen da besteen elkarrizketetan hutsunerik ez uzteko, laukia markatzen ez baduzu.',
+'Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)' => 'Ezabatu nire bidalketa eta iruzkin guztiak ere (eta haietatik zintzilik dauden erantzunak)',
+'Tu contraseña, para confirmar' => 'Zure pasahitza, berresteko',
+'Borrar la cuenta para siempre' => 'Kontua betiko ezabatu',
+'¿Seguro? No se puede deshacer.' => 'Ziur? Ezin da desegin.',
+'Contraseña incorrecta.' => 'Pasahitz okerra.',
+'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Ezin izan da kontua ezabatu. Saiatu berriro edo idatzi guri.',
+'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Zure kontua ezabatu da. Eskerrik asko hemen egon izanagatik.',
 ];

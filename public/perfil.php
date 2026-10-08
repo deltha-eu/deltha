@@ -97,4 +97,15 @@ echo "</optgroup></select><small class=\"hint\">" . t('Se aplica al entrar con t
 // los medios y substacks favoritos ya no se eligen aqui (eran tres desplegables): pestañas «Mis medios» y «Mis substacks» (/mis-fuentes)
 if (fuentes_on()) { require_once __DIR__ . '/../lib/propuestas.php'; if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente') . "</p>"; }
 echo "" . t('<button>Guardar</button>') . "</form>";
+// baja voluntaria (08/10/2026): /baja borra la cuenta; lo escrito se queda como anonimo salvo que marque la casilla. Los admin no pueden.
+if (($u['level'] ?? '') !== 'admin') {
+    $bm = ['pass' => t('Contraseña incorrecta.'), 'error' => t('No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.')][$_GET['baja'] ?? ''] ?? '';
+    echo "<details class=\"editbox baja\" id=\"baja\"" . ($bm !== '' ? ' open' : '') . "><summary>" . t('Borrar mi cuenta') . "</summary>";
+    if ($bm !== '') echo "<p class=\"error\">" . h($bm) . "</p>";
+    echo "<form class=\"plain\" method=\"post\" action=\"/baja\" onsubmit=\"return confirm(" . json_encode(t('¿Seguro? No se puede deshacer.'), JSON_HEX_APOS | JSON_HEX_QUOT) . ")\">";
+    echo "<p class=\"hint\">" . t('Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.') . "</p>";
+    echo "<label><input type=\"checkbox\" name=\"todo\" value=\"1\"> " . t('Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)') . "</label>";
+    echo "<label>" . t('Tu contraseña, para confirmar') . "</label><input type=\"password\" name=\"pass\" required autocomplete=\"current-password\">";
+    echo "<button class=\"danger\">" . t('Borrar la cuenta para siempre') . "</button></form></details>";
+}
 page_footer();

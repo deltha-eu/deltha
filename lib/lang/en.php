@@ -825,4 +825,13 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Could not read the image (JPG, PNG, WebP or AVIF, up to %d MB).',
 'Dueño' => 'Owner',
 'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick of the new owner; unless you are a mod, you will no longer be able to edit it',
+'Borrar mi cuenta' => 'Delete my account',
+'Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.' => 'Your account, email, photo, votes, favourites and private messages are deleted; the nick is freed. What you wrote is kept as anonymous so other people’s conversations are not left with holes, unless you tick the box.',
+'Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)' => 'Also delete all my posts and comments (and the replies hanging from them)',
+'Tu contraseña, para confirmar' => 'Your password, to confirm',
+'Borrar la cuenta para siempre' => 'Delete the account for good',
+'¿Seguro? No se puede deshacer.' => 'Are you sure? This cannot be undone.',
+'Contraseña incorrecta.' => 'Wrong password.',
+'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'The account could not be deleted. Try again or write to us.',
+'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Your account has been deleted. Thank you for having been here.',
 ];
