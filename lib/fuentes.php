@@ -106,10 +106,20 @@ function fuente_seguible(array $src): bool { return fuente_es_medio($src) || (($
 /** Grupos del rail y de /ultimo, en su orden: tipo => [etiqueta, icono]. Los dos primeros se eligen con el boton «Seguir» (DDD_MEDIA_KINDS). */
 const DDD_ULTIMO_KINDS = ['medio' => ['Mis medios', 'news'], 'newsletter' => ['Mis substacks', 'letter'], 'youtube' => ['Mis canales', 'play'], 'agregador' => ['Mis agregadores', 'agg']];   // mismo orden que las portadas: Medios, Substacks
 /** Fuentes de las que /ultimo saca las noticias de un grupo: TODOS los favoritos del usuario (sin limite) o, si no tiene
- *  ninguno / no tiene cuenta, las del menu (medios_menu(): las que han publicado mas recientemente; agregadores: los destacados). */
+ *  ninguno / no tiene cuenta, TODAS las destacadas en admin del tipo (sources.featured) o, si no hay ninguna, las del menu
+ *  (medios_menu(): las que han publicado mas recientemente). */
 function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array {
     if ($mias = mis_medios_recientes($pdo, $u, $kind)) return $mias;
-    return medios_menu($pdo, $u, 0, $kind);
+    return fuentes_destacadas($pdo, $kind) ?: medios_menu($pdo, $u, 0, $kind);
+}
+/** Fuentes de un tipo destacadas en admin (sources.featured), la que ha publicado mas recientemente primero. Son las que ve en
+ *  «Mis medios» / «Mis substacks» / «Mis canales» quien no ha elegido ninguna (o no tiene cuenta); con «solo en mi idioma», las
+ *  de otro idioma se quitan. */
+function fuentes_destacadas(PDO $pdo, string $kind): array {
+    $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => !empty($m['featured']) && fuente_en_mi_idioma($m)));
+    $ult = fuentes_ultima_noticia($pdo);
+    usort($list, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
+    return $list;
 }
 /** Cuantas fuentes de un grupo salen en el menu (no cuantas se pueden guardar: eso no tiene limite). */
 function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[$kind][0] ?? 'media_max_per_user', 3)); }
@@ -173,9 +183,10 @@ function fuente_fav_form(array $src, bool $nombre = false): string {
          . "<button title=\"$title\">" . h($on ? t('Siguiendo') : ($nombre ? t('Seguir %s', $src['name']) : t('Seguir'))) . "</button></form>";
 }
 /** Fuentes de un tipo que se ofrecen en el menu: de los favoritos del usuario, los que han publicado mas recientemente (una noticia
- *  por fuente: «los tres ultimos sin repetir fuente») o, si no tiene favoritos (o no tiene cuenta),
- *  en medios y substacks las que han publicado mas recientemente (siempre hay algo fresco, y van rotando solas); en agregadores las
- *  destacadas en admin (sources.featured). Si no sale ninguna, las primeras del catalogo. Nunca mas del maximo del tipo. */
+ *  por fuente: «los tres ultimos sin repetir fuente») o, si no tiene favoritos (o no tiene cuenta), las destacadas en admin
+ *  (sources.featured, fuentes_destacadas()); si no hay ninguna destacada, en medios, substacks y canales las que han publicado mas
+ *  recientemente (siempre hay algo fresco, y van rotando solas). Si no sale ninguna, las primeras del catalogo. Nunca mas del
+ *  maximo del tipo. */
 /** Fecha de la noticia mas reciente de cada fuente: source_id => pub_date (una consulta por peticion). */
 function fuentes_ultima_noticia(PDO $pdo): array {
     static $r = null;
@@ -188,12 +199,13 @@ function fuentes_ultima_noticia(PDO $pdo): array {
 function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
     $max = $max ?: medios_max($kind);
     $list = mis_medios_recientes($pdo, $u, $kind);   // «solo en mi idioma» tambien quita las favoritas en otro
+    if (!$list) $list = fuentes_destacadas($pdo, $kind);
     if (!$list && $kind !== 'agregador') {
         $ult = fuentes_ultima_noticia($pdo);
         $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => isset($ult[$m['source_id']])));
         usort($list, fn($a, $b) => strcmp($ult[$b['source_id']], $ult[$a['source_id']]));
     }
-    if (!$list) $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => !empty($m['featured'])));
+    if (!$list) $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => !empty($m['featured'])));   // destacadas aunque sean de otro idioma
     if (!$list) $list = fuentes_visibles($pdo, $kind);
     return array_slice($list, 0, $max);
 }

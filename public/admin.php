@@ -116,6 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($act === 'fuente_leer') {
         $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
         if ($src = $q->fetch()) { try { $out = array_merge($out, fuente_actualizar($pdo, $src)); } catch (Throwable $e) { $out[] = 'ERROR: ' . $e->getMessage(); } }
+    } elseif ($act === 'fuentes_destacar') {
+        // Selector de destacadas de un tipo (admin -> Fuentes): lo marcado queda featured = 1, el resto del tipo, 0
+        $fk = (string)post('kind');
+        $ids = array_values(array_filter(array_map('intval', (array)($_POST['f'] ?? []))));
+        $pdo->prepare("UPDATE sources SET featured = 0 WHERE kind = ?")->execute([$fk]);
+        if ($ids) $pdo->prepare("UPDATE sources SET featured = 1 WHERE kind = ? AND source_id IN (" . implode(',', $ids) . ")")->execute([$fk]);
+        $out[] = count($ids) . " fuentes destacadas en " . h($fk) . ".";
     } elseif ($act === 'fuente_borrar') {
         $q = $pdo->prepare("SELECT source_id, name FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
         if ($src = $q->fetch()) {
@@ -581,7 +588,7 @@ if ($tab === 'usuarios') {
         $h .= "<tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . (int)($f['interval_min'] ?? 60) . "\"> minutos</td></tr>";
         $h .= "<tr><td>estado</td><td><select name=\"status\" class=\"auto\"><option value=\"ok\">activa</option><option value=\"off\"" . (($f['status'] ?? 'ok') === 'off' ? ' selected' : '') . ">apagada</option></select></td></tr>";
         $h .= "<tr><td>lector local</td><td><label><input type=\"checkbox\" name=\"relay\" value=\"1\"" . (!empty($f['relay']) ? ' checked' : '') . "> la web de esta fuente rechaza al servidor (403/503): el feed y las fotos los trae el <b>lector local</b> del PC de la redacción (<code>local/lector</code>); el servidor no la lee. Lector visto: " . h((string)cfg('relay_worker_seen', '') ?: 'nunca') . "</label></td></tr>";
-        $h .= "<tr><td>destacado</td><td><label><input type=\"checkbox\" name=\"featured\" value=\"1\"" . (!empty($f['featured']) ? ' checked' : '') . "> solo cuenta en <b>agregadores</b>: los ven en el menú los anónimos. En medios y substacks, a quien no ha elegido se le enseñan los que han publicado más recientemente</label></td></tr>";
+        $h .= "<tr><td>destacado</td><td><label><input type=\"checkbox\" name=\"featured\" value=\"1\"" . (!empty($f['featured']) ? ' checked' : '') . "> lo ve en «Mis medios» / «Mis substacks» / «Mis canales» / «Mis agregadores» (menú y /ultimo) quien no sigue ninguna fuente de ese tipo o no tiene cuenta. Si no hay ninguna destacada del tipo, se enseñan las que han publicado más recientemente</label></td></tr>";
         $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
         return $h . "</table></form>";
     };
@@ -609,6 +616,16 @@ if ($tab === 'usuarios') {
     $rows = $pdo->prepare("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s WHERE s.kind = ?$wl ORDER BY s.name");
     $rows->execute($il === '' || $il === '?' ? [$fk] : [$fk, $il]); $rows = $rows->fetchAll();
     if (!$rows) echo "<p class=\"end\">" . ($il === '' ? "No hay fuentes de este tipo." : "No hay fuentes de este tipo en ese idioma.") . "</p>";
+    // Destacadas del tipo: las que ven en «Mis medios» / «Mis substacks» / … quienes no siguen ninguna fuente (o no tienen cuenta).
+    // Siempre con TODAS las fuentes encendidas del tipo (sin el filtro de idioma), porque al guardar se desmarcan las que no esten.
+    $todas = $pdo->prepare("SELECT source_id, name, featured, lang FROM sources WHERE kind = ? AND status = 'ok' ORDER BY name"); $todas->execute([$fk]); $todas = $todas->fetchAll();
+    if ($todas) {
+        $nd = count(array_filter($todas, fn($f) => !empty($f['featured'])));
+        echo "<details class=\"editbox\"" . ($nd ? '' : ' open') . "><summary><b>Destacadas</b> · $nd de " . count($todas) . " · las que ven en el menú quienes no siguen ninguna fuente de este tipo" . ($nd ? '' : " · <i>ninguna: se enseñan las que han publicado más recientemente</i>") . "</summary>";
+        echo "<form method=\"post\" action=\"/admin?t=fuentes&amp;k=$fk\">$T<input type=\"hidden\" name=\"act\" value=\"fuentes_destacar\"><input type=\"hidden\" name=\"kind\" value=\"" . h($fk) . "\"><p style=\"columns:3 14em\">";
+        foreach ($todas as $f) echo "<label style=\"display:block\"><input type=\"checkbox\" name=\"f[]\" value=\"{$f['source_id']}\"" . (!empty($f['featured']) ? ' checked' : '') . "> " . h($f['name']) . (($f['lang'] ?? '') !== '' ? " <small>" . h($f['lang']) . "</small>" : '') . "</label>";
+        echo "</p><p><button class=\"btn sm\">guardar destacadas</button> <small>en el menú salen las " . medios_max($fk) . " que han publicado más recientemente de estas; en /ultimo, todas</small></p></form></details>";
+    }
     foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
         echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . (!empty($f['relay']) ? " · <b>lector local</b>" : "") . " · " . (($f['lang'] ?? '') !== '' ? h($f['lang']) : "<i>idioma ?</i>") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
