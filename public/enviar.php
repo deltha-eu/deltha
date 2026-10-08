@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $f['url'] = post('url');
+    $f['url'] = url_limpia(post('url'));   // sin utm ni codigos de seguimiento (lib/app.php)
     if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }
     if (!$err && $f['url'] !== '' && ($bloq = source_blocked($pdo, $f['url']))) { $err = t('Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.', h($bloq)); $step = '1'; }
 

@@ -376,6 +376,7 @@ function fuente_guardar(PDO $pdo, array $src, string $phase, array $items): arra
                           image = COALESCE(image, ?), votes = ?, negatives = ?, comments = GREATEST(comments, ?), pub_date = COALESCE(?, pub_date), last_seen = NOW() WHERE item_id = ?");   // url/thread_url se refrescan: Renegados los completa desde su API
     $new = $updated = 0;
     foreach ($items as $it) {
+        $it['url'] = url_limpia((string)$it['url']);   // los feeds traen utm_source=rss y similares: fuera
         $sel->execute([$src['source_id'], $it['ext_id']]);
         $row = $sel->fetch();
         if ($row && $row['phase'] === 'portada' && $phase === 'nuevas') {   // ya esta en portada: la cola no la degrada

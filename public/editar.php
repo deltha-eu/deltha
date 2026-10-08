@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
         if ($comm && !in_array($comm, array_column($comms, 'community_id'), false)) $comm = 0;
         story_set_main_community($pdo, $id, $comm, (int)user()['user_id']);
     }
-    $url     = $isArt ? null : ($own ? (string)$s['url'] : post('url'));   // el autor no toca el enlace
+    $url     = $isArt ? null : ($own ? (string)$s['url'] : url_limpia(post('url')));   // el autor no toca el enlace
     $image   = $s['image'];
     if (post('quitar') === '1') $image = null;
     if (post('extraer') === '1' && $url) {                 // foto del enlace (og:image / twitter:image)
