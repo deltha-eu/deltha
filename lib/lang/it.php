@@ -776,4 +776,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'detectar automáticamente' => 'rileva automaticamente',
 'otro idioma' => 'altra lingua',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Serve solo a chi spunta «solo nella mia lingua» nel profilo.',
+'nombre real: solo lo ven moderadores y admin' => 'nome reale: lo vedono solo moderatori e admin',
 ];

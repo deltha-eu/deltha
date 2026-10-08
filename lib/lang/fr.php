@@ -814,4 +814,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'detectar automáticamente' => 'détecter automatiquement',
 'otro idioma' => 'autre langue',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Ne sert qu\'à ceux qui cochent « seulement dans ma langue » dans leur profil.',
+'nombre real: solo lo ven moderadores y admin' => 'vrai nom : seuls les modérateurs et l’admin le voient',
 ];

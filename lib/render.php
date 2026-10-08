@@ -13,6 +13,12 @@ function display_name(array $row, bool $revealed): string {
     if (!empty($row['login']) && !empty($row['user_id']) && ghost_veiled($row['user_id'])) return ghost_alias((int)$row['user_id']);
     return t('anónimo');
 }
+/** Para moderadores y admin (08/10/2026): junto al alias de un registrado aun en modo Ghost, su nick real con enlace a la ficha
+ *  (para avisarle por mensaje). Nadie mas lo ve. '' si ya se ve el nombre, si es anonimo o si quien mira no modera. */
+function mod_real(array $row, bool $revealed): string {
+    if (!is_mod() || empty($row['login']) || shown($row, $revealed)) return '';
+    return " <a class=\"real\" href=\"/u/" . rawurlencode((string)$row['login']) . "\" title=\"" . h(t('nombre real: solo lo ven moderadores y admin')) . "\">" . icon('eye') . h((string)$row['login']) . "</a>";
+}
 
 /** $from permite entrar por otra tabla (p. ej. story_communities sc JOIN stories s ...) manteniendo el alias s. */
 function story_query_base(string $from = 'FROM stories s'): string {
@@ -81,7 +87,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo who_avatar($s, $rev, $aura, $author);
     echo "<div class=\"pc\">";
     $srcLbl = ($s['content_type'] === 'article' ? ' · ' . t('original') : ($s['source'] ? " · " . source_link($s) : '')) . lang_tag($s);   // + idioma si no es el de la interfaz (08/10/2026)
-    echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . ($pin && pin_tag($pin) !== '' ? " · " . pin_tag($pin) : "") . "</span></div>";
+    echo "<div class=\"l1\"><b>" . h($author) . "</b>" . mod_real(['login' => $s['login'], 'user_id' => $s['user_id']], $rev) . "<span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . $srcLbl . " · " . h($when) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . ($pin && pin_tag($pin) !== '' ? " · " . pin_tag($pin) : "") . "</span></div>";
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     if (foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');   // sin distracciones: la foto va antes del titular para flotar a su derecha
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
@@ -171,7 +177,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     $cls = 'post reply' . ($has_next ? ' has-next' : '') . (empty($c['root_id']) ? ' root' : ' child') . ($del ? ' deleted' : '') . ($fold ? ' ghosted' : '');
     echo "<article class=\"$cls\" id=\"c{$c['comment_id']}\"" . ($nivel > 0 ? " style=\"--lv:$nivel\"" : '') . ">" . who_avatar($c, $revealed, (float)$c['aura'], $n) . "<div class=\"pc\">";
     $nameHtml = shown($c, $revealed) ? "<a href=\"/u/" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
-    echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
+    echo "<div class=\"l1\"><b>$nameHtml</b>" . mod_real($c, $revealed) . "<span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
     if ($parent && !empty($c['root_id']) && ($reto || (int)$c['parent_id'] !== (int)$c['root_id'])) {
         $pn = display_name($parent, ghost_over($parent['created']));
         echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";

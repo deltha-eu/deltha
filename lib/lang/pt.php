@@ -812,4 +812,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'detectar automáticamente' => 'detetar automaticamente',
 'otro idioma' => 'outro idioma',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Só serve para quem marca «só no meu idioma» no perfil.',
+'nombre real: solo lo ven moderadores y admin' => 'nome real: só o veem moderadores e admin',
 ];

@@ -775,4 +775,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'detectar automáticamente' => 'automatikoki antzeman',
 'otro idioma' => 'beste hizkuntza bat',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Profilean «nire hizkuntzan bakarrik» markatzen dutenentzat baino ez du balio.',
+'nombre real: solo lo ven moderadores y admin' => 'benetako izena: moderatzaileek eta adminak baino ez dute ikusten',
 ];

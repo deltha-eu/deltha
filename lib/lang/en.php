@@ -815,4 +815,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'detectar automáticamente' => 'detect automatically',
 'otro idioma' => 'other language',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Only used by people who tick "only in my language" in their profile.',
+'nombre real: solo lo ven moderadores y admin' => 'real name: only moderators and admins see this',
 ];

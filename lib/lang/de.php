@@ -776,4 +776,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'detectar automáticamente' => 'automatisch erkennen',
 'otro idioma' => 'andere Sprache',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Wirkt nur bei Leuten, die im Profil „nur in meiner Sprache“ angekreuzt haben.',
+'nombre real: solo lo ven moderadores y admin' => 'echter Name: nur Moderatoren und Admin sehen ihn',
 ];
