@@ -37,6 +37,19 @@
         DirectoryIndex index.php
     </Directory>
 
+    # --- URL limpias (05/10/2026): el navegador ve /hilo/123, /u/nick, /medios…; por dentro Apache sirve el .php de siempre
+    #     (reescritura interna, sin redirigir). Las URL con .php siguen funcionando. Requiere a2enmod rewrite. ---
+    RewriteEngine On
+    RewriteRule ^/hilo/(\d+)/?$                  /hilo.php?id=$1     [L,QSA]
+    RewriteRule ^/u/([A-Za-z0-9_-]+)/?$          /u.php?u=$1         [L,QSA]
+    RewriteRule ^/fuente/([^/]+)/?$              /fuente.php?f=$1    [L,QSA]
+    RewriteRule ^/comunidad/([^/]+)/?$           /comunidad.php?c=$1 [L,QSA]
+    RewriteRule ^/tema/(\d+)/?$                  /tema.php?t=$1      [L,QSA]
+    RewriteRule ^/medio/([A-Za-z0-9.-]+)/?$      /medio.php?m=$1     [L,QSA]
+    # /nombre -> /nombre.php solo si ese script existe en public/ (no toca /app, /api, /delta, /css, /img, /media)
+    RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+    RewriteRule ^/([a-z0-9-]+)/?$                /$1.php             [L,QSA]
+
     # --- cabeceras: sin rastreo, sin terceros; el único JS es /app/register.js (service worker de la PWA).
     #     style-src lleva 'unsafe-inline' porque fotos, velos y halos de aura se pintan con style= en línea ---
     Header always set X-Content-Type-Options "nosniff"

@@ -4,7 +4,7 @@ require __DIR__ . '/../lib/imagen.php';
 require __DIR__ . '/../lib/aura.php';
 require __DIR__ . '/../lib/moderacion.php';
 
-if (!user() && cfg('anon_can_submit') !== '1') redirect('/login.php');
+if (!user() && cfg('anon_can_submit') !== '1') redirect('/login');
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();   // alfabetico, como en el resto de selectores
 $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
@@ -12,12 +12,12 @@ $err = null;
 $step = post('step') ?: '1';
 $f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null];
 
-// Prerrelleno por GET (boton «enviar al radar» de un medio en /fuente.php, o un marcador): ?url=…&title=…&content=…&topic=ID
+// Prerrelleno por GET (boton «enviar al radar» de un medio en /fuente, o un marcador): ?url=…&title=…&content=…&topic=ID
 // equivale a haber pasado el paso 1 con esa URL; titular y entradilla del feed mandan sobre los de la pagina si vienen.
 $pre = null; $preX = 0;
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
     $pre = ['title' => mb_substr(trim((string)($_GET['title'] ?? '')), 0, 200), 'content' => mb_substr(trim((string)($_GET['content'] ?? '')), 0, 2000), 'topic' => (int)($_GET['topic'] ?? 0), 'image' => null];
-    // ?x=item_id: la foto que el lector ya saco del RSS del medio (la que se ve en /fuente.php). Muchos medios la dan en el feed
+    // ?x=item_id: la foto que el lector ya saco del RSS del medio (la que se ve en /fuente). Muchos medios la dan en el feed
     // pero la pagina no deja leer su og:image desde el servidor (CDN, tamaño…). Se copia con nombre nuevo: la del item
     // se borra cuando el item caduca (sources_keep_days) y el envio no puede quedarse sin foto.
     $preX = (int)($_GET['x'] ?? 0);
@@ -34,11 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$err && $f['url'] !== '') {
         $d = $pdo->prepare("SELECT story_id FROM stories WHERE url = ? AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");
         $d->execute([$f['url']]);
-        if ($dup = $d->fetchColumn()) { $err = t('Ese enlace ya está enviado: <a href="/hilo.php?id=%d">verlo</a>.', $dup); $step = '1'; }
+        if ($dup = $d->fetchColumn()) { $err = t('Ese enlace ya está enviado: <a href="/hilo/%d">verlo</a>.', $dup); $step = '1'; }
     }
 
     if (!$err && $step === '1') {
-        if ($f['url'] === '') redirect('/articulo.php');
+        if ($f['url'] === '') redirect('/articulo');
         // paso 1 -> leer la pagina y pasar al paso 2 con todo prerrellenado
         if ($f['url'] !== '') {
             if ($preX > 0) {
@@ -87,13 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mod_enqueue($pdo, 'story', $sid);
             if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
             $pdo->commit();
-            redirect("/hilo.php?id=$sid");
+            redirect("/hilo/$sid");
         }
     }
 }
 
 page_header(t('Enviar'));
-if (!user()) echo "<p class=\"notice\">" . t('Envías como anónimo. Si <a href="/login.php">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
+if (!user()) echo "<p class=\"notice\">" . t('Envías como anónimo. Si <a href="/login">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">$err</p>";
 
 if ($step === '1') {
@@ -101,11 +101,11 @@ if ($step === '1') {
     echo "" . t('<label>Enlace a una noticia</label>') . "<input type=\"url\" name=\"url\" value=\"" . h($f['url']) . "\" placeholder=\"https://…\" autofocus>";
     echo "" . t('<button>Continuar</button>') . "</form>";
     echo "<p class=\"or\">" . t('— o —') . "</p>";
-    echo "<a class=\"choice\" href=\"/articulo.php\">" . icon('art') . "<div>" . t('<b>Escribe un artículo</b>') . "<span>" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', (int)cfg('article_max_words', 1000)) . "</span></div></a>";
+    echo "<a class=\"choice\" href=\"/articulo\">" . icon('art') . "<div>" . t('<b>Escribe un artículo</b>') . "<span>" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', (int)cfg('article_max_words', 1000)) . "</span></div></a>";
 } else {
     echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"step\" value=\"2\">";
     echo "<input type=\"hidden\" name=\"url\" value=\"" . h($f['url']) . "\">";
-    if ($f['url']) echo "<p class=\"meta\">" . h(source_of($f['url'])) . "" . t(' · <a href="/enviar.php">cambiar enlace</a>') . "</p>";
+    if ($f['url']) echo "<p class=\"meta\">" . h(source_of($f['url'])) . "" . t(' · <a href="/enviar">cambiar enlace</a>') . "</p>";
     echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
     echo "" . t('<label>Entradilla</label>') . "<textarea name=\"content\" maxlength=\"2000\">" . h($f['content']) . "</textarea>";
     echo "" . t('<label>Tema</label>') . "<select name=\"topic\">";
@@ -114,7 +114,7 @@ if ($step === '1') {
         echo "<option value=\"{$t['topic_id']}\"$sel>" . h($t['name']) . "</option>";
     }
     echo "</select>";
-    if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades.php#crear">crea la primera</a>.') . "</p>";
+    if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades#crear">crea la primera</a>.') . "</p>";
     if ($comms) {
         echo "" . t('<label>Comunidad (opcional)</label>') . "<select name=\"community\"><option value=\"0\"" . t('>— ninguna —</option>') . "";
         foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$f['community'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";

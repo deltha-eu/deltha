@@ -18,7 +18,8 @@ function display_name(array $row, bool $revealed): string {
 function story_query_base(string $from = 'FROM stories s'): string {
     // my_vote: el voto (1 | -1 | NULL) del usuario actual a cada envio, para pintar su flecha en negrita (vote_widget)
     $my = user() ? "(SELECT mv.value FROM votes mv WHERE mv.story_id = s.story_id AND mv.user_id = " . (int)user()['user_id'] . ")" : "NULL";
-    return "SELECT s.*, t.name AS topic, t.bonus, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug, co.skin AS comm_skin, $my AS my_vote,
+    $myAt = user() ? "(SELECT mv2.created FROM votes mv2 WHERE mv2.story_id = s.story_id AND mv2.user_id = " . (int)user()['user_id'] . ")" : "NULL";   // cuando se voto: para saber si aun se puede anular (vote_undo_minutes)
+    return "SELECT s.*, t.name AS topic, t.bonus, t.color, u.login, u.aura AS author_aura, u.avatar, co.name AS comm_name, co.slug AS comm_slug, co.skin AS comm_skin, $my AS my_vote, $myAt AS my_vote_at,
                    (SELECT GROUP_CONCAT(CONCAT(c2.slug, '|', c2.name) ORDER BY (c2.community_id = s.community_id) DESC, c2.name SEPARATOR '\\n')
                       FROM story_communities sc2 JOIN communities c2 ON c2.community_id = sc2.community_id AND c2.status = 'ok' WHERE sc2.story_id = s.story_id) AS comm_list
               $from
@@ -40,14 +41,14 @@ function avatar(float $aura, string $initial = '', ?string $photo = null, ?strin
 }
 /** Foto y enlace de perfil solo si el nombre esta revelado */
 function who_avatar(array $row, bool $revealed, float $aura, string $name): string {
-    if (shown($row, $revealed)) return avatar($aura, $name, $row['avatar'] ?? null, '/u.php?u=' . rawurlencode($row['login']));
+    if (shown($row, $revealed)) return avatar($aura, $name, $row['avatar'] ?? null, '/u/' . rawurlencode($row['login']));
     return avatar($aura, $name);
 }
 
 function media_block(array $s, string $cls = 'media', ?string $href = null): void {
     if ($s['image']) {
-        $href = $href ?? "/hilo.php?id={$s['story_id']}";
-        $ext = (str_starts_with($href, 'http') || str_starts_with($href, '/ir.php')) ? ' rel="noopener nofollow"' : '';
+        $href = $href ?? "/hilo/{$s['story_id']}";
+        $ext = (str_starts_with($href, 'http') || str_starts_with($href, '/ir?')) ? ' rel="noopener nofollow"' : '';
         $esYt = ($s['portada'] ?? '') === 'canales' || youtube_video_id($s['url'] ?? '') !== '';   // video: triangulo de reproducir y, con youtube_embed, se ve aqui mismo
         echo "<div class=\"$cls" . ($esYt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($href) . "\"$ext" . youtube_attr($s['url'] ?? '') . " style=\"background-image:url('/media/" . h($s['image']) . "')\"></a>";
         echo topic_tag($s) . "</div>";
@@ -55,14 +56,14 @@ function media_block(array $s, string $cls = 'media', ?string $href = null): voi
 }
 /** Etiqueta del tema, con su color, enlazada al feed del tema */
 function topic_tag(array $s): string {
-    return "<a class=\"tag\" href=\"/tema.php?t=" . (int)$s['topic_id'] . "\">" . h($s['topic']) . "</a>";
+    return "<a class=\"tag\" href=\"/tema/" . (int)$s['topic_id'] . "\">" . h($s['topic']) . "</a>";
 }
 function topic_link(array $s): string {
-    return "<a href=\"/tema.php?t=" . (int)$s['topic_id'] . "\">" . h($s['topic']) . "</a>";
+    return "<a href=\"/tema/" . (int)$s['topic_id'] . "\">" . h($s['topic']) . "</a>";
 }
 /** El medio (dominio de la fuente), enlazado a todo lo enviado de ese medio */
 function source_link(array $s): string {
-    return "<a href=\"/medio.php?m=" . rawurlencode((string)$s['source']) . "\">" . h($s['source']) . "</a>";
+    return "<a href=\"/medio/" . rawurlencode((string)$s['source']) . "\">" . h($s['source']) . "</a>";
 }
 
 /** Post de timeline. $mode: full (portadas, originales) | compact (radar) */
@@ -70,7 +71,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
     $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
     $aura = $s['user_id'] ? (float)($s['author_aura'] ?? cfg('aura_start', 5)) : (float)cfg('aura_anon', 5);
-    $href = "/hilo.php?id={$s['story_id']}";
+    $href = "/hilo/{$s['story_id']}";
     $hrefC = $href . '#comentarios';                       // el hilo, ya bajado a los comentarios
     $when = $s['status'] === 'destacadas' && $s['published_date'] ? hace($s['published_date']) : hace($s['sent_date']);
 
@@ -129,19 +130,22 @@ function vote_widget(array $s): void {
     $id = (int)$s['story_id'];
     $can = user() && in_array($s['status'], ['nuevas','destacadas'], true) && (int)$s['user_id'] !== (int)user()['user_id'];
     $my = (int)($s['my_vote'] ?? 0);   // el voto propio se marca con .on (flecha y numero en negrita)
+    $undo = max(0, (int)cfg('vote_undo_minutes', 5));   // la misma flecha otra vez anula el voto durante estos minutos (migra-121)
+    $puede = $my !== 0 && $undo > 0 && !empty($s['my_vote_at']) && time() - strtotime((string)$s['my_vote_at']) < $undo * 60;
+    $mio = $puede ? t('tu voto · pulsa otra vez para anularlo (%d min)', $undo) : t('tu voto');
     if ($can) {
-        echo "<form class=\"vote\" method=\"post\" action=\"/votar.php\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-        echo "<button name=\"v\" value=\"1\"" . ($my === 1 ? ' class="on"' : '') . " title=\"" . t('positivo') . ($my === 1 ? ' · ' . t('tu voto') : '') . "\">" . icon('up') . "<span>{$s['votes_pos']}</span></button>";
-        echo "<button name=\"v\" value=\"-1\"" . ($my === -1 ? ' class="on"' : '') . " title=\"" . t('negativo') . ($my === -1 ? ' · ' . t('tu voto') : '') . "\">" . icon('down') . "<span>{$s['votes_neg']}</span></button></form>";
+        echo "<form class=\"vote\" method=\"post\" action=\"/votar\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
+        echo "<button name=\"v\" value=\"1\"" . ($my === 1 ? ' class="on"' : '') . " title=\"" . t('positivo') . ($my === 1 ? ' · ' . h($mio) : '') . "\">" . icon('up') . "<span>{$s['votes_pos']}</span></button>";
+        echo "<button name=\"v\" value=\"-1\"" . ($my === -1 ? ' class="on"' : '') . " title=\"" . t('negativo') . ($my === -1 ? ' · ' . h($mio) : '') . "\">" . icon('down') . "<span>{$s['votes_neg']}</span></button></form>";
     } else {
         echo "<span class=\"vote\"><span>" . icon('up') . "<span>{$s['votes_pos']}</span></span><span>" . icon('down') . "<span>{$s['votes_neg']}</span></span></span>";
     }
 }
 
-/** Sol (me gusta) y lagrima (no me gusta) de un comentario (o de un mensaje del Chat: $action = '/votar-chat.php', $idKey = 'msg_id').
+/** Sol (me gusta) y lagrima (no me gusta) de un comentario (o de un mensaje del Chat: $action = '/votar-chat', $idKey = 'msg_id').
  *  $c trae likes, dislikes y my_vote (1|-1|null, del usuario actual). Botones solo para registrados sobre lo ajeno y no borrado;
  *  si no, contadores. Repetir la propia reaccion la retira; la contraria la cambia. */
-function comment_vote_widget(array $c, bool $can_vote, string $action = '/votar-comentario.php', string $idKey = 'comment_id'): void {
+function comment_vote_widget(array $c, bool $can_vote, string $action = '/votar-comentario', string $idKey = 'comment_id'): void {
     $id = (int)$c[$idKey];
     $my = (int)($c['my_vote'] ?? 0);
     $nl = (int)($c['likes'] ?? 0); $nd = (int)($c['dislikes'] ?? 0);
@@ -166,22 +170,22 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     $fold = !$del && ghost_folded($c['user_id'] ?? 0);   // comentario de alguien a quien he ghosteado: plegado (details), por si quiero leerlo
     $cls = 'post reply' . ($has_next ? ' has-next' : '') . (empty($c['root_id']) ? ' root' : ' child') . ($del ? ' deleted' : '') . ($fold ? ' ghosted' : '');
     echo "<article class=\"$cls\" id=\"c{$c['comment_id']}\"" . ($nivel > 0 ? " style=\"--lv:$nivel\"" : '') . ">" . who_avatar($c, $revealed, (float)$c['aura'], $n) . "<div class=\"pc\">";
-    $nameHtml = shown($c, $revealed) ? "<a href=\"/u.php?u=" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
+    $nameHtml = shown($c, $revealed) ? "<a href=\"/u/" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
     echo "<div class=\"l1\"><b>$nameHtml</b><span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
     if ($parent && !empty($c['root_id']) && ($reto || (int)$c['parent_id'] !== (int)$c['root_id'])) {
         $pn = display_name($parent, ghost_over($parent['created']));
         echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";
     }
-    if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has ghosteado') . " · <a href=\"/perfil.php#ghost\">" . t('deshacer') . "</a></summary>";
-    if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
-    else      echo "<p>" . saltos(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content'])) . "</p>";
+    if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has ghosteado') . " · <a href=\"/perfil#ghost\">" . t('deshacer') . "</a></summary>";
+    if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
+    else      echo "<p>" . saltos(enlaces(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content']))) . "</p>";   // @nick → perfil, URLs → enlaces (07/10/2026)
     if ($fold) echo "</details>";
     $acts = [];
-    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo.php?id={$c['story_id']}" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "&amp;v=$hv" : '') . "&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
-    if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
-    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
+    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo/{$c['story_id']}" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "&amp;v=$hv" : '') . "&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
+    if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
+    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
     if (!$del && ($gl = ghost_link((int)($c['user_id'] ?? 0), $c['login'] ?? null, shown($c, $revealed))) !== '') $acts[] = $gl;   // solo con el nombre ya revelado
-    if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario.php?id={$c['comment_id']}\">" . t('editar · eliminar') . "</a>";
+    if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario?id={$c['comment_id']}\">" . t('editar · eliminar') . "</a>";
     if ($acts || !$del) {
         echo "<div class=\"actions\">" . implode('', $acts);
         // sol / lagrima: el propio autor (y quien no puede votar) ve solo los contadores
@@ -195,7 +199,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
 function composer(int $story_id, ?array $parent = null, bool $has_next = false): void {
     $u = user();
     $cls = 'composer' . ($parent ? ' inreply' : '') . ($has_next ? ' has-next' : '');
-    echo "<form class=\"$cls\" id=\"responder\" method=\"post\" action=\"/comentar.php\"><input type=\"hidden\" name=\"id\" value=\"$story_id\">";
+    echo "<form class=\"$cls\" id=\"responder\" method=\"post\" action=\"/comentar\"><input type=\"hidden\" name=\"id\" value=\"$story_id\">";
     $vt = (string)($GLOBALS['DDD_HILO_V'] ?? '');   // vista por tiempo o por votos ('tiempo' | 'votos' | ''): se conserva al publicar y al cancelar
     if ($vt !== '') echo "<input type=\"hidden\" name=\"v\" value=\"$vt\">";
     if ($parent) echo "<input type=\"hidden\" name=\"parent\" value=\"{$parent['comment_id']}\">";
@@ -203,7 +207,7 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     echo "<div class=\"cbox\">";
     if ($parent) {
         $pn = display_name($parent, ghost_over($parent['created']));
-        echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo.php?id=$story_id" . ($vt !== '' ? "&amp;v=$vt" : '') . "\">" . t('cancelar') . "</a></div>";
+        echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo/$story_id" . ($vt !== '' ? "&amp;v=$vt" : '') . "\">" . t('cancelar') . "</a></div>";
     }
     $ph = $u ? t('Escribe con alias; tu nombre aparecerá en %d min', (int)cfg('ghost_minutes', 30)) : t('Escribe como anónimo');
     echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h($ph) . "\" required" . ($parent ? " autofocus" : "") . "></textarea>";
@@ -214,7 +218,7 @@ function paginate(string $base, int $page, int $total, ?int $per = null): void {
     $per = $per ?: (int)cfg('per_page', 20);
     $pages = max(1, (int)ceil($total / $per));
     if ($pages <= 1) { echo "<p class=\"end\">" . t('Esto es todo lo que hay ahora.') . "</p>"; return; }
-    $sep = str_contains($base, '?') ? '&amp;' : '?';   // /procesos.php?v=votos&p=2
+    $sep = str_contains($base, '?') ? '&amp;' : '?';   // /procesos?v=votos&p=2
     echo "<nav class=\"pages\">";
     if ($page > 1)      echo "<a href=\"$base{$sep}p=" . ($page - 1) . "\">← " . t('anterior') . "</a>";
     echo "<span>$page / $pages</span>";
@@ -224,7 +228,7 @@ function paginate(string $base, int $page, int $total, ?int $per = null): void {
 function page_num(): int { return max(1, (int)($_GET['p'] ?? 1)); }
 function page_offset(int $page): int { return ($page - 1) * (int)cfg('per_page', 20); }
 
-/** Descripcion corta de cada skin (perfil, /plantilla.php, comunidades). '' = la del sitio. */
+/** Descripcion corta de cada skin (perfil, /plantilla, comunidades). '' = la del sitio. */
 function skin_descs(): array {
     return ['' => t('La del sitio (%s)', DDD_SKINS[cfg('skin_default', 'editorial')]),
         'editorial' => t('Editorial — limpia, aire de revista'), 'comunidad' => t('Comunidad — foro clásico: barras azules, mensajes con columna de autor, las respuestas por delante'), 'delta' => t('Delta — la identidad gráfica de Deltha, δ a la vista'), 'flujo' => t('Flujo — fotos al lado, más noticias en pantalla'), 'retro' => t('Retrocomputer — ordenador clásico, crema y verde, monoespaciada'), 'manga' => t('Manga — blanco y negro de página impresa, bordes gruesos'), 'punk' => t('Punk — fanzine fotocopiado: negro, fucsia, amarillo ácido'), 'popart' => t('Pop Art — revista gráfica de los sesenta: amarillo, rojo, bordes negros'), 'zen' => t('Zen — agua, flor y silencio; casi un lector'), 'orange' => t('Orange — guiño a Menéame: densa, naranja, votos grandes'), 'foro' => t('Foro — tarjetas sobre gris y pastillas de votos, comentarios y compartir'),
@@ -250,7 +254,7 @@ function skin_select(string $cur): string {
 
 /** «Compartir»: enlace absoluto al hilo. Con JS (/app/share.js) copia el enlace al portapapeles o abre el menu nativo de compartir; sin JS, lleva al hilo. */
 function share_link(array $s): string {
-    $url = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/hilo.php?id=' . (int)$s['story_id'];
+    $url = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/hilo/' . (int)$s['story_id'];
     return "<a class=\"share\" href=\"" . h($url) . "\" data-share data-title=\"" . h($s['title']) . "\" data-copied=\"" . h(t('enlace copiado')) . "\" title=\"" . h(t('copiar el enlace')) . "\">" . icon('share') . "<span>" . t('compartir') . "</span></a>";
 }
 
@@ -268,21 +272,21 @@ function fav_ids(): array {
 }
 function is_fav(int $story_id): bool { return in_array($story_id, fav_ids(), true); }
 
-/** Boton «guardar» / «guardado» (favoritos), solo para registrados; sin JS: un POST a /favorito.php que vuelve a la misma pagina. */
+/** Boton «guardar» / «guardado» (favoritos), solo para registrados; sin JS: un POST a /favorito que vuelve a la misma pagina. */
 function fav_link(array $s): string {
     if (!user()) return '';
     $id = (int)$s['story_id'];
     $on = is_fav($id);
-    return "<form class=\"fav" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/favorito.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
+    return "<form class=\"fav" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/favorito\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
          . "<button title=\"" . h($on ? t('quitar de favoritos') : t('guardar en favoritos')) . "\">" . icon('fav') . "<span>" . ($on ? t('guardado') : t('guardar')) . "</span></button></form>";
 }
 
 /** Pestañas del perfil propio (perfil.php, favoritos.php, mis-fuentes.php): datos, envios guardados y medios y substacks favoritos. */
 function profile_tabs(string $on): void {
     global $pdo;
-    $tabs = ['perfil' => ['/perfil.php', t('Mi perfil')], 'favoritos' => ['/favoritos.php', t('Favoritos')]];
+    $tabs = ['perfil' => ['/perfil', t('Mi perfil')], 'favoritos' => ['/favoritos', t('Favoritos')]];
     require_once __DIR__ . '/fuentes.php';
-    if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, $label]) if (fuentes_activas($pdo, $kind)) $tabs["fuentes:$kind"] = ["/mis-fuentes.php?k=$kind", t($label)];
+    if (fuentes_on()) foreach (DDD_MEDIA_KINDS as $kind => [, $label]) if (fuentes_activas($pdo, $kind)) $tabs["fuentes:$kind"] = ["/mis-fuentes?k=$kind", t($label)];
     echo "<nav class=\"sub\">";
     foreach ($tabs as $k => [$href, $label]) echo "<a href=\"$href\"" . ($k === $on ? ' class="on"' : '') . ">" . h($label) . "</a>";
     echo "</nav>";

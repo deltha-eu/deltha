@@ -62,12 +62,12 @@ function email_domain(string $email): string { return mb_strtolower(substr(strrc
  *   4. email_web_check=1: la web del dominio (https://dominio/, https://www.dominio/ y, salvo email_web_https=1, http://dominio/)
  *      tiene que responder 2xx tras seguir redirecciones (www, https…). Ojo: los navegadores prueban primero https; un dominio que solo
  *      contesta por http (iol.ie: webmail de Blacknight) lo da por caido el navegador, pero es valido. Si no, el dominio entra solo en la lista negra (motivo «auto: …») y no se crea la cuenta.
- * Las dos listas cubren tambien los subdominios (alumnos.us.es cae con us.es). Se gestionan en /moderacion.php#dominios.
+ * Las dos listas cubren tambien los subdominios (alumnos.us.es cae con us.es). Se gestionan en /moderacion#dominios.
  * Tablas y config: sql/migra-058-dominios-correo.sql. */
 
 /** Mensaje al rechazar un dominio (lista negra o web que no responde). */
 function email_temp_msg(): string {
-    return t('No se ha registrado la cuenta por el uso de un email temporal. Recuerda que no necesitas cuenta para enviar o comentar. Si crees que es un error, puedes <a href="/privacidad.php">escribirnos</a> para que te activemos la cuenta manualmente.');
+    return t('No se ha registrado la cuenta por el uso de un email temporal. Recuerda que no necesitas cuenta para enviar o comentar. Si crees que es un error, puedes <a href="/privacidad">escribirnos</a> para que te activemos la cuenta manualmente.');
 }
 
 /** Normaliza lo que pegue un moderador (dominio, correo entero o URL) a un dominio; null si no vale. */
@@ -164,7 +164,7 @@ function send_activation(PDO $pdo, int $uid, string $email): bool {
     $token = bin2hex(random_bytes(16));
     $pdo->prepare("UPDATE users SET token = ?, token_sent = NOW() WHERE user_id = ?")->execute([$token, $uid]);
     $site = (string)cfg('site_name', 'Deltha');
-    $url  = rtrim((string)cfg('site_url', 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')), '/') . "/activar.php?u=$uid&t=$token";
+    $url  = rtrim((string)cfg('site_url', 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')), '/') . "/activar?u=$uid&t=$token";
     $body = "Hola.\n\nAlguien (probablemente tú) ha creado una cuenta en $site con esta dirección de correo.\n\n"
           . "Para activarla, abre este enlace en las próximas " . (int)cfg('token_hours', 48) . " horas:\n\n$url\n\n"
           . "Si no has sido tú, no hagas nada: la cuenta no se activará y este correo no se repetirá.\n\n— $site\n";

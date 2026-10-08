@@ -1,9 +1,9 @@
 <?php
 /**
- * /mensajes.php — mensajes privados entre registrados.
+ * /mensajes — mensajes privados entre registrados.
  *
- *  /mensajes.php            bandeja: una linea por conversacion (ultimo mensaje, no leidos)
- *  /mensajes.php?u=nick     conversacion con ese usuario + cuadro para escribir
+ *  /mensajes            bandeja: una linea por conversacion (ultimo mensaje, no leidos)
+ *  /mensajes?u=nick     conversacion con ese usuario + cuadro para escribir
  *  POST to + content        envia (y vuelve a la conversacion)
  *
  * Con nick real: un privado no tiene sentido con alias. Solo registrados y verificados.
@@ -13,7 +13,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 $me = user();
-if (!$me) redirect('/login.php');
+if (!$me) redirect('/login');
 if ((string)cfg('msg_enabled', '1') !== '1') { page_header(t('Mensajes'), 'mensajes'); echo "<p class=\"end\">" . t('Los mensajes privados están desactivados.') . "</p>"; page_footer(); exit; }
 $myId = (int)$me['user_id'];
 $MAX  = 2000;
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else {
             $pdo->prepare("INSERT INTO messages (from_id, to_id, content) VALUES (?,?,?)")->execute([$myId, $to['user_id'], $content]);
             aviso_dm($pdo, $myId, (string)$me['login'], (int)$to['user_id'], (int)$pdo->lastInsertId(), $content);   // campanita del destinatario
-            redirect('/mensajes.php?u=' . rawurlencode($to['login']) . '#fin');
+            redirect('/mensajes?u=' . rawurlencode($to['login']) . '#fin');
         }
     }
     $u = ($to && (int)$to['user_id'] !== $myId) ? $toLogin : '';   // con error: volver a la conversacion (o a la bandeja) mostrandolo
@@ -54,9 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* ---- conversacion ------------------------------------------------- */
 if ($u !== '') {
     $other = msg_user($pdo, $u);
-    if (!$other) { http_response_code(404); page_header(t('Mensajes'), 'mensajes'); echo "<p class=\"end\">" . t('Ese usuario no existe. <a href="/mensajes.php">Volver a los mensajes</a>') . "</p>"; page_footer(); exit; }
+    if (!$other) { http_response_code(404); page_header(t('Mensajes'), 'mensajes'); echo "<p class=\"end\">" . t('Ese usuario no existe. <a href="/mensajes">Volver a los mensajes</a>') . "</p>"; page_footer(); exit; }
     $oid = (int)$other['user_id'];
-    if ($oid === $myId) redirect('/mensajes.php');
+    if ($oid === $myId) redirect('/mensajes');
 
     // lo que me ha escrito queda leido al abrir la conversacion
     $pdo->prepare("UPDATE messages SET read_at = NOW() WHERE to_id = ? AND from_id = ? AND read_at IS NULL")->execute([$myId, $oid]);
@@ -69,9 +69,9 @@ if ($u !== '') {
     $msgs = $st->fetchAll();
 
     page_header($other['login'], 'mensajes');
-    echo "<div class=\"convhead\"><a href=\"/mensajes.php\"" . t('>← mensajes</a>') . "";
-    echo avatar((float)$other['aura'], $other['login'], $other['avatar'], '/u.php?u=' . rawurlencode($other['login']));
-    echo "<b><a href=\"/u.php?u=" . rawurlencode($other['login']) . "\">" . h($other['login']) . "</a></b></div>";
+    echo "<div class=\"convhead\"><a href=\"/mensajes\"" . t('>← mensajes</a>') . "";
+    echo avatar((float)$other['aura'], $other['login'], $other['avatar'], '/u/' . rawurlencode($other['login']));
+    echo "<b><a href=\"/u/" . rawurlencode($other['login']) . "\">" . h($other['login']) . "</a></b></div>";
     if (!$msgs) echo "<p class=\"end\">" . t('Todavía no os habéis escrito. Lo que escribas abajo solo lo verá <b>') . "" . h($other['login']) . "</b>.</p>";
     $lastDay = '';
     foreach ($msgs as $m) {
@@ -82,7 +82,7 @@ if ($u !== '') {
     }
     echo "<span id=\"fin\"></span>";
     if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
-    echo "<form class=\"composer\" method=\"post\" action=\"/mensajes.php\"><input type=\"hidden\" name=\"to\" value=\"" . h($other['login']) . "\">";
+    echo "<form class=\"composer\" method=\"post\" action=\"/mensajes\"><input type=\"hidden\" name=\"to\" value=\"" . h($other['login']) . "\">";
     echo avatar((float)$me['aura'], $me['login'], $me['avatar']);
     echo "<div class=\"cbox\"><textarea name=\"content\" maxlength=\"$MAX\" placeholder=\"" . t('Mensaje para %s', h($other['login'])) . "\" required autofocus>" . ($err ? h($content ?? '') : '') . "</textarea>" . t('<button>Enviar</button>') . "</div></form>";
     page_footer();
@@ -99,7 +99,7 @@ $convs = array_values(array_filter($st->fetchAll(), fn($c) => !ghost_veiled($c['
 
 page_header(t('Mensajes'), 'mensajes');
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
-echo "<form class=\"newmsg\" method=\"get\" action=\"/mensajes.php\"><input type=\"text\" name=\"u\" placeholder=\"" . t('Escribir a… (nick)') . "\" maxlength=\"32\" required autocomplete=\"off\">" . t('<button>Abrir</button>') . "</form>";
+echo "<form class=\"newmsg\" method=\"get\" action=\"/mensajes\"><input type=\"text\" name=\"u\" placeholder=\"" . t('Escribir a… (nick)') . "\" maxlength=\"32\" required autocomplete=\"off\">" . t('<button>Abrir</button>') . "</form>";
 if (!$convs) echo "<p class=\"end\">" . t('No tienes conversaciones. Escribe a alguien por su nick, o desde su perfil con «enviar mensaje».') . "</p>";
 if ($convs) {
     $ids = implode(',', array_map(fn($c) => (int)$c['other'], $convs));
@@ -109,7 +109,7 @@ if ($convs) {
     foreach ($convs as $c) {
         $o = $U[(int)$c['other']] ?? null; $l = $L[(int)$c['last_id']] ?? null;
         if (!$o || !$l) continue;   // cuenta borrada
-        $href = '/mensajes.php?u=' . rawurlencode($o['login']);
+        $href = '/mensajes?u=' . rawurlencode($o['login']);
         $prev = ((int)$l['from_id'] === $myId ? t('Tú') . ': ' : '') . mb_strimwidth(preg_replace('/\s+/', ' ', $l['content']), 0, 90, '…');
         echo "<a class=\"fz conv" . ($c['unread'] ? ' unread' : '') . "\" href=\"$href\">" . avatar((float)$o['aura'], $o['login'], $o['avatar']);
         echo "<div class=\"fzt\"><b>" . h($o['login']) . "</b><span class=\"meta\"> · " . h(hace($l['created'])) . "</span><div class=\"prev\">" . h($prev) . "</div></div>";

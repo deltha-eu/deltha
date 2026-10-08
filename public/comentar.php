@@ -6,13 +6,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/');
 $id = (int)post('id');
 $content = mb_substr(post('content'), 0, 4000);
 $u = user();
-if (!$u && cfg('anon_can_comment') !== '1') redirect('/login.php');
-if (mb_strlen($content) < 2) redirect("/hilo.php?id=$id");
+if (!$u && cfg('anon_can_comment') !== '1') redirect('/login');
+if (mb_strlen($content) < 2) redirect("/hilo/$id");
 
 $st = $pdo->prepare("SELECT status FROM stories WHERE story_id = ?");
 $st->execute([$id]);
 $status = $st->fetchColumn();
-if (!in_array($status, ['nuevas','candidatas','destacadas'], true)) redirect("/hilo.php?id=$id");
+if (!in_array($status, ['nuevas','candidatas','destacadas'], true)) redirect("/hilo/$id");
 
 if ($u) { $alias = alias_user($pdo, $id, (int)$u['user_id']); $key = null; $aura = (float)$u['aura']; $uid = $u['user_id']; }
 else    { [$alias, $key] = alias_anon($id); $aura = (float)cfg('aura_anon', 5); $uid = null; }
@@ -35,4 +35,4 @@ if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_comentario', 0.02), 
 $pdo->commit();
 // avisos: @mencionados y autor del comentario respondido (lib/avisos.php)
 avisos_comment($pdo, ['comment_id' => $cid, 'story_id' => $id, 'user_id' => $uid, 'alias' => $alias, 'content' => $content], $parent ? $pr : null);
-redirect("/hilo.php?id=$id" . (in_array(post('v'), ['tiempo', 'votos'], true) ? '&v=' . post('v') : '') . (isset($_POST['js']) ? '' : "#c$cid"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll
+redirect("/hilo/$id" . (in_array(post('v'), ['tiempo', 'votos'], true) ? '&v=' . post('v') : '') . (isset($_POST['js']) ? '' : "#c$cid"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll

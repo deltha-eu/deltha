@@ -28,11 +28,11 @@ $tab = (string)($_GET['t'] ?? '');
 if (!in_array($tab, ['comentarios', 'medios', 'substacks'], true) || (isset($fk[$tab]) && !($verF && fuente_kind_on($fk[$tab])))) $tab = 'envios';
 $sigue = [];
 if ($verF) foreach ($fk as $tt => $kk) if (fuente_kind_on($kk)) $sigue[$tt] = mis_medios($pdo, ['user_id' => $uid], $kk);
-$base = "/u.php?u=" . rawurlencode($p['login']);
+$base = "/u/" . rawurlencode($p['login']);
 echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$p['aura'], 1, ',', '') . " · " . t('desde') . " " . date('M Y', strtotime($p['created'])) . ($p['last_seen'] ? " · " . h(t('último acceso %s', hace($p['last_seen']))) : '')
-   . " · <a class=\"cnt\" href=\"$base\">" . t('%d envíos', $nPub) . "</a> · <a class=\"cnt\" href=\"$base&amp;t=comentarios\">" . t('%d comentarios', $nCom) . "</a>";
-if ($own) echo " · " . t('<a href="/perfil.php">editar</a>') . "";
-if (!$own && user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes.php?u=" . rawurlencode($p['login']) . "\">" . t('enviar mensaje') . "</a>";
+   . " · <a class=\"cnt\" href=\"$base\">" . t('%d envíos', $nPub) . "</a> · <a class=\"cnt\" href=\"$base?t=comentarios\">" . t('%d comentarios', $nCom) . "</a>";
+if ($own) echo " · " . t('<a href="/perfil">editar</a>') . "";
+if (!$own && user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes?u=" . rawurlencode($p['login']) . "\">" . t('enviar mensaje') . "</a>";
 $canMod = modedit_puede($p);   // moderadores: usuarios normales; admin: cualquiera (lib/usuarios.php)
 if ($canMod) echo " · <a href=\"#modedit\" onclick=\"document.getElementById('modedit').open = true\">" . t('editar perfil') . "</a>";
 echo "</p></div></div>";
@@ -46,9 +46,9 @@ if ($canMod) {
     echo "</details>";
 }
 
-echo "<nav class=\"sub\"><a href=\"$base\"" . ($tab === 'envios' ? ' class="on"' : '') . ">" . t('Envíos') . " <small>$nPub</small></a><a href=\"$base&amp;t=comentarios\"" . ($tab === 'comentarios' ? ' class="on"' : '') . ">" . t('Comentarios') . " <small>$nCom</small></a>"
-   . (isset($sigue['medios']) ? "<a href=\"$base&amp;t=medios\"" . ($tab === 'medios' ? ' class="on"' : '') . ">" . t('Medios') . " <small>" . count($sigue['medios']) . "</small></a>" : '')
-   . (isset($sigue['substacks']) ? "<a href=\"$base&amp;t=substacks\"" . ($tab === 'substacks' ? ' class="on"' : '') . ">" . t('Substacks') . " <small>" . count($sigue['substacks']) . "</small></a>" : '')
+echo "<nav class=\"sub\"><a href=\"$base\"" . ($tab === 'envios' ? ' class="on"' : '') . ">" . t('Envíos') . " <small>$nPub</small></a><a href=\"$base?t=comentarios\"" . ($tab === 'comentarios' ? ' class="on"' : '') . ">" . t('Comentarios') . " <small>$nCom</small></a>"
+   . (isset($sigue['medios']) ? "<a href=\"$base?t=medios\"" . ($tab === 'medios' ? ' class="on"' : '') . ">" . t('Medios') . " <small>" . count($sigue['medios']) . "</small></a>" : '')
+   . (isset($sigue['substacks']) ? "<a href=\"$base?t=substacks\"" . ($tab === 'substacks' ? ' class="on"' : '') . ">" . t('Substacks') . " <small>" . count($sigue['substacks']) . "</small></a>" : '')
    . "</nav>";
 $page = page_num(); $per = (int)cfg('per_page', 20);
 if ($tab === 'envios') {
@@ -69,8 +69,8 @@ if ($tab === 'envios') {
     if (!$lista) echo "<p class=\"end\">" . ($own ? t('Todavía no sigues ninguno aquí.') : t('No sigue ninguno todavía.')) . "</p>";
     else {
         $faltan = user() && !$own ? count(array_filter($lista, fn($m) => !fuente_es_fav($m))) : 0;
-        echo "<div class=\"ufollow\"><p class=\"notice\">" . ($own ? t('Esto es lo que ven los demás en tu ficha; se cambia en <a href="/perfil.php#ficha-fuentes">tu perfil</a>.') : t('Los que sigue %s.', h($p['login'])))
-           . ($faltan ? " <form class=\"inl\" method=\"post\" action=\"/fav-fuente.php\"><input type=\"hidden\" name=\"all_of\" value=\"$uid\"><input type=\"hidden\" name=\"k\" value=\"$kk\"><button class=\"link\">" . t('Seguir todos') . " ($faltan)</button></form>" : '') . "</p>";
+        echo "<div class=\"ufollow\"><p class=\"notice\">" . ($own ? t('Esto es lo que ven los demás en tu ficha; se cambia en <a href="/perfil#ficha-fuentes">tu perfil</a>.') : t('Los que sigue %s.', h($p['login'])))
+           . ($faltan ? " <form class=\"inl\" method=\"post\" action=\"/fav-fuente\"><input type=\"hidden\" name=\"all_of\" value=\"$uid\"><input type=\"hidden\" name=\"k\" value=\"$kk\"><button class=\"link\">" . t('Seguir todos') . " ($faltan)</button></form>" : '') . "</p>";
         foreach ($lista as $m) {
             $descr = h((string)$m['descr'] ?: source_of($m['home']));
             if (($m['lang'] ?? '') !== '' && $m['lang'] !== lang()) $descr = "<b>" . h(strtoupper($m['lang'])) . "</b> · " . $descr;
@@ -87,11 +87,11 @@ if ($tab === 'envios') {
     avisos_preload_nicks($pdo, array_column($rows, 'content'));
     echo "<div class=\"ucoms\">";
     foreach ($rows as $c) {
-        echo "<p class=\"hilotit\">" . t('en') . " <a href=\"/hilo.php?id={$c['story_id']}#c{$c['comment_id']}\">" . h($c['story_title']) . "</a></p>";
+        echo "<p class=\"hilotit\">" . t('en') . " <a href=\"/hilo/{$c['story_id']}#c{$c['comment_id']}\">" . h($c['story_title']) . "</a></p>";
         comment_block($c, false, null, false, false);
     }
     echo "</div>";
     if (!$rows) echo "<p class=\"end\">" . ($own ? t('Aún no has comentado.') : t('Nada revelado todavía: sus comentarios siguen vivos o no ha comentado.')) . "</p>";
-    elseif ($nCom > $per) paginate("$base&amp;t=comentarios", $page, $nCom);
+    elseif ($nCom > $per) paginate("$base?t=comentarios", $page, $nCom);
 }
 page_footer();

@@ -1,7 +1,7 @@
 <?php
 /** lib/twofa.php — verificacion en dos pasos por correo (migra-095).
  *  Quien la activa en su perfil (users.twofa = 1) o es administrador con config.twofa_admin = 1, tras acertar usuario y
- *  contraseña recibe un codigo de seis cifras en su correo y lo escribe en /login2.php; hasta entonces la sesion solo guarda
+ *  contraseña recibe un codigo de seis cifras en su correo y lo escribe en /login2; hasta entonces la sesion solo guarda
  *  pending_uid (no uid), asi que no ha entrado. El codigo caduca a los twofa_minutes (10), admite TWOFA_TRIES intentos y se
  *  guarda como HMAC con el secreto del sitio (login_codes, una fila por usuario). Como mucho TWOFA_SENDS envios por hora.
  *  Sin aplicacion de codigos ni codigos de recuperacion: si alguien pierde el acceso, lo recupera con su propio correo.

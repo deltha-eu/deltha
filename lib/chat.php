@@ -76,21 +76,16 @@ function chat_format(string $text, array $logins, array $ids): string {
     $h = h($text);
     $h = preg_replace_callback('~(?<![\w\/])#(\d{1,9})\b~', function ($m) use ($ids) {
         $n = (int)$m[1];
-        $href = isset($ids[$n]) ? "#m$n" : "/chat.php?m=$n#m$n";
+        $href = isset($ids[$n]) ? "#m$n" : "/chat?m=$n#m$n";
         return "<a class=\"ref\" href=\"$href\">#$n</a>";
     }, $h);
     $h = preg_replace_callback('~(?<![\w@])@([A-Za-z0-9_\-]{3,32})\b~', function ($m) use ($logins) {
         $k = strtolower($m[1]);
         if (!isset($logins[$k])) return $m[0];
         if (is_array($logins[$k])) return "<span class=\"at\">@" . h($logins[$k]['alias']) . "</span>";   // velado por ghosteo: alias y sin enlace
-        return "<a class=\"at\" href=\"/u.php?u=" . rawurlencode($logins[$k]) . "\">@" . h($logins[$k]) . "</a>";
+        return "<a class=\"at\" href=\"/u/" . rawurlencode($logins[$k]) . "\">@" . h($logins[$k]) . "</a>";
     }, $h);
-    $h = preg_replace_callback('~(?<![">])\bhttps?://[^\s<]+~', function ($m) {
-        $url = rtrim($m[0], '.,;:)');
-        $tail = substr($m[0], strlen($url));
-        return "<a href=\"$url\" rel=\"noopener nofollow\">" . h(mb_strimwidth(html_entity_decode($url, ENT_QUOTES), 0, 60, '…')) . "</a>$tail";
-    }, $h);
-    return saltos($h);
+    return saltos(enlaces($h));   // URLs → enlaces (enlaces(), lib/app.php: lo mismo que en los comentarios)
 }
 /** Pagina (1..n) en la que esta el mensaje N, con los mensajes ordenados del mas nuevo al mas viejo. */
 function chat_page_of(PDO $pdo, int $id): int {

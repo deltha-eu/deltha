@@ -37,7 +37,7 @@ page_header(t('Crear cuenta'));
 if ($done) {
     echo "" . t('<h1>Revisa tu correo</h1>') . "";
     echo "<p class=\"notice\">" . t('Hemos enviado un enlace de activación a <b>') . "" . h($done) . "" . t('</b>. Ábrelo para terminar: la cuenta no funciona hasta entonces. Si no lo ves, mira en la carpeta de spam.') . "</p>";
-    echo "<p class=\"end\">" . t('¿No llega? <a href="/reenviar.php">Pedir otro enlace</a>.') . "</p>";
+    echo "<p class=\"end\">" . t('¿No llega? <a href="/reenviar">Pedir otro enlace</a>.') . "</p>";
     page_footer(); exit;
 }
 echo "<p class=\"notice\">" . t('Con cuenta publicas en modo Ghost: cada envío o comentario sale con un alias y tu nombre aparece a los %d minutos. Puedes votar y tu aura crece con lo que aportas. Te enviaremos un correo para activar la cuenta.', (int)cfg('ghost_minutes', 30)) . "</p>";

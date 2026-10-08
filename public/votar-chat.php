@@ -6,9 +6,9 @@
  */
 require __DIR__ . '/../lib/app.php';
 $u = user();
-if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login.php');
+if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login');
 $id = (int)post('id'); $v = (int)post('v');
-if (!in_array($v, [1, -1], true)) redirect('/chat.php');
+if (!in_array($v, [1, -1], true)) redirect('/chat');
 
 $pdo->beginTransaction();
 try {
@@ -40,5 +40,5 @@ try {
 } catch (Throwable $e) { $pdo->rollBack(); }
 // volver a la misma pagina del Chat, al mensaje votado (ancla m{id})
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
-if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/chat\.php~i', $back)) $back = "/chat.php?m=$id";
+if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/chat(\.php)?~i', $back)) $back = "/chat?m=$id";
 redirect($back . (isset($_POST['js']) ? '' : "#m$id"));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll

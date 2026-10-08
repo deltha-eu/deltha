@@ -1,7 +1,7 @@
 <?php
-/** /fuente.php?f=slug[&v=portada|populares|nuevas] — una fuente externa pintada con Deltha, solo lectura.
+/** /fuente/slug[?v=portada|populares|nuevas] — una fuente externa pintada con Deltha, solo lectura.
  *  Agregador (Meneame): tres vistas, votos y comentarios de la fuente. Medio (Jot Down...): sus ultimas noticias,
- *  con boton «enviar al radar» que abre /enviar.php prerrellenado. Los items los lee el cron (lib/fuentes.php). */
+ *  con boton «enviar al radar» que abre /enviar prerrellenado. Los items los lee el cron (lib/fuentes.php). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/fuentes.php';
@@ -29,7 +29,7 @@ $sent = $medio ? fuente_ya_enviadas($pdo, array_column($rows, 'url')) : [];
 
 // la plantilla de la fuente manda sobre la del usuario (no sobre ?skin=), como la de una comunidad
 community_skin((string)$src['skin']);
-// anonimos: cacheable un minuto (misma politica que /procesos.php)
+// anonimos: cacheable un minuto (misma politica que /procesos)
 if (user()) header('Cache-Control: private, no-cache'); else { header('Cache-Control: public, max-age=60'); header('Vary: Cookie'); }
 
 page_header(($medio || count($views) === 1) ? $src['name'] : $src['name'] . ' · ' . $views[$view], 'fuente:' . $src['slug']);
@@ -44,7 +44,7 @@ if ($medio) {
     $intro = t('Las últimas noticias de <a href="%s" rel="noopener">%s</a> por RSS, vistas desde Deltha.', h($src['home']), h($src['name']));
     if ($src['descr']) $intro .= ' ' . h($src['descr']) . '.';
     $intro .= ' ' . t('Cada titular lleva a la noticia; con «enviar al radar» la propones en Deltha como cualquier envío.');
-    if (!user()) $intro .= ' ' . t('<a href="/login.php">Entra</a> para elegir tus medios.');
+    if (!user()) $intro .= ' ' . t('<a href="/login">Entra</a> para elegir tus medios.');
 } else {
     $intro = fuente_sin_votos($src)
         ? t('Solo lectura: los últimos mensajes de <a href="%s" rel="noopener">%s</a>, vistos desde Deltha. Aquí no se responde: cada mensaje lleva a su sitio en el hilo original; el número es el del mensaje dentro del hilo.', h($src['home']), h($src['name']))

@@ -3,8 +3,8 @@
  * lib/propuestas.php — fuentes propuestas por los usuarios (medios y substacks/newsletters).
  *
  * Quien tenga aura >= source_propose_aura (6 por defecto; moderadores y admin, siempre) puede proponer una fuente con RSS
- * en /proponer-fuente.php. No entra en el catalogo: queda en source_proposals con status 'pending' y la revisa un moderador en
- * /moderacion.php#fuentes, que ve el resultado de la prueba automatica del RSS (numero de noticias, idioma, ultimos titulos o el
+ * en /proponer-fuente. No entra en el catalogo: queda en source_proposals con status 'pending' y la revisa un moderador en
+ * /moderacion#fuentes, que ve el resultado de la prueba automatica del RSS (numero de noticias, idioma, ultimos titulos o el
  * error), puede volver a probarla y la aprueba (se crea en sources, activa y sin destacar) o la rechaza con un motivo. En ambos
  * casos quien la propuso recibe un mensaje privado del moderador.
  * Topes: source_propose_max_pending pendientes a la vez por persona y source_propose_per_day propuestas en 24 h.
@@ -20,7 +20,7 @@ function fprop_puede(?array $u): bool {
     return (float)$u['aura'] >= (float)cfg('source_propose_aura', 6);
 }
 
-/** Propuestas pendientes (para el contador de /moderacion.php). */
+/** Propuestas pendientes (para el contador de /moderacion). */
 function fprop_pendientes(PDO $pdo): int {
     static $n = null;
     if ($n !== null) return $n;

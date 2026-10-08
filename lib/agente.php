@@ -6,7 +6,7 @@
  *  del modelo— y sus parametros, con la casilla «activo». Puede haber varios. El worker del PC de la redaccion
  *  (local/comentarista/comentarista.py) pide hilos candidatos a /api/agente.php para cada agente activo con cupo, baja el
  *  articulo, lo pasa por el modelo local con la personalidad y devuelve un comentario (o «paso»). Aqui: que hilos se le
- *  ofrecen a cada uno, el tope diario y la publicacion del comentario por el mismo camino que /comentar.php: alias Ghost del
+ *  ofrecen a cada uno, el tope diario y la publicacion del comentario por el mismo camino que /comentar: alias Ghost del
  *  hilo, contador del hilo, cola de moderacion, avisos. Sin aura (un bot no debe ganar aura: con mod_aura llegaria a moderar).
  *  agent_seen recuerda que hilos ha visto cada agente y que hizo con cada uno.
  */
@@ -124,7 +124,7 @@ function agent_form(PDO $pdo, int $uid, ?array $a): string {
         $hoy = agent_today($pdo, $uid);
         $h .= "<p class=\"meta\" style=\"padding:0\">Hoy " . $hoy . " de " . (int)$v['per_day'] . " comentarios · " . $envHoy . " de " . (int)$v['submits_per_day'] . " envíos" . (!empty($a['next_submit']) && (int)$v['submits_per_day'] > 0 ? " (próximo hacia las " . date('H:i', strtotime((string)$a['next_submit'])) . ")" : "") . " · vistos: " . (int)($c['comment'] ?? 0) . " comentados, " . (int)($c['skip'] ?? 0) . " pasados, " . (int)($c['fail'] ?? 0) . " fallos"
             . agent_review_resumen($pdo, $uid, $v)
-            . " · worker visto " . h((string)cfg('agent_worker_seen', '') ?: 'nunca') . " · <a href=\"/admin.php?t=agentes&amp;a=$uid\">registro</a></p>";
+            . " · worker visto " . h((string)cfg('agent_worker_seen', '') ?: 'nunca') . " · <a href=\"/admin?t=agentes&amp;a=$uid\">registro</a></p>";
     }
     $h .= "</details>";
     return $h;
@@ -226,7 +226,7 @@ function agent_skip(PDO $pdo, int $uid, int $story_id, string $result, string $n
  * Cada minuto desde scripts/promocionar.php. Para cada agente activo con submits_per_day > 0 al que le toque (next_submit
  * NULL o pasado), elige al azar una noticia reciente de sus fuentes (source_items de medios/substacks activos, del tipo y los
  * temas de su ficha, publicada en las ultimas agent_submit_max_age_h horas, no enviada ya por nadie ni en agent_sent) y la
- * envia tal cual como haria una persona desde /fuente.php: titular y entradilla del feed, foto del feed copiada (como en
+ * envia tal cual como haria una persona desde /fuente: titular y entradilla del feed, foto del feed copiada (como en
  * enviar.php ?x=), tema el de la fuente (o el primero de su ficha), al radar, alias Ghost, cola de moderacion. Sin aura.
  * Luego fija next_submit = ahora + 24/N horas por un factor al azar entre 0,7 y 1,4, para que no sea un reloj. */
 function agentes_tick(PDO $pdo): array {
