@@ -28,6 +28,7 @@ $st->execute();
 $rss = '';
 foreach (array_unique(array_merge([$p], array_keys(portadas()))) as $k) $rss .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"" . h(cfg('site_name', 'Deltha') . ' · ' . t(DDD_PORTADAS[$k])) . "\" href=\"/rss?portada=$k\">";
 page_header(t(DDD_PORTADAS[$p]), $p, $rss);
+if (isset($_GET['baja'])) echo "<p class=\"notice\">" . t('Tu cuenta se ha borrado. Gracias por haber estado aquí.') . "</p>";   // viene de /baja
 if (isset($_GET['bienvenida']) && user()) {
     echo "<p class=\"notice\">" . t('Bienvenido, <b>') . "" . h(user()['login']) . "</b>: " . t('tu cuenta está creada y ya has entrado. Publicas en modo Ghost (alias durante %d min) y puedes votar. En <a href="/perfil">tu perfil</a> puedes poner foto, una frase y elegir tema claro u oscuro.', (int)cfg('ghost_minutes', 30)) . "</p>";
 }

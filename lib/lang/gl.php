@@ -785,4 +785,13 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Non se puido ler a imaxe (JPG, PNG, WebP ou AVIF, ata %d MB).',
 'Dueño' => 'Dono',
 'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick de quen pasa a ser o dono; se non es mod, deixarás de poder editala',
+'Borrar mi cuenta' => 'Borrar a miña conta',
+'Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.' => 'Bórranse a túa conta, o correo, a foto, os votos, os favoritos e as mensaxes privadas; o nick queda libre. O que escribiches consérvase como anónimo para non deixar ocos nas conversas dos demais, salvo que marques a casa.',
+'Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)' => 'Borrar tamén todos os meus envíos e comentarios (e as respostas que colgan deles)',
+'Tu contraseña, para confirmar' => 'O teu contrasinal, para confirmar',
+'Borrar la cuenta para siempre' => 'Borrar a conta para sempre',
+'¿Seguro? No se puede deshacer.' => 'Seguro? Non se pode desfacer.',
+'Contraseña incorrecta.' => 'Contrasinal incorrecto.',
+'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Non se puido borrar a conta. Téntao de novo ou escríbenos.',
+'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'A túa conta borrouse. Grazas por ter estado aquí.',
 ];

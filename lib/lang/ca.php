@@ -785,4 +785,13 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'No s’ha pogut llegir la imatge (JPG, PNG, WebP o AVIF, fins a %d MB).',
 'Dueño' => 'Propietari',
 'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick de qui passa a ser el propietari; si no ets mod, deixaràs de poder editar-la',
+'Borrar mi cuenta' => 'Esborrar el meu compte',
+'Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.' => 'S’esborren el teu compte, el correu, la foto, els vots, els favorits i els missatges privats; el nick queda lliure. El que has escrit es conserva com a anònim per no deixar forats a les converses dels altres, llevat que marquis la casella.',
+'Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)' => 'Esborrar també tots els meus enviaments i comentaris (i les respostes que en pengen)',
+'Tu contraseña, para confirmar' => 'La teva contrasenya, per confirmar',
+'Borrar la cuenta para siempre' => 'Esborrar el compte per sempre',
+'¿Seguro? No se puede deshacer.' => 'Segur? No es pot desfer.',
+'Contraseña incorrecta.' => 'Contrasenya incorrecta.',
+'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'No s’ha pogut esborrar el compte. Torna-ho a provar o escriu-nos.',
+'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'El teu compte s’ha esborrat. Gràcies per haver estat aquí.',
 ];

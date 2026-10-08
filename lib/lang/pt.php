@@ -822,4 +822,13 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Não foi possível ler a imagem (JPG, PNG, WebP ou AVIF, até %d MB).',
 'Dueño' => 'Dono',
 'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick de quem passa a ser o dono; se não és mod, deixarás de a poder editar',
+'Borrar mi cuenta' => 'Apagar a minha conta',
+'Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.' => 'Apagam-se a tua conta, o e-mail, a foto, os votos, os favoritos e as mensagens privadas; o nick fica livre. O que escreveste conserva-se como anónimo para não deixar buracos nas conversas dos outros, salvo se marcares a caixa.',
+'Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)' => 'Apagar também todos os meus envios e comentários (e as respostas que dependem deles)',
+'Tu contraseña, para confirmar' => 'A tua palavra-passe, para confirmar',
+'Borrar la cuenta para siempre' => 'Apagar a conta para sempre',
+'¿Seguro? No se puede deshacer.' => 'De certeza? Não se pode desfazer.',
+'Contraseña incorrecta.' => 'Palavra-passe incorreta.',
+'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Não foi possível apagar a conta. Tenta de novo ou escreve-nos.',
+'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'A tua conta foi apagada. Obrigado por teres estado aqui.',
 ];

@@ -786,4 +786,13 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Impossibile leggere l’immagine (JPG, PNG, WebP o AVIF, fino a %d MB).',
 'Dueño' => 'Proprietario',
 'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick del nuovo proprietario; se non sei mod, non potrai più modificarla',
+'Borrar mi cuenta' => 'Eliminare il mio account',
+'Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.' => 'Si cancellano account, email, foto, voti, preferiti e messaggi privati; il nick torna libero. Ciò che hai scritto resta come anonimo per non lasciare buchi nelle conversazioni degli altri, salvo che tu spunti la casella.',
+'Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)' => 'Eliminare anche tutti i miei invii e commenti (e le risposte che ne dipendono)',
+'Tu contraseña, para confirmar' => 'La tua password, per confermare',
+'Borrar la cuenta para siempre' => 'Eliminare l’account per sempre',
+'¿Seguro? No se puede deshacer.' => 'Sicuro? Non si può annullare.',
+'Contraseña incorrecta.' => 'Password errata.',
+'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Non è stato possibile eliminare l’account. Riprova o scrivici.',
+'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Il tuo account è stato eliminato. Grazie per essere stato qui.',
 ];

@@ -786,4 +786,13 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Bild konnte nicht gelesen werden (JPG, PNG, WebP oder AVIF, bis %d MB).',
 'Dueño' => 'Besitzer',
 'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'Nick des neuen Besitzers; wenn du kein Mod bist, kannst du sie danach nicht mehr bearbeiten',
+'Borrar mi cuenta' => 'Mein Konto löschen',
+'Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.' => 'Konto, E-Mail, Foto, Stimmen, Favoriten und private Nachrichten werden gelöscht; der Nick wird frei. Was du geschrieben hast, bleibt anonym erhalten, damit die Gespräche der anderen keine Lücken bekommen, es sei denn, du setzt das Häkchen.',
+'Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)' => 'Auch alle meine Beiträge und Kommentare löschen (und die Antworten darauf)',
+'Tu contraseña, para confirmar' => 'Dein Passwort zur Bestätigung',
+'Borrar la cuenta para siempre' => 'Konto endgültig löschen',
+'¿Seguro? No se puede deshacer.' => 'Sicher? Das lässt sich nicht rückgängig machen.',
+'Contraseña incorrecta.' => 'Falsches Passwort.',
+'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Das Konto konnte nicht gelöscht werden. Versuch es noch einmal oder schreib uns.',
+'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Dein Konto wurde gelöscht. Danke, dass du hier warst.',
 ];
