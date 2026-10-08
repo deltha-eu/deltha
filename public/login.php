@@ -31,5 +31,5 @@ echo "" . t('<p class="notice">Al entrar se crea una única cookie técnica de s
 if ($err) echo "<p class=\"error\" role=\"alert\">$err</p>";
 echo "<form class=\"plain\" method=\"post\">" . t('<label>Usuario</label>') . "<input type=\"text\" name=\"login\" required autocomplete=\"username\"" . ($err ? " autofocus" : "") . ">";
 echo "" . t('<label>Contraseña</label>') . "<input type=\"password\" name=\"pass\" required autocomplete=\"current-password\">" . t('<button>Entrar</button>') . "</form>";
-echo "<p><a href=\"/registro\">" . t('Crear cuenta') . "</a></p>";
+echo "<p><a href=\"/registro\">" . t('Crear cuenta') . "</a> · <a href=\"/recuperar\">" . t('¿Has olvidado la contraseña?') . "</a></p>";
 page_footer();
