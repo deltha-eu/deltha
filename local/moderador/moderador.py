@@ -52,6 +52,10 @@ Categorías (usa exactamente estas claves):
   violencia grave contra personas o colectivos; instrucciones para cometer delitos graves; venta de cosas ilegales; fraudes.
   Informar de un atentado, analizarlo o condenarlo NO es apología.
 - spam: publicidad encubierta, enlaces de afiliación, texto repetido o automático, captación comercial.
+  NO es spam que alguien hable de su propio Substack, boletín, blog, podcast o canal, enlace a él, invite a leerlo o a
+  suscribirse, o comparta ahí lo que escribe: Deltha existe para eso (muchos usuarios son autores de Substack y la
+  autopromoción de lo que uno escribe es bienvenida). Solo es spam si es publicidad de productos o servicios, enlaces
+  de afiliación, el mismo texto pegado muchas veces o un texto automático.
 - otro: incumple las normas de otra manera clara (suplantar a alguien, trampas con los votos).
 - ninguna: no incumple nada. Es la respuesta más habitual.
 
