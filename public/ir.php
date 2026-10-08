@@ -10,12 +10,7 @@ $s = $st->fetch();
 header('X-Robots-Tag: noindex, nofollow');
 header('Cache-Control: no-store');
 if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true) && !is_admin())) { http_response_code(404); exit; }
-<<<<<<< HEAD
 $url = url_limpia((string)$s['url']);   // los envios antiguos pueden llevar utm: se sale limpio
-if (!preg_match('~^https?://~i', $url)) redirect('/hilo.php?id=' . $id);
-=======
-$url = (string)$s['url'];
 if (!preg_match('~^https?://~i', $url)) redirect('/hilo/' . $id);
->>>>>>> 11cd0cc4478e4c3c470fe08dcc813772bbde9932
 story_cuenta($pdo, $s, 'clicks');
 header('Location: ' . str_replace(["\r", "\n"], '', $url), true, 302);
