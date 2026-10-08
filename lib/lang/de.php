@@ -795,4 +795,12 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Contraseña incorrecta.' => 'Falsches Passwort.',
 'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Das Konto konnte nicht gelöscht werden. Versuch es noch einmal oder schreib uns.',
 'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Dein Konto wurde gelöscht. Danke, dass du hier warst.',
+'¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.' => 'Warum gehst du? Es hilft uns, besser zu werden; du musst nicht antworten.',
+'Prefiero no contestar' => 'Möchte ich nicht sagen',
+'No entiendo la plataforma' => 'Ich verstehe die Plattform nicht',
+'No me gusta la plataforma' => 'Die Plattform gefällt mir nicht',
+'He tenido una mala experiencia con otros usuarios' => 'Ich hatte eine schlechte Erfahrung mit anderen Nutzern',
+'He tenido una mala experiencia con la administración' => 'Ich hatte eine schlechte Erfahrung mit der Administration',
+'Otra (cuéntanos abajo)' => 'Anderes (erzähl es uns unten)',
+'si es otra, cuéntanos' => 'falls anderes: erzähl es uns',
 ];

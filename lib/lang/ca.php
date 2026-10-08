@@ -794,4 +794,12 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Contraseña incorrecta.' => 'Contrasenya incorrecta.',
 'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'No s’ha pogut esborrar el compte. Torna-ho a provar o escriu-nos.',
 'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'El teu compte s’ha esborrat. Gràcies per haver estat aquí.',
+'¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.' => 'Per què te’n vas? Ens ajuda a millorar; pots no contestar.',
+'Prefiero no contestar' => 'Prefereixo no contestar',
+'No entiendo la plataforma' => 'No entenc la plataforma',
+'No me gusta la plataforma' => 'No m’agrada la plataforma',
+'He tenido una mala experiencia con otros usuarios' => 'He tingut una mala experiència amb altres usuaris',
+'He tenido una mala experiencia con la administración' => 'He tingut una mala experiència amb l’administració',
+'Otra (cuéntanos abajo)' => 'Una altra (explica’ns-ho a sota)',
+'si es otra, cuéntanos' => 'si és una altra, explica’ns-ho',
 ];

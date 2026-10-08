@@ -13,15 +13,23 @@ if (!$u) redirect('/login');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/perfil#baja');
 $uid = (int)$u['user_id'];
 
-$st = $pdo->prepare("SELECT pass, level, avatar FROM users WHERE user_id = ?"); $st->execute([$uid]); $row = $st->fetch();
+$st = $pdo->prepare("SELECT pass, level, avatar, created, aura FROM users WHERE user_id = ?"); $st->execute([$uid]); $row = $st->fetch();
 if (!$row || !password_verify(post('pass'), (string)$row['pass'])) redirect('/perfil?baja=pass#baja');
 if ($row['level'] === 'admin') redirect('/perfil?baja=admin#baja');
 $todo = post('todo') === '1';
+$motivo = in_array(post('motivo'), array_keys(DDD_BAJA_MOTIVOS), true) ? post('motivo') : '';
+$motivoTxt = $motivo === 'otra' ? mb_substr(post('motivo_txt'), 0, 500) : '';
 
 $pdo->beginTransaction();
 try {
     $q = fn(string $sql, array $p = []) => $pdo->prepare($sql)->execute($p);
     $opt = function (string $sql, array $p = []) use ($pdo) { try { $pdo->prepare($sql)->execute($p); } catch (Throwable $e) {} };   // tablas que puede que no existan
+
+    // registro de la baja (migra-127): nick, antigüedad, lo que tenia y el motivo; sin correo
+    $ne = (int)$pdo->query("SELECT COUNT(*) FROM stories WHERE user_id = $uid")->fetchColumn();
+    $nc = (int)$pdo->query("SELECT COUNT(*) FROM comments WHERE user_id = $uid")->fetchColumn();
+    $opt("INSERT INTO bajas (login, registrado, aura, envios, comentarios, todo, motivo, motivo_txt) VALUES (?,?,?,?,?,?,?,?)",
+         [(string)$u['login'], (string)$row['created'], (float)$row['aura'], $ne, $nc, $todo ? 1 : 0, $motivo, $motivoTxt !== '' ? $motivoTxt : null]);
 
     if ($todo) {
         // 1. sus envios, con todo lo que cuelga de ellos (como admin -> borrar usuario)

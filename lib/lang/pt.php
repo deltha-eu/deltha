@@ -831,4 +831,12 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Contraseña incorrecta.' => 'Palavra-passe incorreta.',
 'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Não foi possível apagar a conta. Tenta de novo ou escreve-nos.',
 'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'A tua conta foi apagada. Obrigado por teres estado aqui.',
+'¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.' => 'Porque te vais? Ajuda-nos a melhorar; podes não responder.',
+'Prefiero no contestar' => 'Prefiro não responder',
+'No entiendo la plataforma' => 'Não entendo a plataforma',
+'No me gusta la plataforma' => 'Não gosto da plataforma',
+'He tenido una mala experiencia con otros usuarios' => 'Tive uma má experiência com outros utilizadores',
+'He tenido una mala experiencia con la administración' => 'Tive uma má experiência com a administração',
+'Otra (cuéntanos abajo)' => 'Outra (conta-nos em baixo)',
+'si es otra, cuéntanos' => 'se for outra, conta-nos',
 ];

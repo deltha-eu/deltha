@@ -794,4 +794,12 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Contraseña incorrecta.' => 'Pasahitz okerra.',
 'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Ezin izan da kontua ezabatu. Saiatu berriro edo idatzi guri.',
 'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Zure kontua ezabatu da. Eskerrik asko hemen egon izanagatik.',
+'¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.' => 'Zergatik zoaz? Hobetzen laguntzen digu; ez erantzutea aukera duzu.',
+'Prefiero no contestar' => 'Nahiago dut ez erantzun',
+'No entiendo la plataforma' => 'Ez dut plataforma ulertzen',
+'No me gusta la plataforma' => 'Ez zait plataforma gustatzen',
+'He tenido una mala experiencia con otros usuarios' => 'Esperientzia txarra izan dut beste erabiltzaile batzuekin',
+'He tenido una mala experiencia con la administración' => 'Esperientzia txarra izan dut administrazioarekin',
+'Otra (cuéntanos abajo)' => 'Beste bat (kontatu behean)',
+'si es otra, cuéntanos' => 'beste bat bada, kontatu',
 ];

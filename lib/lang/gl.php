@@ -794,4 +794,12 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Contraseña incorrecta.' => 'Contrasinal incorrecto.',
 'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Non se puido borrar a conta. Téntao de novo ou escríbenos.',
 'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'A túa conta borrouse. Grazas por ter estado aquí.',
+'¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.' => 'Por que marchas? Axúdanos a mellorar; podes non contestar.',
+'Prefiero no contestar' => 'Prefiro non contestar',
+'No entiendo la plataforma' => 'Non entendo a plataforma',
+'No me gusta la plataforma' => 'Non me gusta a plataforma',
+'He tenido una mala experiencia con otros usuarios' => 'Tiven unha mala experiencia con outros usuarios',
+'He tenido una mala experiencia con la administración' => 'Tiven unha mala experiencia coa administración',
+'Otra (cuéntanos abajo)' => 'Outra (cóntanos abaixo)',
+'si es otra, cuéntanos' => 'se é outra, cóntanos',
 ];

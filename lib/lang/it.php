@@ -795,4 +795,12 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Contraseña incorrecta.' => 'Password errata.',
 'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'Non è stato possibile eliminare l’account. Riprova o scrivici.',
 'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Il tuo account è stato eliminato. Grazie per essere stato qui.',
+'¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.' => 'Perché te ne vai? Ci aiuta a migliorare; puoi non rispondere.',
+'Prefiero no contestar' => 'Preferisco non rispondere',
+'No entiendo la plataforma' => 'Non capisco la piattaforma',
+'No me gusta la plataforma' => 'Non mi piace la piattaforma',
+'He tenido una mala experiencia con otros usuarios' => 'Ho avuto una brutta esperienza con altri utenti',
+'He tenido una mala experiencia con la administración' => 'Ho avuto una brutta esperienza con l’amministrazione',
+'Otra (cuéntanos abajo)' => 'Altro (raccontacelo sotto)',
+'si es otra, cuéntanos' => 'se altro, raccontacelo',
 ];
