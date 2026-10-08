@@ -38,6 +38,14 @@ function agregadores_on(): bool { return (string)cfg('sources_agregadores', '0')
 function youtube_on(): bool { return (string)cfg('sources_youtube', '1') === '1'; }
 /** ¿Esta encendido este tipo de fuente? Medios y substacks, siempre; agregadores y YouTube tienen interruptor en Config. */
 function fuente_kind_on(string $kind): bool { return $kind === 'agregador' ? agregadores_on() : ($kind === 'youtube' ? youtube_on() : true); }
+/** Canales y agregadores (08/10/2026): aunque esten encendidos, solo los ve quien ha llegado a config.fuentes_nivel_aura (6) de aura,
+ *  y siempre los moderadores. Asi a quien acaba de llegar le salen solo Mis medios y Mis substacks. Sin cuenta, no. */
+function fuente_kind_visible(string $kind): bool {
+    if (!fuente_kind_on($kind)) return false;
+    if ($kind !== 'agregador' && $kind !== 'youtube') return true;
+    $u = user();
+    return $u && (is_mod() || (float)$u['aura'] >= (float)cfg('fuentes_nivel_aura', 6));
+}
 
 /** Fuentes activas (cacheado por peticion). $kind: '' todas | agregador | medio */
 function fuentes_activas(PDO $pdo, string $kind = ''): array {
@@ -127,7 +135,7 @@ function fuentes_tipos(PDO $pdo): array {
     static $t = null;
     if ($t !== null) return $t;
     $t = [];
-    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => $v) if (fuente_kind_on($k) && fuentes_visibles($pdo, $k)) $t[$k] = $v;
+    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => $v) if (fuente_kind_visible($k) && fuentes_visibles($pdo, $k)) $t[$k] = $v;
     return $t;
 }
 const DDD_FKIND_COOKIE = 'ddd_fk';   // ultimo tipo de fuente abierto en /mis-fuentes o /fuentes (un año, sin JS)
