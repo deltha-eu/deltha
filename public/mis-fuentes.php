@@ -53,6 +53,8 @@ elseif ($mias) $intro = t('Sigues %d: %s.', count($mias), $nombres);
 elseif ($u) $intro = t('Todavía no sigues ninguno aquí; te enseñamos %s. Pulsa «Seguir» en los que quieras tener aquí.', $nombres);
 else $intro = t('Lo último de %s.', $nombres) . ' ' . t('<a href="/login">Entra</a> para elegir tus medios.');
 echo "<p class=\"notice\">$intro</p>";
+// con pocas fuentes seguidas (cinco o menos, de todos los tipos), una ayuda breve en gris de como añadirlas
+if ($u) { $ns = 0; foreach (fuentes_tipos($pdo) as $kk => $v) $ns += count(mis_medios($pdo, $u, $kk)); if ($ns <= 5) echo "<p class=\"end ayuda-fuentes\">" . t('Para tener aquí lo que lees: entra en <a href="/fuentes">Todas las fuentes</a> y pulsa «Seguir» en los medios y substacks que te interesen; también puedes seguirlos desde cualquier noticia suya. Si falta alguno, abre «Seguir y dejar de seguir» aquí abajo y pega su dirección.') . "</p>"; }
 echo fuentes_casilla_idioma();   // la misma casilla que en el perfil y el catalogo
 
 if ($u && fuentes_on()) {

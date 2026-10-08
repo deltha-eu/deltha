@@ -11,7 +11,7 @@ require __DIR__ . '/../lib/propuestas.php';
 
 $u = user();
 $GRUPOS = ['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'youtube' => 'YouTube', 'agregador' => t('Agregadores')];
-foreach (array_keys($GRUPOS) as $gk) if (!fuente_kind_on($gk)) unset($GRUPOS[$gk]);   // agregadores (config.sources_agregadores) o YouTube (config.sources_youtube) apagados
+foreach (array_keys($GRUPOS) as $gk) if (!fuente_kind_visible($gk)) unset($GRUPOS[$gk]);   // apagados en admin, o canales y agregadores para quien aun no llega a fuentes_nivel_aura
 if (!fuentes_activas($pdo, 'youtube')) unset($GRUPOS['youtube']);   // sin canales en el catalogo, el grupo no se anuncia
 $k = isset($_GET['todas']) ? '' : fuentes_tipo_actual($pdo);   // sin ?k=: el ultimo tipo que abrio; ?todas=1: los cuatro grupos
 if (!isset($GRUPOS[$k])) $k = '';

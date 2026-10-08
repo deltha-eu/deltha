@@ -197,7 +197,7 @@ function side_substacks(PDO $pdo): void { side_ultimo($pdo, 'newsletter', t('Úl
 function side_youtube(PDO $pdo): void { side_ultimo($pdo, 'youtube', t('Último en YouTube')); }
 function side_ultimo(PDO $pdo, string $kind, string $title): void {
     require_once __DIR__ . '/fuentes.php';
-    if (!fuentes_on() || !fuente_kind_on($kind)) return;
+    if (!fuentes_on() || !fuente_kind_visible($kind)) return;   // canales y agregadores: solo desde fuentes_nivel_aura
     foreach ([$kind => $title] as $kind => $title) {
         $mylang = fuentes_solo_mi_idioma();   // «solo fuentes en mi idioma»: fuera las de otro idioma (las de idioma desconocido se ven)
         // cinco noticias de cinco fuentes distintas: la mas reciente de cada una (si un medio publica seis seguidas no acapara el modulo)
