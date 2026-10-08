@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $out[] = 'Config guardada.';
     } elseif ($act === 'pagina') {
         // slug base + idioma: la española es «que-es»; las traducciones, «que-es.en», «que-es.fr»…
-        $base = in_array(post('slug'), ['privacidad', 'normas', 'algoritmo', 'que-es'], true) ? post('slug') : 'privacidad';
+        $base = in_array(post('slug'), ['privacidad', 'normas', 'algoritmo', 'que-es', 'empezar'], true) ? post('slug') : 'privacidad';
         $pl = (string)post('pl');
         $pslug = ($pl !== 'es' && isset(DDD_LANGS[$pl])) ? "$base.$pl" : $base;
         if (post('borrar') === '1' && $pslug !== $base) {
@@ -668,10 +668,10 @@ if ($tab === 'usuarios') {
     foreach (DDD_LANGS as $lc => $ln) echo $lc === $pl ? " <b>" . h($ln) . "</b> ·" : " <a href=\"?t=privacidad&amp;pl=$lc\">" . h($ln) . "</a> ·";
     echo "</p>";
     if ($pl !== 'es') echo "<p><small>Estás editando la traducción al <b>" . h(DDD_LANGS[$pl]) . "</b>. Los marcadores (<code>{site}</code>, <code>{ttl}</code>…) se dejan tal cual. Si cambias el texto español, las traducciones no se actualizan solas: revísalas aquí.</small></p>";
-    foreach (['que-es' => '¿Qué es Deltha?', 'privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso', 'algoritmo' => 'Cómo funciona el δ'] as $slug => $lbl) {
+    foreach (['que-es' => '¿Qué es Deltha?', 'empezar' => 'Cómo empezar', 'privacidad' => 'Privacidad y contacto', 'normas' => 'Normas de uso', 'algoritmo' => 'Cómo funciona el δ'] as $slug => $lbl) {
         $pg = page_get($pdo, $slug, $pl);
         $falta = $pl !== 'es' && $pg['lang'] !== $pl;   // no hay traduccion: sale la española
-        $url = "/$slug.php" . ($pl !== 'es' ? "?lang=$pl" : "");
+        $url = "/$slug" . ($pl !== 'es' ? "?lang=$pl" : "");
         echo "<h3>$lbl" . ($pl !== 'es' ? " · " . h(DDD_LANGS[$pl]) : "") . "</h3><p><small>Se muestra en <a href=\"$url\">$url</a>"
            . ($falta ? " · <b>sin traducir</b>: se ve la española (abajo, para traducirla)" : ($pg['updated'] ? " · última edición " . h($pg['updated']) : "")) . ".</small></p>";
         echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"pagina\"><input type=\"hidden\" name=\"slug\" value=\"$slug\"><input type=\"hidden\" name=\"pl\" value=\"$pl\">";

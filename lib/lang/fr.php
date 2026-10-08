@@ -807,4 +807,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'quitar la marca de mensaje a la comunidad' => 'retirer la marque de message à la communauté',
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'votre vote · appuyez encore pour l’annuler (%d min)',
 'Chat / Ayuda' => 'Chat / Aide',
+'Cómo empezar' => 'Pour commencer',
 ];

@@ -373,6 +373,9 @@ nav.sub { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 12px 0; border-
 nav.sub a { padding: 8px 9px; font-size: 14px; color: var(--muted); white-space: nowrap; position: relative; }
 @media (max-width: 420px) { nav.sub { gap: 0; padding: 6px 8px 0; justify-content: space-between; } nav.sub a { padding: 8px 4px; font-size: 13px; } }
 nav.sub a.on { color: var(--fg); font-weight: 700; }
+nav.sub a.ayuda { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; color: var(--accent); }   /* «Como empezar» en el Chat (migra-122): a la derecha */
+nav.sub a.ayuda .i { width: 15px; height: 15px; }
+@media (max-width: 420px) { nav.sub a.ayuda span { display: none; } nav.sub a.ayuda .i { width: 18px; height: 18px; } }   /* en movil, solo el icono */
 nav.sub a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 2px; background: var(--accent); }
 .fz { display: flex; gap: 10px; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--line); font-size: 14px; }
 .fz:hover { background: var(--hover); }

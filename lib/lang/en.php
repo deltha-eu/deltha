@@ -808,4 +808,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'quitar la marca de mensaje a la comunidad' => 'remove the community-message mark',
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'your vote · press again to undo it (%d min)',
 'Chat / Ayuda' => 'Chat / Help',
+'Cómo empezar' => 'Getting started',
 ];

@@ -769,4 +769,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'quitar la marca de mensaje a la comunidad' => 'Markierung als Nachricht an die Community entfernen',
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'deine Stimme · noch einmal drücken, um sie zurückzunehmen (%d Min.)',
 'Chat / Ayuda' => 'Chat / Hilfe',
+'Cómo empezar' => 'Erste Schritte',
 ];
