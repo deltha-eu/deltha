@@ -775,4 +775,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'detectar automáticamente' => 'detectar automaticamente',
 'otro idioma' => 'outro idioma',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Só serve para quen marca «só no meu idioma» no seu perfil.',
+'nombre real: solo lo ven moderadores y admin' => 'nome real: só o ven moderadores e admin',
 ];
