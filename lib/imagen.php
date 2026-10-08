@@ -286,14 +286,14 @@ function extraer_meta(string $url, bool $conImagen = true): array {
             $n = preg_quote($n, '/');
             if (preg_match('/<meta[^>]+(?:property|name)=["\']' . $n . '["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)
              || preg_match('/<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\']' . $n . '["\']/i', $html, $m)) {
-                $v = trim(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                $v = texto_plano($m[1]);   // sin etiquetas ni entidades (08/10/2026)
                 if ($v !== '') return $v;
             }
         }
         return null;
     };
     $title = $meta(['og:title', 'twitter:title']);
-    if (!$title && preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $m)) $title = trim(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    if (!$title && preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $m)) $title = texto_plano($m[1]);
     if ($title) {
         // quitar sufijo de medio: "Titular - El Pais" / "Titular | eldiario.es"
         $title = preg_replace('/\s+[\-|–—·]\s+[^\-|–—·]{2,40}$/u', '', $title);

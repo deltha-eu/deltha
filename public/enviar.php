@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($copia = imagen_copiar($img)) $pre['image'] = $copia;
             }
             $m = extraer_meta($f['url'], empty($pre['image']));   // con foto del RSS no hace falta bajar la og:image
-            $f['title'] = $m['title']; $f['content'] = $m['description'];
+            $f['title'] = texto_plano($m['title']); $f['content'] = texto_plano($m['description']);
             $f['image'] = !empty($pre['image']) ? $pre['image'] : $m['image'];
             if ($pre) {
                 if ($pre['title'] !== '') $f['title'] = $pre['title'];
@@ -60,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$err) {
         // paso 2 -> guardar
         $f['lang'] = lang_post();   // idioma elegido ('' = detectar)
-        $f['title']   = mb_substr(post('title'), 0, 200);
-        $f['content'] = mb_substr(post('content'), 0, 2000);
+        $f['title']   = mb_substr(texto_plano(post('title')), 0, 200);     // sin etiquetas HTML (08/10/2026)
+        $f['content'] = mb_substr(texto_plano(post('content')), 0, 2000);
         $f['topic']   = (int)post('topic');
         $f['community'] = (int)post('community');
         if ($f['community'] && !in_array($f['community'], array_column($comms, 'community_id'), false)) $f['community'] = 0;
