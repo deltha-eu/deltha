@@ -75,7 +75,7 @@ robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por
 page_header(t('Hilo'), $tab, og_tags($s['title'], $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo/' . $id)), $s['title']);
 echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
-echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
+echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . lang_tag($s) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
 story_cuenta($pdo, $s, 'views');   // una lectura por persona y dia (lib/contadores.php)
 $dest = $s['url'] ? ir_url($s) : null;   // la salida al medio pasa por /ir, que cuenta el clic
 if (foco()) media_block($s, 'media', $s['content_type'] === 'article' ? null : $dest);   // sin distracciones: la foto, antes del titular, flota a su derecha

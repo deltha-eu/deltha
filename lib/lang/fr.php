@@ -811,4 +811,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'retirar' => 'retirer',
 'mientras esté en el radar y nadie lo haya comentado' => 'tant qu\'il est dans le radar et que personne ne l\'a commenté',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Le délai pour le corriger est passé, mais tant qu\'il reste dans le radar et que personne ne l\'a commenté vous pouvez le retirer.',
+'detectar automáticamente' => 'détecter automatiquement',
+'otro idioma' => 'autre langue',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Ne sert qu\'à ceux qui cochent « seulement dans ma langue » dans leur profil.',
 ];

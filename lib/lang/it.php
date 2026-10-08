@@ -773,4 +773,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'retirar' => 'ritirare',
 'mientras esté en el radar y nadie lo haya comentado' => 'finché è nel radar e nessuno l\'ha commentato',
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Il tempo per correggerlo è passato, ma finché resta nel radar e nessuno l\'ha commentato puoi ritirarlo.',
+'detectar automáticamente' => 'rileva automaticamente',
+'otro idioma' => 'altra lingua',
+'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Serve solo a chi spunta «solo nella mia lingua» nel profilo.',
 ];

@@ -10,7 +10,7 @@ $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchA
 $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
 $err = null;
 $step = post('step') ?: '1';
-$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null];
+$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null, 'lang' => ''];   // lang: '' = detectar al guardar
 
 // Prerrelleno por GET (boton «enviar al radar» de un medio en /fuente, o un marcador): ?url=…&title=…&content=…&topic=ID
 // equivale a haber pasado el paso 1 con esa URL; titular y entradilla del feed mandan sobre los de la pagina si vienen.
@@ -59,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $step = '2';
     } elseif (!$err) {
         // paso 2 -> guardar
+        $f['lang'] = lang_post();   // idioma elegido ('' = detectar)
         $f['title']   = mb_substr(post('title'), 0, 200);
         $f['content'] = mb_substr(post('content'), 0, 2000);
         $f['topic']   = (int)post('topic');
@@ -78,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
             $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status)
                            VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
+                ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), $f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
             $sid = (int)$pdo->lastInsertId();
             $pdo->prepare("UPDATE stories SET portada = ? WHERE story_id = ?")->execute([portada_de($pdo, ['url' => $f['url'], 'source' => source_of($f['url'])]), $sid]);   // Medios o Substacks (el ciclo lo recalcula)
             if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
@@ -114,6 +115,8 @@ if ($step === '1') {
         echo "<option value=\"{$t['topic_id']}\"$sel>" . h($t['name']) . "</option>";
     }
     echo "</select>";
+    echo "<label>" . t('Idioma') . "</label>" . lang_select($f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']));   // propuesto por la fuente o la deteccion; se puede corregir (08/10/2026)
+    echo "<p class=\"meta\" style=\"padding:0\">" . t('Solo sirve para quien marca «solo en mi idioma» en su perfil.') . "</p>";
     if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades#crear">crea la primera</a>.') . "</p>";
     if ($comms) {
         echo "" . t('<label>Comunidad (opcional)</label>') . "<select name=\"community\"><option value=\"0\"" . t('>— ninguna —</option>') . "";

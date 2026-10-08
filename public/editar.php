@@ -42,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     $title   = mb_substr(post('title'), 0, 200);
     $content = mb_substr(post('content'), 0, $maxLen);
     $topic   = (int)post('topic');
+    $lang    = lang_post() ?: lang_for_story($pdo, $isArt ? null : (post('url') ?: (string)$s['url']), $title, $content);   // idioma: el elegido o, en «detectar», el que salga (08/10/2026)
     $idx     = $isArt && cfg('index_articles', '1') === '1' ? (post('indexable') === '1' ? 1 : 0) : (int)($s['indexable'] ?? 0);   // abrir el articulo a buscadores: no cuenta como edicion
     if (!$own) {   // la comunidad principal solo la cambia moderacion; las adoptadas se gestionan desde el hilo
         $comm = (int)post('community');
@@ -69,11 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
                 || (string)$image !== (string)($s['image'] ?? '') || (!$isArt && ($url ?: null) !== $s['url']);
         $mark = $changed ? ", edited_at = NOW()" : "";
         if ($isArt) {
-            $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, indexable=?$mark WHERE story_id=?")
-                ->execute([$title, $content, $topic, $image, $idx, $id]);
+            $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, indexable=?, lang=?$mark WHERE story_id=?")
+                ->execute([$title, $content, $topic, $image, $idx, $lang, $id]);
         } else {
-            $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, url=?, source=?$mark WHERE story_id=?")
-                ->execute([$title, $content ?: null, $topic, $image, $url ?: null, $url ? source_of($url) : null, $id]);
+            $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, url=?, source=?, lang=?$mark WHERE story_id=?")
+                ->execute([$title, $content ?: null, $topic, $image, $url ?: null, $url ? source_of($url) : null, $lang, $id]);
         }
         redirect("/hilo/$id");
     }
@@ -101,6 +102,7 @@ if ($isArt) echo "<p class=\"meta mdhelp\">" . t('Marcas: <code>**negrita**</cod
 echo "<label>" . t('Tema') . "</label><select name=\"topic\">";
 foreach ($topics as $t) echo "<option value=\"{$t['topic_id']}\"" . ((int)$s['topic_id'] === (int)$t['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
 echo "</select>";
+echo "<label>" . t('Idioma') . "</label>" . lang_select((string)($s['lang'] ?? ''));   // el guardado; «detectar» vuelve a mirarlo al guardar (08/10/2026)
 if (!$own) {
     echo "<label>Comunidad principal</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
     foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$s['community_id'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
