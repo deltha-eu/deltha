@@ -17,7 +17,7 @@ if ($id > 0 && pins_on()) {
             $st = $pdo->prepare("SELECT * FROM stories WHERE story_id = ?");
             $st->execute([$id]);
             $s = $st->fetch();
-            $err = $s ? pin_poner($pdo, $u, 'story', $id, pin_grupo_story($s), $s['status'] === 'destacadas') : t('Esa noticia no existe.');
+            $err = $s ? pin_poner($pdo, $u, 'story', $id, pin_grupo_story($s), pin_en_portada($s)) : t('Esa noticia no existe.');
         } else {
             $st = $pdo->prepare("SELECT * FROM source_items WHERE item_id = ?");
             $st->execute([$id]);
