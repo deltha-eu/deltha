@@ -334,7 +334,7 @@ function agent_submit_item(PDO $pdo, array $a, array $i): int {
         $image = imagen_copiar((string)$i['image']);   // apunta la copia: si la foto resulta ser la generica del medio, se retira tambien
     }
     require_once __DIR__ . '/moderacion.php';
-    $title = mb_substr(trim((string)$i['title']), 0, 200);
+    $title = mb_substr(texto_plano((string)$i['title']), 0, 200);   // por si el item es anterior a la limpieza de titulos (08/10/2026)
     $lead = mb_substr(trim((string)$i['content']), 0, 2000) ?: null;
     $pdo->beginTransaction();
     $lang = (string)($i['src_lang'] ?? '') ?: lang_detect($title . ' ' . (string)$lead);

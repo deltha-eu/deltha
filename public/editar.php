@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'eliminar') {
 }
 if ($retire && $_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') redirect("/hilo/$id");   // fuera de plazo no se edita nada
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
-    $title   = mb_substr(post('title'), 0, 200);
+    $title   = mb_substr(texto_plano(post('title')), 0, 200);   // sin etiquetas HTML (08/10/2026)
     $content = mb_substr(post('content'), 0, $maxLen);
     $topic   = (int)post('topic');
     $lang    = lang_post() ?: lang_for_story($pdo, $isArt ? null : (post('url') ?: (string)$s['url']), $title, $content);   // idioma: el elegido o, en «detectar», el que salga (08/10/2026)

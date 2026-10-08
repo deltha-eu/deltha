@@ -176,6 +176,14 @@ function saltos(string $html): string {
     $html = preg_replace('/\n{3,}/', "\n\n", trim(str_replace(["\r\n", "\r"], "\n", $html)));
     return str_replace("\n", '<br>', $html);
 }
+/** Titular o entradilla en texto plano: fuera etiquetas HTML (incluidas las que llegan escapadas, como «&lt;span lang="gl"&gt;…»),
+ *  entidades decodificadas y espacios normalizados. Para lo que viene de los feeds, de la og:title y de los formularios (08/10/2026). */
+function texto_plano(?string $s): string {
+    $t = html_entity_decode((string)$s, ENT_QUOTES | ENT_HTML5, 'UTF-8');   // primero: «&lt;span&gt;» pasa a ser una etiqueta de verdad
+    $t = strip_tags(preg_replace('~<br\s*/?>|</p>~i', ' ', $t));
+    $t = html_entity_decode($t, ENT_QUOTES | ENT_HTML5, 'UTF-8');           // segundo: lo doblemente escapado (&amp;amp;)
+    return trim(preg_replace('/[ \t\x{00A0}]+/u', ' ', $t));
+}
 /** URLs sueltas del texto (ya escapado con h()) → enlaces (nofollow, recortados a 60 caracteres). Lo usan los comentarios y el Chat.
  *  No toca lo que ya es un atributo o va dentro de una etiqueta (lookbehind de comillas y >); la puntuacion final se queda fuera del enlace. */
 function enlaces(string $html): string {

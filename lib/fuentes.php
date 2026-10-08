@@ -503,7 +503,7 @@ function fuentes_parse_rss(string $xml): array {
         $ts = strtotime((string)$i->pubDate) ?: (strtotime((string)($dc->date ?? '')) ?: time());
         $out[] = [
             'ext_id'     => $extId,
-            'title'      => mb_substr(trim(html_entity_decode((string)$i->title, ENT_QUOTES | ENT_HTML5, 'UTF-8')), 0, 200),
+            'title'      => mb_substr(texto_plano((string)$i->title), 0, 200),   // sin etiquetas ni entidades (texto_plano, 08/10/2026)
             'url'        => mb_substr($url, 0, 600),
             'thread_url' => mb_substr($thread, 0, 600),
             'source'     => $source ? mb_substr($source, 0, 100) : null,
@@ -600,7 +600,7 @@ function fuentes_parse_atom(SimpleXMLElement $doc): array {
         $ts = strtotime((string)($e->published ?: $e->updated)) ?: time();
         $out[] = [
             'ext_id'     => substr(sha1($id), 0, 32),
-            'title'      => mb_substr(trim(html_entity_decode((string)$e->title, ENT_QUOTES | ENT_HTML5, 'UTF-8')), 0, 200),
+            'title'      => mb_substr(texto_plano((string)$e->title), 0, 200),
             'url'        => mb_substr($link, 0, 600),
             'thread_url' => mb_substr($link, 0, 600),
             'source'     => mb_substr((string)source_of($link), 0, 100) ?: null,
