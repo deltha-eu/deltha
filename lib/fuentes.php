@@ -96,7 +96,7 @@ function fuente_by_slug(PDO $pdo, string $slug): ?array {
     return null;
 }
 function fuente_url(array $src, string $view = ''): string {
-    return '/fuente/' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '&v=' . $view : '');
+    return '/fuente/' . rawurlencode($src['slug']) . ($view && $view !== 'portada' ? '?v=' . $view : '');
 }
 function fuente_es_medio(array $src): bool { return in_array($src['kind'] ?? 'agregador', ['medio', 'newsletter', 'youtube'], true); }   // sin fases ni votos, con «enviar al radar»
 /** Grupos con favoritos del usuario: tipo => [clave de config de cuantos salen en el menu, etiqueta del grupo] */

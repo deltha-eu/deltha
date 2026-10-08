@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $u) {
     else {
         try {
             $pdo->prepare("INSERT INTO communities (slug, name, descr, color, skin, owner_id) VALUES (?,?,?,?,?,?)")->execute([$slug, $name, $descr ?: null, $color, $skin, $u['user_id']]);
-            redirect('/comunidad/' . rawurlencode($slug) . '&nueva=1');
+            redirect('/comunidad/' . rawurlencode($slug) . '?nueva=1');
         } catch (PDOException $e) { $err = t('Ya existe una comunidad con ese nombre.'); }
     }
 }

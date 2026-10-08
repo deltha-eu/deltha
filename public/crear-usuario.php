@@ -13,4 +13,4 @@ $verified = post('verified') === '1';
 $back = post('back') === 'admin' ? '/admin?t=usuarios' : '/usuarios';
 if ($err) redirect($back . (str_contains($back, '?') ? '&' : '?') . 'nuevo_err=' . rawurlencode($err) . '&nl=' . rawurlencode($login) . '&ne=' . rawurlencode($email) . '#nuevo-usuario');
 if (!$verified) { require __DIR__ . '/../lib/mail.php'; send_activation($pdo, $uid, mb_strtolower(trim($email))); }
-redirect('/u/' . rawurlencode(trim($login)) . '&ok=creado#modedit');
+redirect('/u/' . rawurlencode(trim($login)) . '?ok=creado#modedit');
