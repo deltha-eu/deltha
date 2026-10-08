@@ -820,4 +820,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'quitar el logo actual' => 'remover o logótipo atual',
 'quitar la imagen de fondo actual' => 'remover a imagem de fundo atual',
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Não foi possível ler a imagem (JPG, PNG, WebP ou AVIF, até %d MB).',
+'Dueño' => 'Dono',
+'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick de quem passa a ser o dono; se não és mod, deixarás de a poder editar',
 ];

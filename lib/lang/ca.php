@@ -783,4 +783,6 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'quitar el logo actual' => 'treure el logo actual',
 'quitar la imagen de fondo actual' => 'treure la imatge de fons actual',
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'No s’ha pogut llegir la imatge (JPG, PNG, WebP o AVIF, fins a %d MB).',
+'Dueño' => 'Propietari',
+'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick de qui passa a ser el propietari; si no ets mod, deixaràs de poder editar-la',
 ];

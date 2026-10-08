@@ -784,4 +784,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'quitar el logo actual' => 'togliere il logo attuale',
 'quitar la imagen de fondo actual' => 'togliere l’immagine di sfondo attuale',
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Impossibile leggere l’immagine (JPG, PNG, WebP o AVIF, fino a %d MB).',
+'Dueño' => 'Proprietario',
+'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick del nuovo proprietario; se non sei mod, non potrai più modificarla',
 ];

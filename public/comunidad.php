@@ -30,11 +30,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEdit) {
         }
     }
     unset($cur);
+    // cambio de dueño (08/10/2026): el dueño o un mod escriben el nick de quien se la queda; el nuevo dueño edita y adopta envios
+    $owner = (int)$c['owner_id']; $newOwner = trim(post('owner_login'));
+    if ($newOwner !== '' && strcasecmp($newOwner, (string)$c['owner']) !== 0) {
+        $q = $pdo->prepare("SELECT user_id FROM users WHERE login = ?"); $q->execute([$newOwner]);
+        if (!($owner = (int)$q->fetchColumn())) $imgErr = t('Ese usuario no existe.');
+    }
     if (mb_strlen($name) < 3 || mb_strlen($name) > 48) $err = t('El nombre debe tener entre 3 y 48 caracteres.');
     elseif (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $err = t('Color no válido.');
     elseif ($imgErr !== '') $err = $imgErr;
     else {
-        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ?, skin = ?, logo = ?, cover = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $skin, $logo, $cover, $c['community_id']]); redirect('/comunidad/' . rawurlencode($slug) . '?ok=1'); }
+        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ?, skin = ?, logo = ?, cover = ?, owner_id = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $skin, $logo, $cover, $owner, $c['community_id']]); redirect('/comunidad/' . rawurlencode($slug) . '?ok=1'); }
         catch (PDOException $e) { $err = t('Ya existe otra comunidad con ese nombre.'); }
     }
 }
@@ -72,6 +78,7 @@ if ($canEdit) {
     if (!empty($c['logo'])) echo "<label><input type=\"checkbox\" name=\"quitar_logo\" value=\"1\"> " . t('quitar el logo actual') . "</label>";
     echo "<label>" . t('Imagen de fondo') . " <small>" . t('apaisada, se recorta a 4:1; va detrás de la cabecera') . "</small></label><input type=\"file\" name=\"cover\" accept=\"image/*\">";
     if (!empty($c['cover'])) echo "<label><input type=\"checkbox\" name=\"quitar_cover\" value=\"1\"> " . t('quitar la imagen de fondo actual') . "</label>";
+    echo "<label>" . t('Dueño') . " <small>" . t('nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla') . "</small></label><input type=\"text\" name=\"owner_login\" maxlength=\"32\" value=\"" . h($c['owner']) . "\" autocomplete=\"off\">";
     echo "" . t('<button>Guardar</button>') . "</form>";
     if (is_mod()) echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"c\" value=\"" . h($slug) . "\"><input type=\"hidden\" name=\"act\" value=\"ocultar\"><button class=\"danger\">" . ($c['status'] === 'ok' ? t('Ocultar comunidad (moderación)') : t('Volver a mostrar')) . "</button></form>";
     echo "</details>";

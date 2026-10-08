@@ -783,4 +783,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'quitar el logo actual' => 'kendu oraingo logoa',
 'quitar la imagen de fondo actual' => 'kendu oraingo hondoko irudia',
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Ezin izan da irudia irakurri (JPG, PNG, WebP edo AVIF, %d MB arte).',
+'Dueño' => 'Jabea',
+'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'jabe berriaren ezizena; mod ez bazara, ezingo duzu gehiago editatu',
 ];
