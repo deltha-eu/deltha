@@ -359,7 +359,11 @@ function fuente_smf_completar(PDO $pdo, array $src, array &$items, int $timeout)
         $html = http_get($it['url'], $timeout, 3000000);
         if ($html === null) continue;
         $id = (int)$it['smf']['msg'];
-        if (preg_match('/msg=' . $id . '["&][^>]*class="smalltext">#(\d+)</', $html, $m)) $it['comments'] = (int)$m[1];
+        // numero del mensaje dentro del hilo: SMF 2.0 lo ponia en el enlace de la fecha (class="smalltext">#748); SMF 2.1 (Areopago desde
+        // octubre de 2026) en <span class="page_number floatright">#748</span> dentro del bloque id="msgN", y en title="Respuesta nº748"
+        if (preg_match('/id="msg' . $id . '".{0,6000}?class="page_number[^"]*">#(\d+)</su', $html, $m)) $it['comments'] = (int)$m[1];
+        elseif (preg_match('/msg=' . $id . '["&][^>]*title="Respuesta n[ºo°]\s*(\d+)/u', $html, $m)) $it['comments'] = (int)$m[1];
+        elseif (preg_match('/msg=' . $id . '["&][^>]*class="smalltext">#(\d+)</', $html, $m)) $it['comments'] = (int)$m[1];
         // autor: el bloque del mensaje (id="msgN") y, dentro, el nombre en div.poster > h4
         if (preg_match('/id="msg' . $id . '".{0,4000}?<div class="poster">.*?<h4>\s*(?:<a[^>]*>)?\s*([^<]{1,64}?)\s*</su', $html, $m)) $it['author'] = trim(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?: null;
     }
