@@ -60,24 +60,33 @@ function rail_skins(): void {
     rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
 }
 
-/** Cuarto grupo del rail: «Mis medios», «Mis substacks» y «Mis agregadores» como cabeceras (mismo aspecto que Plantilla / Aspecto / Idioma,
- *  sin flecha ni plegado), cada una pulsable → /ultimo?k=… (las diez ultimas noticias del grupo en formato normal), y debajo, siempre
- *  visibles, solo los nombres: de los favoritos del usuario, los tres que han publicado mas recientemente (y «todos» → /mis-fuentes si
- *  tiene mas) o, sin favoritos / sin cuenta, los destacados en admin (sources.featured) y, si no hay ninguno, los que han publicado
- *  mas recientemente del catalogo. */
+/** Cuarto grupo del rail (08/10/2026): dos cabeceras con el mismo aspecto que Plantilla / Aspecto / Idioma.
+ *   - «Mis fuentes» → /mis-fuentes: debajo, los nombres de las que han publicado mas recientemente entre todas las que sigue (de
+ *     cualquier tipo, hasta media_max_per_user) o, si no sigue ninguna / no tiene cuenta, las destacadas en admin; y «todas · N».
+ *   - «Todas las fuentes» → /fuentes: debajo, un enlace por tipo con cuantas hay en el catalogo (Medios · Substacks · Canales · Agregadores). */
 function rail_medios(): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
-    if (!fuentes_on()) return;
+    if (!fuentes_on() || !($tipos = fuentes_tipos($pdo))) return;
     $u = user();
-    foreach (DDD_ULTIMO_KINDS as $kind => [$label, $ic]) {
-        if (!($list = medios_menu($pdo, $u, 0, $kind))) continue;
-        $mias = count(mis_medios_recientes($pdo, $u, $kind));
-        $on = current_tab() === "ultimo:$kind" ? ' class="on"' : '';
-        echo "<details class=\"rail-dd medios\" open><summary><a href=\"/ultimo?k=$kind\"$on title=\"" . h(t('lo último en %s', t($label))) . "\">" . icon($ic) . "<span>" . t($label) . "<small>" . ($mias ? t('%d elegidos', $mias) : ($kind === 'agregador' ? t('%d fuentes', count($list)) : (fuentes_destacadas($pdo, $kind) ? t('destacados') : t('recientes')))) . "</small></span></a></summary><div class=\"list\">";
-        foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . (current_tab() === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
-        if ($mias > count($list)) echo "<a class=\"more" . (current_tab() === "fuentes:$kind" ? ' on' : '') . "\" href=\"/mis-fuentes?k=$kind\">" . t('todos') . " · $mias</a>";
-        echo "</div></details>";
-    }
+    $ult = fuentes_ultima_noticia($pdo);
+    $mias = []; $nm = 0;
+    foreach ($tipos as $k => $v) { $l = mis_medios_recientes($pdo, $u, $k); $nm += count($l); $mias = array_merge($mias, $l); }
+    if (!$mias) foreach ($tipos as $k => $v) $mias = array_merge($mias, fuentes_destacadas($pdo, $k));
+    $dest = !$nm && $mias;
+    if (!$mias) foreach ($tipos as $k => $v) if ($k !== 'agregador') $mias = array_merge($mias, medios_menu($pdo, $u, 0, $k));
+    usort($mias, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
+    $max = medios_max('medio');
+    $list = array_slice($mias, 0, $max);
+    $tab = current_tab();
+    $sub = $nm ? t('%d elegidos', $nm) : ($dest ? t('destacados') : t('recientes'));
+    echo "<details class=\"rail-dd medios\" open><summary><a href=\"/mis-fuentes\"" . ($tab === 'misfuentes' ? ' class="on"' : '') . " title=\"" . h(t('lo último de las fuentes que sigues')) . "\">" . icon('news') . "<span>" . t('Mis fuentes') . "<small>" . h($sub) . "</small></span></a></summary><div class=\"list\">";
+    foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . ($tab === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
+    if ($nm > count($list)) echo "<a class=\"more\" href=\"/mis-fuentes\">" . t('todos') . " · $nm</a>";
+    echo "</div></details>";
+    $nt = 0; foreach ($tipos as $k => $v) $nt += count(fuentes_visibles($pdo, $k));
+    echo "<details class=\"rail-dd medios todas\" open><summary><a href=\"/fuentes\"" . ($tab === 'fuentes' ? ' class="on"' : '') . " title=\"" . h(t('el catálogo entero, para seguir las que quieras')) . "\">" . icon('agg') . "<span>" . t('Todas las fuentes') . "<small>" . h(t('%d fuentes', $nt)) . "</small></span></a></summary><div class=\"list\">";
+    foreach ($tipos as $k => $v) echo "<a href=\"/fuentes?k=$k\">" . h($k === 'youtube' ? 'YouTube' : t(['medio' => 'Medios', 'newsletter' => 'Substacks', 'agregador' => 'Agregadores'][$k])) . " <small>" . count(fuentes_visibles($pdo, $k)) . "</small></a>";
+    echo "</div></details>";
 }
 
 /** Columna derecha. */
@@ -202,8 +211,8 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
             if (count($rows) === 5) break;
         }
         if (!$rows) continue;
-        // «todos» lleva al catalogo filtrado por este grupo (/medios?k=medio|newsletter)
-        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/medios?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
+        // «todos» lleva al catalogo filtrado por este grupo (/fuentes?k=medio|newsletter)
+        echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/fuentes?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
         // el enlace lleva a la pagina del medio en Deltha (/fuente/slug), no a la noticia
         foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h(fuente_url(['slug' => $r['slug']])) . "\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
         echo "</section>";

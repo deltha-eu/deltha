@@ -49,7 +49,7 @@ if (!$puede) {
     if (($_GET['ok'] ?? '') === '1') echo "<p class=\"notice\">" . t('Gracias. Hemos leído su RSS sin problemas y la propuesta queda pendiente: un moderador la revisará y te avisará por mensaje privado.') . "</p>";
     if (($_GET['ok'] ?? '') === '2') echo "<p class=\"notice\">" . t('Gracias. No hemos podido leer su RSS, pero la propuesta queda pendiente: un moderador lo revisará y te avisará por mensaje privado.') . "</p>";
     if ($err) echo "<p class=\"error\">$err</p>";
-    echo "<p class=\"notice\">" . t('Propón un medio o un substack que tenga RSS. No se añade directamente: un moderador comprueba que su RSS se lee bien antes de que entre en el <a href="/medios">catálogo</a>.') . "</p>";
+    echo "<p class=\"notice\">" . str_replace('href="/medios"', 'href="/fuentes"', t('Propón un medio o un substack que tenga RSS. No se añade directamente: un moderador comprueba que su RSS se lee bien antes de que entre en el <a href="/medios">catálogo</a>.')) . "</p>";
     echo "<form class=\"plain\" method=\"post\">";
     echo "<label>" . t('Tipo') . "</label><select name=\"kind\"><option value=\"medio\"" . ($f['kind'] === 'medio' ? ' selected' : '') . ">" . t('Medio') . "</option><option value=\"newsletter\"" . ($f['kind'] === 'newsletter' ? ' selected' : '') . ">" . t('Substack o newsletter') . "</option></select>";
     echo "<label>" . t('Nombre') . "</label><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name']) . "\">";

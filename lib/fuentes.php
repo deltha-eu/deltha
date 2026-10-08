@@ -121,6 +121,40 @@ function fuentes_destacadas(PDO $pdo, string $kind): array {
     usort($list, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
     return $list;
 }
+/** Tipos de fuente que se ofrecen ahora mismo (encendidos en admin y con alguna fuente visible), en el orden de DDD_ULTIMO_KINDS.
+ *  Es la sub-navegacion de /mis-fuentes y /fuentes (08/10/2026: «Mis fuentes» y «Todas las fuentes» sustituyen a las cuatro entradas). */
+function fuentes_tipos(PDO $pdo): array {
+    static $t = null;
+    if ($t !== null) return $t;
+    $t = [];
+    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => $v) if (fuente_kind_on($k) && fuentes_visibles($pdo, $k)) $t[$k] = $v;
+    return $t;
+}
+const DDD_FKIND_COOKIE = 'ddd_fk';   // ultimo tipo de fuente abierto en /mis-fuentes o /fuentes (un año, sin JS)
+/** Tipo de fuente en uso: ?k= si vale (y se recuerda en cookie), si no el ultimo que se abrio, si no el primero. '' si no hay ninguno. */
+function fuentes_tipo_actual(PDO $pdo, ?string $k = null): string {
+    $tipos = fuentes_tipos($pdo);
+    if (!$tipos) return '';
+    $k = $k ?? (string)($_GET['k'] ?? '');
+    if (isset($tipos[$k])) {
+        if (($_COOKIE[DDD_FKIND_COOKIE] ?? '') !== $k && !headers_sent()) pref_cookie(DDD_FKIND_COOKIE, $k);
+        return $k;
+    }
+    $c = (string)($_COOKIE[DDD_FKIND_COOKIE] ?? '');
+    return isset($tipos[$c]) ? $c : array_key_first($tipos);
+}
+/** Sub-navegacion por tipo: en /mis-fuentes «Mis medios · Mis substacks · …» con cuantas sigue de cada uno; en /fuentes «Medios ·
+ *  Substacks · …» con cuantas hay en el catalogo (y «todas»). $extra: enlaces adicionales al final (p. ej. «todas»). */
+function fuentes_subnav(PDO $pdo, string $base, string $k, bool $mias, string $extra = ''): string {
+    $u = user(); $h = "<nav class=\"sub tipos\">";
+    foreach (fuentes_tipos($pdo) as $kk => [$lbl]) {
+        $n = $mias ? count(mis_medios($pdo, $u, $kk)) : count(fuentes_visibles($pdo, $kk));
+        $txt = $mias ? t($lbl) : ($kk === 'youtube' ? 'YouTube' : t(['medio' => 'Medios', 'newsletter' => 'Substacks', 'agregador' => 'Agregadores'][$kk]));
+        $h .= "<a href=\"$base?k=$kk\"" . ($kk === $k ? ' class="on"' : '') . ">" . h($txt) . ($n ? " <small>$n</small>" : '') . "</a>";
+    }
+    return $h . $extra . "</nav>";
+}
+
 /** Cuantas fuentes de un grupo salen en el menu (no cuantas se pueden guardar: eso no tiene limite). */
 function medios_max(string $kind): int { return max(1, (int)cfg(DDD_MEDIA_KINDS[$kind][0] ?? 'media_max_per_user', 3)); }
 
