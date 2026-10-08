@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEdit) {
     if (mb_strlen($name) < 3 || mb_strlen($name) > 48) $err = t('El nombre debe tener entre 3 y 48 caracteres.');
     elseif (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $err = t('Color no válido.');
     else {
-        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ?, skin = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $skin, $c['community_id']]); redirect('/comunidad/' . rawurlencode($slug) . '&ok=1'); }
+        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ?, skin = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $skin, $c['community_id']]); redirect('/comunidad/' . rawurlencode($slug) . '?ok=1'); }
         catch (PDOException $e) { $err = t('Ya existe otra comunidad con ese nombre.'); }
     }
 }
