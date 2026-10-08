@@ -199,6 +199,39 @@ function vida_pct(string $published): int {
     $used = time() - strtotime($published);
     return max(0, min(100, 100 - (int)round($used * 100 / $ttl)));
 }
+/** Quita de una URL los codigos de seguimiento (pedido por Angel, 08/10/2026): todos los utm_*, los identificadores de clic de las
+ *  redes y plataformas de anuncios (fbclid, gclid, msclkid…), los de boletines (mc_cid, _hsenc, mkt_tok…), el «si» de YouTube y
+ *  Spotify, y el «r» de quien comparte en Substack. Lo demas queda tal cual, en su orden y sin recodificar (hay medios cuyo
+ *  enlace depende de ?id= o ?p=). Se aplica al enviar, al editar, al leer los feeds, en los envios de los agentes y en /ir.php. */
+const DDD_URL_TRACK = ['fbclid', 'gclid', 'gclsrc', 'dclid', 'gbraid', 'wbraid', 'gad_source', 'gad_campaignid', 'msclkid', 'yclid', 'twclid', 'ttclid', 'li_fat_id', 'igshid', 'igsh',
+    'mc_cid', 'mc_eid', '_hsenc', '_hsmi', '__hssc', '__hstc', '__hsfp', 'hsctatracking', 'mkt_tok', 'vero_id', 'vero_conv', 'oly_enc_id', 'oly_anon_id', 's_cid', '_ga', '_gl',
+    'ref_src', 'ref_url', 'srsltid', 'xtor', 'smid', 'smtyp', 'cmpid', 'ocid', 'triedredirect', 'at_medium', 'at_campaign', 'at_custom1', 'at_custom2', 'at_custom3', 'at_custom4', 'pk_campaign', 'pk_kwd', 'pk_source', 'pk_medium',
+    'mtm_campaign', 'mtm_source', 'mtm_medium', 'mtm_kwd', 'mtm_content', 'mtm_cid', 'mtm_group', 'mtm_placement'];
+function url_limpia(?string $url): string {
+    $url = trim((string)$url);
+    if ($url === '' || !preg_match('~^https?://~i', $url)) return $url;
+    $frag = ''; $query = null;
+    if (($p = strpos($url, '#')) !== false) { $frag = substr($url, $p + 1); $url = substr($url, 0, $p); }
+    if (($p = strpos($url, '?')) !== false) { $query = substr($url, $p + 1); $url = substr($url, 0, $p); }
+    $host = strtolower((string)parse_url($url, PHP_URL_HOST));
+    $path = (string)parse_url($url, PHP_URL_PATH);
+    $esDe = fn(string ...$ds) => (bool)array_filter($ds, fn($d) => $host === $d || str_ends_with($host, '.' . $d));
+    if ($query !== null) {
+        $keep = [];
+        foreach (explode('&', $query) as $par) {
+            if ($par === '') continue;
+            $k = strtolower(rawurldecode(explode('=', $par, 2)[0]));
+            $v = explode('=', $par, 2)[1] ?? '';
+            if (str_starts_with($k, 'utm_') || in_array($k, DDD_URL_TRACK, true)) continue;
+            if ($k === 'si' && $esDe('youtube.com', 'youtu.be', 'spotify.com')) continue;                                             // quien comparte
+            if ($k === 'r' && preg_match('~^[a-z0-9]{2,10}$~i', $v) && ($esDe('substack.com') || str_starts_with($path, '/p/'))) continue;   // Substack: quien comparte
+            $keep[] = $par;
+        }
+        if ($keep) $url .= '?' . implode('&', $keep);
+    }
+    if ($frag !== '' && !preg_match('~^(utm_|xtor=|at_medium=|Echobox=)~i', $frag)) $url .= '#' . $frag;
+    return $url;
+}
 function source_of(?string $url): ?string {
     if (!$url) return null;
     $host = parse_url($url, PHP_URL_HOST);

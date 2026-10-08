@@ -276,6 +276,7 @@ function agent_submit_cands(PDO $pdo, array $a, int $limit, bool $review = false
     foreach ($st->fetchAll() as $i) {
         if (mb_strlen((string)$i['title']) < 8) continue;
         if (function_exists('source_blocked') && source_blocked($pdo, (string)$i['url'])) continue;   // medios bloqueados (lib/bloqueos.php)
+        if (agent_item_vetado($i)) continue;   // ni Infobae ni teletipos de agencia (06/10/2026)
         if ($review && $langs) {
             $l = lang_detect((string)$i['title'] . ' ' . mb_substr((string)$i['content'], 0, 600));
             if ($l !== '' && $l !== '??' && !in_array($l, $langs, true)) continue;
@@ -284,6 +285,23 @@ function agent_submit_cands(PDO $pdo, array $a, int $limit, bool $review = false
         if (count($out) >= $limit) break;
     }
     return $out;
+}
+
+/** Lo que ningun agente envia (pedido por Angel, 06/10/2026): nada de Infobae y nada cuya entradilla venga firmada por una agencia
+ *  (Agencias, EFE, AFP, Europa Press): son teletipos que repiten todos los medios. Solo afecta a los envios de los agentes; las
+ *  personas pueden seguir enviandolos y las noticias siguen viendose en «Mis medios».
+ *  EFE y AFP se buscan en mayusculas o entre parentesis; «Agencias», con mayuscula y como firma (suelta, no «las agencias de viajes»). */
+const AGENT_VETO_DOMINIOS = ['infobae.com'];
+function agent_item_vetado(array $i): bool {
+    $host = strtolower((string)parse_url((string)($i['url'] ?? ''), PHP_URL_HOST));
+    foreach (AGENT_VETO_DOMINIOS as $d) if ($host === $d || str_ends_with($host, '.' . $d)) return true;
+    $t = mb_substr(trim(strip_tags((string)($i['content'] ?? ''))), 0, 600);
+    if ($t === '') return false;
+    if (preg_match('~\\b(EFE|AFP)\\b|\\bEuropa\\s?Press\\b|\\((Efe|Afp|EP|Agencias?)\\)~u', $t)) return true;
+    if (preg_match('~\\beuropa\\s?press\\b~iu', $t)) return true;
+    if (preg_match('~(^|[\\s(\\-–—|·/,])Agencias\\s*([).,:;|\\-–—/]|$)~u', $t)) return true;                      // «Madrid, Agencias.» · «— Agencias» · «(Agencias)»
+    if (preg_match('~(^|[\\s(\\-–—|·/,])Efe\\s*([).,:;|\\-–—/]|$)~u', $t)) return true;                           // «Madrid, 6 oct (Efe).-» · «Efe.»
+    return false;
 }
 
 /** Envia una noticia por el agente (o no, si no hay candidatas) y programa la siguiente. Devuelve la linea de log.
@@ -305,6 +323,7 @@ function agent_submit_one(PDO $pdo, array $a): string {
 /** Inserta en el radar la noticia $i (fila de agent_submit_cands) a nombre del agente, tal cual llega del feed. Devuelve story_id. */
 function agent_submit_item(PDO $pdo, array $a, array $i): int {
     $uid = (int)$a['user_id'];
+    $i['url'] = url_limpia((string)$i['url']);   // por si el item se guardo antes de limpiar los feeds
     $topics = array_values(array_filter(array_map('intval', agent_list((string)$a['submit_topics']))));
     $topic = (int)($i['topic_id'] ?: ($topics[0] ?? 0));
     if ($topic <= 0) $topic = (int)$pdo->query("SELECT topic_id FROM topics ORDER BY topic_id LIMIT 1")->fetchColumn();
