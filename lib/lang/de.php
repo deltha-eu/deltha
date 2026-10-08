@@ -814,4 +814,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Lo último de %s.' => 'Das Neueste von %s.',
 'Medios, substacks y canales con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis fuentes».' => 'Medien, Substacks und Kanäle mit RSS, die du im Deltha-Look lesen kannst. Jede Meldung hat einen Knopf, um sie im Radar vorzuschlagen. Drücke „Folgen“ bei denen, die du willst, ohne Limit: du hast sie dann in „Meine Quellen“.',
 'Para tener aquí lo que lees: entra en <a href="/fuentes">Todas las fuentes</a> y pulsa «Seguir» en los medios y substacks que te interesen; también puedes seguirlos desde cualquier noticia suya. Si falta alguno, abre «Seguir y dejar de seguir» aquí abajo y pega su dirección.' => 'Damit hier steht, was du liest: geh zu <a href="/fuentes">Alle Quellen</a> und drücke „Folgen“ bei den Medien und Substacks, die dich interessieren; du kannst ihnen auch von jeder ihrer Meldungen aus folgen. Fehlt eine, öffne unten „Folgen und entfolgen“ und füge ihre Adresse ein.',
+'Todas' => 'Alle',
 ];

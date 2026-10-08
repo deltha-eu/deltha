@@ -3542,6 +3542,7 @@ form.pin.on button:hover { background: color-mix(in srgb, var(--halo) 12%, var(-
 .fz.comm img.dot.logo { width: 28px; height: 28px; border-radius: 7px; object-fit: cover; margin-top: 0; }
 
 /* Mis fuentes / Todas las fuentes (08/10/2026): selector de tipo arriba, con «todas» / «Mis fuentes» a la derecha */
+nav.sub.tipos { padding-left: 20px; padding-right: 20px; gap: 6px; }
 nav.sub.tipos a small { opacity: .7; font-size: 11px; }
 nav.sub.tipos a.todas, nav.sub.tipos a.mias { margin-left: auto; }
 nav.sub.tipos a.todas + a.mias { margin-left: 0; }
