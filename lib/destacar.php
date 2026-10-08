@@ -13,7 +13,8 @@
  *  Cola (migra-114): en cada grupo solo hay una destacada de usuario a la vez; si alguien destaca mientras otra esta en marcha, la suya
  *  queda en cola (pins.starts en el futuro) y empieza cuando a la actual se le acabe su media hora; varias esperan por orden.
  *  Originales (migra-125): grupo 'originales', mismo boton en /originales y en el hilo; sin halo automatico en la primera (solo
- *  las que ponga el admin o un usuario con credito); la de usuario dura pin_user_minutes_originales (4 h). */
+ *  las que ponga el admin o un usuario con credito); la de usuario dura pin_user_minutes_originales (4 h). Nunca dos a la vez: la de
+ *  usuario tiene prioridad y la del admin se oculta mientras dure (vuelve sola al acabar). */
 declare(strict_types=1);
 
 function pins_on(): bool { return (string)cfg('pins_enabled', '1') === '1'; }
@@ -49,6 +50,11 @@ function pins_activos(PDO $pdo): array {
     try {
         $pdo->exec("DELETE FROM pins WHERE expires IS NOT NULL AND expires <= NOW()");
         foreach ($pdo->query("SELECT p.*, u.login, (p.starts IS NULL OR p.starts <= NOW()) AS activo FROM pins p JOIN users u ON u.user_id = p.user_id ORDER BY p.by_admin DESC, p.starts, p.created DESC") as $p) $pins[$p['what'] . ':' . (int)$p['ref_id']] = $p;
+        // Originales: nunca dos a la vez. La de un usuario manda: mientras haya una de usuario en marcha, la del admin no se ve (ni halo,
+        // ni etiqueta, ni primera); se queda en la tabla y vuelve sola cuando a la del usuario se le acaben sus horas.
+        $userOn = false;
+        foreach ($pins as $p) if ($p['what'] === 'story' && $p['grupo'] === 'originales' && !(int)$p['by_admin'] && (int)$p['activo'] === 1) { $userOn = true; break; }
+        if ($userOn) foreach ($pins as $k => $p) if ($p['what'] === 'story' && $p['grupo'] === 'originales' && (int)$p['by_admin']) unset($pins[$k]);
     } catch (Throwable $e) { /* antes de aplicar la migracion: sin destacadas */ }
     return $pins;
 }
