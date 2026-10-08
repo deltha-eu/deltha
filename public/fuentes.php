@@ -17,7 +17,7 @@ $k = isset($_GET['todas']) ? '' : fuentes_tipo_actual($pdo);   // sin ?k=: el ul
 if (!isset($GRUPOS[$k])) $k = '';
 $kinds = $k ? [$k] : array_keys($GRUPOS);
 page_header(t('Todas las fuentes'), 'fuentes');
-echo fuentes_subnav($pdo, '/fuentes', $k, false, "<a class=\"todas" . ($k === '' ? ' on' : '') . "\" href=\"/fuentes?todas=1\">" . t('todas') . "</a> <a class=\"mias\" href=\"/mis-fuentes" . ($k ? "?k=$k" : '') . "\">" . t('Mis fuentes') . "</a>");
+echo fuentes_subnav($pdo, '/fuentes', $k, false, "<a class=\"todas" . ($k === '' ? ' on' : '') . "\" href=\"/fuentes?todas=1\">" . t('Todas') . "</a> <a class=\"mias\" href=\"/mis-fuentes" . ($k ? "?k=$k" : '') . "\">" . t('Mis fuentes') . "</a>");
 // sin <h1>: page_header() ya pinta el titulo en la cabecera (salia repetido)
 echo "<p class=\"notice\">" . t('Medios, substacks y canales con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis fuentes».') . ($u ? '' : ' ' . t('<a href="/login">Entra</a> para elegir tus medios.'))
    . ($k !== 'agregador' ? ' ' . (fprop_puede($u) ? t('Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.', num_pg(lang(), cfg('source_propose_aura', 6)), num_pg(lang(), round((float)$u['aura'], 1)))

@@ -850,4 +850,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Lo último de %s.' => 'O último de %s.',
 'Medios, substacks y canales con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis fuentes».' => 'Meios, substacks e canais com RSS que podes ler com o aspeto de Deltha. Cada notícia tem um botão para a propor no radar. Carrega em «Seguir» nos que quiseres, sem limite: terás tudo em «As minhas fontes».',
 'Para tener aquí lo que lees: entra en <a href="/fuentes">Todas las fuentes</a> y pulsa «Seguir» en los medios y substacks que te interesen; también puedes seguirlos desde cualquier noticia suya. Si falta alguno, abre «Seguir y dejar de seguir» aquí abajo y pega su dirección.' => 'Para teres aqui o que lês: entra em <a href="/fuentes">Todas as fontes</a> e carrega em «Seguir» nos meios e substacks que te interessem; também os podes seguir a partir de qualquer notícia deles. Se faltar algum, abre «Seguir e deixar de seguir» aqui em baixo e cola o seu endereço.',
+'Todas' => 'Todas',
 ];

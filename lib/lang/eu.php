@@ -813,4 +813,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Lo último de %s.' => '%s-en azkena.',
 'Medios, substacks y canales con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis fuentes».' => 'RSS duten hedabideak, substack-ak eta kanalak, Deltharen itxurarekin irakurtzeko. Albiste bakoitzak radarrean proposatzeko botoia du. Sakatu «Jarraitu» nahi dituzunetan, mugarik gabe: «Nire iturriak» atalean izango dituzu.',
 'Para tener aquí lo que lees: entra en <a href="/fuentes">Todas las fuentes</a> y pulsa «Seguir» en los medios y substacks que te interesen; también puedes seguirlos desde cualquier noticia suya. Si falta alguno, abre «Seguir y dejar de seguir» aquí abajo y pega su dirección.' => 'Irakurtzen duzuna hemen izateko: sartu <a href="/fuentes">Iturri guztiak</a> atalean eta sakatu «Jarraitu» interesatzen zaizkizun hedabide eta substack-etan; haien edozein albistetatik ere jarrai ditzakezu. Bat falta bada, ireki behean «Jarraitu eta jarraitzeari utzi» eta itsatsi haren helbidea.',
+'Todas' => 'Guztiak',
 ];
