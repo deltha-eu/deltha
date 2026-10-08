@@ -822,4 +822,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'quitar el logo actual' => 'retirer le logo actuel',
 'quitar la imagen de fondo actual' => 'retirer l’image de fond actuelle',
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Impossible de lire l’image (JPG, PNG, WebP ou AVIF, jusqu’à %d Mo).',
+'Dueño' => 'Propriétaire',
+'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'pseudo du nouveau propriétaire ; si vous n’êtes pas modérateur, vous ne pourrez plus la modifier',
 ];

@@ -784,4 +784,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'quitar el logo actual' => 'aktuelles Logo entfernen',
 'quitar la imagen de fondo actual' => 'aktuelles Hintergrundbild entfernen',
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Bild konnte nicht gelesen werden (JPG, PNG, WebP oder AVIF, bis %d MB).',
+'Dueño' => 'Besitzer',
+'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'Nick des neuen Besitzers; wenn du kein Mod bist, kannst du sie danach nicht mehr bearbeiten',
 ];

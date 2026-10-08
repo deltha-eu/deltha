@@ -823,4 +823,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'quitar el logo actual' => 'remove the current logo',
 'quitar la imagen de fondo actual' => 'remove the current background image',
 'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Could not read the image (JPG, PNG, WebP or AVIF, up to %d MB).',
+'Dueño' => 'Owner',
+'nick de quien pasa a ser el dueño; si no eres mod, dejarás de poder editarla' => 'nick of the new owner; unless you are a mod, you will no longer be able to edit it',
 ];
