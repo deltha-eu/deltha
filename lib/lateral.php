@@ -160,9 +160,12 @@ function side_votadas(PDO $pdo): void {
 }
 
 /** Comunidades con actividad: la ultima noticia de cada una, mas reciente primero. Dos enlaces por fila: el nombre de la
- *  comunidad lleva a la comunidad (todas sus noticias) y el titular, al hilo de esa noticia. */
+ *  comunidad lleva a la comunidad (todas sus noticias) y el titular, al hilo de esa noticia. El circulo muestra cuantos
+ *  envios tiene la comunidad (no los comentarios del hilo). */
 function side_comunidades(PDO $pdo): void {
-    $rows = $pdo->query("SELECT c.name, c.slug, c.color, s.story_id, s.title, s.comments, s.sent_date
+    $rows = $pdo->query("SELECT c.name, c.slug, c.color, s.story_id, s.title, s.sent_date,
+                                (SELECT COUNT(*) FROM story_communities sc2 JOIN stories y ON y.story_id = sc2.story_id
+                                  WHERE sc2.community_id = c.community_id AND y.status IN ('nuevas','destacadas','archived')) AS posts
                            FROM communities c
                            JOIN stories s ON s.story_id = (SELECT sc.story_id FROM story_communities sc JOIN stories x ON x.story_id = sc.story_id WHERE sc.community_id = c.community_id AND x.status IN ('nuevas','destacadas','archived') ORDER BY sc.created DESC LIMIT 1)
                           WHERE c.status = 'ok' ORDER BY s.sent_date DESC LIMIT 8")->fetchAll();
@@ -170,7 +173,7 @@ function side_comunidades(PDO $pdo): void {
     // «todas» en la cabecera, como en los modulos de substacks y medios
     echo "<section class=\"mod comm\"><h3>" . t('En comunidades') . "<span><a href=\"/comunidades\">" . t('todas') . "</a></span></h3>";
     foreach ($rows as $r) {
-        echo "<div class=\"row\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\">" . (int)$r['comments'] . "</i><span class=\"t\"><a class=\"cm\" href=\"/comunidad/" . rawurlencode((string)$r['slug']) . "\"><b>" . h($r['name']) . "</b></a> <a href=\"/hilo/" . (int)$r['story_id'] . "\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</a></span></div>";
+        echo "<div class=\"row\" style=\"--cc:" . h($r['color']) . "\"><i class=\"n\" title=\"" . t('envíos') . "\">" . (int)$r['posts'] . "</i><span class=\"t\"><a class=\"cm\" href=\"/comunidad/" . rawurlencode((string)$r['slug']) . "\"><b>" . h($r['name']) . "</b></a> <a href=\"/hilo/" . (int)$r['story_id'] . "\">" . h(mb_strimwidth($r['title'], 0, 80, '…')) . "</a></span></div>";
     }
     echo "</section>";
 }
