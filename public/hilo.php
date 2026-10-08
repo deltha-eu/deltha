@@ -99,7 +99,7 @@ if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";
 echo "<span style=\"margin-left:auto\">"; vote_widget($s); echo "</span>";
 // «+ Seguir <medio>»: el medio o substack del envio (solo si su dominio es de una fuente del catalogo)
 if (user() && $s['content_type'] !== 'article' && $s['source']) { require_once __DIR__ . '/../lib/fuentes.php'; if (fuentes_on() && ($fsrc = fuente_por_dominio($pdo, (string)$s['source']))) echo fuente_fav_form($fsrc, true); }
-echo fav_link($s) . share_link($s) . pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), $s['status'] === 'destacadas') . "</div>";   // «Destacar» (migra-111)
+echo fav_link($s) . share_link($s) . pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), pin_en_portada($s)) . "</div>";   // «Destacar» (migra-111)
 // Herramientas del envio (05/10/2026): una sola caja plegada bajo la barra, en vez de dos barras con todo seguido. Moderadores y admin:
 // tema, comunidad principal y «editar · eliminar»; dueños de comunidad (y moderadores): en que comunidades esta el envio. Cada cosa en su fila.
 $u = user();

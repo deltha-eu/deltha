@@ -11,22 +11,32 @@
  *  (users.pin_credits, se cuenta en aura_add()), y gastarlo destaca una noticia durante pin_user_minutes (30); una activa por
  *  usuario, destacar otra sustituye la anterior. Las del admin no caducan y hay una por grupo. Tabla pins. config.pins_enabled apaga todo.
  *  Cola (migra-114): en cada grupo solo hay una destacada de usuario a la vez; si alguien destaca mientras otra esta en marcha, la suya
- *  queda en cola (pins.starts en el futuro) y empieza cuando a la actual se le acabe su media hora; varias esperan por orden. */
+ *  queda en cola (pins.starts en el futuro) y empieza cuando a la actual se le acabe su media hora; varias esperan por orden.
+ *  Originales (migra-125): grupo 'originales', mismo boton en /originales y en el hilo; sin halo automatico en la primera (solo
+ *  las que ponga el admin o un usuario con credito); la de usuario dura pin_user_minutes_originales (4 h). */
 declare(strict_types=1);
 
 function pins_on(): bool { return (string)cfg('pins_enabled', '1') === '1'; }
-function pin_minutos(): int { return max(1, (int)cfg('pin_user_minutes', 30)); }
+/** Minutos que dura una destacada de usuario: en Originales, pin_user_minutes_originales (240); en las portadas, pin_user_minutes (30). */
+function pin_minutos(string $grupo = ''): int { return max(1, (int)($grupo === 'originales' ? cfg('pin_user_minutes_originales', 240) : cfg('pin_user_minutes', 30))); }
 
-/** Grupo de un envio: su portada ('' = no se destaca: originales, sin portada). */
+/** Grupo de un envio: su portada o, para los textos propios, 'originales' (migra-125) ('' = no se destaca: archivados). */
 function pin_grupo_story(array $s): string {
-    if (($s['content_type'] ?? '') === 'article' || !in_array($s['status'] ?? '', ['nuevas', 'destacadas'], true)) return '';
+    if (!in_array($s['status'] ?? '', ['nuevas', 'destacadas'], true)) return '';
+    if (($s['content_type'] ?? '') === 'article') return 'originales';
     return (string)($s['portada'] ?? '');
+}
+/** ¿Esta el envio donde se destaca? En las portadas, solo lo publicado (un usuario no saca nada del radar; el admin si, y lo publica
+ *  al destacarlo). Los originales no pasan por el radar: se destacan en /originales mientras su hilo este abierto. */
+function pin_en_portada(array $s): bool {
+    if (($s['content_type'] ?? '') === 'article') return in_array($s['status'] ?? '', ['nuevas', 'destacadas'], true);
+    return ($s['status'] ?? '') === 'destacadas';
 }
 /** Grupo de una noticia RSS: el tipo de su fuente ('' = no se destaca: agregadores, YouTube). */
 function pin_grupo_item(array $src): string { $k = (string)($src['kind'] ?? ''); return in_array($k, ['medio', 'newsletter'], true) ? $k : ''; }
 /** Nombre de un grupo para los textos: portada o grupo del rail. */
 function pin_grupo_nombre(string $what, string $grupo): string {
-    if ($what === 'story') return t(DDD_PORTADAS[$grupo] ?? $grupo);
+    if ($what === 'story') return $grupo === 'originales' ? t('Originales') : t(DDD_PORTADAS[$grupo] ?? $grupo);
     return t($grupo === 'medio' ? 'Mis medios' : 'Mis substacks');
 }
 
@@ -86,7 +96,7 @@ function pin_form(PDO $pdo, string $what, int $ref, string $grupo, bool $enPorta
              . "<button title=\"" . h(t('quitar el destacado: vuelve a su sitio por fecha')) . "\">" . icon('pin') . "<span>" . t('Destacada') . "</span></button></form>";
     }
     if (is_admin()) $title = t('Destacar: irá la primera en %s hasta que destaques otra o la quites', $nombre);
-    elseif ($enPortada && pin_credits() > 0) $title = t('Destacar: irá la primera en %s durante %d min. Te quedan %d destacados (ganas uno cada vez que tu aura sube una unidad).', $nombre, pin_minutos(), pin_credits());
+    elseif ($enPortada && pin_credits() > 0) $title = t('Destacar: irá la primera en %s durante %d min. Te quedan %d destacados (ganas uno cada vez que tu aura sube una unidad).', $nombre, pin_minutos($grupo), pin_credits());
     else return '';
     return "<form class=\"pin\" method=\"post\" action=\"/destacar\">$hid<input type=\"hidden\" name=\"act\" value=\"poner\">"
          . "<button title=\"" . h($title) . "\">" . icon('pin') . "<span>" . t('Destacar') . (is_admin() ? '' : " <small>" . pin_credits() . "</small>") . "</span></button></form>";
@@ -134,8 +144,8 @@ function pin_poner(PDO $pdo, array $u, string $what, int $ref, string $grupo, bo
     $st = $pdo->prepare("SELECT MAX(expires) FROM pins WHERE by_admin = 0 AND what = ? AND grupo = ? AND expires > NOW()");
     $st->execute([$what, $grupo]);
     $desde = (string)($st->fetchColumn() ?: '');
-    if ($desde === '') $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, NOW(), NOW() + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, pin_minutos()]);
-    else $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, ?, ? + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, $desde, $desde, pin_minutos()]);
+    if ($desde === '') $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, NOW(), NOW() + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, pin_minutos($grupo)]);
+    else $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, ?, ? + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, $desde, $desde, pin_minutos($grupo)]);
     return '';
 }
 /** Quita una destacada: el admin, cualquiera; un usuario, solo la suya (no se devuelve el destacado). */
@@ -164,7 +174,7 @@ function pins_ids(PDO $pdo, string $what, string $grupo): array {
 function pins_stories(PDO $pdo, string $portada): array {
     $ids = pins_ids($pdo, 'story', $portada);
     if (!$ids) return [];
-    $st = $pdo->prepare(story_query_base() . " WHERE s.story_id IN (" . implode(',', $ids) . ") AND s.status = 'destacadas'");
+    $st = $pdo->prepare(story_query_base() . " WHERE s.story_id IN (" . implode(',', $ids) . ") AND s.status " . ($portada === 'originales' ? "IN ('nuevas','destacadas') AND s.content_type = 'article'" : "= 'destacadas'"));
     $st->execute();
     $rows = array_column($st->fetchAll(), null, 'story_id');
     $out = [];

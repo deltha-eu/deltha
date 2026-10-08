@@ -121,7 +121,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo mod_edit_link($s) . own_edit_link($s);   // mods y admin: «editar» a un clic; el autor, en plazo, tambien
     if (is_fav((int)$s['story_id'])) echo fav_link($s);   // en el feed solo si ya esta guardado: marca y permite quitarlo (se guarda desde el hilo)
     echo share_link($s);
-    echo pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), $s['status'] === 'destacadas');   // «Destacar» (migra-111)
+    echo pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), pin_en_portada($s));   // «Destacar» (migra-111)
     echo "</div>";
     echo "</div></article>";
 }
