@@ -181,7 +181,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     else      echo "<p>" . saltos(enlaces(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content']))) . "</p>";   // @nick → perfil, URLs → enlaces (07/10/2026)
     if ($fold) echo "</details>";
     $acts = [];
-    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo/{$c['story_id']}" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "&amp;v=$hv" : '') . "&amp;r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
+    if ($can_reply && !$del) $acts[] = "<a href=\"/hilo/{$c['story_id']}?" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "v=$hv&amp;" : '') . "r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
     if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
     if (!$del && ($gl = ghost_link((int)($c['user_id'] ?? 0), $c['login'] ?? null, shown($c, $revealed))) !== '') $acts[] = $gl;   // solo con el nombre ya revelado
@@ -207,7 +207,7 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     echo "<div class=\"cbox\">";
     if ($parent) {
         $pn = display_name($parent, ghost_over($parent['created']));
-        echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo/$story_id" . ($vt !== '' ? "&amp;v=$vt" : '') . "\">" . t('cancelar') . "</a></div>";
+        echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo/$story_id" . ($vt !== '' ? "?v=$vt" : '') . "\">" . t('cancelar') . "</a></div>";
     }
     $ph = $u ? t('Escribe con alias; tu nombre aparecerá en %d min', (int)cfg('ghost_minutes', 30)) : t('Escribe como anónimo');
     echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h($ph) . "\" required" . ($parent ? " autofocus" : "") . "></textarea>";
