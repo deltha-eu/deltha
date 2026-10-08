@@ -1,12 +1,12 @@
 <?php
-/** /proponer-fuente.php — proponer un medio o un substack/newsletter con RSS para el catalogo. Solo cuentas con aura >= source_propose_aura
- *  (moderadores y admin, siempre). No se publica: se prueba el RSS y queda pendiente en /moderacion.php#fuentes, donde un moderador
+/** /proponer-fuente — proponer un medio o un substack/newsletter con RSS para el catalogo. Solo cuentas con aura >= source_propose_aura
+ *  (moderadores y admin, siempre). No se publica: se prueba el RSS y queda pendiente en /moderacion#fuentes, donde un moderador
  *  lo aprueba o lo rechaza; quien lo propuso recibe un mensaje privado. Abajo, las propuestas propias y su estado. Ver lib/propuestas.php. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/propuestas.php';
 
 $u = user();
-if (!$u) redirect('/login.php');
+if (!$u) redirect('/login');
 $puede = fprop_puede($u);
 $err = null;
 $f = ['kind' => in_array($_GET['k'] ?? '', ['medio', 'newsletter'], true) ? $_GET['k'] : 'medio', 'name' => '', 'home' => '', 'feed' => '', 'descr' => '', 'note' => ''];
@@ -36,7 +36,7 @@ if ($puede && $_SERVER['REQUEST_METHOD'] === 'POST') {
         else {
             $pdo->prepare("INSERT INTO source_proposals (user_id, kind, name, home, feed, descr, note, lang, test_items, test_info) VALUES (?,?,?,?,?,?,?,?,?,?)")
                 ->execute([$uid, $f['kind'], $f['name'], $f['home'], $r['feed'] !== '' ? $r['feed'] : $f['home'], $f['descr'] ?: null, $f['note'] ?: null, $r['lang'], $r['items'], fprop_info($r)]);
-            redirect('/proponer-fuente.php?ok=' . ($r['items'] ? '1' : '2'));
+            redirect('/proponer-fuente?ok=' . ($r['items'] ? '1' : '2'));
         }
     }
 }
@@ -49,7 +49,7 @@ if (!$puede) {
     if (($_GET['ok'] ?? '') === '1') echo "<p class=\"notice\">" . t('Gracias. Hemos leído su RSS sin problemas y la propuesta queda pendiente: un moderador la revisará y te avisará por mensaje privado.') . "</p>";
     if (($_GET['ok'] ?? '') === '2') echo "<p class=\"notice\">" . t('Gracias. No hemos podido leer su RSS, pero la propuesta queda pendiente: un moderador lo revisará y te avisará por mensaje privado.') . "</p>";
     if ($err) echo "<p class=\"error\">$err</p>";
-    echo "<p class=\"notice\">" . t('Propón un medio o un substack que tenga RSS. No se añade directamente: un moderador comprueba que su RSS se lee bien antes de que entre en el <a href="/medios.php">catálogo</a>.') . "</p>";
+    echo "<p class=\"notice\">" . t('Propón un medio o un substack que tenga RSS. No se añade directamente: un moderador comprueba que su RSS se lee bien antes de que entre en el <a href="/medios">catálogo</a>.') . "</p>";
     echo "<form class=\"plain\" method=\"post\">";
     echo "<label>" . t('Tipo') . "</label><select name=\"kind\"><option value=\"medio\"" . ($f['kind'] === 'medio' ? ' selected' : '') . ">" . t('Medio') . "</option><option value=\"newsletter\"" . ($f['kind'] === 'newsletter' ? ' selected' : '') . ">" . t('Substack o newsletter') . "</option></select>";
     echo "<label>" . t('Nombre') . "</label><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name']) . "\">";

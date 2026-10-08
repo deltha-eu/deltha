@@ -1,5 +1,5 @@
 <?php
-/** /normas.php — normas de uso. Visible sin clave. El texto vive en la tabla pages (slug 'normas') y se edita en admin -> Paginas. */
+/** /normas — normas de uso. Visible sin clave. El texto vive en la tabla pages (slug 'normas') y se edita en admin -> Paginas. */
 define('DDD_PUBLIC', true);
 define('DDD_INDEX', true);    // pagina escaparate: la unica clase de pagina (con los articulos que el autor elige) que entra en buscadores
 require __DIR__ . '/../lib/app.php';

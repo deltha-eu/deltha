@@ -226,7 +226,8 @@ form.plain .showpw label { display: flex; align-items: center; gap: 6px; }
 .choice:hover { background: var(--hover); }
 .or { text-align: center; color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
 .notice { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
-.error { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--neg) 12%, var(--bg)); color: var(--neg); }
+.error { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--neg) 12%, var(--bg)); color: var(--fg); font-weight: 600; border: 1px solid var(--neg); }   /* --neg es gris en casi todas las skins: sin negrita ni borde se confundia con un .notice (07/10/2026) */
+.error::before { content: "⚠ "; }
 .end { text-align: center; color: var(--muted); font-size: 14px; padding: 28px 16px; }
 nav.pages { display: flex; justify-content: space-between; padding: 14px 16px; font-size: 14px; color: var(--muted); }
 footer.inflow { padding: 12px 16px calc(var(--bottom-h) + 20px + env(safe-area-inset-bottom)); font-size: 12px; color: var(--muted); align-items: center; gap: 12px; }
@@ -495,6 +496,24 @@ header.top .bell > span { display: none; }
 .chat .cm p a.ref:hover { background: color-mix(in srgb, var(--accent) 20%, var(--bg)); }
 .chat .cm p a.at { text-decoration: none; font-weight: 600; }
 .chat .cm.deleted .delmsg { color: var(--muted); }
+/* refresco del Chat sin recargar (app/escribir.js, 07/10/2026): lo que acaba de llegar se realza un segundo y se apaga */
+@keyframes ddd-nuevo { from { background-color: color-mix(in srgb, var(--accent) 18%, var(--bg)); } to { background-color: transparent; } }
+.chat .cm.nuevo { animation: ddd-nuevo 1.6s ease-out; }
+@media (prefers-reduced-motion: reduce) { .chat .cm.nuevo { animation: none; } }
+/* mensaje a la comunidad (admin/mod, migra-121): resaltado en su sitio, etiqueta con megafono y franja con los ultimos arriba del Chat */
+.chat .cm.anuncio { background: color-mix(in srgb, var(--accent) 8%, var(--bg)); box-shadow: inset 3px 0 0 var(--accent); }
+.chat .ch .anun { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--accent); }
+.chat .ch .anun .i { width: 14px; height: 14px; }
+.chat .anuncios { padding: 8px 16px 10px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 6%, var(--bg)); font-size: 14px; }
+.chat .anuncios p { margin: 4px 0 0; display: flex; gap: 6px; align-items: baseline; overflow-wrap: anywhere; }
+.chat .anuncios .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--accent); text-decoration: none; }
+.chat .cm .actions button.anunbtn { display: inline-flex; align-items: center; }
+.chat .cm .actions button.anunbtn.on { color: var(--accent); }
+.chat .cm .actions button.anunbtn.on .i { fill: currentColor; }
+.chatbox label.anuncio { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); cursor: pointer; margin-left: auto; }
+.chatbox label.anuncio .i { width: 15px; height: 15px; }
+.chatbox label.anuncio:has(input:checked) { color: var(--accent); font-weight: 600; }
+.chatbox label.anuncio:has(input:checked) .i { fill: currentColor; }
 .chat .cm .actions { margin-top: 4px; gap: 14px; font-size: 12px; flex-wrap: wrap; }
 .chat .cm .actions .i { width: 15px; height: 15px; }
 .chat .cm .actions .reps { color: var(--muted); display: inline-flex; gap: 4px; align-items: center; }
@@ -673,6 +692,10 @@ form.plain.skinform { gap: 6px; }
 [data-fam="comunidad"] .hilo .stats { margin: 0 8px; background: var(--bar); color: #fff; border: 1px solid var(--blue2); border-top: 0; font-size: 12px; font-weight: 700; padding: 7px 12px; gap: 12px; }
 [data-fam="comunidad"] .hilo .stats > span:first-child { text-transform: uppercase; letter-spacing: .03em; }
 [data-fam="comunidad"] .hilo .stats b, [data-fam="comunidad"] .hilo .stats .share, [data-fam="comunidad"] .hilo .stats .vote > span, [data-fam="comunidad"] .hilo .stats .vote button { color: #fff; }
+/* (07/10/2026) la barra es azul con letra blanca, pero lo añadido despues (lecturas y clics .cnt, comentarios .cmt, guardar, Seguir, Destacar) traia su gris --muted y no se veia */
+[data-fam="comunidad"] .hilo .stats :is(span, a, b, button, .cnt, .cmt, .share, form.fav button) { color: #fff; }
+[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir button) { color: #fff; background: transparent; border-color: rgba(255,255,255,.7); }
+[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir button):hover { background: rgba(255,255,255,.15); }
 [data-fam="comunidad"] .hilo .modbar { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
 [data-fam="comunidad"] .hilo .modtools { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
 [data-fam="comunidad"] .hilo .thread { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; padding: 0; }
@@ -1212,9 +1235,16 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { font-size: 17px; }
 }
 /* el hilo: misma caja, sin rejilla */
-[data-skin="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 10px 14px 8px; background: var(--bg); }
+[data-skin="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 12px 14px 12px; background: var(--bg); }   /* 12 abajo (antes 8): el enlace al medio quedaba pegado al borde */
 [data-skin="orange"] .hilo .main h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; }
 [data-skin="orange"] .hilo .main .media { border: 0; border-radius: 5px; }
+/* (07/10/2026) la foto del hilo heredaba los 96 px de la tarjeta y, sin la rejilla de esta, caia debajo del texto. Aqui el .pc es una rejilla
+   de dos columnas: todo en la primera, la foto en la segunda (140 px, 4:3) a la altura del autor, titular y entradilla. En modo sin distracciones flota como siempre. */
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { display: grid; grid-template-columns: minmax(0, 1fr) 140px; column-gap: 14px; row-gap: 6px; align-items: start; }
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > * { grid-area: auto; grid-column: 1; min-width: 0; margin-top: 0; margin-bottom: 0; }   /* grid-area: auto anula el «lead» de la tarjeta, que colaba la entradilla antes del titular; el aire lo pone row-gap */
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { grid-column: 2; grid-row: 1 / span 3; width: 140px; margin: 0; }
+html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .life, .delta) { grid-column: 1 / -1; }
+@media (max-width: 600px) { html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { grid-template-columns: minmax(0, 1fr) 96px; } html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { width: 96px; } }
 [data-skin="orange"] .hilo .stats { margin: 0 12px; border: 0; font-size: 13px; }
 [data-skin="orange"] .hilo .stats form.vote, [data-skin="orange"] .hilo .stats span.vote { gap: 4px; background: var(--or2); border-radius: 6px; padding: 3px 4px 3px 8px; }
 [data-skin="orange"] .hilo .stats .vote button[value="1"], [data-skin="orange"] .hilo .stats .vote > span:first-child { color: var(--or); font-weight: 800; padding-right: 8px; }

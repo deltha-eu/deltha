@@ -1,5 +1,5 @@
 <?php
-/** lib/cola.php — estimacion del radar (la usan /procesos.php, /radar.php y la columna lateral de escritorio). */
+/** lib/cola.php — estimacion del radar (la usan /procesos, /radar y la columna lateral de escritorio). */
 declare(strict_types=1);
 
 /* ---- estimacion: en que ciclo llega a portada cada enlace del radar ---

@@ -1,13 +1,13 @@
 <?php
 /** lib/avisos.php — avisos (la campanita): una sola tabla, `notifications`, y una sola burbuja con el numero de no leidos
  *  delante del avatar (cabecera en movil, rail en escritorio). Tipos:
- *    mention_comment  alguien escribe @tunick en un comentario      → /hilo.php?id=S#cN
- *    reply_comment    alguien responde a un comentario tuyo         → /hilo.php?id=S#cN
- *    mention_chat     alguien escribe @tunick en el Chat            → /chat.php?m=N#mN
- *    reply_chat       alguien cita (#N) un mensaje tuyo del Chat    → /chat.php?m=N#mN
- *    dm               alguien te manda un privado                   → /mensajes.php?u=nick
+ *    mention_comment  alguien escribe @tunick en un comentario      → /hilo/S#cN
+ *    reply_comment    alguien responde a un comentario tuyo         → /hilo/S#cN
+ *    mention_chat     alguien escribe @tunick en el Chat            → /chat?m=N#mN
+ *    reply_chat       alguien cita (#N) un mensaje tuyo del Chat    → /chat?m=N#mN
+ *    dm               alguien te manda un privado                   → /mensajes?u=nick
  *  Se enganchan donde se guarda cada cosa (comentar.php, editar-comentario.php, chat.php, mensajes.php). En la fila se guarda
- *  el tipo y el id del origen (no la URL, que se construye al pintar) y un trozo del texto de entonces. La lista (/avisos.php)
+ *  el tipo y el id del origen (no la URL, que se construye al pintar) y un trozo del texto de entonces. La lista (/avisos)
  *  es el historico: nada se borra, solo cambia read_at. Un aviso pasa a leido al pulsarlo (o con «marcar todo como leido»);
  *  los privados, ademas, al abrir la conversacion. Los privados seguidos de la misma persona se agrupan en un aviso
  *  mientras este sin leer; leido, el siguiente crea aviso nuevo.
@@ -107,22 +107,22 @@ function avisos_unread(): int {
     }
     return $n;
 }
-/** La campanita: enlace a /avisos.php con la burbuja de no leidos (vacia si no hay). Solo para registrados. */
+/** La campanita: enlace a /avisos con la burbuja de no leidos (vacia si no hay). Solo para registrados. */
 function avisos_bell(string $cls = ''): string {
     if (!user() || !avisos_on()) return '';
     $n = avisos_unread();
-    return "<a class=\"bell" . ($cls !== '' ? " $cls" : '') . ($n ? ' has' : '') . "\" href=\"/avisos.php\" title=\"" . t('Avisos') . "\" data-bell>" . icon('bell')
+    return "<a class=\"bell" . ($cls !== '' ? " $cls" : '') . ($n ? ' has' : '') . "\" href=\"/avisos\" title=\"" . t('Avisos') . "\" data-bell>" . icon('bell')
         . "<i class=\"badge\"" . ($n ? '' : ' hidden') . ">" . ($n > 99 ? '99+' : $n) . "</i><span>" . t('Avisos') . "</span></a>";
 }
 
 /** Adonde lleva un aviso. */
 function aviso_href(array $n): string {
     switch ($n['kind']) {
-        case 'mention_comment': case 'reply_comment': return "/hilo.php?id=" . (int)$n['story_id'] . "#c" . (int)$n['ref_id'];
-        case 'mention_chat':    case 'reply_chat':    return "/chat.php?m=" . (int)$n['ref_id'] . "#m" . (int)$n['ref_id'];
-        case 'dm': return !empty($n['login']) ? "/mensajes.php?u=" . rawurlencode($n['login']) : "/mensajes.php";
+        case 'mention_comment': case 'reply_comment': return "/hilo/" . (int)$n['story_id'] . "#c" . (int)$n['ref_id'];
+        case 'mention_chat':    case 'reply_chat':    return "/chat?m=" . (int)$n['ref_id'] . "#m" . (int)$n['ref_id'];
+        case 'dm': return !empty($n['login']) ? "/mensajes?u=" . rawurlencode($n['login']) : "/mensajes";
     }
-    return '/avisos.php';
+    return '/avisos';
 }
 /** Como se llama quien avisa, ahora: en comentarios el alias hasta que el hilo revela el nick; en el Chat y privados, el nick (o el alias anonimo). */
 function aviso_who(array $n): string {
@@ -158,7 +158,7 @@ function avisos_preload_nicks(PDO $pdo, array $texts): void {
     // velados por ghosteo: la mencion sale con el alias de pareja y sin enlace (el nombre no se ve en las menciones)
     foreach (avisos_users_by_nick($pdo, array_keys($all)) as $k => $u) $DDD_NICKS[$k] = ghost_veiled($u['user_id']) ? ['alias' => ghost_alias($u['user_id'])] : $u['login'];
 }
-/** HTML (ya escapado) → cada @nick existente enlazado a /u.php (los velados por ghosteo, con su alias y sin enlace). */
+/** HTML (ya escapado) → cada @nick existente enlazado a /u (los velados por ghosteo, con su alias y sin enlace). */
 function nicks_format(string $html): string {
     global $DDD_NICKS;
     if (!$DDD_NICKS || !str_contains($html, '@')) return $html;
@@ -166,6 +166,6 @@ function nicks_format(string $html): string {
         $k = strtolower($m[1]);
         if (!isset($DDD_NICKS[$k])) return $m[0];
         if (is_array($DDD_NICKS[$k])) return "<span class=\"at\">@" . h($DDD_NICKS[$k]['alias']) . "</span>";
-        return "<a class=\"at\" href=\"/u.php?u=" . rawurlencode($DDD_NICKS[$k]) . "\">@" . h($DDD_NICKS[$k]) . "</a>";
+        return "<a class=\"at\" href=\"/u/" . rawurlencode($DDD_NICKS[$k]) . "\">@" . h($DDD_NICKS[$k]) . "</a>";
     }, $html);
 }

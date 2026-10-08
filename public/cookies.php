@@ -1,5 +1,5 @@
 <?php
-/** /cookies.php — inventario de cookies y JavaScript, a la vista de todo el mundo (enlace en el pie, tras Privacidad).
+/** /cookies — inventario de cookies y JavaScript, a la vista de todo el mundo (enlace en el pie, tras Privacidad).
  *  El texto vive en la tabla pages (slug 'cookies') y se edita en admin > Paginas, como privacidad, normas y algoritmo.
  *  Se mantiene a mano: al tocar una cookie o un script, actualizar tambien esta pagina. */
 define('DDD_PUBLIC', true);

@@ -1,8 +1,8 @@
 <?php
-/** /plantilla.php — pestaña «Plantilla»: elegir la plantilla visual (y el aspecto claro/oscuro) con una lista de casillas,
+/** /plantilla — pestaña «Plantilla»: elegir la plantilla visual (y el aspecto claro/oscuro) con una lista de casillas,
  *  tambien sin cuenta. Con cuenta se guarda en users.skin / users.theme; sin cuenta, en las cookies ddd_skin / ddd_theme,
  *  que solo existen porque la persona las pide (save_skin_pref / save_theme_pref en lib/app.php). Es la misma logica que
- *  el desplegable del rail de escritorio (/cambiar-skin.php); esta pagina es la via en movil, donde el rail no existe. */
+ *  el desplegable del rail de escritorio (/cambiar-skin); esta pagina es la via en movil, donde el rail no existe. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 $u = user();

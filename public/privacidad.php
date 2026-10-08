@@ -1,5 +1,5 @@
 <?php
-/** /privacidad.php — politica de privacidad, aviso legal y contacto. Visible sin clave.
+/** /privacidad — politica de privacidad, aviso legal y contacto. Visible sin clave.
  *  El texto vive en la tabla pages (slug 'privacidad') y se edita en admin. */
 define('DDD_PUBLIC', true);
 define('DDD_INDEX', true);    // pagina escaparate: la unica clase de pagina (con los articulos que el autor elige) que entra en buscadores

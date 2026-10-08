@@ -1,6 +1,6 @@
 <?php
-/** /usuarios.php — la gente registrada, del mas reciente al mas antiguo, paginada (solo para registrados).
- *  ?v=conectados  con cuenta y actividad en los ultimos online_minutes (la cifra de /estadisticas.php)
+/** /usuarios — la gente registrada, del mas reciente al mas antiguo, paginada (solo para registrados).
+ *  ?v=conectados  con cuenta y actividad en los ultimos online_minutes (la cifra de /estadisticas)
  *  ?v=hoy | 7d    registrados hoy / en los ultimos 7 dias
  *  sin ?v         todos los registrados
  *  ?n=usuario | mod | admin   filtro por nivel (tercera fila de pestañas), combinable con vista y orden. Moderador = nivel mod o, sin ser
@@ -10,7 +10,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/usuarios.php';   // alta de usuarios por el admin (user_create_form)
-if (!user()) redirect('/login.php');
+if (!user()) redirect('/login');
 
 $onlineMin = (int)cfg('online_minutes', 5);
 $VIEWS = ['' => t('Últimos registros'), 'conectados' => t('Conectados ahora'), 'hoy' => t('Registros hoy'), '7d' => t('Registros últimos 7 días')];
@@ -35,7 +35,7 @@ $url = function (string $v, string $o, string $n, string $amp = '&amp;'): string
     if ($v !== '') $q[] = "v=$v";
     if ($o !== '' && $o !== ($v === 'conectados' ? 'acceso' : 'registro')) $q[] = "o=$o";
     if ($n !== '') $q[] = "n=$n";
-    return '/usuarios.php' . ($q ? '?' . implode($amp, $q) : '');
+    return '/usuarios' . ($q ? '?' . implode($amp, $q) : '');
 };
 $page = page_num();
 $per  = (int)cfg('per_page', 20);
@@ -63,12 +63,12 @@ echo "</nav>";
 echo "<nav class=\"sub fecha\">";
 foreach ($NIVELES as $k => [$label]) echo "<a href=\"" . $url($v, $o, $k) . "\"" . ($k === $n ? ' class="on"' : '') . ">" . h($label) . "</a>";
 echo "</nav>";
-echo "<p class=\"notice\">" . t('La gente de %s y sus <a href="/comunidades.php"><b>comunidades</b></a>', h(cfg('site_name'))) . (community_quota($pdo, user()) > 0 ? " · <a href=\"/comunidades.php#crear\">" . t('crear una comunidad') . "</a>" : "") . ".</p>";
+echo "<p class=\"notice\">" . t('La gente de %s y sus <a href="/comunidades"><b>comunidades</b></a>', h(cfg('site_name'))) . (community_quota($pdo, user()) > 0 ? " · <a href=\"/comunidades#crear\">" . t('crear una comunidad') . "</a>" : "") . ".</p>";
 echo "<p class=\"notice\">" . t('%d en total. Pulsa en un nombre para ver su perfil público.', $total) . "</p>";
 echo user_create_form('usuarios');   // solo admin: «+ Crear un usuario»
 foreach ($rows as $r) {
-    echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u.php?u=' . rawurlencode($r['login']));
-    echo "<div><b><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></b>";
+    echo "<div class=\"ulist\">" . avatar((float)$r['aura'], $r['login'], $r['avatar'], '/u/' . rawurlencode($r['login']));
+    echo "<div><b><a href=\"/u/" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></b>";
     // registro y ultimo acceso, para todo el mundo (users.last_seen: se actualiza como mucho una vez por minuto, lib/app.php)
     $when = t('registro %s', hace($r['created'])) . ($r['last_seen'] ? ' · ' . t('último acceso %s', hace($r['last_seen'])) : '');
     $niv = $r['level'] === 'admin' ? 'admin' : (user_is_mod($r) ? t('moderador') : '');

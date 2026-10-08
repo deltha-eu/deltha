@@ -34,12 +34,12 @@ Disallow: /
 # Buscadores: pueden pasar, pero cada pagina lleva noindex salvo las de escaparate
 # (/que-es.php, /algoritmo.php, /normas.php, /privacidad.php) y los articulos que su autor abre.
 User-agent: *
-Disallow: /admin.php
-Disallow: /moderacion.php
-Disallow: /votar.php
-Disallow: /ir.php
-Disallow: /comentar.php
-Disallow: /salir.php
+Disallow: /admin
+Disallow: /moderacion
+Disallow: /votar
+Disallow: /ir
+Disallow: /comentar
+Disallow: /salir
 Disallow: /delta/clave.php
-Disallow: /activar.php
-Disallow: /reenviar.php
+Disallow: /activar
+Disallow: /reenviar

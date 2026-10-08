@@ -13,7 +13,7 @@ if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true)
     page_footer();
     exit;
 }
-if ($s['content_type'] === 'article') { foco_por_defecto(); page_crumb('/originales.php', t('Originales')); }   // cabecera «Originales › Hilo»: se vuelve a la lista con un clic;   // un original se abre en modo sin distracciones salvo que el lector lo haya quitado
+if ($s['content_type'] === 'article') { foco_por_defecto(); page_crumb('/originales', t('Originales')); }   // cabecera «Originales › Hilo»: se vuelve a la lista con un clic;   // un original se abre en modo sin distracciones salvo que el lector lo haya quitado
 if (!empty($s['comm_skin'])) community_skin($s['comm_skin']);   // el hilo se ve con la plantilla de su comunidad
 $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
 $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
@@ -72,12 +72,12 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 
 robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por su autor; lo demas, noindex
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
-page_header(t('Hilo'), $tab, og_tags($s['title'], $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo.php?id=' . $id)), $s['title']);
+page_header(t('Hilo'), $tab, og_tags($s['title'], $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo/' . $id)), $s['title']);
 echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
 story_cuenta($pdo, $s, 'views');   // una lectura por persona y dia (lib/contadores.php)
-$dest = $s['url'] ? ir_url($s) : null;   // la salida al medio pasa por /ir.php, que cuenta el clic
+$dest = $s['url'] ? ir_url($s) : null;   // la salida al medio pasa por /ir, que cuenta el clic
 if (foco()) media_block($s, 'media', $s['content_type'] === 'article' ? null : $dest);   // sin distracciones: la foto, antes del titular, flota a su derecha
 echo $dest ? "<h2><a href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . h($s['title']) . "</a></h2>" : "<h2>" . h($s['title']) . "</h2>";
 if ($s['content_type'] === 'article') {
@@ -105,7 +105,7 @@ echo fav_link($s) . share_link($s) . pin_form($pdo, 'story', (int)$s['story_id']
 $u = user();
 $rows = [];
 if (is_mod()) {
-    $f = "<form class=\"inl\" method=\"post\" action=\"/cambiar-tema.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><select name=\"topic\" title=\"" . h(t('Tema')) . "\">";
+    $f = "<form class=\"inl\" method=\"post\" action=\"/cambiar-tema\"><input type=\"hidden\" name=\"id\" value=\"$id\"><select name=\"topic\" title=\"" . h(t('Tema')) . "\">";
     foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) $f .= "<option value=\"{$t['topic_id']}\"" . ((int)$t['topic_id'] === (int)$s['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
     $f .= "</select><select name=\"community\" title=\"" . h(t('Comunidad principal')) . "\"><option value=\"0\">" . t('sin comunidad principal') . "</option>";
     foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) $f .= "<option value=\"{$co['community_id']}\"" . ((int)$co['community_id'] === (int)$s['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
@@ -125,14 +125,14 @@ if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
     if ($canRemoveAny || ($addable && count($inComms) < $max)) {
         $f = '';
         foreach ($inComms as $c) {
-            $f .= "<span class=\"chip\" style=\"--cc:" . h($c['color']) . "\"><i class=\"dot\"></i><a href=\"/comunidad.php?c=" . rawurlencode($c['slug']) . "\">" . h($c['name']) . "</a>";
+            $f .= "<span class=\"chip\" style=\"--cc:" . h($c['color']) . "\"><i class=\"dot\"></i><a href=\"/comunidad/" . rawurlencode($c['slug']) . "\">" . h($c['name']) . "</a>";
             if ($c['main']) $f .= " <small>(" . t('principal') . ")</small>";
             if (is_mod() || (int)$c['owner_id'] === (int)$u['user_id'])
-                $f .= "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"community\" value=\"{$c['community_id']}\"><input type=\"hidden\" name=\"act\" value=\"quitar\"><button class=\"x\" title=\"" . t('quitar de esta comunidad') . "\">×</button></form>";
+                $f .= "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"community\" value=\"{$c['community_id']}\"><input type=\"hidden\" name=\"act\" value=\"quitar\"><button class=\"x\" title=\"" . t('quitar de esta comunidad') . "\">×</button></form>";
             $f .= "</span>";
         }
         if ($addable && count($inComms) < $max) {
-            $f .= "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio.php\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"añadir\"><select name=\"community\">";
+            $f .= "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"añadir\"><select name=\"community\">";
             foreach ($addable as $c) $f .= "<option value=\"{$c['community_id']}\">" . h($c['name']) . "</option>";
             $f .= "</select><button class=\"btn\">" . t('Añadir a la comunidad') . "</button></form>";
         } elseif ($addable) $f .= "<small>" . t('Un envío puede estar como mucho en %d comunidades.', $max) . "</small>";
@@ -142,7 +142,7 @@ if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
 if ($rows) {
     // abierta si se acaba de guardar algo (?comm=), para ver el aviso; si no, plegada
     echo "<details class=\"modtools\"" . (isset($_GET['comm']) ? ' open' : '') . "><summary>" . icon('edit') . "<span>" . (is_mod() ? t('Editar envío') : t('Comunidades')) . "</span>"
-       . (is_mod() ? "<a href=\"/editar.php?id=$id\">" . t('editar · eliminar') . "</a>" : '') . "</summary>";
+       . (is_mod() ? "<a href=\"/editar?id=$id\">" . t('editar · eliminar') . "</a>" : '') . "</summary>";
     foreach ($rows as [$lbl, $html]) echo "<div class=\"row\"><label>" . h($lbl) . "</label><div>$html</div></div>";
     echo "</details>";
 }
@@ -150,7 +150,7 @@ if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice
 
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
 
-if (count($all) > 1) echo "<nav class=\"sub cvista\"><a href=\"/hilo.php?id=$id#comentarios\"" . ($porTiempo ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo.php?id=$id&amp;v=tiempo#comentarios\"" . ($vista === 'tiempo' ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a><a href=\"/hilo.php?id=$id&amp;v=votos#comentarios\"" . ($vista === 'votos' ? ' class="on"' : '') . ">" . t('Por votos') . "</a></nav>";
+if (count($all) > 1) echo "<nav class=\"sub cvista\"><a href=\"/hilo/$id#comentarios\"" . ($porTiempo ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo/$id?v=tiempo#comentarios\"" . ($vista === 'tiempo' ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a><a href=\"/hilo/$id?v=votos#comentarios\"" . ($vista === 'votos' ? ' class="on"' : '') . ">" . t('Por votos') . "</a></nav>";
 foreach ($threads as $list) {
     echo "<div class=\"thread\">";
     $n = count($list);
@@ -167,6 +167,6 @@ foreach ($threads as $list) {
 // la caja de comentar va al final, debajo de los comentarios (al responder a uno, sale bajo ese comentario)
 if ($can_comment && !$replyTo) composer($id);
 elseif (!$open) echo "<p class=\"end\">" . t('Hilo cerrado.') . "</p>";
-elseif (!$can_comment) echo "<p class=\"end\">" . t('<a href="/login.php">Entra</a> para comentar.') . "</p>";
+elseif (!$can_comment) echo "<p class=\"end\">" . t('<a href="/login">Entra</a> para comentar.') . "</p>";
 echo "</div>";
 page_footer();

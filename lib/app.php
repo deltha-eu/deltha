@@ -14,7 +14,7 @@ date_default_timezone_set('Europe/Madrid');
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 169);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 175);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -88,7 +88,7 @@ if (isset($_COOKIE[DDD_SESSION])) {
         $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang, src_mylang FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
-        if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas.php)
+        if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas)
             session_refresca();   // ventana deslizante: mientras entre, no se le cierra la sesion
             $pdo->prepare("UPDATE users SET last_seen = NOW() WHERE user_id = ? AND (last_seen IS NULL OR last_seen < NOW() - INTERVAL 1 MINUTE)")
                 ->execute([$USER['user_id']]);
@@ -106,7 +106,7 @@ require_once __DIR__ . '/destacar.php';   // «Destacar»: envios y noticias RSS
 require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
- * guardada unos minutos, solo para contar visitantes en /estadisticas.php.
+ * guardada unos minutos, solo para contar visitantes en /estadisticas.
  * No se guarda la IP; el dia dentro de la huella impide seguir a nadie de un dia a otro. */
 if ($USER === null && PHP_SAPI !== 'cli' && !preg_match('~bot|crawl|spider|slurp|fetch|monitor~i', $_SERVER['HTTP_USER_AGENT'] ?? '')) {
     $fp = substr(hash_hmac('sha256', client_ip() . '|' . ($_SERVER['HTTP_USER_AGENT'] ?? '') . '|' . date('Y-m-d'), $DDD_SECRET), 0, 16);
@@ -153,7 +153,7 @@ function gate_open(): bool {
 // En CLI (cron: promocionar.php, moderar.php) no hay cookie ni sesion: sin esta
 // excepcion, con la clave activa redirect() hacia exit y el ciclo moria en silencio
 // (nada salia del radar a las portadas, ni revelado, ni archivo, ni decaimiento de aura).
-if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/clave.php');   // /que-es.php, privacidad, normas y algoritmo son publicas (DDD_PUBLIC)
+if (PHP_SAPI !== 'cli' && !defined('DDD_PUBLIC') && !gate_open()) redirect('/delta/clave.php');   // /que-es, privacidad, normas y algoritmo son publicas (DDD_PUBLIC)
 
 /* ---- helpers ------------------------------------------------------- */
 /** Casilla «mostrar contraseña» para un formulario (la activa /app/pw.js; sin JS no aparece). */
@@ -176,6 +176,16 @@ function saltos(string $html): string {
     $html = preg_replace('/\n{3,}/', "\n\n", trim(str_replace(["\r\n", "\r"], "\n", $html)));
     return str_replace("\n", '<br>', $html);
 }
+/** URLs sueltas del texto (ya escapado con h()) → enlaces (nofollow, recortados a 60 caracteres). Lo usan los comentarios y el Chat.
+ *  No toca lo que ya es un atributo o va dentro de una etiqueta (lookbehind de comillas y >); la puntuacion final se queda fuera del enlace. */
+function enlaces(string $html): string {
+    if (!str_contains($html, '://')) return $html;
+    return preg_replace_callback('~(?<![">=/])\bhttps?://[^\s<]+~', function ($m) {
+        $url = rtrim(preg_split('~&(?:quot|lt|gt|#0?39);~', $m[0])[0], '.,;:)');   // una comilla o < > escritos por el usuario (ya escapados) cierran la URL
+        $tail = substr($m[0], strlen($url));
+        return "<a href=\"$url\" rel=\"noopener nofollow\">" . h(mb_strimwidth(html_entity_decode($url, ENT_QUOTES), 0, 60, '…')) . "</a>$tail";
+    }, $html);
+}
 function redirect(string $to): never { header("Location: $to"); exit; }
 // Los navegadores envian los textarea con CRLF: se normaliza a LF, que es lo que esperan los parrafos (\n\n) al pintar.
 function post(string $k, string $d = ''): string { return trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST[$k] ?? $d))); }
@@ -192,7 +202,7 @@ function queda(string $published): string {
     $ttl = (int)cfg('thread_ttl_hours', 48) * 3600;
     $s = strtotime($published) + $ttl - time();
     if ($s <= 0) return t('archivado');
-    return $s < 3600 ? t('muere en %d min', intdiv($s, 60)) : t('muere en %d h', intdiv($s, 3600));
+    return $s < 3600 ? t('se archiva en %d min', intdiv($s, 60)) : t('se archiva en %d h', intdiv($s, 3600));   // antes «muere en» (cambiado el 07/10/2026 a peticion de Angel)
 }
 function vida_pct(string $published): int {
     $ttl = (int)cfg('thread_ttl_hours', 48) * 3600;
@@ -268,7 +278,7 @@ function community_quota(PDO $pdo, ?array $u): int {
     return is_admin() ? 99 : max(0, $max - (int)$st->fetchColumn());
 }
 function community_link(array $s): string {
-    return "<a href=\"/comunidad.php?c=" . rawurlencode((string)$s['comm_slug']) . "\">" . h($s['comm_name']) . "</a>";
+    return "<a href=\"/comunidad/" . rawurlencode((string)$s['comm_slug']) . "\">" . h($s['comm_name']) . "</a>";
 }
 /** Todas las comunidades del envio (story_communities), la principal primero: " · Cine clásico, Cortos". '' si no hay.
  *  Usa comm_list (GROUP_CONCAT de story_query_base) si viene; si no, la principal. */
@@ -371,19 +381,19 @@ function topic_delete(PDO $pdo, int $topic_id, int $to): ?string {
     } catch (PDOException $e) { $pdo->rollBack(); return 'No se pudo borrar el tema: ' . $e->getMessage(); }
     return null;
 }
-/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub / u:yt / u:agg (lo ultimo de Mis medios / Mis substacks / Mis canales / Mis agregadores, /ultimo.php) */
+/** A donde aterriza el usuario al entrar: '' = portada | t:ID | c:ID | u:medio / u:sub / u:yt / u:agg (lo ultimo de Mis medios / Mis substacks / Mis canales / Mis agregadores, /ultimo) */
 function landing_url(PDO $pdo, ?array $u): string {
     $l = (string)($u['landing'] ?? '');
-    if ($l === 'u:medio' || $l === 'u:sub') return (string)cfg('sources_enabled', '1') === '1' ? '/ultimo.php?k=' . ($l === 'u:sub' ? 'newsletter' : 'medio') : '/';
+    if ($l === 'u:medio' || $l === 'u:sub') return (string)cfg('sources_enabled', '1') === '1' ? '/ultimo?k=' . ($l === 'u:sub' ? 'newsletter' : 'medio') : '/';
     if (preg_match('/^t:(\d+)$/', $l, $m)) {
         $st = $pdo->prepare("SELECT 1 FROM topics WHERE topic_id = ?"); $st->execute([(int)$m[1]]);
-        if ($st->fetchColumn()) return '/tema.php?t=' . (int)$m[1];
+        if ($st->fetchColumn()) return '/tema/' . (int)$m[1];
     } elseif (preg_match('/^c:(\d+)$/', $l, $m)) {
         $st = $pdo->prepare("SELECT slug FROM communities WHERE community_id = ? AND status = 'ok'"); $st->execute([(int)$m[1]]);
-        if ($slug = $st->fetchColumn()) return '/comunidad.php?c=' . rawurlencode($slug);
+        if ($slug = $st->fetchColumn()) return '/comunidad/' . rawurlencode($slug);
     }
-    if ($l === 'u:agg' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_agregadores', '0') === '1') return '/ultimo.php?k=agregador';
-    if ($l === 'u:yt' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_youtube', '1') === '1') return '/ultimo.php?k=youtube';
+    if ($l === 'u:agg' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_agregadores', '0') === '1') return '/ultimo?k=agregador';
+    if ($l === 'u:yt' && (string)cfg('sources_enabled', '1') === '1' && (string)cfg('sources_youtube', '1') === '1') return '/ultimo?k=youtube';
     return '/';
 }
 
@@ -541,7 +551,7 @@ const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delt
  *  Las cuatro de foro (v156: Marino = Burbuja, Acero = HTCMania, Sendero = ForoMTB, Pildora = ForoBeta) heredan de Comunidad. */
 const DDD_SKIN_FAM = ['marino' => 'comunidad', 'acero' => 'comunidad', 'sendero' => 'comunidad', 'pildora' => 'comunidad', 'brasa' => 'comunidad'];   // brasa = Mediavida (v158)
 function skin_fam(): string { return DDD_SKIN_FAM[skin()] ?? skin(); }
-/** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin.php) o en /plantilla.php. */
+/** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin) o en /plantilla. */
 const DDD_SKIN_COOKIE = 'ddd_skin';
 /** Cookie de preferencia (plantilla, tema, idioma) para quien no tiene cuenta: un año, y solo porque la persona la pidio; '' la borra. */
 function pref_cookie(string $name, string $v): void {
@@ -567,7 +577,7 @@ function save_theme_pref(string $t): void {
 /** Modo «sin distracciones» (solo cambia el escritorio de tres columnas): sin columna derecha, la central se ensancha hasta ocupar su
  *  sitio y las fotos dejan de ir como tarjeta bajo el texto para ir a la derecha del titular, al ancho que tenia esa columna. Pensado para
  *  leer los originales. Es una preferencia del navegador, no de la cuenta (depende de la pantalla): cookie ddd_foco, con o sin sesion;
- *  se cambia en el menu lateral (/cambiar-skin.php?z=…). Tres estados: sin cookie = solo en Originales (la lista /originales.php y el hilo
+ *  se cambia en el menu lateral (/cambiar-skin?z=…). Tres estados: sin cookie = solo en Originales (la lista /originales y el hilo
  *  de un original: esas paginas llaman a foco_por_defecto() antes de pintar); '1' = siempre; '0' = nunca.
  *  page_header() lo marca en <html data-foco="1">. */
 $DDD_FOCO_DEF = false;
@@ -980,24 +990,25 @@ function icon(string $n): string {
         'play'   => '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l5-2.8z" fill="currentColor" stroke="none"/>',   // canales de YouTube: pantalla con triangulo (generico, no el logotipo)
         'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
         'bell'   => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/>',   // avisos (campanita)
+        'mega'   => '<path d="M3 10v4h3l7 4V6l-7 4z"/><path d="M17 9a4.5 4.5 0 0 1 0 6"/><path d="M6 14v4h2"/>',   // megafono: mensaje a la comunidad en el Chat (migra-121)
         'sun'    => '<circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',   // me gusta (comentarios)
         'tear'   => '<path d="M12 3.5c3.2 4.6 6 7.8 6 11.2a6 6 0 0 1-12 0c0-3.4 2.8-6.6 6-11.2z"/>',   // no me gusta (comentarios): lagrima; relleno via CSS cuando es la tuya
         'eye'    => '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',   // lecturas del hilo (migra-120)
         'out'    => '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',   // clics de salida al medio (migra-120)
-        'search' => '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/>',   // lupa: buscador (/buscar.php, migra-085)
+        'search' => '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/>',   // lupa: buscador (/buscar, migra-085)
     ][$n] ?? '';
     return "<svg class=\"i\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">$p</svg>";
 }
 
-/** Enlace «editar» de moderación junto a un envío o artículo (solo mods y admin); lleva a /editar.php. */
+/** Enlace «editar» de moderación junto a un envío o artículo (solo mods y admin); lleva a /editar. */
 function mod_edit_link(array $s): string {
     if (!is_mod()) return '';
-    return "<a class=\"modlink\" href=\"/editar.php?id={$s['story_id']}\" title=\"" . t('editar (moderación)') . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
+    return "<a class=\"modlink\" href=\"/editar?id={$s['story_id']}\" title=\"" . t('editar (moderación)') . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
 }
-/** Enlace «editar» para el autor de un envío dentro del plazo (misma pagina /editar.php, campos limitados). '' si no procede. */
+/** Enlace «editar» para el autor de un envío dentro del plazo (misma pagina /editar, campos limitados). '' si no procede. */
 function own_edit_link(array $s): string {
     if (is_mod() || !can_edit_own_story($s)) return '';
-    return "<a class=\"modlink\" href=\"/editar.php?id={$s['story_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('story_edit_minutes', 15)) . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
+    return "<a class=\"modlink\" href=\"/editar?id={$s['story_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('story_edit_minutes', 15)) . "\">" . icon('edit') . "<span>" . t('editar') . "</span></a>";
 }
 
 /* ---- layout (estilo timeline) -------------------------------------- */
@@ -1036,7 +1047,7 @@ function story_indexable(array $s): bool {
     return cfg('index_articles', '1') === '1' && ($s['content_type'] ?? '') === 'article' && (int)($s['indexable'] ?? 0) === 1
         && in_array($s['status'] ?? '', ['nuevas', 'destacadas', 'archived'], true);
 }
-/** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos.php); $doc: titulo del documento (<title>) cuando
+/** $head: etiquetas extra para <head> (p. ej. el meta refresh de /procesos); $doc: titulo del documento (<title>) cuando
  *  no debe ser el de la barra (las paginas fijas llevan «Sobre Deltha» en la barra y su titulo real en la pestaña del navegador). */
 /** <meta refresh> a la misma URL con auto=1, para que la analitica no cuente las recargas automaticas como paginas vistas (ana_hit) */
 /** La propia pagina con auto=1: la recarga automatica no cuenta como visita nueva en la analitica. */
@@ -1086,9 +1097,9 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<header class=\"top\"><a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
     global $DDD_CRUMB;
     echo "<span class=\"ttl\">" . ($DDD_CRUMB ? "<a class=\"crumb\" href=\"" . h($DDD_CRUMB[0]) . "\">" . h($DDD_CRUMB[1]) . "</a><span class=\"crumbsep\"> › </span>" : '') . h($title) . "</span>";
-    if (buscar_on()) echo "<a class=\"lupa\" href=\"/buscar.php\" title=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</a>";   // movil y tablet; en escritorio la caja va en el rail
-    if ($u) echo avisos_bell('top') . "<a class=\"me\" href=\"/perfil.php\" title=\"" . t('perfil') . "\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
-    else    echo "<a class=\"me\" href=\"/login.php\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
+    if (buscar_on()) echo "<a class=\"lupa\" href=\"/buscar\" title=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</a>";   // movil y tablet; en escritorio la caja va en el rail
+    if ($u) echo avisos_bell('top') . "<a class=\"me\" href=\"/perfil\" title=\"" . t('perfil') . "\">" . ($u['avatar'] ? "<span class=\"av photo mini\" style=\"background-image:url('/media/avatars/" . h($u['avatar']) . "')\"></span>" : icon('user')) . "<span>" . h($u['login']) . "</span></a>";
+    else    echo "<a class=\"me\" href=\"/login\">" . icon('user') . "<span>" . t('entrar') . "</span></a>";
     echo "</header>";
     nav_tabs($tab, 'tabs-top');
     nav_fuentes($tab);
@@ -1101,24 +1112,25 @@ function nav_tabs(string $tab, string $cls): void {
         'medios'       => ['/?portada=medios', t('Medios'), 'news'],
         'substacks'    => ['/?portada=substacks', t('Substacks'), 'letter'],
         'canales'      => ['/?portada=canales', t('Canales'), 'play'],
-        'radar'        => ['/radar.php', t('Radar'), 'radar'],
-        'originales'   => ['/originales.php', t('Originales'), 'art'],
-        'chat'         => ['/chat.php', t('Chat'), 'chat'],
+        'radar'        => ['/radar', t('Radar'), 'radar'],
+        'originales'   => ['/originales', t('Originales'), 'art'],
+        'chat'         => ['/chat', t('Chat'), 'chat'],
     ] : [
-        'temas'        => ['/temas.php', t('Temas'), 'tag'],            // solo en el rail (01/10): en modo sin distracciones no hay columna derecha, que era
-        'comunidades'  => ['/comunidades.php', t('Comunidades'), 'comm'],   // donde se veian temas y comunidades; en movil ya estan en la franja nav.tabs-fuentes
-        'usuarios'     => ['/usuarios.php', t('Usuarios'), 'users'],
-        'plantilla'    => ['/plantilla.php', t('Skin'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
-        'procesos'     => ['/procesos.php', t('Procesos'), 'proc'],
-        'estadisticas' => ['/estadisticas.php', t('Estadísticas'), 'stats'],
-        'analitica'    => ['/analitica.php', t('Analítica'), 'stats'],   // solo registrados y solo en el rail (en movil, desde Estadisticas)
-        'mensajes'     => ['/mensajes.php', t('Mensajes'), 'msg'],
+        'temas'        => ['/temas', t('Temas'), 'tag'],            // solo en el rail (01/10): en modo sin distracciones no hay columna derecha, que era
+        'comunidades'  => ['/comunidades', t('Comunidades'), 'comm'],   // donde se veian temas y comunidades; en movil ya estan en la franja nav.tabs-fuentes
+        'usuarios'     => ['/usuarios', t('Usuarios'), 'users'],
+        'plantilla'    => ['/plantilla', t('Skin'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
+        'procesos'     => ['/procesos', t('Procesos'), 'proc'],
+        'estadisticas' => ['/estadisticas', t('Estadísticas'), 'stats'],
+        'analitica'    => ['/analitica', t('Analítica'), 'stats'],   // solo registrados y solo en el rail (en movil, desde Estadisticas)
+        'mensajes'     => ['/mensajes', t('Mensajes'), 'msg'],
     ];
     if (!portada_canales_on()) unset($tabs['canales']);
     if ($cls !== 'tabs-bottom') unset($tabs['plantilla']);
     if ($cls !== 'rail-bottom') unset($tabs['temas'], $tabs['comunidades']);
     if (isset($tabs['analitica']) && ($cls === 'tabs-bottom' || !user() || !ana_on())) unset($tabs['analitica']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
+    if (isset($tabs['chat']) && $cls === 'rail-top') $tabs['chat'][1] = t('Chat / Ayuda');   // en escritorio (rail) la pestaña anuncia tambien la ayuda; en movil sigue «Chat», que no cabe mas (07/10/2026)
     // pestañas de arriba: Radar va en el centro exacto en movil (v160). Lo de antes y lo de despues se envuelve en dos grupos
     // (span.g, display: contents salvo en movil) que ocupan mitades iguales; Radar lleva la clase «radar» y se destaca un poco.
     $keys = array_keys($tabs); $ri = $cls === 'tabs-top' ? array_search('radar', $keys, true) : false;
@@ -1134,13 +1146,13 @@ function nav_tabs(string $tab, string $cls): void {
     echo ($ctr ? '</span>' : '') . "</nav>";
 }
 /** Franja bajo las pestañas, solo cuando no hay rail (movil y tablet, < 1100 px): lo que en escritorio esta en el rail y en la columna
- *  derecha — Mis substacks, Mis medios y Mis agregadores (/ultimo.php), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
+ *  derecha — Mis substacks, Mis medios y Mis agregadores (/ultimo), Temas y Comunidades — con icono y rotulo como el muelle de abajo. */
 function nav_fuentes(string $tab): void {
     global $pdo; require_once __DIR__ . '/fuentes.php';
     $tabs = [];
-    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_visibles($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo.php?k=$k", t(DDD_ULTIMO_KINDS[$k][0]), $ic];   // «Mis substacks», «Mis medios»: como en el rail, para no confundirlos con las portadas
-    $tabs['temas'] = ['/temas.php', t('Temas'), 'tag'];
-    $tabs['comunidades'] = ['/comunidades.php', t('Comunidades'), 'comm'];
+    if (fuentes_on()) foreach (DDD_ULTIMO_KINDS as $k => [, $ic]) if (fuentes_visibles($pdo, $k)) $tabs["ultimo:$k"] = ["/ultimo?k=$k", t(DDD_ULTIMO_KINDS[$k][0]), $ic];   // «Mis substacks», «Mis medios»: como en el rail, para no confundirlos con las portadas
+    $tabs['temas'] = ['/temas', t('Temas'), 'tag'];
+    $tabs['comunidades'] = ['/comunidades', t('Comunidades'), 'comm'];
     echo "<nav class=\"tabs-fuentes\">";
     foreach ($tabs as $k => [$href, $label, $ic]) echo "<a href=\"" . h($href) . "\" title=\"" . h($label) . "\"" . ($k === $tab ? ' class="on"' : '') . ">" . icon($ic) . "<span>" . h($label) . "</span></a>";   // icono y rotulo debajo (v159); «Mis canales» y «Mis agregadores» solo salen si estan encendidos en admin > Config
     echo "</nav>";
@@ -1157,20 +1169,21 @@ function unread_msgs(): int {
     return $n;
 }
 function footer_links(): string {
-    $h  = "<a href=\"/que-es.php\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad.php\">" . t('Privacidad y contacto') . "</a> · <a href=\"/cookies.php\">" . t('Cookies y JavaScript') . "</a> · <a href=\"/normas.php\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo.php\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades.php\">" . t('Comunidades') . "</a>";
-    // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios.php?k=…), no uno por agregador
+    $h  = "<a href=\"/que-es\">" . t('¿Qué es Deltha?') . "</a> · <a href=\"https://contralgoritmia.com/\" rel=\"noopener\">" . t('Manifiesto contralgorítmico') . "</a> · <a href=\"/privacidad\">" . t('Privacidad y contacto') . "</a> · <a href=\"/cookies\">" . t('Cookies y JavaScript') . "</a> · <a href=\"/normas\">" . t('Normas de uso') . "</a> · <a href=\"/algoritmo\">" . t('Cómo funciona el δ') . "</a> · <a href=\"/comunidades\">" . t('Comunidades') . "</a>";
+    // fuentes externas pintadas con Deltha: un enlace por grupo al catalogo (/medios?k=…), no uno por agregador
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (fuentes_on()) {
-        foreach (['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'youtube' => 'YouTube', 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios.php?k=$k\">" . h($label) . "</a>";
+        foreach (['medio' => t('Medios'), 'newsletter' => t('Substacks'), 'youtube' => 'YouTube', 'agregador' => t('Agregadores')] as $k => $label) if (fuentes_visibles($pdo, $k)) $h .= " · <a href=\"/medios?k=$k\">" . h($label) . "</a>";
     }
+    $h .= " · <a href=\"/rss?portada=" . portada_actual() . "\" type=\"application/rss+xml\">RSS</a>";   // el feed de la portada que se esta viendo (o la ultima elegida)
     $h .= " · " . t('Sin cookies para quien no inicia sesión (salvo las de skin, tema, idioma y portada, si los eliges) · sin rastreo · sin algoritmo oculto');
-    if (is_mod())   $h .= " · <a href=\"/moderacion.php\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
-    if (is_admin()) $h .= " · <a href=\"/admin.php\">admin</a>";
+    if (is_mod())   $h .= " · <a href=\"/moderacion\">" . t('moderación') . (open_reports() ? " (" . open_reports() . ")" : "") . "</a>";
+    if (is_admin()) $h .= " · <a href=\"/admin\">admin</a>";
     return $h;
 }
 function page_footer(): void {
     echo "</main>";
-    echo "<a class=\"fab\" href=\"/enviar.php\" aria-label=\"" . t('Enviar') . "\">" . icon('plus') . "</a>";
+    echo "<a class=\"fab\" href=\"/enviar\" aria-label=\"" . t('Enviar') . "\">" . icon('plus') . "</a>";
     // pie en flujo (movil): al final de cada pagina
     echo "<footer class=\"inflow\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a>";
     echo "<p>" . footer_links() . "</p></footer>";
@@ -1186,5 +1199,5 @@ function page_footer(): void {
     echo "</body></html>";
 }
 function current_tab(): string { global $DDD_TAB; return $DDD_TAB ?? ''; }
-/** Buscador interno (/buscar.php): lupa en la cabecera y caja en el rail. config.search_enabled (migra-085). */
+/** Buscador interno (/buscar): lupa en la cabecera y caja en el rail. config.search_enabled (migra-085). */
 function buscar_on(): bool { return (string)cfg('search_enabled', '1') === '1'; }

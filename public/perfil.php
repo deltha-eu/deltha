@@ -4,7 +4,7 @@ require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/imagen.php';
 require __DIR__ . '/../lib/fuentes.php';
 $u = user();
-if (!$u) redirect('/login.php');
+if (!$u) redirect('/login');
 $err = null; $ok = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $theme = in_array(post('theme'), ['auto', 'light', 'dark'], true) ? post('theme') : 'auto';
-    $skin  = (string)($u['skin'] ?? '');   // la plantilla se elige en /plantilla.php
+    $skin  = (string)($u['skin'] ?? '');   // la plantilla se elige en /plantilla
     $landing = preg_match('/^((t|c):\d{1,9}|u:(medio|sub|yt|agg))$/', post('landing')) ? post('landing') : '';
     $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
     $mylang = post('src_mylang') === '1' ? 1 : 0;   // solo fuentes (medios, substacks, agregadores) en mi idioma
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ?, src_mylang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $mylang, $u['user_id']]);
         try { $pdo->prepare("UPDATE users SET twofa = ? WHERE user_id = ?")->execute([post('twofa') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-095 sin aplicar */ }
         try { $pdo->prepare("UPDATE users SET show_follows = ? WHERE user_id = ?")->execute([post('show_follows') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-116 sin aplicar */ }
-        redirect('/perfil.php?ok=1');
+        redirect('/perfil?ok=1');
     }
 }
 if (isset($_GET['ok'])) $ok = t('Perfil guardado.');
@@ -41,7 +41,7 @@ if (isset($_GET['ok'])) $ok = t('Perfil guardado.');
 page_header(t('Perfil'));
 echo "<div class=\"profile\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<div><h1>" . h($u['login']) . "</h1>";
 if ($u['bio']) echo "<p class=\"bio\">" . h($u['bio']) . "</p>";
-echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . " · <a href=\"/u.php?u=" . rawurlencode($u['login']) . "\">" . t('ver perfil público') . "</a> · <a href=\"/usuarios.php\">" . t('usuarios') . "</a> · <a href=\"/comunidades.php\">" . t('comunidades') . "</a>" . (is_mod() ? " · <a href=\"/moderacion.php\">" . t('moderación') . "</a>" : "") . (is_admin() ? " · <a href=\"/admin.php\">admin</a>" : "") . " · <a href=\"/salir.php\">" . t('salir') . "</a></p></div></div>";
+echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . " · <a href=\"/u/" . rawurlencode($u['login']) . "\">" . t('ver perfil público') . "</a> · <a href=\"/usuarios\">" . t('usuarios') . "</a> · <a href=\"/comunidades\">" . t('comunidades') . "</a>" . (is_mod() ? " · <a href=\"/moderacion\">" . t('moderación') . "</a>" : "") . (is_admin() ? " · <a href=\"/admin\">admin</a>" : "") . " · <a href=\"/salir\">" . t('salir') . "</a></p></div></div>";
 profile_tabs('perfil');
 echo "<p class=\"notice\">" . t('Tu foto y tu frase se ven en tu perfil y junto a tu nombre cuando se revela, a los %d minutos de cada aportación. Hasta entonces eres un alias con halo.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
@@ -53,7 +53,7 @@ if (ghost_on() && (($gl = ghost_list($pdo, (int)$u['user_id'])) || isset($_GET['
     if (!$gl) echo "<p class=\"end\">" . t('No has ghosteado a nadie.') . "</p>";
     foreach ($gl as $g) {
         echo "<div class=\"ulist\">" . avatar((float)$g['aura'], $g['login'], $g['avatar']) . "<div><b>" . h($g['login']) . "</b><span class=\"meta\"> · " . t('desde') . " " . h(hace($g['created'])) . "</span>";
-        echo "<form class=\"inline\" method=\"post\" action=\"/ghostear.php\"><input type=\"hidden\" name=\"u\" value=\"" . h($g['login']) . "\"><input type=\"hidden\" name=\"act\" value=\"deshacer\"><button class=\"link\">" . t('deshacer') . "</button></form></div></div>";
+        echo "<form class=\"inline\" method=\"post\" action=\"/ghostear\"><input type=\"hidden\" name=\"u\" value=\"" . h($g['login']) . "\"><input type=\"hidden\" name=\"act\" value=\"deshacer\"><button class=\"link\">" . t('deshacer') . "</button></form></div></div>";
     }
     if ($gl) echo "<small class=\"hint\">" . t('Ni ellos ven tu nombre ni tú el suyo; sus comentarios te salen plegados y no podéis escribiros. Nadie recibe aviso.') . "</small>";
     echo "</div>";
@@ -86,7 +86,7 @@ foreach (['auto' => t('Automático (como el sistema)'), 'light' => t('Claro'), '
 }
 echo "</select>";
 $cur = (string)($u['skin'] ?? '');
-echo "" . t('<label>Skin</label>') . "<p class=\"skinnow\"><b>" . h($cur !== '' ? DDD_SKINS[$cur] : skin_descs()['']) . "</b> · <a href=\"/plantilla.php\">" . t('elegir otra') . "</a></p><small class=\"hint\">" . t('Las skins se eligen en su propia pestaña, con muestra y descripción de cada una; el tema claro/oscuro de arriba se aplica a todas.') . "</small>";
+echo "" . t('<label>Skin</label>') . "<p class=\"skinnow\"><b>" . h($cur !== '' ? DDD_SKINS[$cur] : skin_descs()['']) . "</b> · <a href=\"/plantilla\">" . t('elegir otra') . "</a></p><small class=\"hint\">" . t('Las skins se eligen en su propia pestaña, con muestra y descripción de cada una; el tema claro/oscuro de arriba se aplica a todas.') . "</small>";
 echo "<label id=\"aterrizar\">" . t('Al abrir Deltha, entrar en…') . "</label><select name=\"landing\"><option value=\"\"" . t('>La portada</option>')
    . (fuentes_on() ? "<option value=\"u:medio\"" . (($u['landing'] ?? '') === 'u:medio' ? ' selected' : '') . ">" . t('Mis medios') . "</option><option value=\"u:sub\"" . (($u['landing'] ?? '') === 'u:sub' ? ' selected' : '') . ">" . t('Mis substacks') . "</option>" . (youtube_on() && fuentes_activas($pdo, 'youtube') ? "<option value=\"u:yt\"" . (($u['landing'] ?? '') === 'u:yt' ? ' selected' : '') . ">" . t('Mis canales') . "</option>" : '') . (agregadores_on() ? "<option value=\"u:agg\"" . (($u['landing'] ?? '') === 'u:agg' ? ' selected' : '') . ">" . t('Mis agregadores') . "</option>" : '') : '')
    . "<optgroup label=\"" . t('Un tema') . "\">";
@@ -94,7 +94,7 @@ foreach ($pdo->query("SELECT topic_id, name FROM topics ORDER BY name") as $t) e
 echo "</optgroup><optgroup label=\"" . t('Una comunidad') . "\">";
 foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) echo "<option value=\"c:{$co['community_id']}\"" . (($u['landing'] ?? '') === "c:{$co['community_id']}" ? ' selected' : '') . ">" . h($co['name']) . "</option>";
 echo "</optgroup></select><small class=\"hint\">" . t('Se aplica al entrar con tu cuenta y al abrir Deltha desde fuera (un marcador, la app); la pestaña Portada sigue llevando a la portada.') . "</small>";
-// los medios y substacks favoritos ya no se eligen aqui (eran tres desplegables): pestañas «Mis medios» y «Mis substacks» (/mis-fuentes.php)
-if (fuentes_on()) { require_once __DIR__ . '/../lib/propuestas.php'; if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente.php') . "</p>"; }
+// los medios y substacks favoritos ya no se eligen aqui (eran tres desplegables): pestañas «Mis medios» y «Mis substacks» (/mis-fuentes)
+if (fuentes_on()) { require_once __DIR__ . '/../lib/propuestas.php'; if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente') . "</p>"; }
 echo "" . t('<button>Guardar</button>') . "</form>";
 page_footer();

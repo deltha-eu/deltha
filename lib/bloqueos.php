@@ -2,7 +2,7 @@
 /**
  * lib/bloqueos.php — medios bloqueados: dominios cuyos enlaces no se admiten en Deltha
  * (p. ej. RT y Sputnik, prohibidos en la UE). Los gestionan moderadores y admin en
- * /moderacion.php#medios; se comprueba al enviar (/enviar.php) y al editar el enlace (/editar.php).
+ * /moderacion#medios; se comprueba al enviar (/enviar) y al editar el enlace (/editar).
  *
  * Funciona como los dominios de correo vetados: se guarda el dominio sin «www.» y en minúsculas,
  * y bloquea también sus subdominios (actualidad.rt.com cae con rt.com).

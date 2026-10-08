@@ -1,11 +1,11 @@
 <?php
-/** /editar.php?id=N — edición de un envío. Moderadores y admin: todo (titular, texto, enlace, tema,
+/** /editar?id=N — edición de un envío. Moderadores y admin: todo (titular, texto, enlace, tema,
  *  comunidad, foto, eliminar). El autor, en plazo (aura > story_edit_min_aura, story_edit_minutes
  *  desde el envío y mientras no llegue a portada): titular, entradilla/texto, tema y foto — el
  *  enlace no se toca — y retirar el envío. Toda edición que cambie algo marca stories.edited_at. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/imagen.php';
-if (!user()) redirect('/login.php');
+if (!user()) redirect('/login');
 
 $id = (int)($_GET['id'] ?? post('id'));
 $st = $pdo->prepare("SELECT * FROM stories WHERE story_id = ?");
@@ -18,7 +18,7 @@ if (!is_mod() && !$own) {
     $mine = (int)($s['user_id'] ?? 0) === (int)user()['user_id'];
     echo "<p class=\"end\">" . ($mine
         ? t('Ya no se puede editar: el plazo es de %d minutos desde el envío, hace falta aura mayor que %s y que el envío no haya llegado a portada.', (int)cfg('story_edit_minutes', 15), h(num_es(cfg('story_edit_min_aura', 10))))
-        : t('Solo el autor (en los primeros minutos) o los moderadores.')) . " <a href=\"/hilo.php?id=$id\">" . t('Volver al hilo') . "</a></p>";
+        : t('Solo el autor (en los primeros minutos) o los moderadores.')) . " <a href=\"/hilo/$id\">" . t('Volver al hilo') . "</a></p>";
     page_footer(); exit;
 }
 
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, url=?, source=?$mark WHERE story_id=?")
                 ->execute([$title, $content ?: null, $topic, $image, $url ?: null, $url ? source_of($url) : null, $id]);
         }
-        redirect("/hilo.php?id=$id");
+        redirect("/hilo/$id");
     }
     $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'url' => $url, 'image' => $image, 'indexable' => $idx]);
 }
@@ -81,9 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
 page_header(($isArt ? t('Editar artículo') : t('Editar envío')) . " #$id");   // sin <h1>: el titulo ya va en la cabecera
 if ($own) {
     $q = (int)cfg('story_edit_minutes', 15) * 60 - (time() - strtotime($s['sent_date']));
-    echo "<p class=\"notice\">" . t('Puedes corregir tu envío durante %d minutos tras enviarlo, mientras no llegue a portada (te quedan %d min). Quedará marcado como editado.', (int)cfg('story_edit_minutes', 15), max(1, intdiv($q, 60))) . " <a href=\"/hilo.php?id=$id\">" . t('Volver al hilo') . "</a>.</p>";
+    echo "<p class=\"notice\">" . t('Puedes corregir tu envío durante %d minutos tras enviarlo, mientras no llegue a portada (te quedan %d min). Quedará marcado como editado.', (int)cfg('story_edit_minutes', 15), max(1, intdiv($q, 60))) . " <a href=\"/hilo/$id\">" . t('Volver al hilo') . "</a>.</p>";
 } else {
-    echo "<p class=\"notice\">Edición de moderación. Los cambios se ven al momento; el autor, los votos y el delta no cambian. <a href=\"/hilo.php?id=$id\">Volver al hilo</a>.</p>";
+    echo "<p class=\"notice\">Edición de moderación. Los cambios se ven al momento; el autor, los votos y el delta no cambian. <a href=\"/hilo/$id\">Volver al hilo</a>.</p>";
 }
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"id\" value=\"$id\">";

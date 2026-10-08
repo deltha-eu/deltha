@@ -1,12 +1,12 @@
 <?php
-/** /editar-usuario.php?id=N — edición del perfil de otro usuario por moderadores y admin:
+/** /editar-usuario?id=N — edición del perfil de otro usuario por moderadores y admin:
  *  nick, frase y foto (mods y admin); correo, estado de activación, nueva contraseña, nivel (normal/mod/admin) y aura (solo admin).
- *  El formulario (lib/usuarios.php, modedit_form) es el mismo que sale en el perfil público (/u.php#modedit); con back=u se vuelve allí. */
+ *  El formulario (lib/usuarios.php, modedit_form) es el mismo que sale en el perfil público (/u#modedit); con back=u se vuelve allí. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/imagen.php';
 require __DIR__ . '/../lib/usuarios.php';
-if (!user()) redirect('/login.php');
+if (!user()) redirect('/login');
 if (!is_mod()) { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
 $id = (int)($_GET['id'] ?? post('id'));
@@ -14,7 +14,7 @@ $st = $pdo->prepare("SELECT user_id, login, email, level, aura, avatar, bio, ver
 $st->execute([$id]);
 $p = $st->fetch();
 if (!$p) { http_response_code(404); page_header('Editar usuario'); echo "<p class=\"end\">Ese usuario no existe.</p>"; page_footer(); exit; }
-// un moderador no toca a admins ni a otros moderadores (tampoco a quien modera por aura, ni a si mismo: eso va en /perfil.php); el admin puede con todos
+// un moderador no toca a admins ni a otros moderadores (tampoco a quien modera por aura, ni a si mismo: eso va en /perfil); el admin puede con todos
 if (!modedit_puede($p)) { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo el admin puede editar a moderadores y admins.</p>"; page_footer(); exit; }
 
 $err = null; $ok = ($_GET['ok'] ?? '') === '2' ? 'Perfil guardado y contraseña cambiada.' : (isset($_GET['ok']) ? 'Perfil guardado.' : null);
@@ -79,19 +79,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (is_admin() && $newpass !== '') {
             $pdo->prepare("UPDATE users SET pass = ?, token = NULL, token_sent = NULL WHERE user_id = ?")->execute([password_hash($newpass, PASSWORD_DEFAULT), $id]);
-            if (post('back') === 'u') redirect('/u.php?u=' . rawurlencode($login) . '&ok=2#modedit');
-            redirect("/editar-usuario.php?id=$id&ok=2");
+            if (post('back') === 'u') redirect('/u/' . rawurlencode($login) . '&ok=2#modedit');
+            redirect("/editar-usuario?id=$id&ok=2");
         }
-        if (post('back') === 'u') redirect('/u.php?u=' . rawurlencode($login) . '&ok=1#modedit');
-        redirect("/editar-usuario.php?id=$id&ok=1");
+        if (post('back') === 'u') redirect('/u/' . rawurlencode($login) . '&ok=1#modedit');
+        redirect("/editar-usuario?id=$id&ok=1");
     }
-    if ($err && post('back') === 'u') redirect('/u.php?u=' . rawurlencode($p['login']) . '&err=' . rawurlencode($err) . '#modedit');
+    if ($err && post('back') === 'u') redirect('/u/' . rawurlencode($p['login']) . '&err=' . rawurlencode($err) . '#modedit');
     $p = array_merge($p, ['login' => $login, 'bio' => $bio, 'avatar' => $avatar, 'email' => $email, 'verified' => $verified] + (is_admin() ? ['aura' => $aura ?? $p['aura'], 'level' => $level ?? $p['level']] : []));
 }
 
 page_header('Editar usuario');
 echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . h($p['login']) . "</h1>";
-echo "<p class=\"meta\">#{$p['user_id']} · " . h($p['level']) . " · aura " . number_format((float)$p['aura'], 1, ',', '') . " · desde " . date('M Y', strtotime($p['created'])) . " · <a href=\"/u.php?u=" . rawurlencode($p['login']) . "\">perfil público</a>" . (is_admin() ? " · <a href=\"/admin.php\">admin</a>" : "") . "</p></div></div>";
+echo "<p class=\"meta\">#{$p['user_id']} · " . h($p['level']) . " · aura " . number_format((float)$p['aura'], 1, ',', '') . " · desde " . date('M Y', strtotime($p['created'])) . " · <a href=\"/u/" . rawurlencode($p['login']) . "\">perfil público</a>" . (is_admin() ? " · <a href=\"/admin\">admin</a>" : "") . "</p></div></div>";
 echo "<p class=\"notice\">Edición de moderación del perfil de otro usuario. Los cambios se ven al momento; el usuario no recibe aviso.</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($ok)  echo "<p class=\"notice\">" . h($ok) . "</p>";

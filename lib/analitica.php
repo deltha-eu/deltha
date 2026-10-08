@@ -8,7 +8,7 @@
  *   sesiones   = paginas marcadas new_session (primera tras analytics_session_minutes sin actividad),
  *   paginas    = filas.
  * ana_tick() (cron) cierra cada dia en ana_daily y borra el detalle de mas de analytics_keep_days dias.
- * /analitica.php (registrados) muestra ayer / mes / año desde ana_daily; admin -> Analitica, el detalle en vivo desde hits.
+ * /analitica (registrados) muestra ayer / mes / año desde ana_daily; admin -> Analitica, el detalle en vivo desde hits.
  */
 declare(strict_types=1);
 

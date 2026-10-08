@@ -374,7 +374,7 @@ $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario v
 page_header('Admin', '', $tab === 'analitica' ? '<meta http-equiv="refresh" content="60">' : '');
 echo "<div class=\"admin\">";
 echo "<nav class=\"tabs\">";
-foreach ($TABS as $k => $v) echo "<a href=\"/admin.php?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v</a>";
+foreach ($TABS as $k => $v) echo "<a href=\"/admin?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v</a>";
 echo "</nav>";
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
 if (!empty($pedir_confirmacion)) {
@@ -384,7 +384,7 @@ if (!empty($pedir_confirmacion)) {
     echo "<div class=\"error\" style=\"padding:12px 16px;margin-bottom:16px\"><strong>Borrar la cuenta «" . h($pc['login']) . "» (#{$pc['user_id']})</strong><br>"
        . "Se eliminarán de verdad sus {$ns['s']} envíos (con todos los comentarios y votos de cualquiera que haya en esos hilos), sus {$ns['c']} comentarios (con las respuestas de otros que cuelguen de ellos), sus {$ns['v']} votos, alias, aura y avatar. No hay vuelta atrás.<br>"
        . "<form method=\"post\" style=\"display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"uid\" value=\"{$pc['user_id']}\">"
-       . "Escribe el nombre de usuario para confirmar: <input type=\"text\" name=\"confirmar\" autocomplete=\"off\" style=\"width:160px\"> <button class=\"btn\">Borrar definitivamente</button> <a class=\"btn\" href=\"/admin.php\">cancelar</a></form></div>";
+       . "Escribe el nombre de usuario para confirmar: <input type=\"text\" name=\"confirmar\" autocomplete=\"off\" style=\"width:160px\"> <button class=\"btn\">Borrar definitivamente</button> <a class=\"btn\" href=\"/admin\">cancelar</a></form></div>";
 }
 
 if ($tab === 'usuarios') {
@@ -397,8 +397,8 @@ if ($tab === 'usuarios') {
     $l->execute($args);
     echo "<h3 id=\"usuarios\">Usuarios ($nU)</h3>";
     require_once __DIR__ . '/../lib/usuarios.php';
-    echo user_create_form('admin');   // «+ Crear un usuario» (lo guarda /crear-usuario.php)
-    echo "<form method=\"get\" action=\"/admin.php\" style=\"display:flex;gap:6px;margin-bottom:8px\"><input type=\"hidden\" name=\"t\" value=\"usuarios\"><input type=\"text\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"usuario o correo\" style=\"flex:1\"><button class=\"btn\">Buscar</button>" . ($q !== '' ? " <a class=\"btn\" href=\"/admin.php\">todos</a>" : "") . "</form>";
+    echo user_create_form('admin');   // «+ Crear un usuario» (lo guarda /crear-usuario)
+    echo "<form method=\"get\" action=\"/admin\" style=\"display:flex;gap:6px;margin-bottom:8px\"><input type=\"hidden\" name=\"t\" value=\"usuarios\"><input type=\"text\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"usuario o correo\" style=\"flex:1\"><button class=\"btn\">Buscar</button>" . ($q !== '' ? " <a class=\"btn\" href=\"/admin\">todos</a>" : "") . "</form>";
     $rows = $l->fetchAll();
     echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"mods\"><input type=\"hidden\" name=\"ids\" value=\"" . implode(',', array_column($rows, 'user_id')) . "\">";
     $modaura = (float)cfg('mod_aura', 20);
@@ -412,24 +412,24 @@ if ($tab === 'usuarios') {
             $cell .= "</select>" . (mod_origen($r) === 'aura' ? "<br><small>mod por aura</small>" : "");
         }
         // los botones usan formularios propios (atributo form=) para no anidarlos en el de moderadores
-        $acc = "<a class=\"btn sm\" href=\"/editar-usuario.php?id={$r['user_id']}\" title=\"editar nick, frase, foto y correo\">editar</a> ";
+        $acc = "<a class=\"btn sm\" href=\"/editar-usuario?id={$r['user_id']}\" title=\"editar nick, frase, foto y correo\">editar</a> ";
         $acc .= (int)$r['verified'] === 0 ? "<button class=\"btn sm\" form=\"ver{$r['user_id']}\" title=\"marcar el correo como validado\">validar</button> " : "";
         if ($r['level'] !== 'admin') $acc .= "<button class=\"btn sm\" form=\"del{$r['user_id']}\" title=\"borrar la cuenta y todo lo suyo\">borrar</button>";
         $meta = h($r['email']) . ((int)$r['verified'] === 0 ? " (sin activar)" : "") . " · registro " . h(substr($r['created'], 0, 16)) . ($r['last_seen'] ? " · último acceso " . h(hace($r['last_seen'])) : "");
-        echo "<tr><td class=\"num\">{$r['user_id']}</td><td class=\"who\"><a href=\"/u.php?u=" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a><small>$meta</small></td><td>" . h($r['aura']) . "</td><td style=\"text-align:center\">$cell</td><td class=\"acc\">$acc</td></tr>";
+        echo "<tr><td class=\"num\">{$r['user_id']}</td><td class=\"who\"><a href=\"/u/" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a><small>$meta</small></td><td>" . h($r['aura']) . "</td><td style=\"text-align:center\">$cell</td><td class=\"acc\">$acc</td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar niveles</button></p></form>";
     foreach ($rows as $r) {
-        echo "<form id=\"ver{$r['user_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"verificar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
-        echo "<form id=\"del{$r['user_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
+        echo "<form id=\"ver{$r['user_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"verificar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
+        echo "<form id=\"del{$r['user_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"uid\" value=\"{$r['user_id']}\"></form>";
     }
     $pages = max(1, (int)ceil($nU / $per));
     if ($pages > 1) {
         $qs = $q !== '' ? "&q=" . rawurlencode($q) : "";
         echo "<p>";
-        if ($up > 1) echo "<a href=\"/admin.php?t=usuarios&up=" . ($up - 1) . "$qs\">← anterior</a> ";
+        if ($up > 1) echo "<a href=\"/admin?t=usuarios&up=" . ($up - 1) . "$qs\">← anterior</a> ";
         echo "$up / $pages";
-        if ($up < $pages) echo " <a href=\"/admin.php?t=usuarios&up=" . ($up + 1) . "$qs\">siguiente →</a>";
+        if ($up < $pages) echo " <a href=\"/admin?t=usuarios&up=" . ($up + 1) . "$qs\">siguiente →</a>";
         echo "</p>";
     }
 
@@ -455,7 +455,7 @@ if ($tab === 'usuarios') {
     echo "<p><button class=\"btn\">Guardar</button></p>";
     echo "<p><small>El cron llama al script cada minuto; cada ventana del intervalo tiene un minuto de ejecución que depende del secreto del sitio (fuera nadie lo sabe: contra el <i>sniping</i>, la web dice «antes de las hh:mm»). Los ciclos se turnan entre Medios y Substacks (el de ahora le toca a <b>" . h(DDD_PORTADAS[portada_turno(ciclo_ventana(time()))]) . "</b>, si se ejecuta a mano) y cada uno publica en su portada <b>uno</b> del radar de esa portada, elegido a suertes con probabilidad proporcional al δ entre los que llevan los minutos indicados, tienen los votos netos que cuentan indicados (la puerta es en votos, no en δ: con la raíz un solo voto ya daba δ = 1) y llegan al δ mínimo de su portada; si no hay ninguno y está activada la cesión, publica en la otra. Los originales no van a portada. Lo que pasa las horas indicadas sin llegar a portada se archiva. Fórmula: δ = signo(n)·√|n| + bonus del tema (si n &gt; 0) − decaimiento × max(0, medias horas − medias horas mínimas), con n = votos netos que cuentan (uno por conexión y envío, y solo de cuentas con más de las horas de cuarentena). El cambio surte efecto en el siguiente minuto, sin tocar el servidor.</small></p></form>";
     $nq = (int)$pdo->query("SELECT COUNT(*) FROM mod_queue WHERE status IN ('needs_human','queued','processing')")->fetchColumn();
-    echo "<h3>Cola de moderación</h3><p>$nq pendientes de la IA · " . open_reports() . " comentarios reportados · <a href=\"/moderacion.php\">ir a moderación</a> (la ven también los moderadores)</p>";
+    echo "<h3>Cola de moderación</h3><p>$nq pendientes de la IA · " . open_reports() . " comentarios reportados · <a href=\"/moderacion\">ir a moderación</a> (la ven también los moderadores)</p>";
     echo "<h3>Últimas promociones</h3><table>";
     foreach ($pdo->query("SELECT p.*, s.title FROM promo_log p JOIN stories s ON s.story_id = p.story_id ORDER BY p.id DESC LIMIT 15") as $p) {
         echo "<tr><td>" . h($p['created']) . "</td><td>" . h((string)($p['portada'] ?? '')) . "</td><td>" . h(mb_strimwidth($p['title'], 0, 60, '…')) . "</td><td>δ " . h($p['delta']) . "</td><td>{$p['candidates']} en su radar · {$p['commenters']} hablando</td></tr>";
@@ -499,17 +499,17 @@ if ($tab === 'usuarios') {
                 $st = $pdo->prepare("SELECT result, COUNT(*) n FROM agent_seen WHERE user_id = ? GROUP BY result"); $st->execute([$a['user_id']]);
                 $c = array_column($st->fetchAll(), 'n', 'result');
                 $params = (int)$a['per_day'] . " com./día" . ((int)($a['submits_per_day'] ?? 0) > 0 ? " · " . (int)$a['submits_per_day'] . " envíos/día (" . h($a['submit_kinds'] ?? 'ambos') . ($a['submit_topics'] !== '' ? ", temas " . h($a['submit_topics']) : "") . (($a['submit_langs'] ?? '') !== '' ? ", idiomas " . h($a['submit_langs']) : "") . ((int)($a['submit_review'] ?? 0) ? ", <b>evalúa la IA</b>" : ", al azar") . ")" : "") . " · " . (int)$a['min_age_min'] . " min–" . (int)$a['max_age_h'] . " h · ≤ " . (int)$a['max_comments'] . " com." . ((int)$a['replies'] ? " · responde" : "") . ($a['topics'] !== '' ? " · temas " . h($a['topics']) : "") . ($a['skip_users'] !== '' ? " · evita " . h($a['skip_users']) : "");
-                echo "<tr><td class=\"who\"><a href=\"/u.php?u=" . rawurlencode($a['login']) . "\">" . h($a['login']) . "</a><small>" . (trim((string)$a['persona']) === '' ? 'sin personalidad (usa personalidad.md)' : mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['persona']), 0, 90, '…')) . "</small></td>"
+                echo "<tr><td class=\"who\"><a href=\"/u/" . rawurlencode($a['login']) . "\">" . h($a['login']) . "</a><small>" . (trim((string)$a['persona']) === '' ? 'sin personalidad (usa personalidad.md)' : mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['persona']), 0, 90, '…')) . "</small></td>"
                    . "<td>" . ((int)$a['enabled'] ? '<b>activo</b>' : 'apagado') . ((int)$a['verified'] ? '' : ' (cuenta sin validar)') . "</td><td class=\"num\">" . agent_today($pdo, (int)$a['user_id']) . "</td>"
                    . "<td class=\"num\">" . (int)($c['comment'] ?? 0) . " com. · " . (int)($c['skip'] ?? 0) . " pasa · " . (int)($c['fail'] ?? 0) . " fallo</td><td><small>$params</small></td>"
-                   . "<td class=\"acc\"><a class=\"btn sm\" href=\"/editar-usuario.php?id={$a['user_id']}\">ficha</a> <a class=\"btn sm\" href=\"/admin.php?t=agentes&amp;a={$a['user_id']}\">registro</a></td></tr>";
+                   . "<td class=\"acc\"><a class=\"btn sm\" href=\"/editar-usuario?id={$a['user_id']}\">ficha</a> <a class=\"btn sm\" href=\"/admin?t=agentes&amp;a={$a['user_id']}\">registro</a></td></tr>";
             }
             echo "</table>";
         }
         if (($aid = (int)($_GET['a'] ?? 0)) > 0) {
             $st = $pdo->prepare("SELECT v.*, s.title FROM agent_seen v JOIN stories s ON s.story_id = v.story_id WHERE v.user_id = ? ORDER BY v.created DESC LIMIT 100"); $st->execute([$aid]);
             echo "<h3>Registro</h3><table class=\"users\"><tr><th>cuándo</th><th>hilo</th><th>resultado</th><th>nota del modelo</th></tr>";
-            foreach ($st->fetchAll() as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\"><a href=\"/hilo.php?id={$r['story_id']}" . ($r['comment_id'] ? "#c{$r['comment_id']}" : "") . "\">" . h(mb_strimwidth((string)$r['title'], 0, 70, '…')) . "</a></td><td>" . h($r['result']) . "</td><td><small>" . h((string)$r['note']) . ($r['model'] ? " · " . h($r['model']) : "") . "</small></td></tr>";
+            foreach ($st->fetchAll() as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\"><a href=\"/hilo/{$r['story_id']}" . ($r['comment_id'] ? "#c{$r['comment_id']}" : "") . "\">" . h(mb_strimwidth((string)$r['title'], 0, 70, '…')) . "</a></td><td>" . h($r['result']) . "</td><td><small>" . h((string)$r['note']) . ($r['model'] ? " · " . h($r['model']) : "") . "</small></td></tr>";
             echo "</table>";
             if (agent_review_on()) {   // migra-117: lo que la IA local ha puntuado para sus envios
                 $st = $pdo->prepare("SELECT z.*, x.story_id FROM agent_item_seen z LEFT JOIN agent_sent x ON x.item_id = z.item_id AND x.user_id = z.user_id WHERE z.user_id = ? ORDER BY z.created DESC, z.score DESC LIMIT 150"); $st->execute([$aid]);
@@ -519,7 +519,7 @@ if ($tab === 'usuarios') {
                 else {
                     echo "<p class=\"meta\">Nota mínima para enviar: <b>" . agent_review_min() . "</b> (Config → <code>agent_review_min</code>). Las suspendidas no se le vuelven a ofrecer.</p>";
                     echo "<table class=\"users\"><tr><th>cuándo</th><th>noticia</th><th>nota</th><th>motivo del modelo</th><th></th></tr>";
-                    foreach ($rows as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\">" . h(mb_strimwidth((string)$r['title'], 0, 80, '…')) . "<small>" . h((string)$r['source']) . "</small></td><td class=\"num\">" . ((int)$r['score'] >= agent_review_min() ? '<b>' . (int)$r['score'] . '</b>' : (int)$r['score']) . "</td><td><small>" . h((string)$r['note']) . "</small></td><td>" . ((int)$r['sent'] ? ($r['story_id'] ? "<a href=\"/hilo.php?id=" . (int)$r['story_id'] . "\">enviada</a>" : 'enviada') : '') . "</td></tr>";
+                    foreach ($rows as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\">" . h(mb_strimwidth((string)$r['title'], 0, 80, '…')) . "<small>" . h((string)$r['source']) . "</small></td><td class=\"num\">" . ((int)$r['score'] >= agent_review_min() ? '<b>' . (int)$r['score'] . '</b>' : (int)$r['score']) . "</td><td><small>" . h((string)$r['note']) . "</small></td><td>" . ((int)$r['sent'] ? ($r['story_id'] ? "<a href=\"/hilo/" . (int)$r['story_id'] . "\">enviada</a>" : 'enviada') : '') . "</td></tr>";
                     echo "</table>";
                 }
             }
@@ -532,7 +532,7 @@ if ($tab === 'usuarios') {
 } elseif ($tab === 'temas') {
     echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>envíos</th><th style=\"width:90px\">bonus δ</th><th style=\"width:70px\">color</th></tr>";
     foreach ($pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.name") as $t) {
-        echo "<tr><td><a href=\"/tema.php?t={$t['topic_id']}\">" . h($t['name']) . "</a></td><td class=\"num\">{$t['n']}</td><td><input type=\"text\" name=\"bonus[{$t['topic_id']}]\" value=\"" . h(num_es($t['bonus'])) . "\"></td>";
+        echo "<tr><td><a href=\"/tema/{$t['topic_id']}\">" . h($t['name']) . "</a></td><td class=\"num\">{$t['n']}</td><td><input type=\"text\" name=\"bonus[{$t['topic_id']}]\" value=\"" . h(num_es($t['bonus'])) . "\"></td>";
         echo "<td><input type=\"color\" name=\"color[{$t['topic_id']}]\" value=\"" . h($t['color']) . "\" title=\"color del velo y la etiqueta\"></td></tr>";
     }
     echo "</table><p><button class=\"btn\">Guardar temas</button></p></form>";
@@ -545,7 +545,7 @@ if ($tab === 'usuarios') {
         echo " y mover sus envíos a <select name=\"to\">"; foreach ($tl as $t) echo "<option value=\"{$t['topic_id']}\">" . h($t['name']) . "</option>"; echo "</select>";
         echo " <label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> seguro</label> <button class=\"btn danger\">Borrar tema</button></form>";
     }
-    echo "<p><small>El bonus se <b>suma</b> al δ de los envíos del tema que tienen apoyo neto (con 0,3, un envío con un voto que cuenta vale 1,3 en vez de 1). Antes era un coeficiente multiplicador, que también amplificaba los votos negativos y el decaimiento; se cambió el 26/09/2026 (migra-080). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.php.</small></p>";
+    echo "<p><small>El bonus se <b>suma</b> al δ de los envíos del tema que tienen apoyo neto (con 0,3, un envío con un voto que cuenta vale 1,3 en vez de 1). Antes era un coeficiente multiplicador, que también amplificaba los votos negativos y el decaimiento; se cambió el 26/09/2026 (migra-080). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.</small></p>";
 
 } elseif ($tab === 'fuentes') {
     // subpestañas por tipo de fuente: Substack (newsletter), Medios, YouTube, Agregadores; los formularios vuelven a la subpestaña (campo oculto k)
@@ -561,7 +561,7 @@ if ($tab === 'usuarios') {
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
         $h .= "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name'] ?? '') . "\"></td></tr>";
-        $h .= "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\" placeholder=\"minúsculas, números o guion: sale en /fuente.php?f=slug\"></td></tr>";
+        $h .= "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\" placeholder=\"minúsculas, números o guion: sale en /fuente/slug\"></td></tr>";
         $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"newsletter\"" . (($f['kind'] ?? '') === 'newsletter' ? ' selected' : '') . ">newsletter / Substack (igual que un medio, en «Mis substacks»)</option><option value=\"youtube\"" . (($f['kind'] ?? '') === 'youtube' ? ' selected' : '') . ">canal de YouTube (igual que un medio, en «Mis canales»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td></tr>";
         $h .= "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($f['home'] ?? '') . "\" placeholder=\"https://…\"></td></tr>";
         $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/ (canal de YouTube: vacío, se saca de la web)\"></td></tr>";
@@ -585,11 +585,11 @@ if ($tab === 'usuarios') {
         $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
         return $h . "</table></form>";
     };
-    echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios.php\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, que los usuarios siguen con el botón «Seguir», sin límite («Mis medios»; en el menú salen los <code>media_max_per_user</code> más recientes), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Canal de YouTube</b>: igual que un medio, en el grupo «Mis canales»; en «web» va la dirección del canal (<code>https://www.youtube.com/@nombre</code>) y el RSS se deja vacío: se calcula al guardar (solo vídeos largos, sin shorts ni directos, salvo <code>youtube_shorts=1</code>). La miniatura se guarda en /media y el vídeo se ve en YouTube. <code>sources_youtube=0</code> los apaga todos. <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
+    echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/medios\">catálogo público</a>). <b>Medio</b>: sus últimas noticias, que los usuarios siguen con el botón «Seguir», sin límite («Mis medios»; en el menú salen los <code>media_max_per_user</code> más recientes), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Canal de YouTube</b>: igual que un medio, en el grupo «Mis canales»; en «web» va la dirección del canal (<code>https://www.youtube.com/@nombre</code>) y el RSS se deja vacío: se calcula al guardar (solo vídeos largos, sin shorts ni directos, salvo <code>youtube_shorts=1</code>). La miniatura se guarda en /media y el vídeo se ve en YouTube. <code>sources_youtube=0</code> los apaga todos. <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
     echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><button class=\"btn\">Leer todas las fuentes ahora</button><small>sin esperar al intervalo; tarda unos segundos por fuente (feeds e imágenes)</small></form>";
     $nk = $pdo->query("SELECT kind, COUNT(*) FROM sources GROUP BY kind")->fetchAll(PDO::FETCH_KEY_PAIR);
     echo "<nav class=\"sub\">";
-    foreach ($FK as $k => $v) echo "<a href=\"/admin.php?t=fuentes&amp;k=$k\"" . ($k === $fk ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
+    foreach ($FK as $k => $v) echo "<a href=\"/admin?t=fuentes&amp;k=$k\"" . ($k === $fk ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
     echo "</nav>";
     // idiomas de este tipo con su numero de fuentes: primero los de la interfaz (en su orden), luego otros codigos y al final «sin idioma»
     $nl = $pdo->prepare("SELECT COALESCE(lang, '') l, COUNT(*) FROM sources WHERE kind = ? GROUP BY COALESCE(lang, '')");
@@ -597,11 +597,11 @@ if ($tab === 'usuarios') {
     $ord = array_merge(array_intersect(array_keys(DDD_LANGS), array_keys($nl)), array_diff(array_keys($nl), array_keys(DDD_LANGS), ['']));
     if (isset($nl[''])) $ord[] = '';
     if (count($nl) > 1 || $il !== '') {
-        echo "<nav class=\"sub\"><a href=\"/admin.php?t=fuentes&amp;k=$fk\"" . ($il === '' ? ' class="on"' : '') . ">todos <small>" . array_sum($nl) . "</small></a>";
+        echo "<nav class=\"sub\"><a href=\"/admin?t=fuentes&amp;k=$fk\"" . ($il === '' ? ' class="on"' : '') . ">todos <small>" . array_sum($nl) . "</small></a>";
         foreach ($ord as $l) {
             $code = $l === '' ? '?' : $l;
             $lbl = $l === '' ? 'sin idioma' : (DDD_LANGS[$l] ?? $l);
-            echo "<a href=\"/admin.php?t=fuentes&amp;k=$fk&amp;il=" . urlencode($code) . "\"" . ($il === $code ? ' class="on"' : '') . " title=\"" . h($code) . "\">" . h($lbl) . " <small>" . (int)$nl[$l] . "</small></a>";
+            echo "<a href=\"/admin?t=fuentes&amp;k=$fk&amp;il=" . urlencode($code) . "\"" . ($il === $code ? ' class="on"' : '') . " title=\"" . h($code) . "\">" . h($lbl) . " <small>" . (int)$nl[$l] . "</small></a>";
         }
         echo "</nav>";
     }
@@ -609,7 +609,7 @@ if ($tab === 'usuarios') {
     $rows = $pdo->prepare("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s WHERE s.kind = ?$wl ORDER BY s.name");
     $rows->execute($il === '' || $il === '?' ? [$fk] : [$fk, $il]); $rows = $rows->fetchAll();
     if (!$rows) echo "<p class=\"end\">" . ($il === '' ? "No hay fuentes de este tipo." : "No hay fuentes de este tipo en ese idioma.") . "</p>";
-    foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin.php\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
+    foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
         echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . (!empty($f['relay']) ? " · <b>lector local</b>" : "") . " · " . (($f['lang'] ?? '') !== '' ? h($f['lang']) : "<i>idioma ?</i>") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
         echo $fuente_form($f, 'fuente');

@@ -1,13 +1,15 @@
 <?php
-/** /chat.php — pestaña Chat: un solo flujo de mensajes cortos, el mas reciente arriba, sin anidar (tipo Nótame).
+/** /chat — pestaña Chat: un solo flujo de mensajes cortos, el mas reciente arriba, sin anidar (tipo Nótame).
  *  Cuadro arriba; «responder» bajo cada mensaje abre el cuadro con «#ID » puesto; cada #N del texto enlaza al
  *  mensaje N y este enseña sus respuestas. @nick enlaza al perfil. Sin avatares: solo el nombre.
  *  Registrados con su nick; anonimos con alias estable por IP si chat_anon = 1. Borrado propio durante
- *  chat_delete_minutes; reportar → /reportar.php?chat=N; borrado de moderacion desde /moderacion.php; los administradores
- *  ademas pueden editar el texto (/editar-chat.php, queda «editado»).
- *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca)
- *  salvo cuando se esta escribiendo (?r=N) o se acaba de publicar. Con JS lo lleva /app/escribir.js, que cancela el
- *  refresco en cuanto hay algo escrito (antes se perdia el mensaje a medias); sin JS, el <noscript><meta refresh> de siempre.
+ *  chat_delete_minutes; reportar → /reportar?chat=N; borrado de moderacion desde /moderacion; los administradores
+ *  ademas pueden editar el texto (/editar-chat, queda «editado»).
+ *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca).
+ *  Con JS lo lleva /app/escribir.js (07/10/2026): pide esta misma pagina con fetch (auto=1) y cambia solo el bloque .chat, sin
+ *  recargar: no se mueve el scroll ni se pierde lo escrito, y lo nuevo llega con un realce; por eso con JS se refresca tambien
+ *  mientras se escribe. Sin JS, el <noscript><meta refresh> de siempre, que no se pone mientras se escribe (?r=N, ok=1, error)
+ *  para no perder el texto a medias.
  *  Dos vistas (subpestañas «Por hilos» / «Por tiempo»): por hilos, la de por defecto, agrupa cada mensaje con sus respuestas
  *  (reply_to: el primer #N citado), el hilo con actividad mas reciente arriba y, dentro, del mas antiguo al mas nuevo con las respuestas
  *  sangradas segun a quien responden (sin rayas entre mensajes); ?v=tiempo es el flujo cronologico de antes, el mas reciente arriba. La vista viaja en la URL (no hay cookie): responder, publicar, borrar, paginar y el refresco la conservan. */
@@ -23,7 +25,7 @@ $canWrite = $u || (string)cfg('chat_anon', '1') === '1';
 $maxLen = min(1000, max(50, (int)cfg('chat_max_len', 500)));
 $err = null;
 $hilos = (string)($_GET['v'] ?? '') !== 'tiempo';   // por hilos es la vista por defecto; ?v=tiempo, el flujo cronologico (?v=hilos de enlaces antiguos sigue valiendo)
-$base = '/chat.php' . ($hilos ? '' : '?v=tiempo');   // la vista elegida va en todos los enlaces y redirecciones
+$base = '/chat' . ($hilos ? '' : '?v=tiempo');   // la vista elegida va en todos los enlaces y redirecciones
 $amp = $hilos ? '?' : '&';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,7 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($m = $st->fetch()) && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $pdo->prepare("UPDATE chat SET status = 'gone' WHERE msg_id = ?")->execute([$id]);
         redirect($base);
     }
-    if (!$canWrite) redirect('/login.php');
+    if (post('act') === 'anuncio') {   // admin/mod: marcar o quitar «mensaje a la comunidad» (migra-121)
+        $id = (int)post('id');
+        if (is_mod()) $pdo->prepare("UPDATE chat SET anuncio = 1 - anuncio WHERE msg_id = ? AND status = 'ok' AND deleted = 0")->execute([$id]);
+        redirect($base . $amp . "m=$id" . (isset($_POST['js']) ? '' : "#m$id"));
+    }
+    if (!$canWrite) redirect('/login');
     $content = trim(preg_replace("/\r\n?/", "\n", post('content')));
     $content = mb_substr($content, 0, $maxLen);
     if (mb_strlen($content) < 1) redirect($base);
@@ -42,8 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else {
         $ref = chat_first_ref($content);
         if ($ref) { $q = $pdo->prepare("SELECT 1 FROM chat WHERE msg_id = ? AND status = 'ok'"); $q->execute([$ref]); if (!$q->fetchColumn()) $ref = null; }
-        $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content) VALUES (?,?,?,?,?)")
-            ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content]);
+        $anuncio = is_mod() && post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad: solo admin/mod (migra-121)
+        $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,?)")
+            ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content, $anuncio]);
         $mid = (int)$pdo->lastInsertId();
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
         avisos_chat($pdo, $mid, $u ? (int)$u['user_id'] : null, $u ? (string)$u['login'] : $anonAlias, $content, $ref);   // @mencionados y autor del #N citado
@@ -121,47 +129,61 @@ if ($mentions) {
 $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 
-$refresco = $writing ? 0 : max(0, (int)cfg('chat_refresh_sec', 60));   // 0 = no se recarga sola
+$refrescoJs = max(0, (int)cfg('chat_refresh_sec', 60));   // con JS (fetch, sin recargar): siempre; 0 = nunca
+$refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta refresh): no mientras se escribe
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
-echo "<nav class=\"sub\"><a href=\"/chat.php\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat.php?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a></nav>";
-echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refresco ? " data-refresh=\"$refresco\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
+echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a></nav>";
+echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refrescoJs ? " data-refresh=\"$refrescoJs\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
 $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
     echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\">";
     $ph = $u ? t('Escribe como %s', $u['login']) : t('Escribes como %s (anónimo). Con cuenta, con tu nombre.', $anonAlias);
     echo "<textarea name=\"content\" maxlength=\"$maxLen\" rows=\"2\" placeholder=\"" . h($ph) . "\" required" . ($reply ? " autofocus" : "") . ">" . ($reply ? "#$replyTo " : "") . "</textarea>";
-    echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($reply ? " · <a href=\"" . h($base) . "\">" . t('cancelar') . "</a>" : "") . "</small><button>" . t('Enviar') . "</button></div></form>";
+    echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($reply ? " · <a href=\"" . h($base) . "\">" . t('cancelar') . "</a>" : "") . "</small>";
+    if (is_mod()) echo "<label class=\"anuncio\" title=\"" . h(t('marcar como mensaje a la comunidad')) . "\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\">" . icon('mega') . "<span>" . t('Mensaje a la comunidad') . "</span></label>";   // admin/mod (migra-121)
+    echo "<button>" . t('Enviar') . "</button></div></form>";
 };
 $replyHere = $replyTo > 0 && isset($ids[$replyTo]);   // el mensaje respondido esta en esta pagina: el cuadro va debajo de el
 if ($canWrite) {
     if (!$replyHere) $box($replyTo > 0);
 } else {
-    echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login.php\">" . t('entrar') . "</a></p>";
+    echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login\">" . t('entrar') . "</a></p>";
 }
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
+if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra-121): los tres ultimos, arriba del flujo, enlazados a su sitio
+    $an = $pdo->query("SELECT c.msg_id, c.content, c.user_id, c.alias, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.anuncio = 1 AND c.deleted = 0 AND " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT 3")->fetchAll();
+    $an = array_filter($an, fn($a) => !isset($ids[(int)$a['msg_id']]));   // los que ya se ven en esta pagina no se repiten: la franja es para los que han quedado atras
+    if ($an) {
+        echo "<div class=\"anuncios\"><div class=\"ch\"><span class=\"anun\">" . icon('mega') . t('Mensajes a la comunidad') . "</span></div>";
+        foreach ($an as $a) echo "<p><a class=\"num\" href=\"/chat?m={$a['msg_id']}#m{$a['msg_id']}\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> <span>" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</span></p>";
+        echo "</div>";
+    }
+}
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el mensaje queda avisado a los moderadores.') . "</p>";
 if (!$rows) echo "<p class=\"end\">" . t('Nadie ha dicho nada todavía. Empieza tú.') . "</p>";
 foreach ($rows as $m) {
     $id = (int)$m['msg_id'];
     $who = chat_who($m);
     $del = (int)$m['deleted'] === 1;
-    echo "<article class=\"cm" . (isset($sangria[$id]) ? ' rep' : '') . (isset($cabeza[$id]) ? ' top' : '') . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\"" . (isset($sangria[$id]) ? " style=\"--lv:{$sangria[$id]}\"" : '') . ">";
+    $anun = !$del && (int)($m['anuncio'] ?? 0) === 1;   // mensaje a la comunidad (migra-121): resaltado y con etiqueta
+    echo "<article class=\"cm" . ($anun ? ' anuncio' : '') . (isset($sangria[$id]) ? ' rep' : '') . (isset($cabeza[$id]) ? ' top' : '') . ($del ? ' deleted' : '') . ($u && !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'] ? ' mine' : '') . ($id === $goto ? ' hl' : '') . "\" id=\"m$id\"" . (isset($sangria[$id]) ? " style=\"--lv:{$sangria[$id]}\"" : '') . ">";
     echo "<div class=\"ch\"><a class=\"num\" href=\"#m$id\">#$id</a> ";
-    echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u.php?u=" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
-    echo "<span class=\"meta\"> · " . h(hace($m['created'])) . (!empty($m['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
-    if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas.php\">" . t('normas') . "</a></p>";
+    echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u/" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
+    echo "<span class=\"meta\"> · " . h(hace($m['created'])) . (!empty($m['edited_at']) && !$del ? " · " . t('editado') : "") . "</span>" . ($anun ? " <span class=\"anun\">" . icon('mega') . t('Mensaje a la comunidad') . "</span>" : "") . "</div>";
+    if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
     else      echo "<p>" . chat_format($m['content'], $logins, $ids) . "</p>";
     $acts = [];
     if (!$del && $canWrite) $acts[] = "<a class=\"replylink\" href=\"" . h($base . $amp) . "r=$id#m$id\">" . icon('reply') . "<span>" . t('responder') . "</span></a>";
-    if (!$hilos && !empty($replies[$id])) $acts[] = "<span class=\"reps\">" . t('respuestas:') . " " . implode(' ', array_map(fn($r) => "<a class=\"ref\" href=\"" . (isset($ids[$r]) ? "#m$r" : "/chat.php?m=$r#m$r") . "\">#$r</a>", $replies[$id])) . "</span>";
+    if (!$hilos && !empty($replies[$id])) $acts[] = "<span class=\"reps\">" . t('respuestas:') . " " . implode(' ', array_map(fn($r) => "<a class=\"ref\" href=\"" . (isset($ids[$r]) ? "#m$r" : "/chat?m=$r#m$r") . "\">#$r</a>", $replies[$id])) . "</span>";
     if (!$del && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"borrar\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link\" title=\"" . h(t('solo durante %d min', (int)cfg('chat_delete_minutes', 5))) . "\">" . t('borrar') . "</button></form>";
-    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar.php?chat=$id\">" . t('reportar') . "</a>";
-    if (is_admin() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-chat.php?id=$id\">" . t('editar') . "</a>";   // solo administradores (migra-094); los moderadores, solo eliminar
-    if (is_mod() && !$del) $acts[] = "<form method=\"post\" action=\"/moderacion.php\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"$id\"><input type=\"hidden\" name=\"back\" value=\"1\"><button class=\"link modlink\">" . t('eliminar') . "</button></form>";
+    if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar?chat=$id\">" . t('reportar') . "</a>";
+    if (is_admin() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-chat?id=$id\">" . t('editar') . "</a>";   // solo administradores (migra-094); los moderadores, solo eliminar
+    if (is_mod() && !$del) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"anuncio\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link anunbtn" . ($anun ? ' on' : '') . "\" title=\"" . h($anun ? t('quitar la marca de mensaje a la comunidad') : t('marcar como mensaje a la comunidad')) . "\" aria-label=\"" . h(t('Mensaje a la comunidad')) . "\">" . icon('mega') . "</button></form>";   // megafono: mensaje a la comunidad (migra-121)
+    if (is_mod() && !$del) $acts[] = "<form method=\"post\" action=\"/moderacion\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"$id\"><input type=\"hidden\" name=\"back\" value=\"1\"><button class=\"link modlink\">" . t('eliminar') . "</button></form>";
     if ($acts || !$del) {
         echo "<div class=\"actions\">" . implode('', $acts);
         // sol / lagrima: registrados sobre mensajes ajenos; el resto (y el autor) ve solo los contadores
-        if (!$del) comment_vote_widget($m, $u && (int)$m['user_id'] !== (int)$u['user_id'], '/votar-chat.php', 'msg_id');
+        if (!$del) comment_vote_widget($m, $u && (int)$m['user_id'] !== (int)$u['user_id'], '/votar-chat', 'msg_id');
         echo "</div>";
     }
     echo "</article>";

@@ -1,8 +1,8 @@
 <?php
 /**
  * lib/contadores.php — lecturas y clics de cada envio (migra-120).
- *   stories.views  = entradas al hilo (/hilo.php)
- *   stories.clicks = salidas al medio (/ir.php?id=…, que suma y redirige)
+ *   stories.views  = entradas al hilo (/hilo/N)
+ *   stories.clicks = salidas al medio (/ir?id=…, que suma y redirige)
  * Una vez por persona, envio y dia: la misma huella de la analitica (HMAC de ip+navegador+dia, truncado; nunca la IP),
  * apuntada en Redis 24 h (lib/cache.php). Sin Redis se cuenta igual, sin deduplicar. No cuentan bots, precargas,
  * recargas automaticas ni el propio autor. Nunca rompe la pagina.
@@ -32,7 +32,7 @@ function story_cuenta(PDO $pdo, array $s, string $col): void {
 }
 
 /** Enlace de salida al medio que pasa por el contador de clics. */
-function ir_url(array $s): string { return '/ir.php?id=' . (int)$s['story_id']; }
+function ir_url(array $s): string { return '/ir?id=' . (int)$s['story_id']; }
 
 /** Cifras de lecturas y clics para la fila de acciones de la tarjeta y la barra del hilo. */
 function story_contadores(array $s): string {

@@ -39,7 +39,7 @@ function ana_admin(PDO $pdo): void {
     echo "del <input type=\"date\" name=\"from\" value=\"$from\"> al <input type=\"date\" name=\"to\" value=\"$to\"> <button class=\"btn\">Ver</button> ";
     foreach ([['hoy', 0], ['7 días', 6], ['30 días', 29], ['90 días', 89], ['este año', -1]] as [$l, $d]) {
         $f = $d === -1 ? date('Y-01-01') : date('Y-m-d', strtotime("-$d days"));
-        echo "<a href=\"/admin.php?t=analitica&from=$f&to=$hoy\">$l</a> ";
+        echo "<a href=\"/admin?t=analitica&from=$f&to=$hoy\">$l</a> ";
     }
     echo "</form>";
     // dias: cerrados desde ana_daily, hoy desde hits
@@ -93,13 +93,14 @@ function ana_admin(PDO $pdo): void {
 /** Ruta legible: los hilos con su titular, las portadas y paginas con su nombre */
 function ana_path_label(PDO $pdo, string $path): string {
     static $titles = [];
-    if (preg_match('~^/hilo\.php\?id=(\d+)$~', $path, $m)) {
+    if (preg_match('~^/hilo(?:\.php\?id=|/)(\d+)$~', $path, $m)) {   // /hilo/123 (URL limpia, 05/10/2026) o /hilo.php?id=123 (hits antiguos)
         $id = (int)$m[1];
         if (!array_key_exists($id, $titles)) { $st = $pdo->prepare("SELECT title FROM stories WHERE story_id = ?"); $st->execute([$id]); $titles[$id] = $st->fetchColumn(); }
         $t = $titles[$id] ? h(mb_strimwidth((string)$titles[$id], 0, 70, '…')) : "hilo $id";
         return "<a href=\"" . h($path) . "\">$t</a>";
     }
-    $names = ['/' => 'Portada (Medios)', '/?portada=medios' => 'Portada Medios', '/?portada=substacks' => 'Portada Substacks', '/radar.php' => 'Radar', '/originales.php' => 'Originales', '/chat.php' => 'Chat',
-              '/usuarios.php' => 'Usuarios', '/procesos.php' => 'Procesos', '/estadisticas.php' => 'Estadísticas', '/analitica.php' => 'Analítica', '/mensajes.php' => 'Mensajes', '/que-es.php' => '¿Qué es Deltha?', '/algoritmo.php' => 'Cómo funciona el δ', '/normas.php' => 'Normas', '/privacidad.php' => 'Privacidad', '/temas.php' => 'Temas', '/comunidades.php' => 'Comunidades', '/plantilla.php' => 'Skins', '/login.php' => 'Entrar', '/registro.php' => 'Registro', '/enviar.php' => 'Enviar', '/articulo.php' => 'Escribir artículo', '/favoritos.php' => 'Favoritos', '/perfil.php' => 'Perfil'];
-    return "<a href=\"" . h($path) . "\">" . h($names[$path] ?? $path) . "</a>";
+    $names = ['/' => 'Portada (Medios)', '/?portada=medios' => 'Portada Medios', '/?portada=substacks' => 'Portada Substacks', '/radar' => 'Radar', '/originales' => 'Originales', '/chat' => 'Chat',
+              '/usuarios' => 'Usuarios', '/procesos' => 'Procesos', '/estadisticas' => 'Estadísticas', '/analitica' => 'Analítica', '/mensajes' => 'Mensajes', '/que-es' => '¿Qué es Deltha?', '/algoritmo' => 'Cómo funciona el δ', '/normas' => 'Normas', '/privacidad' => 'Privacidad', '/temas' => 'Temas', '/comunidades' => 'Comunidades', '/plantilla' => 'Skins', '/login' => 'Entrar', '/registro' => 'Registro', '/enviar' => 'Enviar', '/articulo' => 'Escribir artículo', '/favoritos' => 'Favoritos', '/perfil' => 'Perfil'];
+    $key = preg_replace('~\.php(?=\?|$)~', '', $path);   // hits antiguos con .php: mismo nombre
+    return "<a href=\"" . h($path) . "\">" . h($names[$key] ?? $path) . "</a>";
 }

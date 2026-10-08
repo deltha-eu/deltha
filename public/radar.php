@@ -1,7 +1,7 @@
 <?php
-/** /radar.php[?portada=medios|substacks] — todo lo enviado que aun no ha llegado a portada, por orden de llegada (enlaces; los originales
+/** /radar[?portada=medios|substacks] — todo lo enviado que aun no ha llegado a portada, por orden de llegada (enlaces; los originales
  *  van en su pestaña). Cada ciclo publica, alternando Medios y Substacks, uno de esa portada, a suertes segun el δ, entre los que llegan al minimo.
- *  En /procesos.php estan ordenados por δ, con la estimacion. */
+ *  En /procesos estan ordenados por δ, con la estimacion. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require_once __DIR__ . '/../lib/cola.php';
@@ -21,13 +21,13 @@ $all = $pdo->query(str_replace('SELECT s.*,', 'SELECT s.*, ' . delta_sql() . ' A
 $DDD_ETA = cola_eta($all);
 
 page_header(t('Radar'), 'radar');
-echo "<nav class=\"sub\"><a href=\"/radar.php\"" . ($f === '' ? ' class="on"' : '') . ">" . t('Todo') . "</a>";
-foreach (portadas() as $k => $lbl) echo "<a href=\"/radar.php?portada=$k\"" . ($f === $k ? ' class="on"' : '') . ">" . h(mb_strtoupper(mb_substr($x = t('hacia %s', t($lbl)), 0, 1)) . mb_substr($x, 1)) . "</a>";
+echo "<nav class=\"sub\"><a href=\"/radar\"" . ($f === '' ? ' class="on"' : '') . ">" . t('Todo') . "</a>";
+foreach (portadas() as $k => $lbl) echo "<a href=\"/radar?portada=$k\"" . ($f === $k ? ' class="on"' : '') . ">" . h(mb_strtoupper(mb_substr($x = t('hacia %s', t($lbl)), 0, 1)) . mb_substr($x, 1)) . "</a>";
 echo "</nav>";
-echo "<p class=\"notice\">" . t('Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos.php">Procesos</a> está ordenado por δ, con la estimación de cada uno.', (int)cfg('cycle_minutes', 5), (int)cfg('delta_min_age_min', 30), h(num_es(delta_minpub('medios'))), h(num_es(delta_minpub('substacks'))))
+echo "<p class=\"notice\">" . t('Lo enviado que aún no está en portada, por orden de llegada. Cada %d min un ciclo publica en Medios o en Substacks, por turnos, un envío de esa portada que lleve más de %d min en el radar y cuyo δ llegue a %s (Medios) o %s (Substacks): a suertes, con más probabilidad cuanto mayor es el δ. En <a href="/procesos">Procesos</a> está ordenado por δ, con la estimación de cada uno.', (int)cfg('cycle_minutes', 5), (int)cfg('delta_min_age_min', 30), h(num_es(delta_minpub('medios'))), h(num_es(delta_minpub('substacks'))))
    . (portada_canales_on() ? ' ' . t('Los vídeos de YouTube van a la portada Canales, que solo ocupa un ciclo cuando alguno llega al mínimo (δ ≥ %s) y como mucho cada %d min.', h(num_es(delta_minpub('canales'))), canales_gap()) : '') . "</p>";
 $n = 0;
 foreach ($rows as $s) { story_post($pdo, $s, "compact"); $n++; }
-if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en el radar. <a href="/enviar.php">Envía algo</a>.') . "</p>";
-paginate('/radar.php' . ($f ? "?portada=$f" : ''), $page, $total);
+if ($n === 0) echo "<p class=\"end\">" . t('No hay nada en el radar. <a href="/enviar">Envía algo</a>.') . "</p>";
+paginate('/radar' . ($f ? "?portada=$f" : ''), $page, $total);
 page_footer();

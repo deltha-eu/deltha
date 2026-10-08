@@ -1,9 +1,9 @@
 <?php
-/** /analitica.php — analitica propia, para registrados: visitantes, sesiones y paginas vistas de ayer, del mes y del año.
+/** /analitica — analitica propia, para registrados: visitantes, sesiones y paginas vistas de ayer, del mes y del año.
  *  Cifras cerradas por dias (ana_daily, lib/analitica.php): cambian una vez al dia. El detalle en vivo esta en admin -> Analitica. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
-if (!user()) redirect('/login.php');
+if (!user()) redirect('/login');
 
 $ayer = date('Y-m-d', strtotime('yesterday'));
 $mes  = date('Y-m-01');
@@ -26,6 +26,6 @@ foreach ([['visitors', t('visitantes')], ['sessions', t('sesiones')], ['pageview
     echo $tile($dAnio[$k], t('este año'));
     echo "</div>";
 }
-if (is_admin()) echo "<p class=\"end\"><a href=\"/admin.php?t=analitica\">" . t('Analítica completa (admin)') . "</a></p>";
+if (is_admin()) echo "<p class=\"end\"><a href=\"/admin?t=analitica\">" . t('Analítica completa (admin)') . "</a></p>";
 echo "</div>";
 page_footer();
