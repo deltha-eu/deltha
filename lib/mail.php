@@ -170,3 +170,15 @@ function send_activation(PDO $pdo, int $uid, string $email): bool {
           . "Si no has sido tú, no hagas nada: la cuenta no se activará y este correo no se repetirá.\n\n— $site\n";
     return send_mail($email, "Activa tu cuenta en $site", $body);
 }
+
+/** Recuperar contraseña (migra-129): genera reset_token, lo guarda y envia el enlace a /nueva-clave. Texto fijo, como la activacion. */
+function send_reset(PDO $pdo, int $uid, string $email): bool {
+    $token = bin2hex(random_bytes(16));
+    $pdo->prepare("UPDATE users SET reset_token = ?, reset_sent = NOW() WHERE user_id = ?")->execute([$token, $uid]);
+    $site = (string)cfg('site_name', 'Deltha');
+    $url  = rtrim((string)cfg('site_url', 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')), '/') . "/nueva-clave?u=$uid&t=$token";
+    $body = "Hola.\n\nAlguien (probablemente tú) ha pedido cambiar la contraseña de su cuenta en $site.\n\n"
+          . "Para elegir una nueva, abre este enlace en las próximas " . (int)cfg('reset_hours', 2) . " horas:\n\n$url\n\n"
+          . "Si no has sido tú, no hagas nada: tu contraseña sigue siendo la misma y este correo no se repetirá.\n\n— $site\n";
+    return send_mail($email, "Cambiar tu contraseña en $site", $body);
+}

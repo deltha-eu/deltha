@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 if (isset($_GET['ok'])) $ok = t('Perfil guardado.');
+if (isset($_GET['clave'])) $ok = t('Contraseña cambiada: ya has entrado con la nueva.');   // viene de /nueva-clave
 
 page_header(t('Perfil'));
 echo "<div class=\"profile\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<div><h1>" . h($u['login']) . "</h1>";
