@@ -132,7 +132,7 @@ $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 $refrescoJs = max(0, (int)cfg('chat_refresh_sec', 60));   // con JS (fetch, sin recargar): siempre; 0 = nunca
 $refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta refresh): no mientras se escribe
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
-echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a></nav>";
+echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a><a class=\"ayuda\" href=\"/empezar\">" . icon('help') . "<span>" . t('Cómo empezar') . "</span></a></nav>";   // la FAQ de arranque (migra-122), a la derecha
 echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refrescoJs ? " data-refresh=\"$refrescoJs\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
 $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
