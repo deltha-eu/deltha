@@ -105,6 +105,9 @@ if (($u['level'] ?? '') !== 'admin') {
     echo "<form class=\"plain\" method=\"post\" action=\"/baja\" onsubmit=\"return confirm(" . json_encode(t('¿Seguro? No se puede deshacer.'), JSON_HEX_APOS | JSON_HEX_QUOT) . ")\">";
     echo "<p class=\"hint\">" . t('Se borran tu cuenta, tu correo, tu foto, tus votos, tus favoritos y tus mensajes privados; el nick queda libre. Lo que has escrito se conserva como anónimo para no dejar huecos en las conversaciones de los demás, salvo que marques la casilla.') . "</p>";
     echo "<label><input type=\"checkbox\" name=\"todo\" value=\"1\"> " . t('Borrar también todos mis envíos y comentarios (y las respuestas que cuelgan de ellos)') . "</label>";
+    echo "<label>" . t('¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.') . "</label>";
+    foreach (DDD_BAJA_MOTIVOS as $k => $lbl) echo "<label class=\"radio\"><input type=\"radio\" name=\"motivo\" value=\"$k\"" . ($k === '' ? ' checked' : '') . "> " . t($lbl) . "</label>";
+    echo "<input type=\"text\" name=\"motivo_txt\" maxlength=\"500\" placeholder=\"" . h(t('si es otra, cuéntanos')) . "\">";
     echo "<label>" . t('Tu contraseña, para confirmar') . "</label><input type=\"password\" name=\"pass\" required autocomplete=\"current-password\">";
     echo "<button class=\"danger\">" . t('Borrar la cuenta para siempre') . "</button></form></details>";
 }

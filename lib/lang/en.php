@@ -834,4 +834,12 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Contraseña incorrecta.' => 'Wrong password.',
 'No se ha podido borrar la cuenta. Vuelve a intentarlo o escríbenos.' => 'The account could not be deleted. Try again or write to us.',
 'Tu cuenta se ha borrado. Gracias por haber estado aquí.' => 'Your account has been deleted. Thank you for having been here.',
+'¿Por qué te vas? Nos ayuda a mejorar; puedes no contestar.' => 'Why are you leaving? It helps us improve; you may skip it.',
+'Prefiero no contestar' => 'I’d rather not say',
+'No entiendo la plataforma' => 'I don’t understand the platform',
+'No me gusta la plataforma' => 'I don’t like the platform',
+'He tenido una mala experiencia con otros usuarios' => 'I had a bad experience with other users',
+'He tenido una mala experiencia con la administración' => 'I had a bad experience with the admins',
+'Otra (cuéntanos abajo)' => 'Other (tell us below)',
+'si es otra, cuéntanos' => 'if other, tell us',
 ];

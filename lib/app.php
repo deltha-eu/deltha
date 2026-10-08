@@ -13,6 +13,9 @@ date_default_timezone_set('Europe/Madrid');
 
 define('DDD_ROOT', dirname(__DIR__));
 define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
+/** Motivos del cuestionario de baja (/perfil -> /baja, migra-127): clave guardada en bajas.motivo => texto (se traduce con t()). */
+const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
+                          'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
 define('DDD_CSS_VER', 182);   // subir al cambiar ddd.css
 

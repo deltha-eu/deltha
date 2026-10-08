@@ -444,6 +444,21 @@ if ($tab === 'usuarios') {
         if ($up < $pages) echo " <a href=\"/admin?t=usuarios&up=" . ($up + 1) . "$qs\">siguiente →</a>";
         echo "</p>";
     }
+    // bajas voluntarias (migra-127): quien se ha ido, cuando, que tenia y por que
+    try {
+        $bj = $pdo->query("SELECT * FROM bajas ORDER BY created DESC LIMIT 200")->fetchAll();
+        echo "<details class=\"editbox\"><summary><b>Bajas</b> · " . count($bj) . " · usuarios que han borrado su cuenta desde el perfil, con el motivo que dieron</summary>";
+        if (!$bj) echo "<p class=\"end\">Ninguna todavía.</p>";
+        else {
+            echo "<table><tr><th>cuándo</th><th>nick</th><th>llevaba</th><th>aura</th><th class=\"num\">envíos</th><th class=\"num\">coment.</th><th>borró lo escrito</th><th>motivo</th></tr>";
+            foreach ($bj as $b) {
+                $dias = max(0, (int)floor((strtotime($b['created']) - strtotime($b['registrado'])) / 86400));
+                echo "<tr><td>" . h(date('d/m/Y H:i', strtotime($b['created']))) . "</td><td>" . h($b['login']) . "</td><td>$dias d</td><td>" . h(num_es($b['aura'])) . "</td><td class=\"num\">{$b['envios']}</td><td class=\"num\">{$b['comentarios']}</td><td>" . ((int)$b['todo'] ? 'sí' : 'no') . "</td><td>" . h(DDD_BAJA_MOTIVOS[$b['motivo']] ?? $b['motivo']) . ($b['motivo_txt'] !== null && $b['motivo_txt'] !== '' ? ": <i>" . h($b['motivo_txt']) . "</i>" : '') . "</td></tr>";
+            }
+            echo "</table>";
+        }
+        echo "</details>";
+    } catch (Throwable $e) { /* migra-127 sin aplicar */ }
 
 } elseif ($tab === 'ciclo') {
     $counts = $pdo->query("SELECT status, COUNT(*) n FROM stories GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
