@@ -769,4 +769,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'el teu vot · prem un altre cop per anul·lar-lo (%d min)',
 'Chat / Ayuda' => 'Xat / Ajuda',
 'Cómo empezar' => 'Com començar',
+'retirar' => 'retirar',
+'mientras esté en el radar y nadie lo haya comentado' => 'mentre sigui al radar i ningú no l\'hagi comentat',
+'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'El termini per corregir-lo ha passat, però mentre segueixi al radar i ningú no l\'hagi comentat pots retirar-lo.',
 ];

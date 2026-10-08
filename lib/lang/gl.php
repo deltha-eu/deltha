@@ -769,4 +769,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'tu voto · pulsa otra vez para anularlo (%d min)' => 'o teu voto · preme outra vez para anulalo (%d min)',
 'Chat / Ayuda' => 'Chat / Axuda',
 'Cómo empezar' => 'Como empezar',
+'retirar' => 'retirar',
+'mientras esté en el radar y nadie lo haya comentado' => 'mentres estea no radar e ninguén o comentase',
+'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'O prazo para corrixilo pasou, pero mentres siga no radar e ninguén o comentase podes retiralo.',
 ];

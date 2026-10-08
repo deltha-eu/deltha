@@ -13,7 +13,8 @@ $st->execute([$id]);
 $s = $st->fetch();
 if (!$s) { http_response_code(404); page_header(t('Editar')); echo "<p class=\"end\">" . t('Ese envío no existe.') . "</p>"; page_footer(); exit; }
 $own = !is_mod() && can_edit_own_story($s);   // el autor: aura > story_edit_min_aura, en plazo y aun no en portada
-if (!is_mod() && !$own) {
+$retire = !is_mod() && !$own && can_retire_own_story($s);   // fuera de plazo: solo retirar, mientras siga en el radar y nadie haya comentado (migra-123)
+if (!is_mod() && !$own && !$retire) {
     http_response_code(403); page_header(t('Editar'));
     $mine = (int)($s['user_id'] ?? 0) === (int)user()['user_id'];
     echo "<p class=\"end\">" . ($mine
@@ -29,13 +30,14 @@ $maxLen = $isArt ? max(2000, (int)cfg('article_max_words', 1000) * 12) : 2000;  
 $err = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'eliminar') {
-    if (post('seguro') !== '1') $err = $own ? t('Marca la casilla de confirmación para retirarlo.') : 'Marca la casilla de confirmación para eliminar.';
+    if (post('seguro') !== '1') $err = ($own || $retire) ? t('Marca la casilla de confirmación para retirarlo.') : 'Marca la casilla de confirmación para eliminar.';
     else {
         // no se borra fisicamente: pasa a "discard" y deja de verse en todas partes (el admin aun puede abrir el hilo)
         $pdo->prepare("UPDATE stories SET status = 'discard' WHERE story_id = ?")->execute([$id]);
         redirect('/');
     }
 }
+if ($retire && $_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') redirect("/hilo/$id");   // fuera de plazo no se edita nada
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     $title   = mb_substr(post('title'), 0, 200);
     $content = mb_substr(post('content'), 0, $maxLen);
@@ -78,13 +80,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'url' => $url, 'image' => $image, 'indexable' => $idx]);
 }
 
-page_header(($isArt ? t('Editar artículo') : t('Editar envío')) . " #$id");   // sin <h1>: el titulo ya va en la cabecera
-if ($own) {
+page_header(($retire ? t('Retirar') : ($isArt ? t('Editar artículo') : t('Editar envío'))) . " #$id");   // sin <h1>: el titulo ya va en la cabecera
+if ($retire) {
+    echo "<p class=\"notice\">" . t('El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.') . " <a href=\"/hilo/$id\">" . t('Volver al hilo') . "</a>.</p>";
+    if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
+} elseif ($own) {
     $q = (int)cfg('story_edit_minutes', 15) * 60 - (time() - strtotime($s['sent_date']));
     echo "<p class=\"notice\">" . t('Puedes corregir tu envío durante %d minutos tras enviarlo, mientras no llegue a portada (te quedan %d min). Quedará marcado como editado.', (int)cfg('story_edit_minutes', 15), max(1, intdiv($q, 60))) . " <a href=\"/hilo/$id\">" . t('Volver al hilo') . "</a>.</p>";
 } else {
     echo "<p class=\"notice\">Edición de moderación. Los cambios se ven al momento; el autor, los votos y el delta no cambian. <a href=\"/hilo/$id\">Volver al hilo</a>.</p>";
 }
+if (!$retire) {
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
 echo "<label>" . t('Titular') . "</label><input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($s['title']) . "\">";
@@ -111,6 +117,8 @@ echo "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
 if (!$isArt && $s['url']) echo "<label><input type=\"checkbox\" name=\"extraer\" value=\"1\"> " . t('extraer la foto de la página del enlace al guardar (og:image)') . "</label>";
 if ($isArt && cfg('index_articles', '1') === '1' && $s['user_id']) echo "<label><input type=\"checkbox\" name=\"indexable\" value=\"1\"" . ((int)($s['indexable'] ?? 0) === 1 ? ' checked' : '') . "> " . t('Dejar que los buscadores indexen este artículo') . "</label>";
 echo "<button>" . t('Guardar cambios') . "</button></form>";
+}   // fin del formulario de edicion (no sale en modo retirar)
+$own = $own || $retire;   // de aqui abajo, el apartado Retirar es el mismo para el autor en plazo y fuera de el
 echo "<h3 style=\"padding:16px 16px 0\">" . ($own ? t('Retirar') : 'Eliminar') . "</h3>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"eliminar\">";
 if ($own) echo "<label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> " . t('sí, retirar este %s y sus comentarios de todas las listas (no se puede deshacer)', $isArt ? t('artículo') : t('envío')) . "</label>";
