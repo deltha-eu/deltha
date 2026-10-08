@@ -777,4 +777,11 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'otro idioma' => 'andere Sprache',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Wirkt nur bei Leuten, die im Profil „nur in meiner Sprache“ angekreuzt haben.',
 'nombre real: solo lo ven moderadores y admin' => 'echter Name: nur Moderatoren und Admin sehen ihn',
+'Logo' => 'Logo',
+'cuadrado; sustituye al punto de color' => 'quadratisch; ersetzt den Farbpunkt',
+'Imagen de fondo' => 'Hintergrundbild',
+'apaisada, se recorta a 4:1; va detrás de la cabecera' => 'Querformat, auf 4:1 beschnitten; hinter der Kopfzeile',
+'quitar el logo actual' => 'aktuelles Logo entfernen',
+'quitar la imagen de fondo actual' => 'aktuelles Hintergrundbild entfernen',
+'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Bild konnte nicht gelesen werden (JPG, PNG, WebP oder AVIF, bis %d MB).',
 ];

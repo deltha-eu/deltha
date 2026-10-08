@@ -96,6 +96,29 @@ function avatar_desde_subida(array $file): ?string {
     return $ok ? $name : null;
 }
 
+/** Imagen de una comunidad (migra-126): recorte centrado a $w x $h en /media/comunidades (logo 256x256, portada 1600x400). */
+function comunidad_imagen_desde_subida(array $file, int $w, int $h): ?string {
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return null;
+    $bytes = file_get_contents($file['tmp_name']);
+    if ($bytes === false || strlen($bytes) > (int)cfg('img_max_bytes', 6000000)) return null;
+    $src = imagen_decodificar($bytes);
+    if (!$src) return null;
+    $sw = imagesx($src); $sh = imagesy($src);
+    if ($sw < 64 || $sh < 32) { imagedestroy($src); return null; }
+    $ratio = $w / $h;
+    if ($sw / $sh > $ratio) { $cw = (int)round($sh * $ratio); $ch = $sh; $cx = intdiv($sw - $cw, 2); $cy = 0; }
+    else                    { $cw = $sw; $ch = (int)round($sw / $ratio); $cx = 0; $cy = intdiv($sh - $ch, 2); }
+    $dst = imagecreatetruecolor($w, $h);
+    imagecopyresampled($dst, $src, 0, 0, $cx, $cy, $w, $h, $cw, $ch);
+    imagedestroy($src);
+    $dir = DDD_MEDIA_DIR . '/comunidades';
+    if (!is_dir($dir)) mkdir($dir, 0775, true);
+    $name = bin2hex(random_bytes(12)) . '.jpg';
+    $ok = imagejpeg($dst, "$dir/$name", 85);
+    imagedestroy($dst);
+    return $ok ? $name : null;
+}
+
 function imagen_desde_subida(array $file): ?string {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return null;
     if (!is_uploaded_file($file['tmp_name'])) return null;

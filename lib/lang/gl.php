@@ -776,4 +776,11 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'otro idioma' => 'outro idioma',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Só serve para quen marca «só no meu idioma» no seu perfil.',
 'nombre real: solo lo ven moderadores y admin' => 'nome real: só o ven moderadores e admin',
+'Logo' => 'Logo',
+'cuadrado; sustituye al punto de color' => 'cadrado; substitúe o punto de cor',
+'Imagen de fondo' => 'Imaxe de fondo',
+'apaisada, se recorta a 4:1; va detrás de la cabecera' => 'apaisada, recórtase a 4:1; vai detrás da cabeceira',
+'quitar el logo actual' => 'quitar o logo actual',
+'quitar la imagen de fondo actual' => 'quitar a imaxe de fondo actual',
+'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Non se puido ler a imaxe (JPG, PNG, WebP ou AVIF, ata %d MB).',
 ];

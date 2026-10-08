@@ -816,4 +816,11 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'otro idioma' => 'other language',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Only used by people who tick "only in my language" in their profile.',
 'nombre real: solo lo ven moderadores y admin' => 'real name: only moderators and admins see this',
+'Logo' => 'Logo',
+'cuadrado; sustituye al punto de color' => 'square; replaces the colour dot',
+'Imagen de fondo' => 'Background image',
+'apaisada, se recorta a 4:1; va detrás de la cabecera' => 'landscape, cropped to 4:1; goes behind the header',
+'quitar el logo actual' => 'remove the current logo',
+'quitar la imagen de fondo actual' => 'remove the current background image',
+'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Could not read the image (JPG, PNG, WebP or AVIF, up to %d MB).',
 ];

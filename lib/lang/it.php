@@ -777,4 +777,11 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'otro idioma' => 'altra lingua',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Serve solo a chi spunta «solo nella mia lingua» nel profilo.',
 'nombre real: solo lo ven moderadores y admin' => 'nome reale: lo vedono solo moderatori e admin',
+'Logo' => 'Logo',
+'cuadrado; sustituye al punto de color' => 'quadrato; sostituisce il punto colorato',
+'Imagen de fondo' => 'Immagine di sfondo',
+'apaisada, se recorta a 4:1; va detrás de la cabecera' => 'orizzontale, ritagliata a 4:1; va dietro l’intestazione',
+'quitar el logo actual' => 'togliere il logo attuale',
+'quitar la imagen de fondo actual' => 'togliere l’immagine di sfondo attuale',
+'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Impossibile leggere l’immagine (JPG, PNG, WebP o AVIF, fino a %d MB).',
 ];

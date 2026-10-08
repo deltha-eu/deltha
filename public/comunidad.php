@@ -3,6 +3,7 @@
  *  añadido primero. El creador (y los mods) la editan aquí mismo. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
+require __DIR__ . '/../lib/imagen.php';   // logo y portada de la comunidad (migra-126)
 
 $slug = trim((string)($_GET['c'] ?? post('c')));
 $c = community_by_slug($pdo, $slug);
@@ -18,10 +19,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEdit) {
     }
     $name = trim(preg_replace('/\s+/', ' ', post('name'))); $descr = mb_substr(trim(post('descr')), 0, 200); $color = post('color') ?: $c['color'];
     $skin = isset(DDD_SKINS[post('skin')]) ? post('skin') : '';
+    // logo (cuadrado, sustituye al punto de color) y portada (fondo de la cabecera), migra-126: /media/comunidades
+    $logo = $c['logo'] ?? null; $cover = $c['cover'] ?? null; $imgErr = '';
+    foreach (['logo' => [256, 256, &$logo], 'cover' => [1600, 400, &$cover]] as $campo => [$w, $h, &$cur]) {
+        if (post("quitar_$campo") === '1' && $cur) { @unlink(DDD_MEDIA_DIR . '/comunidades/' . $cur); $cur = null; }
+        if (!empty($_FILES[$campo]['name'])) {
+            $new = comunidad_imagen_desde_subida($_FILES[$campo], $w, $h);
+            if (!$new) $imgErr = t('No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).', (int)round((int)cfg('img_max_bytes', 6000000) / 1000000));
+            else { if ($cur) @unlink(DDD_MEDIA_DIR . '/comunidades/' . $cur); $cur = $new; }
+        }
+    }
+    unset($cur);
     if (mb_strlen($name) < 3 || mb_strlen($name) > 48) $err = t('El nombre debe tener entre 3 y 48 caracteres.');
     elseif (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $err = t('Color no válido.');
+    elseif ($imgErr !== '') $err = $imgErr;
     else {
-        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ?, skin = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $skin, $c['community_id']]); redirect('/comunidad/' . rawurlencode($slug) . '?ok=1'); }
+        try { $pdo->prepare("UPDATE communities SET name = ?, descr = ?, color = ?, skin = ?, logo = ?, cover = ? WHERE community_id = ?")->execute([$name, $descr ?: null, $color, $skin, $logo, $cover, $c['community_id']]); redirect('/comunidad/' . rawurlencode($slug) . '?ok=1'); }
         catch (PDOException $e) { $err = t('Ya existe otra comunidad con ese nombre.'); }
     }
 }
@@ -39,7 +52,8 @@ $st->execute();
 
 if (!empty($c['skin'])) community_skin($c['skin']);   // la comunidad se ve con su plantilla
 page_header($c['name']);
-echo "<div class=\"commhead\" style=\"--cc:" . h($c['color']) . "\"><span class=\"dot\"></span><div><h1>" . h($c['name']) . "</h1>";
+$style = "--cc:" . h($c['color']) . (!empty($c['cover']) ? ";background-image:url('/media/comunidades/" . h($c['cover']) . "')" : '');
+echo "<div class=\"commhead" . (!empty($c['cover']) ? ' withcover' : '') . "\" style=\"$style\">" . (!empty($c['logo']) ? "<img class=\"logo\" src=\"/media/comunidades/" . h($c['logo']) . "\" alt=\"\">" : "<span class=\"dot\"></span>") . "<div><h1>" . h($c['name']) . "</h1>";
 if ($c['descr']) echo "<p class=\"bio\">" . h($c['descr']) . "</p>";
 echo "<p class=\"meta\">" . t('comunidad creada por') . " <a href=\"/u/" . rawurlencode($c['owner']) . "\">" . h($c['owner']) . "</a> · " . t('%d envíos', $total) . " · <a href=\"/comunidades\">" . t('todas las comunidades') . "</a>";
 if ($c['status'] !== 'ok') echo " · <b>" . t('oculta') . "</b>";
@@ -49,11 +63,15 @@ if (isset($_GET['nueva'])) echo "<p class=\"notice\">" . t('Comunidad creada. Ya
 if (isset($_GET['ok'])) echo "<p class=\"notice\">" . t('Guardado.') . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($canEdit) {
-    echo "<details class=\"editbox\">" . t('<summary>Editar la comunidad</summary>') . "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"c\" value=\"" . h($slug) . "\">";
+    echo "<details class=\"editbox\">" . t('<summary>Editar la comunidad</summary>') . "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"c\" value=\"" . h($slug) . "\">";
     echo "" . t('<label>Nombre</label>') . "<input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($c['name']) . "\">";
     echo "" . t('<label>De qué va</label>') . "<input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h((string)$c['descr']) . "\">";
     echo "" . t('<label>Color</label>') . "<input type=\"color\" name=\"color\" value=\"" . h($c['color']) . "\">";
     echo skin_select((string)($c['skin'] ?? ''));
+    echo "<label>" . t('Logo') . " <small>" . t('cuadrado; sustituye al punto de color') . "</small></label><input type=\"file\" name=\"logo\" accept=\"image/*\">";
+    if (!empty($c['logo'])) echo "<label><input type=\"checkbox\" name=\"quitar_logo\" value=\"1\"> " . t('quitar el logo actual') . "</label>";
+    echo "<label>" . t('Imagen de fondo') . " <small>" . t('apaisada, se recorta a 4:1; va detrás de la cabecera') . "</small></label><input type=\"file\" name=\"cover\" accept=\"image/*\">";
+    if (!empty($c['cover'])) echo "<label><input type=\"checkbox\" name=\"quitar_cover\" value=\"1\"> " . t('quitar la imagen de fondo actual') . "</label>";
     echo "" . t('<button>Guardar</button>') . "</form>";
     if (is_mod()) echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"c\" value=\"" . h($slug) . "\"><input type=\"hidden\" name=\"act\" value=\"ocultar\"><button class=\"danger\">" . ($c['status'] === 'ok' ? t('Ocultar comunidad (moderación)') : t('Volver a mostrar')) . "</button></form>";
     echo "</details>";

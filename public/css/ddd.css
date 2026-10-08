@@ -3528,3 +3528,14 @@ form.pin.on button:hover { background: color-mix(in srgb, var(--halo) 12%, var(-
 .l1 a.real { margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }
 .l1 a.real .i { width: 13px; height: 13px; vertical-align: -2px; margin-right: 2px; }
 .l1 a.real:hover { color: var(--accent); text-decoration: underline; }
+
+/* logo y foto de fondo de la comunidad (migra-126) */
+.commhead img.logo { flex: none; width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: var(--card); }
+.commhead.withcover { position: relative; min-height: 180px; align-items: flex-end; background-size: cover; background-position: center; border-radius: 10px; overflow: hidden; border-bottom: 0; color: #fff; }
+.commhead.withcover::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.72) 0, rgba(0,0,0,.25) 55%, rgba(0,0,0,0) 100%); }
+.commhead.withcover > * { position: relative; }
+.commhead.withcover h1, .commhead.withcover .bio, .commhead.withcover .meta, .commhead.withcover .meta a { color: #fff; }
+.commhead.withcover .meta { opacity: .9; }
+.commhead.withcover img.logo { border: 2px solid rgba(255,255,255,.85); }
+.commhead.withcover .dot { margin-top: 0; margin-bottom: 6px; }
+.fz.comm img.dot.logo { width: 28px; height: 28px; border-radius: 7px; object-fit: cover; margin-top: 0; }
