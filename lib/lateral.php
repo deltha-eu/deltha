@@ -214,7 +214,7 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
         // «todos» lleva al catalogo filtrado por este grupo (/fuentes?k=medio|newsletter)
         echo "<section class=\"mod fuente medio\"><h3>" . h($title) . "<span><a href=\"/fuentes?k=" . h($kind) . "\">" . t('todos') . "</a></span></h3>";
         // el enlace lleva a la pagina del medio en Deltha (/fuente/slug), no a la noticia
-        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h(fuente_url(['slug' => $r['slug']])) . "\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</span></a>";
+        foreach ($rows as $r) echo "<a class=\"row\" href=\"" . h(fuente_url(['slug' => $r['slug']])) . "\"><span class=\"t\"><b>" . h($r['name']) . "</b> " . h(mb_strimwidth(sin_emojis($r['title']) ?: $r['title'], 0, 70, '…')) . "</span></a>";
         echo "</section>";
     }
 }

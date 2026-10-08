@@ -320,6 +320,9 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
         if (($src['kind'] ?? '') === 'youtube' && (string)cfg('youtube_titulares', '1') === '1') {   // titulares de YouTube: sin GRITOS ni emojis
             foreach ($items as &$it) { $it['title'] = titular_normal($it['title']); $it['content'] = sin_emojis($it['content']); }
             unset($it);
+        } else {   // el resto (agregadores, foros, medios): sin emojis en el titular (08/10/2026: en agregadores y canales salian a montones)
+            foreach ($items as &$it) $it['title'] = sin_emojis($it['title']) ?: $it['title'];
+            unset($it);
         }
         if (!empty($items[0]['smf'])) { $k = fuente_smf_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']}: $k mensajes leidos del foro"; }
         if (str_contains($url, 'renegados.es')) { $k = fuente_renegados_completar($items, $timeout); if ($k) $log[] = "fuente {$src['slug']} $phase: votos y comentarios de la API para $k items"; }
@@ -817,7 +820,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     if ($isThumb) echo "<a class=\"thumb\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a>";
     $foto = ($i['image'] && !$isThumb) ? "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . ($yt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($i['url']) . "\" $rel" . ($yt ? youtube_attr($i['url']) : '') . " style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>" : '';
     if (foco()) echo $foto;   // sin distracciones: la foto, antes del titular, flota a su derecha
-    echo "<h2><a href=\"" . h($i['url']) . "\" $rel>" . h($i['title']) . "</a></h2>";
+    echo "<h2><a href=\"" . h($i['url']) . "\" $rel>" . h(sin_emojis($i['title']) ?: $i['title']) . "</a></h2>";   // tambien lo ya guardado con emojis
     if ($i['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($i['content'], 0, $mode === 'full' ? 240 : 160, '…')) . "</p>";
     if (!foco()) echo $foto;
     echo "<div class=\"actions\">";
