@@ -45,7 +45,7 @@ if ($u && $quota > 0) {
 echo "<h3 style=\"padding:20px 16px 0\"" . t('>Todas las comunidades</h3>') . "";
 if (!$rows) echo "<p class=\"end\">" . t('Todavía no hay comunidades.') . "</p>";
 foreach ($rows as $c) {
-    echo "<a class=\"fz comm\" href=\"/comunidad/" . rawurlencode($c['slug']) . "\"><span class=\"dot\" style=\"background:" . h($c['color']) . "\"></span><div class=\"fzt\"><b>" . h($c['name']) . "</b>";
+    echo "<a class=\"fz comm\" href=\"/comunidad/" . rawurlencode($c['slug']) . "\">" . (!empty($c['logo']) ? "<img class=\"dot logo\" src=\"/media/comunidades/" . h($c['logo']) . "\" alt=\"\">" : "<span class=\"dot\" style=\"background:" . h($c['color']) . "\"></span>") . "<div class=\"fzt\"><b>" . h($c['name']) . "</b>";
     echo "<span class=\"meta\"> · " . t('%d envíos', $c['n']) . " · " . t('de') . " " . h($c['owner']) . ($c['last'] ? " · " . h(hace($c['last'])) : '') . "</span>";
     if ($c['descr']) echo "<div class=\"prev\">" . h($c['descr']) . "</div>";
     echo "</div></a>";

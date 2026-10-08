@@ -776,4 +776,11 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'otro idioma' => 'beste hizkuntza bat',
 'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Profilean «nire hizkuntzan bakarrik» markatzen dutenentzat baino ez du balio.',
 'nombre real: solo lo ven moderadores y admin' => 'benetako izena: moderatzaileek eta adminak baino ez dute ikusten',
+'Logo' => 'Logoa',
+'cuadrado; sustituye al punto de color' => 'karratua; koloreko puntuaren ordez',
+'Imagen de fondo' => 'Hondoko irudia',
+'apaisada, se recorta a 4:1; va detrás de la cabecera' => 'etzana, 4:1era mozten da; goiburuaren atzean doa',
+'quitar el logo actual' => 'kendu oraingo logoa',
+'quitar la imagen de fondo actual' => 'kendu oraingo hondoko irudia',
+'No se ha podido leer la imagen (JPG, PNG, WebP o AVIF, hasta %d MB).' => 'Ezin izan da irudia irakurri (JPG, PNG, WebP edo AVIF, %d MB arte).',
 ];
