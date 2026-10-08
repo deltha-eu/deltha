@@ -3547,4 +3547,8 @@ nav.sub.tipos a.todas, nav.sub.tipos a.mias { margin-left: auto; }
 nav.sub.tipos a.todas + a.mias { margin-left: 0; }
 details.editbox.gestion { margin: 8px 12px; }
 details.editbox.gestion h3.sec { margin-top: 10px; }
-@media (min-width: 1100px) { .rail details.rail-dd.todas .list a small { margin-left: auto; color: var(--muted); font-size: 11px; } }
+@media (min-width: 1100px) {
+  .rail details.rail-dd.medios summary small { margin-top: 3px; }
+  .rail details.rail-dd.todas .list a { justify-content: space-between; }
+  .rail details.rail-dd.todas .list a small { margin-left: 10px; color: var(--muted); font-size: 11px; }
+}
