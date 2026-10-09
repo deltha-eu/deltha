@@ -874,4 +874,8 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Agregador o foro' => 'Agrégateur ou forum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Aussi des chaînes YouTube (l’adresse de la chaîne suffit) et des agrégateurs ou forums avec RSS.',
 'más aura' => 'plus d’aura',
+'Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.' => 'Mettre en avant : elle sera première dans %s pendant %d min. Coûte %s d’aura ; il vous en restera %s.',
+'Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.' => 'Mettre en avant coûte %s d’aura et on ne peut pas descendre sous %s ; vous en avez %s.',
+'No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.' => 'Pas assez d’aura : mettre en avant coûte %s et on ne peut pas descendre sous %s.',
+'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'En file : commence dans %d min, à la fin de l’actuelle. Cliquer = retirer (l’aura n’est pas rendue).',
 ];

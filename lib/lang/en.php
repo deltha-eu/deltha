@@ -875,4 +875,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Agregador o foro' => 'Aggregator or forum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Also YouTube channels (the channel address is enough) and aggregators or forums with RSS.',
 'más aura' => 'most aura',
+'Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.' => 'Feature: it will go first in %s for %d min. It costs %s aura; you will have %s left.',
+'Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.' => 'Featuring costs %s aura and you cannot go below %s; you have %s.',
+'No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.' => 'Not enough aura: featuring costs %s and you cannot go below %s.',
+'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'Queued: it starts in %d min, when the current one ends. Click = remove (the aura is not refunded).',
 ];

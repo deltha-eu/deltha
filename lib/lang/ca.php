@@ -835,4 +835,8 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Agregador o foro' => 'Agregador o fòrum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'També canals de YouTube (n’hi ha prou amb l’adreça del canal) i agregadors o fòrums amb RSS.',
 'más aura' => 'més aura',
+'Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.' => 'Destacar: anirà la primera a %s durant %d min. Costa %s d’aura; et quedaran %s.',
+'Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.' => 'Destacar costa %s d’aura i no es pot baixar de %s; en tens %s.',
+'No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.' => 'No tens prou aura: destacar costa %s i no es pot baixar de %s.',
+'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'En cua: començarà d’aquí a %d min, quan acabi la destacada actual. Prémer = treure (no es retorna l’aura).',
 ];
