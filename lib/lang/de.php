@@ -832,4 +832,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'buscar por nick' => 'nach Nick suchen',
 'nick o correo' => 'Nick oder E-Mail',
 '%d coinciden con «%s».' => '%d passen zu „%s“.',
+'Canal de YouTube' => 'YouTube-Kanal',
+'Agregador o foro' => 'Aggregator oder Forum',
+'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Auch YouTube-Kanäle (die Kanaladresse genügt) und Aggregatoren oder Foren mit RSS.',
 ];

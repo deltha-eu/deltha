@@ -36,7 +36,7 @@ if (count($porIdioma) > 1) {
     foreach ($ord as $l) echo "<a href=\"/fuentes?" . ($k ? "k=$k&amp;" : "todas=1&amp;") . "il=" . h($l) . "\"" . ($il === $l ? ' class="on"' : '') . " lang=\"" . h($l) . "\">" . h(DDD_LANGS[$l] ?? strtoupper($l)) . " <small>" . (int)$porIdioma[$l] . "</small></a>";
     echo "</nav>";
 }
-if (fprop_puede($u) && $k !== 'agregador' && $k !== 'youtube') echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
+if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
 foreach ($kinds as $kind) {
     $lista = fuentes_on() ? fuentes_visibles($pdo, $kind) : [];
     if ($il !== '') $lista = array_values(array_filter($lista, fn($m) => ($m['lang'] ?? '') === $il));

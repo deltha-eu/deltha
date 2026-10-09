@@ -4,15 +4,20 @@
  *  lo aprueba o lo rechaza; quien lo propuso recibe un mensaje privado. Abajo, las propuestas propias y su estado. Ver lib/propuestas.php. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/propuestas.php';
+require_once __DIR__ . '/../lib/fuentes.php';   // fuente_kind_visible(), youtube_feed_de()
 
 $u = user();
 if (!$u) redirect('/login');
 $puede = fprop_puede($u);
 $err = null;
-$f = ['kind' => in_array($_GET['k'] ?? '', ['medio', 'newsletter'], true) ? $_GET['k'] : 'medio', 'name' => '', 'home' => '', 'feed' => '', 'descr' => '', 'note' => ''];
+// tipos que se pueden proponer (09/10/2026): medio y substack siempre; canal de YouTube y agregador/foro si el usuario los ve (fuente_kind_visible)
+$TIPOS = ['medio' => t('Medio'), 'newsletter' => t('Substack o newsletter')];
+if (fuente_kind_visible('youtube')) $TIPOS['youtube'] = t('Canal de YouTube');
+if (fuente_kind_visible('agregador')) $TIPOS['agregador'] = t('Agregador o foro');
+$f = ['kind' => isset($TIPOS[$_GET['k'] ?? '']) ? $_GET['k'] : 'medio', 'name' => '', 'home' => '', 'feed' => '', 'descr' => '', 'note' => ''];
 
 if ($puede && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $f['kind']  = post('kind') === 'newsletter' ? 'newsletter' : 'medio';
+    $f['kind']  = isset($TIPOS[post('kind')]) ? post('kind') : 'medio';
     $f['name']  = mb_substr(trim(post('name')), 0, 48);
     $f['home']  = trim(post('home'));
     $f['feed']  = trim(post('feed'));
@@ -31,6 +36,8 @@ if ($puede && $_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ((int)$pend->fetchColumn() >= max(1, (int)cfg('source_propose_max_pending', 3))) $err = t('Ya tienes %d propuestas pendientes de revisión; espera a que las revisen.', max(1, (int)cfg('source_propose_max_pending', 3)));
     elseif ((int)$dia->fetchColumn() >= max(1, (int)cfg('source_propose_per_day', 5))) $err = t('Has propuesto muchas fuentes hoy; vuelve mañana.');
     else {
+        // canal de YouTube: el RSS se calcula de la direccion del canal (youtube_feed_de); el resto, como siempre
+        if ($f['kind'] === 'youtube' && $f['feed'] === '') { $e = null; $f['feed'] = (string)(youtube_feed_de($f['home'], $e) ?? ''); }
         $r = fprop_probar($f['feed'], $f['home']);
         if ($r['items'] && ($ya = fprop_existe($pdo, $r['feed'], '')) !== null) $err = t('Ese medio ya está en el catálogo o pendiente de revisión: %s.', h($ya));   // el RSS encontrado en la web ya lo tenemos
         else {
@@ -49,9 +56,9 @@ if (!$puede) {
     if (($_GET['ok'] ?? '') === '1') echo "<p class=\"notice\">" . t('Gracias. Hemos leído su RSS sin problemas y la propuesta queda pendiente: un moderador la revisará y te avisará por mensaje privado.') . "</p>";
     if (($_GET['ok'] ?? '') === '2') echo "<p class=\"notice\">" . t('Gracias. No hemos podido leer su RSS, pero la propuesta queda pendiente: un moderador lo revisará y te avisará por mensaje privado.') . "</p>";
     if ($err) echo "<p class=\"error\">$err</p>";
-    echo "<p class=\"notice\">" . str_replace('href="/medios"', 'href="/fuentes"', t('Propón un medio o un substack que tenga RSS. No se añade directamente: un moderador comprueba que su RSS se lee bien antes de que entre en el <a href="/medios">catálogo</a>.')) . "</p>";
+    echo "<p class=\"notice\">" . str_replace('href="/medios"', 'href="/fuentes"', t('Propón un medio o un substack que tenga RSS. No se añade directamente: un moderador comprueba que su RSS se lee bien antes de que entre en el <a href="/medios">catálogo</a>.')) . (count($TIPOS) > 2 ? ' ' . t('También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.') : '') . "</p>";
     echo "<form class=\"plain\" method=\"post\">";
-    echo "<label>" . t('Tipo') . "</label><select name=\"kind\"><option value=\"medio\"" . ($f['kind'] === 'medio' ? ' selected' : '') . ">" . t('Medio') . "</option><option value=\"newsletter\"" . ($f['kind'] === 'newsletter' ? ' selected' : '') . ">" . t('Substack o newsletter') . "</option></select>";
+    echo "<label>" . t('Tipo') . "</label><select name=\"kind\">"; foreach ($TIPOS as $tk => $tl) echo "<option value=\"$tk\"" . ($f['kind'] === $tk ? ' selected' : '') . ">" . h($tl) . "</option>"; echo "</select>";
     echo "<label>" . t('Nombre') . "</label><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name']) . "\">";
     echo "<label>" . t('Web') . "</label><input type=\"url\" name=\"home\" required value=\"" . h($f['home']) . "\" placeholder=\"https://…\">";
     echo "<label>" . t('RSS (opcional)') . "</label><input type=\"url\" name=\"feed\" value=\"" . h($f['feed']) . "\" placeholder=\"https://…/feed\"><small class=\"hint\">" . t('Si lo dejas vacío, lo buscamos en la web.') . "</small>";
@@ -65,7 +72,7 @@ $mias->execute([(int)$u['user_id']]);
 if ($mias = $mias->fetchAll()) {
     $EST = ['pending' => t('pendiente'), 'ok' => t('aceptada'), 'rejected' => t('rechazada')];
     echo "<h3 class=\"sec\">" . t('Tus propuestas') . "</h3><ul class=\"fprops\">";
-    foreach ($mias as $m) echo "<li><b>" . h($m['name']) . "</b> <span class=\"meta\">· " . ($m['kind'] === 'newsletter' ? t('Substack o newsletter') : t('Medio')) . " · " . h(hace($m['created'])) . " · <span class=\"st-{$m['status']}\">" . h($EST[$m['status']] ?? $m['status']) . "</span>" . ($m['reply'] ? " · " . h($m['reply']) : '') . "</span></li>";
+    foreach ($mias as $m) echo "<li><b>" . h($m['name']) . "</b> <span class=\"meta\">· " . h(['medio' => t('Medio'), 'newsletter' => t('Substack o newsletter'), 'youtube' => t('Canal de YouTube'), 'agregador' => t('Agregador o foro')][$m['kind']] ?? $m['kind']) . " · " . h(hace($m['created'])) . " · <span class=\"st-{$m['status']}\">" . h($EST[$m['status']] ?? $m['status']) . "</span>" . ($m['reply'] ? " · " . h($m['reply']) : '') . "</span></li>";
     echo "</ul>";
 }
 page_footer();

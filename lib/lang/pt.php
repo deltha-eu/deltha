@@ -868,4 +868,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'buscar por nick' => 'procurar por nick',
 'nick o correo' => 'nick ou e-mail',
 '%d coinciden con «%s».' => '%d coincidem com «%s».',
+'Canal de YouTube' => 'Canal de YouTube',
+'Agregador o foro' => 'Agregador ou fórum',
+'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Também canais de YouTube (basta o endereço do canal) e agregadores ou fóruns com RSS.',
 ];

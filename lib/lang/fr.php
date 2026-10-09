@@ -870,4 +870,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'buscar por nick' => 'chercher par pseudo',
 'nick o correo' => 'pseudo ou e-mail',
 '%d coinciden con «%s».' => '%d correspondent à « %s ».',
+'Canal de YouTube' => 'Chaîne YouTube',
+'Agregador o foro' => 'Agrégateur ou forum',
+'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Aussi des chaînes YouTube (l’adresse de la chaîne suffit) et des agrégateurs ou forums avec RSS.',
 ];

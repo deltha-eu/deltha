@@ -831,4 +831,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'buscar por nick' => 'bilatu ezizenaren arabera',
 'nick o correo' => 'ezizena edo posta',
 '%d coinciden con «%s».' => '%d bat datoz «%s»-rekin.',
+'Canal de YouTube' => 'YouTube kanala',
+'Agregador o foro' => 'Agregatzailea edo foroa',
+'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Baita YouTube kanalak (kanalaren helbidea nahikoa da) eta RSS duten agregatzaile edo foroak ere.',
 ];

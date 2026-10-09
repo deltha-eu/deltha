@@ -871,4 +871,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'buscar por nick' => 'search by nick',
 'nick o correo' => 'nick or email',
 '%d coinciden con «%s».' => '%d match “%s”.',
+'Canal de YouTube' => 'YouTube channel',
+'Agregador o foro' => 'Aggregator or forum',
+'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Also YouTube channels (the channel address is enough) and aggregators or forums with RSS.',
 ];

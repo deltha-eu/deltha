@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
         $out[] = "«{$p['name']}» rechazada; se le ha avisado por mensaje.";
     } else {
         $slug = strtolower(trim(post('slug')));
-        $kind = in_array(post('kind'), ['newsletter', 'youtube'], true) ? post('kind') : 'medio';
+        $kind = in_array(post('kind'), ['newsletter', 'youtube', 'agregador'], true) ? post('kind') : 'medio';
         $name = mb_substr(trim(post('name')), 0, 48);
         $home = trim(post('home')); $feed = trim(post('feed'));
         $descr = mb_substr(trim(post('descr')), 0, 200) ?: null;
@@ -243,7 +243,7 @@ foreach ($props as $p) {
     echo "<form method=\"post\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fprop_ok\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><table>";
     echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($p['name']) . "\"></td></tr>";
     echo "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($pslug !== '' ? $pslug : fprop_slug($pdo, $p['name'])) . "\"></td></tr>";
-    echo "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . ($p['kind'] === 'medio' ? ' selected' : '') . ">medio</option><option value=\"newsletter\"" . ($p['kind'] === 'newsletter' ? ' selected' : '') . ">substack/newsletter</option><option value=\"youtube\"" . ($p['kind'] === 'youtube' ? ' selected' : '') . ">canal de YouTube</option></select></td></tr>";
+    echo "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . ($p['kind'] === 'medio' ? ' selected' : '') . ">medio</option><option value=\"newsletter\"" . ($p['kind'] === 'newsletter' ? ' selected' : '') . ">substack/newsletter</option><option value=\"youtube\"" . ($p['kind'] === 'youtube' ? ' selected' : '') . ">canal de YouTube</option><option value=\"agregador\"" . ($p['kind'] === 'agregador' ? ' selected' : '') . ">agregador/foro</option></select></td></tr>";
     echo "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($p['home']) . "\"></td></tr>";
     echo "<tr><td>RSS</td><td><input type=\"url\" name=\"feed\" required value=\"" . h($p['feed']) . "\"> <button class=\"btn sm\" name=\"act\" value=\"fprop_probar\" formnovalidate title=\"volver a leer este RSS\">probar</button></td></tr>";
     echo "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h((string)$p['descr']) . "\"></td></tr>";
