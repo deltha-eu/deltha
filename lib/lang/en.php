@@ -879,4 +879,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Featuring uses %s aura and you cannot go below %s; you have %s.',
 'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Not enough aura: featuring uses %s and you cannot go below %s.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'Queued: it starts in %d min, when the current one ends. Click = remove (the aura is not refunded).',
+'buscar una fuente por nombre o dirección' => 'search a source by name or address',
+'Ninguna fuente coincide con «%s».' => 'No source matches “%s”.',
 ];
