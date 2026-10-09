@@ -839,4 +839,6 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Destacar usa %s de aura e non se pode baixar de %s; tes %s.',
 'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Non tes aura dabondo: destacar usa %s e non se pode baixar de %s.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'En cola: empezará en %d min, cando remate a destacada actual. Premer = quitar (non se devolve a aura).',
+'buscar una fuente por nombre o dirección' => 'buscar unha fonte por nome ou enderezo',
+'Ninguna fuente coincide con «%s».' => 'Ningunha fonte coincide con «%s».',
 ];

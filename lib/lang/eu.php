@@ -839,4 +839,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Nabarmentzeak %s aura erabiltzen du eta ezin da %s-tik jaitsi; %s dituzu.',
 'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Ez duzu aura nahikorik: nabarmentzeak %s erabiltzen du eta ezin da %s-tik jaitsi.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'Ilaran: %d minutu barru hasiko da, oraingoa amaitzean. Sakatu = kendu (aura ez da itzultzen).',
+'buscar una fuente por nombre o dirección' => 'bilatu iturri bat izen edo helbidearen arabera',
+'Ninguna fuente coincide con «%s».' => 'Ez dago «%s»-rekin bat datorren iturririk.',
 ];

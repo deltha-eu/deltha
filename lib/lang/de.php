@@ -840,4 +840,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Hervorheben verwendet %s Aura, und unter %s geht es nicht; du hast %s.',
 'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Nicht genug Aura: Hervorheben verwendet %s, und unter %s geht es nicht.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'In der Warteschlange: beginnt in %d min, wenn die aktuelle endet. Klick = entfernen (Aura wird nicht erstattet).',
+'buscar una fuente por nombre o dirección' => 'Quelle nach Name oder Adresse suchen',
+'Ninguna fuente coincide con «%s».' => 'Keine Quelle passt zu „%s“.',
 ];

@@ -878,4 +878,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Mettre en avant utilise %s d’aura et on ne peut pas descendre sous %s ; vous en avez %s.',
 'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Pas assez d’aura : mettre en avant utilise %s et on ne peut pas descendre sous %s.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'En file : commence dans %d min, à la fin de l’actuelle. Cliquer = retirer (l’aura n’est pas rendue).',
+'buscar una fuente por nombre o dirección' => 'chercher une source par nom ou adresse',
+'Ninguna fuente coincide con «%s».' => 'Aucune source ne correspond à « %s ».',
 ];

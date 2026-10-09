@@ -840,4 +840,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Mettere in evidenza usa %s di aura e non si può scendere sotto %s; ne hai %s.',
 'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Aura insufficiente: mettere in evidenza usa %s e non si può scendere sotto %s.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'In coda: inizia tra %d min, quando finisce quella attuale. Clic = togliere (l’aura non si restituisce).',
+'buscar una fuente por nombre o dirección' => 'cerca una fonte per nome o indirizzo',
+'Ninguna fuente coincide con «%s».' => 'Nessuna fonte corrisponde a «%s».',
 ];
