@@ -538,6 +538,11 @@ function page_body(array $pg): string {
         '{editaura}' => num_pg($L, cfg('comment_edit_min_aura', 6)),
         '{editmin}'  => (string)(int)cfg('comment_edit_minutes', 10),
         '{seditaura}'=> num_pg($L, cfg('story_edit_min_aura', 6)),
+        '{pincost}'  => num_pg($L, cfg('pin_cost', 0.5)),                    // destacar en portada, en aura (migra-132)
+        '{pincostorig}' => num_pg($L, cfg('pin_cost_originales', 1)),          // destacar un original
+        '{aurafloor}'=> num_pg($L, cfg('aura_gasto_minimo', cfg('aura_start', 5))),   // suelo del aura como moneda
+        '{pinmin}'   => (string)(int)cfg('pin_user_minutes', 30),               // minutos que dura la destacada de usuario en portada
+        '{pinhorig}' => num_pg($L, round((int)cfg('pin_user_minutes_originales', 240) / 60, 1)),   // horas en Originales
         '{seditmin}' => (string)(int)cfg('story_edit_minutes', 15),
         // fuentes RSS (cuantos medios y newsletters favoritos salen en el menu, aura para proponer)
         '{mediamax}' => (string)(int)cfg('media_max_per_user', 3),

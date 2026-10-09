@@ -835,8 +835,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Agregador o foro' => 'Agregatzailea edo foroa',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Baita YouTube kanalak (kanalaren helbidea nahikoa da) eta RSS duten agregatzaile edo foroak ere.',
 'más aura' => 'aura gehien',
-'Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.' => 'Nabarmendu: lehena izango da %s atalean %d minutuz. %s aura kostatzen da; %s geratuko zaizkizu.',
-'Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.' => 'Nabarmentzeak %s aura kostatzen du eta ezin da %s-tik jaitsi; %s dituzu.',
-'No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.' => 'Ez duzu aura nahikorik: nabarmentzeak %s kostatzen du eta ezin da %s-tik jaitsi.',
+'Destacar: irá la primera en %s durante %d min. Usa %s de tu aura; te quedarán %s.' => 'Nabarmendu: lehena izango da %s atalean %d minutuz. Zure auraren %s erabiltzen du; %s geratuko zaizkizu.',
+'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Nabarmentzeak %s aura erabiltzen du eta ezin da %s-tik jaitsi; %s dituzu.',
+'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Ez duzu aura nahikorik: nabarmentzeak %s erabiltzen du eta ezin da %s-tik jaitsi.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'Ilaran: %d minutu barru hasiko da, oraingoa amaitzean. Sakatu = kendu (aura ez da itzultzen).',
 ];

@@ -835,8 +835,8 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Agregador o foro' => 'Agregador ou foro',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Tamén canles de YouTube (abonda co enderezo da canle) e agregadores ou foros con RSS.',
 'más aura' => 'máis aura',
-'Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.' => 'Destacar: irá a primeira en %s durante %d min. Custa %s de aura; quedaranche %s.',
-'Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.' => 'Destacar custa %s de aura e non se pode baixar de %s; tes %s.',
-'No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.' => 'Non tes aura dabondo: destacar custa %s e non se pode baixar de %s.',
+'Destacar: irá la primera en %s durante %d min. Usa %s de tu aura; te quedarán %s.' => 'Destacar: irá a primeira en %s durante %d min. Usa %s da túa aura; quedaranche %s.',
+'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Destacar usa %s de aura e non se pode baixar de %s; tes %s.',
+'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Non tes aura dabondo: destacar usa %s e non se pode baixar de %s.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'En cola: empezará en %d min, cando remate a destacada actual. Premer = quitar (non se devolve a aura).',
 ];

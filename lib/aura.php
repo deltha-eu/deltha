@@ -23,8 +23,8 @@ function aura_add(PDO $pdo, int $user_id, float $amount, string $reason, ?int $r
     return $add;
 }
 
-/** El aura como moneda (migra-132): descuenta $amount al usuario si despues le queda al menos aura_gasto_minimo (por defecto el aura
- *  inicial, 5) y lo apunta en aura_log en negativo con el motivo («destacar», …). Devuelve true si se ha cobrado. Una sola UPDATE
+/** El aura como recurso (migra-132): descuenta $amount al usuario si despues le queda al menos aura_gasto_minimo (por defecto el aura
+ *  inicial, 5) y lo apunta en aura_log en negativo con el motivo («destacar», …). Devuelve true si se ha descontado. Una sola UPDATE
  *  con la condicion dentro: dos peticiones a la vez no pueden dejar a nadie por debajo del suelo. No cuenta para el tope diario. */
 function aura_gastar(PDO $pdo, int $user_id, float $amount, string $reason, ?int $ref = null): bool {
     $amount = round($amount, 3);
@@ -42,9 +42,9 @@ function aura_devolver(PDO $pdo, int $user_id, float $amount, string $reason, ?i
     $pdo->prepare("UPDATE users SET aura = aura + ? WHERE user_id = ?")->execute([$amount, $user_id]);
     $pdo->prepare("INSERT INTO aura_log (user_id, amount, reason, ref_id) VALUES (?,?,?,?)")->execute([$user_id, $amount, $reason, $ref]);
 }
-/** Suelo por debajo del cual no se puede gastar aura (config.aura_gasto_minimo; si no, el aura inicial). */
+/** Suelo por debajo del cual no se puede usar aura (config.aura_gasto_minimo; si no, el aura inicial). */
 function aura_gasto_minimo(): float { return (float)cfg('aura_gasto_minimo', cfg('aura_start', 5)); }
-/** ¿Puede este usuario pagar $amount sin bajar del suelo? (para pintar o no un boton; el cobro real lo decide aura_gastar) */
+/** ¿Puede este usuario pagar $amount sin bajar del suelo? (para pintar o no un boton; el descuento real lo decide aura_gastar) */
 function aura_puede_gastar(?array $u, float $amount): bool { return $u && (float)$u['aura'] - $amount >= aura_gasto_minimo() - 0.0005; }
 
 /** Decaimiento diario: una vez por dia natural, a todos los registrados, sin bajar del suelo. Devuelve filas afectadas o -1 si ya se hizo hoy. */

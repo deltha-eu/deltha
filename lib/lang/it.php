@@ -836,8 +836,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Agregador o foro' => 'Aggregatore o forum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Anche canali YouTube (basta l’indirizzo del canale) e aggregatori o forum con RSS.',
 'más aura' => 'più aura',
-'Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.' => 'Mettere in evidenza: sarà la prima in %s per %d min. Costa %s di aura; te ne resteranno %s.',
-'Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.' => 'Mettere in evidenza costa %s di aura e non si può scendere sotto %s; ne hai %s.',
-'No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.' => 'Aura insufficiente: mettere in evidenza costa %s e non si può scendere sotto %s.',
+'Destacar: irá la primera en %s durante %d min. Usa %s de tu aura; te quedarán %s.' => 'Mettere in evidenza: sarà la prima in %s per %d min. Usa %s della tua aura; te ne resteranno %s.',
+'Destacar usa %s de aura y no se puede bajar de %s; tienes %s.' => 'Mettere in evidenza usa %s di aura e non si può scendere sotto %s; ne hai %s.',
+'No tienes aura suficiente: destacar usa %s y no se puede bajar de %s.' => 'Aura insufficiente: mettere in evidenza usa %s e non si può scendere sotto %s.',
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'In coda: inizia tra %d min, quando finisce quella attuale. Clic = togliere (l’aura non si restituisce).',
 ];
