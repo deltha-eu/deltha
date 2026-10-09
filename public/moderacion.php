@@ -94,6 +94,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'ia') {   // decisi
     $out[] = $r ? "#$item: $r." : "#$item ya estaba resuelto.";
 }
 
+/* ---- alta directa de una fuente por un moderador (09/10/2026): mismos campos que al aprobar una propuesta, sin propuesta de por medio.
+ *      Sin RSS se busca en la web (fprop_probar); si no se lee nada, no se crea y se enseña el error. ---- */
+$altaF = ['name' => '', 'kind' => 'medio', 'home' => '', 'feed' => '', 'descr' => '', 'lang' => '', 'interval_min' => ''];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_alta') {
+    require_once __DIR__ . '/../lib/fuentes.php';
+    foreach ($altaF as $k => $v) $altaF[$k] = trim(post($k));
+    $name = mb_substr($altaF['name'], 0, 48);
+    $kind = in_array($altaF['kind'], ['medio', 'newsletter', 'youtube', 'agregador'], true) ? $altaF['kind'] : 'medio';
+    $home = $altaF['home']; $feed = $altaF['feed'];
+    foreach (['home', 'feed'] as $k) if ($$k !== '' && !preg_match('#^https?://#i', $$k)) $$k = 'https://' . $$k;
+    $slang = preg_match('/^[a-z]{2}$/', $altaF['lang']) ? $altaF['lang'] : '';
+    $iv = max(1, min(1440, (int)($altaF['interval_min'] ?: ($kind === 'newsletter' ? 1440 : ($kind === 'youtube' ? 180 : 60)))));
+    if ($name === '') $out[] = 'Falta el nombre.';
+    elseif (!preg_match('#^https?://[^\s]+$#i', $home)) $out[] = 'La web debe ser una URL http(s).';
+    elseif (($ya = fprop_existe($pdo, $feed, $home)) !== null) $out[] = "Ya está en el catálogo o pendiente: $ya.";
+    else {
+        if ($kind === 'youtube' && $feed === '') { $e = null; $feed = (string)(youtube_feed_de($home, $e) ?? ''); }
+        $r = fprop_probar($feed, $home);
+        if (!$r['items'] && !in_array($kind, ['agregador'], true)) $out[] = 'No se ha podido leer ningún RSS de esa fuente: ' . (string)$r['error'] . ' Pon la dirección del RSS a mano si la conoces.';
+        else {
+            $feed = $r['feed'] !== '' ? (string)$r['feed'] : ($feed !== '' ? $feed : $home);
+            if ($slang === '' && preg_match('/^[a-z]{2}$/', (string)$r['lang'])) $slang = (string)$r['lang'];
+            $slug = fprop_slug($pdo, $name);
+            try {
+                $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES (?,?,?,?,?,?,'',NULL,?,'',?,'ok',0)")
+                    ->execute([$slug, $kind, $name, mb_substr($home, 0, 200), mb_substr($altaF['descr'], 0, 200) ?: null, $slang, mb_substr($feed, 0, 300), $iv]);
+                $out[] = "«{$name}» añadida al catálogo (/fuente/{$slug})" . ($r['items'] ? ", RSS leído: {$r['items']} noticias" : '') . "; el lector la leerá en los próximos minutos. Los detalles (tema, destacada, skin) se afinan en admin → Fuentes.";
+                $altaF = ['name' => '', 'kind' => 'medio', 'home' => '', 'feed' => '', 'descr' => '', 'lang' => '', 'interval_min' => ''];
+            } catch (PDOException $e) { $out[] = 'No se ha podido crear la fuente: ' . $e->getMessage(); }
+        }
+    }
+}
+
 /* ---- fuentes propuestas por los usuarios (lib/propuestas.php) ---- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_probar', 'fprop_ok', 'fprop_no'], true)) {
     $q = $pdo->prepare("SELECT * FROM source_proposals WHERE prop_id = ? AND status = 'pending'"); $q->execute([(int)post('pid')]);
@@ -228,6 +261,17 @@ foreach ($creps as $r) {
 try { $props = $pdo->query("SELECT p.*, u.login, u.aura FROM source_proposals p JOIN users u ON u.user_id = p.user_id WHERE p.status = 'pending' ORDER BY p.created LIMIT 50")->fetchAll(); } catch (Throwable $e) { $props = []; }
 echo "<h3 id=\"fuentes\">Fuentes propuestas (" . count($props) . ")</h3>";
 echo "<p><small>Medios, substacks y canales propuestos (aura " . h((string)cfg('source_propose_aura', 6)) . " o más) o añadidos por su cuenta desde «Mis medios» (aura " . h((string)cfg('source_add_aura', 5)) . " o más): estos últimos ya funcionan para quien los añadió, pero no salen en el catálogo público hasta que los apruebes. Al proponerlos se prueba el RSS; compruébalo (títulos recientes, idioma, que sea el medio que dice) y apruébalo o recházalo. Al aprobar entra activo y sin destacar; en los dos casos quien lo propuso recibe un mensaje tuyo.</small></p>";
+// alta directa (09/10/2026): un moderador da de alta una fuente sin esperar a que alguien la proponga
+echo "<details class=\"editbox\"" . ($altaF['name'] !== '' || $altaF['home'] !== '' ? ' open' : '') . "><summary><b>Dar de alta una fuente</b> · sin propuesta: nombre, tipo y web; el RSS se busca solo si no lo pones</summary>";
+echo "<form method=\"post\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fuente_alta\"><table>";
+echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($altaF['name']) . "\"></td></tr>";
+echo "<tr><td>tipo</td><td><select name=\"kind\">"; foreach (['medio' => 'medio', 'newsletter' => 'substack/newsletter', 'youtube' => 'canal de YouTube', 'agregador' => 'agregador/foro'] as $ak => $al) echo "<option value=\"$ak\"" . ($altaF['kind'] === $ak ? ' selected' : '') . ">$al</option>"; echo "</select></td></tr>";
+echo "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($altaF['home']) . "\" placeholder=\"https://…\"> <small>en un canal de YouTube, la dirección del canal</small></td></tr>";
+echo "<tr><td>RSS</td><td><input type=\"url\" name=\"feed\" value=\"" . h($altaF['feed']) . "\" placeholder=\"vacío = buscarlo en la web\"></td></tr>";
+echo "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h($altaF['descr']) . "\"></td></tr>";
+echo "<tr><td>idioma</td><td><select name=\"lang\"><option value=\"\">— detectar del RSS —</option>"; foreach (DDD_LANGS as $lc => $ln) echo "<option value=\"$lc\"" . ($altaF['lang'] === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>"; echo "</select></td></tr>";
+echo "<tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . h($altaF['interval_min']) . "\" placeholder=\"60\"> minutos (vacío: 60; substack 1440; YouTube 180)</td></tr>";
+echo "<tr><td></td><td><button class=\"btn\">Dar de alta</button></td></tr></table></form></details>";
 if (!$props) echo "<p>No hay propuestas pendientes.</p>";
 else $ptopics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
 foreach ($props as $p) {
