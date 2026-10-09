@@ -278,6 +278,7 @@ main > p { padding: 0 16px; }
 .admin nav.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); margin: 0 0 20px; }
 .admin nav.tabs a { padding: 9px 12px 8px; color: var(--muted); font-size: 14px; white-space: nowrap; position: relative; text-decoration: none; }
 .admin nav.tabs a.on { color: var(--fg); font-weight: 700; }
+.admin nav.tabs a small { color: var(--accent); font-weight: 700; font-size: 12px; }   /* pendientes en la pestaña (moderacion, 09/10/2026) */
 .admin nav.tabs a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 2px; background: var(--accent); }
 /* tabla de usuarios: dos lineas por fila (nick / correo · registro), acciones compactas */
 .admin table.users td { padding: 10px 6px; vertical-align: middle; }
