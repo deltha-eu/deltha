@@ -835,4 +835,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Canal de YouTube' => 'Canale YouTube',
 'Agregador o foro' => 'Aggregatore o forum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Anche canali YouTube (basta l’indirizzo del canale) e aggregatori o forum con RSS.',
+'más aura' => 'più aura',
 ];

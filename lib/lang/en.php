@@ -874,4 +874,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Canal de YouTube' => 'YouTube channel',
 'Agregador o foro' => 'Aggregator or forum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Also YouTube channels (the channel address is enough) and aggregators or forums with RSS.',
+'más aura' => 'most aura',
 ];

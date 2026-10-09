@@ -873,4 +873,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Canal de YouTube' => 'Chaîne YouTube',
 'Agregador o foro' => 'Agrégateur ou forum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Aussi des chaînes YouTube (l’adresse de la chaîne suffit) et des agrégateurs ou forums avec RSS.',
+'más aura' => 'plus d’aura',
 ];
