@@ -836,4 +836,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Agregador o foro' => 'Aggregator oder Forum',
 'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'Auch YouTube-Kanäle (die Kanaladresse genügt) und Aggregatoren oder Foren mit RSS.',
 'más aura' => 'meiste Aura',
+'Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.' => 'Hervorheben: steht %2$d min lang in %1$s ganz oben. Kostet %3$s Aura; dir bleiben %4$s.',
+'Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.' => 'Hervorheben kostet %s Aura, und unter %s geht es nicht; du hast %s.',
+'No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.' => 'Nicht genug Aura: Hervorheben kostet %s, und unter %s geht es nicht.',
+'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'In der Warteschlange: beginnt in %d min, wenn die aktuelle endet. Klick = entfernen (Aura wird nicht erstattet).',
 ];

@@ -8,7 +8,7 @@
  *   - noticias RSS ('item'): «Mis medios» / «Mis substacks» (/ultimo, fuente_post()).
  *  No baja hasta que se destaque otra del mismo grupo (la anterior se desmarca sola) o se quite en el mismo sitio: entonces vuelve a
  *  la posicion que le toca por fecha. Los usuarios tambien pueden: cada vez que su aura sube una unidad entera ganan un «destacado»
- *  (users.pin_credits, se cuenta en aura_add()), y gastarlo destaca una noticia durante pin_user_minutes (30); una activa por
+ *  (hasta el 09/10/2026: creditos; ahora cuesta aura, pin_cost / pin_cost_originales, migra-132) durante pin_user_minutes (30); una activa por
  *  usuario, destacar otra sustituye la anterior. Las del admin no caducan y hay una por grupo. Tabla pins. config.pins_enabled apaga todo.
  *  Cola (migra-114): en cada grupo solo hay una destacada de usuario a la vez; si alguien destaca mientras otra esta en marcha, la suya
  *  queda en cola (pins.starts en el futuro) y empieza cuando a la actual se le acabe su media hora; varias esperan por orden.
@@ -49,6 +49,14 @@ function pins_activos(PDO $pdo): array {
     if (!pins_on()) return $pins;
     try {
         $pdo->exec("DELETE FROM pins WHERE expires IS NOT NULL AND expires <= NOW()");
+        // en cola y el envio ya no esta donde se destaca (archivado, retirado, borrado): no llego a verse, se devuelve el aura (migra-132)
+        try {
+            foreach ($pdo->query("SELECT p.pin_id, p.user_id, p.grupo, p.ref_id FROM pins p LEFT JOIN stories s ON s.story_id = p.ref_id WHERE p.by_admin = 0 AND p.what = 'story' AND p.starts > NOW() AND (s.story_id IS NULL OR s.status NOT IN ('nuevas','destacadas'))")->fetchAll() as $z) {
+                require_once __DIR__ . '/aura.php';
+                aura_devolver($pdo, (int)$z['user_id'], pin_cost((string)$z['grupo']), 'destacar_devuelto', (int)$z['ref_id']);
+                $pdo->prepare("DELETE FROM pins WHERE pin_id = ?")->execute([(int)$z['pin_id']]);
+            }
+        } catch (Throwable $e) {}
         foreach ($pdo->query("SELECT p.*, u.login, (p.starts IS NULL OR p.starts <= NOW()) AS activo FROM pins p JOIN users u ON u.user_id = p.user_id ORDER BY p.by_admin DESC, p.starts, p.created DESC") as $p) $pins[$p['what'] . ':' . (int)$p['ref_id']] = $p;
         // Nunca dos a la vez en un grupo (08/10/2026; antes salian la del admin y la de usuario juntas). La de un usuario manda: mientras
         // haya una de usuario en marcha en ese grupo, la del admin no se ve (ni halo, ni etiqueta, ni primera); se queda en la tabla y
@@ -74,17 +82,11 @@ function pin_halo_primera(?bool $set = null): bool {
     $on = false;
     return true;
 }
-/** Destacados que le quedan al usuario actual (los gana al subir de unidad de aura). Una consulta por peticion, solo si hace falta
- *  (no va en el SELECT de user() para que el sitio no se rompa entre subir el codigo y aplicar la migracion). */
-function pin_credits(): int {
-    static $n = null;
-    if ($n !== null) return $n;
-    $u = user();
-    if (!$u) return $n = 0;
-    global $pdo;
-    try { $st = $pdo->prepare("SELECT pin_credits FROM users WHERE user_id = ?"); $st->execute([(int)$u['user_id']]); return $n = (int)$st->fetchColumn(); }
-    catch (Throwable $e) { return $n = 0; }
-}
+/** Lo que cuesta destacar, en aura (migra-132; antes «creditos» por cada unidad nueva de aura): pin_cost (0,5) en las portadas y
+ *  pin_cost_originales (1) en Originales. Se cobra con aura_gastar() (lib/aura.php), que no deja bajar de aura_gasto_minimo. */
+function pin_cost(string $grupo): float { require_once __DIR__ . '/aura.php'; return max(0.0, (float)($grupo === 'originales' ? cfg('pin_cost_originales', 1) : cfg('pin_cost', 0.5))); }
+/** ¿Puede el usuario actual pagar un destacado en este grupo? */
+function pin_puede_pagar(string $grupo): bool { require_once __DIR__ . '/aura.php'; return aura_puede_gastar(user(), pin_cost($grupo)); }
 
 /** Boton de la tarjeta: «Destacar» (admin siempre; usuario con destacados, solo sobre lo que ya esta en portada) o «Destacada»
  *  (pulsar = quitar: el admin sobre cualquiera, el usuario sobre la suya). Sin JS: POST a /destacar (w=story|item, i=id,
@@ -98,15 +100,17 @@ function pin_form(PDO $pdo, string $what, int $ref, string $grupo, bool $enPorta
     if ($pin) {
         if (!is_admin() && !pin_mio($pin)) return '';   // destacada por otro: solo se ve el halo
         if (!pin_activo($pin)) return "<form class=\"pin on cola\" method=\"post\" action=\"/destacar\">$hid<input type=\"hidden\" name=\"act\" value=\"quitar\">"
-             . "<button title=\"" . h(t('En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el destacado).', pin_min_hasta((string)$pin['starts']))) . "\">" . icon('pin') . "<span>" . t('En cola') . "</span></button></form>";
+             . "<button title=\"" . h(t('En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).', pin_min_hasta((string)$pin['starts']))) . "\">" . icon('pin') . "<span>" . t('En cola') . "</span></button></form>";
         return "<form class=\"pin on\" method=\"post\" action=\"/destacar\">$hid<input type=\"hidden\" name=\"act\" value=\"quitar\">"
              . "<button title=\"" . h(t('quitar el destacado: vuelve a su sitio por fecha')) . "\">" . icon('pin') . "<span>" . t('Destacada') . "</span></button></form>";
     }
     if (is_admin()) $title = t('Destacar: irá la primera en %s hasta que destaques otra o la quites', $nombre);
-    elseif ($enPortada && pin_credits() > 0) $title = t('Destacar: irá la primera en %s durante %d min. Te quedan %d destacados (ganas uno cada vez que tu aura sube una unidad).', $nombre, pin_minutos($grupo), pin_credits());
+    elseif ($enPortada && pin_puede_pagar($grupo)) $title = t('Destacar: irá la primera en %s durante %d min. Cuesta %s de aura; te quedarán %s.', $nombre, pin_minutos($grupo), num_es(pin_cost($grupo)), num_es((float)$u['aura'] - pin_cost($grupo)));
+    elseif ($enPortada && !is_admin()) $title = t('Destacar cuesta %s de aura y no se puede bajar de %s; tienes %s.', num_es(pin_cost($grupo)), num_es(aura_gasto_minimo()), num_es((float)$u['aura']));
     else return '';
+    if (!is_admin() && !pin_puede_pagar($grupo)) return "<span class=\"pin off\" title=\"" . h($title) . "\">" . icon('pin') . "<span>" . t('Destacar') . " <small>" . num_es(pin_cost($grupo)) . "</small></span></span>";   // sin aura suficiente: se ve el precio, sin boton
     return "<form class=\"pin\" method=\"post\" action=\"/destacar\">$hid<input type=\"hidden\" name=\"act\" value=\"poner\">"
-         . "<button title=\"" . h($title) . "\">" . icon('pin') . "<span>" . t('Destacar') . (is_admin() ? '' : " <small>" . pin_credits() . "</small>") . "</span></button></form>";
+         . "<button title=\"" . h($title) . "\">" . icon('pin') . "<span>" . t('Destacar') . (is_admin() ? '' : " <small>" . num_es(pin_cost($grupo)) . "</small>") . "</span></button></form>";
 }
 /** Minutos que faltan hasta una fecha (minimo 1). */
 function pin_min_hasta(string $fecha): int { return max(1, (int)ceil((strtotime($fecha) - time()) / 60)); }
@@ -143,10 +147,9 @@ function pin_poner(PDO $pdo, array $u, string $what, int $ref, string $grupo, bo
         return '';
     }
     if (!$enPortada) return t('Esta noticia no se puede destacar.');
-    $st = $pdo->prepare("UPDATE users SET pin_credits = pin_credits - 1 WHERE user_id = ? AND pin_credits > 0");
-    $st->execute([$uid]);
-    if (!$st->rowCount()) return t('No te quedan destacados: ganas uno cada vez que tu aura sube una unidad.');
-    $pdo->prepare("DELETE FROM pins WHERE user_id = ? AND by_admin = 0")->execute([$uid]);   // una (activa o en cola) por usuario
+    require_once __DIR__ . '/aura.php';
+    if (!aura_gastar($pdo, $uid, pin_cost($grupo), 'destacar', $ref)) return t('No tienes aura suficiente: destacar cuesta %s y no se puede bajar de %s.', num_es(pin_cost($grupo)), num_es(aura_gasto_minimo()));
+    $pdo->prepare("DELETE FROM pins WHERE user_id = ? AND by_admin = 0")->execute([$uid]);   // una (activa o en cola) por usuario (la anterior no se devuelve)
     // cola: empieza cuando acabe la ultima destacada de usuario del grupo (si no hay ninguna en marcha, ahora)
     $st = $pdo->prepare("SELECT MAX(expires) FROM pins WHERE by_admin = 0 AND what = ? AND grupo = ? AND expires > NOW()");
     $st->execute([$what, $grupo]);
@@ -155,7 +158,7 @@ function pin_poner(PDO $pdo, array $u, string $what, int $ref, string $grupo, bo
     else $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, ?, ? + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, $desde, $desde, pin_minutos($grupo)]);
     return '';
 }
-/** Quita una destacada: el admin, cualquiera; un usuario, solo la suya (no se devuelve el destacado). */
+/** Quita una destacada: el admin, cualquiera; un usuario, solo la suya (no se devuelve el aura). */
 function pin_quitar(PDO $pdo, array $u, string $what, int $ref): bool {
     $pin = pin_de($pdo, $what, $ref);
     if (!$pin || (!is_admin() && (int)$pin['user_id'] !== (int)$u['user_id'])) return false;
