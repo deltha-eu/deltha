@@ -867,4 +867,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Elige una contraseña nueva para %s.' => 'Choisissez un nouveau mot de passe pour %s.',
 'Guardar la contraseña' => 'Enregistrer le mot de passe',
 'Contraseña cambiada: ya has entrado con la nueva.' => 'Mot de passe changé : vous êtes connecté avec le nouveau.',
+'buscar por nick' => 'chercher par pseudo',
+'nick o correo' => 'pseudo ou e-mail',
+'%d coinciden con «%s».' => '%d correspondent à « %s ».',
 ];

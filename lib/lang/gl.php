@@ -828,4 +828,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Elige una contraseña nueva para %s.' => 'Escolle un contrasinal novo para %s.',
 'Guardar la contraseña' => 'Gardar o contrasinal',
 'Contraseña cambiada: ya has entrado con la nueva.' => 'Contrasinal cambiado: xa entraches co novo.',
+'buscar por nick' => 'buscar por nick',
+'nick o correo' => 'nick ou correo',
+'%d coinciden con «%s».' => '%d coinciden con «%s».',
 ];
