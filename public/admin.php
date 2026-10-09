@@ -583,6 +583,10 @@ if ($tab === 'usuarios') {
     // filtro por idioma dentro de la subpestaña: il = codigo (es, en, pt…), '?' = sin idioma, '' = todos; los formularios lo conservan
     $il = (string)($_GET['il'] ?? $_POST['il'] ?? '');
     if ($il !== '?' && !preg_match('/^[a-z]{2,5}$/', $il)) $il = '';
+    // buscador (09/10/2026): nombre, slug, descripcion, web o RSS, sin mayusculas ni tildes; busca en TODOS los tipos e idiomas
+    $fq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64));
+    $llano = fn(string $t): string => strtr(mb_strtolower($t), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ã' => 'a', 'õ' => 'o', 'ç' => 'c', 'ä' => 'a', 'ö' => 'o', 'ß' => 'ss']);
+    $fqn = $llano($fq);
     $T .= "<input type=\"hidden\" name=\"k\" value=\"$fk\"><input type=\"hidden\" name=\"il\" value=\"" . h($il) . "\">";
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
@@ -616,8 +620,15 @@ if ($tab === 'usuarios') {
     echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><button class=\"btn\">Leer todas las fuentes ahora</button><small>sin esperar al intervalo; tarda unos segundos por fuente (feeds e imágenes)</small></form>";
     $nk = $pdo->query("SELECT kind, COUNT(*) FROM sources GROUP BY kind")->fetchAll(PDO::FETCH_KEY_PAIR);
     echo "<nav class=\"sub\">";
-    foreach ($FK as $k => $v) echo "<a href=\"/admin?t=fuentes&amp;k=$k\"" . ($k === $fk ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
+    foreach ($FK as $k => $v) echo "<a href=\"/admin?t=fuentes&amp;k=$k\"" . ($k === $fk && $fq === '' ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
     echo "</nav>";
+    echo "<form method=\"get\" action=\"/admin\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"fuentes\"><input type=\"hidden\" name=\"k\" value=\"$fk\"><input type=\"search\" name=\"q\" value=\"" . h($fq) . "\" maxlength=\"64\" placeholder=\"buscar fuente: nombre, slug, descripción, web o RSS (en todos los tipos)\"><button class=\"btn sm\">Buscar</button>" . ($fq !== '' ? " <a href=\"/admin?t=fuentes&amp;k=$fk\">todas</a>" : '') . "</form>";
+    if ($fq !== '') {
+        $rows = array_values(array_filter($pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s ORDER BY s.kind, s.name")->fetchAll(),
+            fn($f) => str_contains($llano(implode(' ', [$f['name'], $f['slug'], (string)$f['descr'], (string)$f['home'], (string)$f['feed_portada'], (string)$f['feed_nuevas']])), $fqn)));
+        echo "<p class=\"notice\">" . count($rows) . " coinciden con «" . h($fq) . "» (todos los tipos e idiomas).</p>";
+        if (!$rows) echo "<p class=\"end\">Ninguna fuente coincide.</p>";
+    } else {
     // idiomas de este tipo con su numero de fuentes: primero los de la interfaz (en su orden), luego otros codigos y al final «sin idioma»
     $nl = $pdo->prepare("SELECT COALESCE(lang, '') l, COUNT(*) FROM sources WHERE kind = ? GROUP BY COALESCE(lang, '')");
     $nl->execute([$fk]); $nl = $nl->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -636,10 +647,11 @@ if ($tab === 'usuarios') {
     $rows = $pdo->prepare("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s WHERE s.kind = ?$wl ORDER BY s.name");
     $rows->execute($il === '' || $il === '?' ? [$fk] : [$fk, $il]); $rows = $rows->fetchAll();
     if (!$rows) echo "<p class=\"end\">" . ($il === '' ? "No hay fuentes de este tipo." : "No hay fuentes de este tipo en ese idioma.") . "</p>";
+    }   // fin sin busqueda
     // Destacadas del tipo: las que ven en «Mis medios» / «Mis substacks» / … quienes no siguen ninguna fuente (o no tienen cuenta).
     // Siempre con TODAS las fuentes encendidas del tipo (sin el filtro de idioma), porque al guardar se desmarcan las que no esten.
     $todas = $pdo->prepare("SELECT source_id, name, featured, lang FROM sources WHERE kind = ? AND status = 'ok' ORDER BY name"); $todas->execute([$fk]); $todas = $todas->fetchAll();
-    if ($todas) {
+    if ($todas && $fq === '') {   // buscando no se enseña: la busqueda cruza tipos
         $nd = count(array_filter($todas, fn($f) => !empty($f['featured'])));
         echo "<details class=\"editbox\"" . ($nd ? '' : ' open') . "><summary><b>Destacadas</b> · $nd de " . count($todas) . " · las que ven en el menú quienes no siguen ninguna fuente de este tipo" . ($nd ? '' : " · <i>ninguna: se enseñan las que han publicado más recientemente</i>") . "</summary>";
         echo "<form method=\"post\" action=\"/admin?t=fuentes&amp;k=$fk\">$T<input type=\"hidden\" name=\"act\" value=\"fuentes_destacar\"><input type=\"hidden\" name=\"kind\" value=\"" . h($fk) . "\"><p style=\"columns:3 14em\">";
