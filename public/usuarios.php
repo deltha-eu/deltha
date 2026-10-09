@@ -6,7 +6,7 @@
  *  ?n=usuario | mod | admin   filtro por nivel (tercera fila de pestañas), combinable con vista y orden. Moderador = nivel mod o, sin ser
  *                 admin, aura >= config.mod_aura (como user_is_mod()); usuario = el resto
  *  ?q=texto      buscador (09/10/2026): nick que contenga el texto; los admin buscan tambien por correo. Se combina con todo lo demas
- *  ?o=registro | acceso | envios | comentarios   orden (fecha de registro, ultima conexion, mas envios, mas comentarios);
+ *  ?o=registro | acceso | aura | envios | comentarios   orden (fecha de registro, ultima conexion, mas aura, mas envios, mas comentarios);
  *                 se combina con la vista; envios = publicados o en el radar (no rechazados ni descartados) */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -29,10 +29,10 @@ $WHERE .= ghost_sql_not_in('user_id');
 $q = mb_substr(trim((string)($_GET['q'] ?? '')), 0, 64);
 $qArgs = [];
 if ($q !== '') { $like = '%' . addcslashes($q, '%_\\') . '%'; $WHERE .= is_admin() ? " AND (login LIKE ? OR email LIKE ?)" : " AND login LIKE ?"; $qArgs = is_admin() ? [$like, $like] : [$like]; }   // los velados por ghosteo (en ambos sentidos) no salen: su perfil no esta disponible (lib/ghost.php)
-$ORDERS = ['registro' => t('fecha de registro'), 'acceso' => t('última conexión'), 'envios' => t('más envíos'), 'comentarios' => t('más comentarios')];
+$ORDERS = ['registro' => t('fecha de registro'), 'acceso' => t('última conexión'), 'aura' => t('más aura'), 'envios' => t('más envíos'), 'comentarios' => t('más comentarios')];
 $o = (string)($_GET['o'] ?? ($v === 'conectados' ? 'acceso' : 'registro'));
 if (!isset($ORDERS[$o])) $o = 'registro';
-$ORDER = ['registro' => 'u.created DESC, u.user_id DESC', 'acceso' => 'u.last_seen DESC, u.user_id DESC',
+$ORDER = ['registro' => 'u.created DESC, u.user_id DESC', 'acceso' => 'u.last_seen DESC, u.user_id DESC', 'aura' => 'u.aura DESC, u.created ASC',
           'envios' => 'n_stories DESC, u.created ASC', 'comentarios' => 'n_comments DESC, u.created ASC'][$o];
 // enlace a esta pagina con vista, orden y nivel dados (se omiten los que valen lo de por defecto)
 $url = function (string $v, string $o, string $n, string $amp = '&amp;') use ($q): string {
