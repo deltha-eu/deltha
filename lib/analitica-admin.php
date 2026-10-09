@@ -99,7 +99,7 @@ function ana_path_label(PDO $pdo, string $path): string {
         $t = $titles[$id] ? h(mb_strimwidth((string)$titles[$id], 0, 70, '…')) : "hilo $id";
         return "<a href=\"" . h($path) . "\">$t</a>";
     }
-    $names = ['/' => 'Portada (Medios)', '/?portada=medios' => 'Portada Medios', '/?portada=substacks' => 'Portada Substacks', '/radar' => 'Radar', '/originales' => 'Originales', '/chat' => 'Chat',
+    $names = ['/' => 'Portada (/ · la última elegida)', '/?portada=medios' => 'Portada Medios', '/?portada=substacks' => 'Portada Substacks', '/?portada=canales' => 'Portada Canales', '/radar' => 'Radar', '/originales' => 'Originales', '/chat' => 'Chat',
               '/usuarios' => 'Usuarios', '/procesos' => 'Procesos', '/estadisticas' => 'Estadísticas', '/analitica' => 'Analítica', '/mensajes' => 'Mensajes', '/que-es' => '¿Qué es Deltha?', '/algoritmo' => 'Cómo funciona el δ', '/normas' => 'Normas', '/privacidad' => 'Privacidad', '/temas' => 'Temas', '/comunidades' => 'Comunidades', '/plantilla' => 'Skins', '/login' => 'Entrar', '/registro' => 'Registro', '/enviar' => 'Enviar', '/articulo' => 'Escribir artículo', '/favoritos' => 'Favoritos', '/perfil' => 'Perfil'];
     $key = preg_replace('~\.php(?=\?|$)~', '', $path);   // hits antiguos con .php: mismo nombre
     return "<a href=\"" . h($path) . "\">" . h($names[$key] ?? $path) . "</a>";
