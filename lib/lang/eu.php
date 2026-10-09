@@ -828,4 +828,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Elige una contraseña nueva para %s.' => 'Aukeratu pasahitz berria %s kontuarentzat.',
 'Guardar la contraseña' => 'Pasahitza gorde',
 'Contraseña cambiada: ya has entrado con la nueva.' => 'Pasahitza aldatuta: berriarekin sartu zara.',
+'buscar por nick' => 'bilatu ezizenaren arabera',
+'nick o correo' => 'ezizena edo posta',
+'%d coinciden con «%s».' => '%d bat datoz «%s»-rekin.',
 ];

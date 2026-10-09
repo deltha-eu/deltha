@@ -865,4 +865,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Elige una contraseña nueva para %s.' => 'Escolhe uma palavra-passe nova para %s.',
 'Guardar la contraseña' => 'Guardar a palavra-passe',
 'Contraseña cambiada: ya has entrado con la nueva.' => 'Palavra-passe alterada: já entraste com a nova.',
+'buscar por nick' => 'procurar por nick',
+'nick o correo' => 'nick ou e-mail',
+'%d coinciden con «%s».' => '%d coincidem com «%s».',
 ];

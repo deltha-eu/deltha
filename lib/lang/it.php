@@ -829,4 +829,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Elige una contraseña nueva para %s.' => 'Scegli una nuova password per %s.',
 'Guardar la contraseña' => 'Salva la password',
 'Contraseña cambiada: ya has entrado con la nueva.' => 'Password cambiata: sei entrato con quella nuova.',
+'buscar por nick' => 'cerca per nick',
+'nick o correo' => 'nick o email',
+'%d coinciden con «%s».' => '%d corrispondono a «%s».',
 ];

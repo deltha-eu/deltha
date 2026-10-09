@@ -868,4 +868,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Elige una contraseña nueva para %s.' => 'Choose a new password for %s.',
 'Guardar la contraseña' => 'Save the password',
 'Contraseña cambiada: ya has entrado con la nueva.' => 'Password changed: you are now signed in with the new one.',
+'buscar por nick' => 'search by nick',
+'nick o correo' => 'nick or email',
+'%d coinciden con «%s».' => '%d match “%s”.',
 ];

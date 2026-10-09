@@ -3554,3 +3554,9 @@ details.editbox.gestion h3.sec { margin-top: 10px; }
   .rail details.rail-dd.todas .list a small { margin-left: 10px; color: var(--muted); font-size: 11px; }
 }
 p.end.ayuda-fuentes { text-align: left; padding: 6px 16px 10px; font-size: 14px; }
+
+/* buscador de /usuarios (09/10/2026) */
+form.buscar-u { display: flex; gap: 6px; align-items: center; padding: 8px 12px 0; }
+form.buscar-u input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 7px 10px; border: 1px solid var(--line2); border-radius: 999px; background: var(--bg); color: var(--fg); }
+form.buscar-u button { font: inherit; font-size: 14px; padding: 7px 14px; border: 1px solid var(--line2); border-radius: 999px; background: none; color: var(--fg); cursor: pointer; }
+form.buscar-u a { font-size: 13px; color: var(--muted); text-decoration: underline; }

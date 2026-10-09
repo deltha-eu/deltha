@@ -829,4 +829,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Elige una contraseña nueva para %s.' => 'Wähle ein neues Passwort für %s.',
 'Guardar la contraseña' => 'Passwort speichern',
 'Contraseña cambiada: ya has entrado con la nueva.' => 'Passwort geändert: Du bist mit dem neuen angemeldet.',
+'buscar por nick' => 'nach Nick suchen',
+'nick o correo' => 'Nick oder E-Mail',
+'%d coinciden con «%s».' => '%d passen zu „%s“.',
 ];
