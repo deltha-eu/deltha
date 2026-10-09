@@ -137,7 +137,10 @@ function imagen_desde_subida(array $file): ?string {
 function imagen_nombre_generico(string $imgUrl): bool {
     $base = strtolower(basename(rawurldecode((string)parse_url($imgUrl, PHP_URL_PATH))));
     if ($base === '') return false;
-    return preg_match('/(?:^|[^a-z])(?:logo|logotipo|placeholder|fallback|default|no[-_]?image|sin[-_]?(?:imagen|foto)|og[-_]?(?:image|img|default)|(?:share|social)[-_]?(?:image|img|default|card))(?:[^a-z]|$)/', $base) === 1;
+    // «default» a secas ya no cuenta (09/10/2026): elDiario.es nombra TODAS sus fotos «…aspect-ratio_default_0.jpg» y se quedaban sin foto;
+    // solo delata relleno junto a image/img/thumb/og («default-image», «img_default», «og-default») o como nombre entero («default.jpg»)
+    if (preg_match('/^default\.[a-z0-9]+$/', $base)) return true;
+    return preg_match('/(?:^|[^a-z])(?:logo|logotipo|placeholder|fallback|default[-_]?(?:image|img|thumb|og)|(?:image|img|thumb)[-_]?default|no[-_]?image|sin[-_]?(?:imagen|foto)|og[-_]?(?:image|img|default)|(?:share|social)[-_]?(?:image|img|default|card))(?:[^a-z]|$)/', $base) === 1;
 }
 
 /** Foto sacada de una pagina o de un feed: como imagen_desde_bytes(), pero devuelve null si es la generica del medio.
@@ -283,13 +286,58 @@ function imagen_desde_og(string $url, ?string $html = null): ?string {
      || preg_match('/"image"\s*:\s*(?:\{[^}]*"url"\s*:\s*)?"(https?:[^"]+)"/i', $html, $m)) {   // JSON-LD
         $img = html_entity_decode($m[1]);
     }
-    if (!$img) return null;
-    if (str_starts_with($img, '//')) $img = 'https:' . $img;
-    elseif (str_starts_with($img, '/')) {
-        $p = parse_url($url); $img = $p['scheme'] . '://' . $p['host'] . (isset($p['port']) ? ':' . $p['port'] : '') . $img;
+    if ($img) {
+        $img = imagen_url_absoluta($img, $url);
+        $bytes = http_get($img, $t);
+        if ($bytes && ($f = imagen_de_pagina($bytes, $url, $img))) return $f;   // null si es la generica del medio: se prueba con el cuerpo
     }
-    $bytes = http_get($img, $t);
-    return $bytes ? imagen_de_pagina($bytes, $url, $img) : null;   // null tambien si es la generica del medio
+    // sin og:image util (09/10/2026): la primera foto del cuerpo del articulo (<article> / <main>), saltando logos, iconos, svg, gifs,
+    // pixeles y marcadores de carga perezosa (data-src antes que src). Hasta tres candidatas, la primera que mida lo suficiente.
+    foreach (imagen_candidatas_cuerpo($html, $url) as $cand) {
+        $bytes = http_get($cand, $t);
+        if ($bytes && ($f = imagen_de_pagina($bytes, $url, $cand))) return $f;
+    }
+    return null;
+}
+/** URL absoluta de una imagen a partir de la de la pagina (//cdn…, /ruta, ruta relativa). */
+function imagen_url_absoluta(string $img, string $pageUrl): string {
+    $img = trim(html_entity_decode($img));
+    if (preg_match('#^https?://#i', $img)) return $img;
+    $p = parse_url($pageUrl);
+    $base = ($p['scheme'] ?? 'https') . '://' . ($p['host'] ?? '') . (isset($p['port']) ? ':' . $p['port'] : '');
+    if (str_starts_with($img, '//')) return ($p['scheme'] ?? 'https') . ':' . $img;
+    if (str_starts_with($img, '/')) return $base . $img;
+    $dir = preg_replace('#/[^/]*$#', '/', (string)($p['path'] ?? '/')) ?: '/';
+    return $base . $dir . $img;
+}
+/** Candidatas a foto dentro del cuerpo del articulo, en orden de aparicion (hasta 3). Se mira <article>, si no <main>, si no todo el
+ *  <body>. De cada <img>: data-src / data-lazy-src / data-original, el primer src de srcset o src. Fuera: data:, .svg, .gif, nombres
+ *  de logo o relleno (imagen_nombre_generico), pixeles (width o height < 100 en atributos) y los avatares (/avatar). */
+function imagen_candidatas_cuerpo(string $html, string $pageUrl): array {
+    $zona = $html;
+    if (preg_match('~<article\b[^>]*>(.*?)</article>~is', $html, $m) && strlen($m[1]) > 500) $zona = $m[1];
+    elseif (preg_match('~<main\b[^>]*>(.*?)</main>~is', $html, $m) && strlen($m[1]) > 500) $zona = $m[1];
+    elseif (preg_match('~<body\b[^>]*>(.*)~is', $html, $m)) $zona = $m[1];
+    if (!preg_match_all('~<img\b[^>]*>~i', $zona, $tags)) return [];
+    $out = [];
+    foreach ($tags[0] as $tag) {
+        $attr = function (string $n) use ($tag): string { return preg_match('~\s' . $n . '\s*=\s*["\']([^"\']*)["\']~i', $tag, $a) ? trim($a[1]) : ''; };
+        $src = '';
+        foreach (['data-src', 'data-lazy-src', 'data-original', 'data-srcset', 'srcset', 'src'] as $n) {
+            $v = $attr($n);
+            if ($v === '' || str_starts_with($v, 'data:')) continue;
+            if (str_contains($n, 'srcset')) $v = trim(explode(',', $v)[0]); $v = trim(explode(' ', $v)[0]);   // srcset: la primera entrada, sin el descriptor
+            if ($v !== '') { $src = $v; break; }
+        }
+        if ($src === '') continue;
+        $src = imagen_url_absoluta($src, $pageUrl);
+        if (!preg_match('#^https?://#i', $src) || preg_match('/\.(svg|gif|ico)(\?|$)/i', $src) || str_contains(strtolower($src), 'avatar') || imagen_nombre_generico($src)) continue;
+        $w = (int)$attr('width'); $h = (int)$attr('height');
+        if (($w && $w < 100) || ($h && $h < 100)) continue;   // iconos y pixeles de seguimiento
+        if (!in_array($src, $out, true)) $out[] = $src;
+        if (count($out) >= 3) break;
+    }
+    return $out;
 }
 
 /** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null).
