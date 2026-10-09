@@ -29,6 +29,7 @@ $isArt = $s['content_type'] === 'article';
 $maxLen = $isArt ? max(2000, (int)cfg('article_max_words', 1000) * 12) : 2000;   // articulos: tope de caracteres derivado del de palabras (config)
 $err = null;
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_mod() && (int)$s['user_id'] !== (int)user()['user_id']) mod_log_post($pdo, 'editar-envio', $err, "envío #$id");   // registro (migra-134): un mod toca un envío ajeno
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'eliminar') {
     if (post('seguro') !== '1') $err = ($own || $retire) ? t('Marca la casilla de confirmación para retirarlo.') : 'Marca la casilla de confirmación para eliminar.';
     else {

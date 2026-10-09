@@ -10,6 +10,7 @@ if (!$u || $_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/login');
 $what = post('w') === 'item' ? 'item' : 'story';
 $id = (int)post('i');
 $err = '';
+if (is_admin()) mod_log_post($pdo, 'destacar', $err);   // registro (migra-134): solo los destacados del admin (los de usuarios van por aura_log)
 if ($id > 0 && pins_on()) {
     try {
         if (post('act') === 'quitar') { pin_quitar($pdo, $u, $what, $id); }

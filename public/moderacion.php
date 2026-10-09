@@ -11,6 +11,7 @@ if (!user()) redirect('/login');
 if (!is_mod()) { http_response_code(403); page_header('Moderación'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
 $out = [];
+mod_log_post($pdo, 'moderacion', $out);   // registro de acciones (migra-134): apunta accion, campos y resultado al terminar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema') {
     $name = mb_strtolower(trim(post('name')));
     if (!preg_match('/^[\\p{L}\\p{N} \\-]{2,32}$/u', $name)) $out[] = 'Nombre de tema no válido (2-32 letras).';

@@ -18,6 +18,7 @@ if ((int)$m['deleted'] === 1) { page_header($titulo); echo "<p class=\"end\">Ese
 $maxLen = min(1000, max(50, (int)cfg('chat_max_len', 500)));
 $err = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    mod_log_post($pdo, 'editar-chat', $err, "mensaje #$id");   // registro (migra-134)
     $txt = mb_substr(trim(preg_replace("/\r\n?/", "\n", post('content'))), 0, $maxLen);
     $anuncio = post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad (migra-121): se cambia sin que cuente como edicion del texto
     if ($anuncio !== (int)$m['anuncio']) $pdo->prepare("UPDATE chat SET anuncio = ? WHERE msg_id = ?")->execute([$anuncio, $id]);

@@ -13,6 +13,7 @@ $canEdit = $u && ((int)$u['user_id'] === (int)$c['owner_id'] || is_mod());
 $err = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEdit) {
+    if (is_mod() && (int)$u['user_id'] !== (int)$c['owner_id']) mod_log_post($pdo, 'comunidad', $err, 'comunidad ' . (string)$c['slug']);   // registro (migra-134): un mod toca una comunidad ajena
     if (post('act') === 'ocultar' && is_mod()) {
         $pdo->prepare("UPDATE communities SET status = IF(status = 'ok', 'hidden', 'ok') WHERE community_id = ?")->execute([$c['community_id']]);
         redirect('/comunidad/' . rawurlencode($slug));

@@ -6,6 +6,7 @@ require __DIR__ . '/../lib/usuarios.php';
 if (!is_admin()) { http_response_code(403); exit('Solo admin'); }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/usuarios#nuevo-usuario');
 
+mod_log_post($pdo, 'crear-usuario', $err);   // registro (migra-134)
 $login = post('login'); $email = post('email');
 $aura = trim(post('aura')) !== '' && is_numeric(str_replace(',', '.', post('aura'))) ? (float)str_replace(',', '.', post('aura')) : null;
 $verified = post('verified') === '1';

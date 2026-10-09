@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES) && 
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = post('act');
+    mod_log_post($pdo, 'admin', $out);   // registro de acciones (migra-134)
     if ($act === 'config') {
         $st = $pdo->prepare("UPDATE config SET cvalue = ? WHERE ckey = ?");
         // interruptores de grupos de fuentes («Mis canales», «Mis agregadores»): se crean si aun no existen (migra-070 / 103 sin aplicar)
@@ -378,7 +379,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'registro' => 'Registro'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -555,6 +556,34 @@ if ($tab === 'usuarios') {
 } elseif ($tab === 'analitica') {
     require __DIR__ . '/../lib/analitica-admin.php';
     ana_admin($pdo);
+
+} elseif ($tab === 'registro') {   // registro de acciones de moderadores y admin (mod_log, migra-134)
+    $rq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64)); $ru = trim(mb_substr((string)($_GET['u'] ?? ''), 0, 32));
+    $rp = max(1, (int)($_GET['p'] ?? 1)); $rper = 100;
+    echo "<h3>Registro de moderación y administración</h3><p><small>Cada acción hecha desde /moderacion, /admin, la ficha de usuario, el chat (mensajes a la comunidad), destacados del admin y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta quién, qué (página:acción), los campos enviados (sin contraseñas) y el resultado que vio en pantalla. Las lecturas no se registran; los destacados de los usuarios están en su aura.</small></p>";
+    try {
+        $quien = $pdo->query("SELECT DISTINCT u.login FROM mod_log l JOIN users u ON u.user_id = l.user_id ORDER BY u.login")->fetchAll(PDO::FETCH_COLUMN);
+        echo "<form method=\"get\" action=\"/admin\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"registro\"><select name=\"u\"><option value=\"\">— todos —</option>";
+        foreach ($quien as $ql) echo "<option value=\"" . h($ql) . "\"" . ($ru === $ql ? ' selected' : '') . ">" . h($ql) . "</option>";
+        echo "</select><input type=\"search\" name=\"q\" value=\"" . h($rq) . "\" maxlength=\"64\" placeholder=\"acción, campo o resultado (p. ej. fuente_editar, #123, ghost)\"><button class=\"btn sm\">Buscar</button>" . ($rq !== '' || $ru !== '' ? " <a href=\"/admin?t=registro\">todo</a>" : '') . "</form>";
+        $w = []; $args = [];
+        if ($ru !== '') { $w[] = "u.login = ?"; $args[] = $ru; }
+        if ($rq !== '') { $w[] = "(l.action LIKE ? OR l.detail LIKE ? OR l.result LIKE ?)"; $like = '%' . $rq . '%'; array_push($args, $like, $like, $like); }
+        $ws = $w ? ' WHERE ' . implode(' AND ', $w) : '';
+        $cn = $pdo->prepare("SELECT COUNT(*) FROM mod_log l JOIN users u ON u.user_id = l.user_id$ws"); $cn->execute($args); $rtotal = (int)$cn->fetchColumn();
+        $st = $pdo->prepare("SELECT l.*, u.login FROM mod_log l JOIN users u ON u.user_id = l.user_id$ws ORDER BY l.log_id DESC LIMIT $rper OFFSET " . (($rp - 1) * $rper)); $st->execute($args); $rl = $st->fetchAll();
+        echo "<p><small>$rtotal " . ($rtotal === 1 ? 'acción' : 'acciones') . ($rq !== '' || $ru !== '' ? ' que coinciden' : '') . ".</small></p>";
+        if (!$rl) echo "<p class=\"end\">Nada registrado todavía.</p>";
+        else {
+            echo "<table class=\"modlog\"><tr><th>cuándo</th><th>quién</th><th>acción</th><th>detalle</th><th>resultado</th></tr>";
+            foreach ($rl as $r) echo "<tr><td style=\"white-space:nowrap\" title=\"" . h($r['created']) . "\">" . h(hace($r['created'])) . "</td><td><a href=\"/u/" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></td><td><code>" . h($r['action']) . "</code></td><td><small>" . h((string)$r['detail']) . "</small></td><td><small>" . h((string)$r['result']) . "</small></td></tr>";
+            echo "</table>";
+            if ($rtotal > $rper) {
+                $base = "/admin?t=registro" . ($ru !== '' ? '&amp;u=' . rawurlencode($ru) : '') . ($rq !== '' ? '&amp;q=' . rawurlencode($rq) : '');
+                echo "<p>" . ($rp > 1 ? "<a class=\"btn\" href=\"$base&amp;p=" . ($rp - 1) . "\">← más recientes</a> " : '') . ($rp * $rper < $rtotal ? "<a class=\"btn\" href=\"$base&amp;p=" . ($rp + 1) . "\">anteriores →</a>" : '') . "</p>";
+            }
+        }
+    } catch (Throwable $e) { echo "<p class=\"error\">Falta la tabla mod_log (migra-134): " . h($e->getMessage()) . "</p>"; }
 
 } elseif ($tab === 'temas') {
     echo "<h3>Temas</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"topics\"><table><tr><th>tema</th><th>envíos</th><th style=\"width:90px\">bonus δ</th><th style=\"width:70px\">color</th></tr>";
