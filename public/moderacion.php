@@ -127,6 +127,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_alta') {
     }
 }
 
+/* ---- editar una fuente del catalogo (09/10/2026): lo basico (nombre, tipo, web, RSS, descripcion, idioma, intervalo, encendida);
+ *      slug, tema, skin, destacada y lector local se quedan en admin → Fuentes. ---- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_editar') {
+    $sid = (int)post('source_id');
+    $name = mb_substr(trim(post('name')), 0, 48);
+    $kind = in_array(post('kind'), ['medio', 'newsletter', 'youtube', 'agregador'], true) ? post('kind') : 'medio';
+    $home = trim(post('home')); $feed = trim(post('feed'));
+    foreach (['home', 'feed'] as $k) if ($$k !== '' && !preg_match('#^https?://#i', $$k)) $$k = 'https://' . $$k;
+    $slang = preg_match('/^[a-z]{2,5}$/', post('lang')) ? post('lang') : '';
+    $iv = max(1, min(1440, (int)post('interval_min') ?: 60));
+    $status = post('status') === 'off' ? 'off' : 'ok';
+    if ($name === '') $out[] = 'Falta el nombre.';
+    elseif (!preg_match('#^https?://[^\s]+$#i', $home)) $out[] = 'La web debe ser una URL http(s).';
+    else {
+        $pdo->prepare("UPDATE sources SET name = ?, kind = ?, home = ?, feed_portada = ?, descr = ?, lang = ?, interval_min = ?, status = ? WHERE source_id = ?")
+            ->execute([$name, $kind, mb_substr($home, 0, 200), mb_substr($feed, 0, 300), mb_substr(trim(post('descr')), 0, 200) ?: null, $slang, $iv, $status, $sid]);
+        $out[] = "«{$name}» guardada.";
+    }
+}
+
 /* ---- fuentes propuestas por los usuarios (lib/propuestas.php) ---- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_probar', 'fprop_ok', 'fprop_no'], true)) {
     $q = $pdo->prepare("SELECT * FROM source_proposals WHERE prop_id = ? AND status = 'pending'"); $q->execute([(int)post('pid')]);
@@ -272,6 +292,33 @@ echo "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength
 echo "<tr><td>idioma</td><td><select name=\"lang\"><option value=\"\">— detectar del RSS —</option>"; foreach (DDD_LANGS as $lc => $ln) echo "<option value=\"$lc\"" . ($altaF['lang'] === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>"; echo "</select></td></tr>";
 echo "<tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . h($altaF['interval_min']) . "\" placeholder=\"60\"> minutos (vacío: 60; substack 1440; YouTube 180)</td></tr>";
 echo "<tr><td></td><td><button class=\"btn\">Dar de alta</button></td></tr></table></form></details>";
+// buscar y editar fuentes del catalogo (09/10/2026): ?fq= por nombre, slug, descripcion, web o RSS, sin mayusculas ni tildes, en todos los tipos
+$fq = trim(mb_substr((string)($_GET['fq'] ?? ''), 0, 64));
+echo "<details class=\"editbox\"" . ($fq !== '' ? ' open' : '') . "><summary><b>Buscar y editar una fuente</b> · nombre, tipo, web, RSS, descripción, idioma, intervalo y encendida/apagada</summary>";
+echo "<form method=\"get\" action=\"/moderacion\" class=\"buscar-u\"><input type=\"search\" name=\"fq\" value=\"" . h($fq) . "\" maxlength=\"64\" placeholder=\"nombre, slug, descripción, web o RSS\"><button class=\"btn sm\">Buscar</button>" . ($fq !== '' ? " <a href=\"/moderacion#fuentes\">cerrar</a>" : '') . "</form>";
+if ($fq !== '') {
+    $llano = fn(string $t): string => strtr(mb_strtolower($t), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ã' => 'a', 'õ' => 'o', 'ç' => 'c', 'ä' => 'a', 'ö' => 'o', 'ß' => 'ss']);
+    $fqn = $llano($fq);
+    $hall = array_values(array_filter($pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n FROM sources s ORDER BY s.kind, s.name")->fetchAll(),
+        fn($f) => str_contains($llano(implode(' ', [$f['name'], $f['slug'], (string)$f['descr'], (string)$f['home'], (string)$f['feed_portada']])), $fqn)));
+    echo "<p class=\"meta\">" . count($hall) . " coinciden con «" . h($fq) . "»" . (count($hall) > 30 ? ' (se enseñan 30: afina la búsqueda)' : '') . ".</p>";
+    foreach (array_slice($hall, 0, 30) as $f) {
+        $sid = (int)$f['source_id'];
+        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? ' · <i>apagada</i>' : '') . ' · ' . (($f['lang'] ?? '') !== '' ? h($f['lang']) : '<i>idioma ?</i>') . " · {$f['n']} noticias" . ($f['last_fetch'] ? ' · leída ' . h(hace($f['last_fetch'])) : ' · sin leer') . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : '') . " · <a href=\"/fuente/" . h($f['slug']) . "\">ver</a></summary>";
+        echo "<form method=\"post\" action=\"/moderacion?fq=" . rawurlencode($fq) . "#fuentes\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fuente_editar\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><table>";
+        echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name']) . "\"> <small>/fuente/" . h($f['slug']) . "</small></td></tr>";
+        echo "<tr><td>tipo</td><td><select name=\"kind\">"; foreach (['medio' => 'medio', 'newsletter' => 'substack/newsletter', 'youtube' => 'canal de YouTube', 'agregador' => 'agregador/foro'] as $ak => $al) echo "<option value=\"$ak\"" . ($f['kind'] === $ak ? ' selected' : '') . ">$al</option>"; echo "</select></td></tr>";
+        echo "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($f['home']) . "\"></td></tr>";
+        echo "<tr><td>RSS</td><td><input type=\"url\" name=\"feed\" value=\"" . h((string)$f['feed_portada']) . "\"></td></tr>";
+        echo "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h((string)$f['descr']) . "\"></td></tr>";
+        $fl = (string)($f['lang'] ?? '');
+        echo "<tr><td>idioma</td><td><select name=\"lang\"><option value=\"\">— detectar del RSS —</option>"; foreach (DDD_LANGS + ($fl !== '' && !isset(DDD_LANGS[$fl]) ? [$fl => $fl] : []) as $lc => $ln) echo "<option value=\"$lc\"" . ($fl === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>"; echo "</select></td></tr>";
+        echo "<tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . (int)$f['interval_min'] . "\"> minutos</td></tr>";
+        echo "<tr><td>estado</td><td><select name=\"status\"><option value=\"ok\">activa</option><option value=\"off\"" . ($f['status'] === 'off' ? ' selected' : '') . ">apagada</option></select></td></tr>";
+        echo "<tr><td></td><td><button class=\"btn\">Guardar</button> <small>slug, tema, skin, destacada y lector local: admin → Fuentes</small></td></tr></table></form></details>";
+    }
+}
+echo "</details>";
 if (!$props) echo "<p>No hay propuestas pendientes.</p>";
 else $ptopics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
 foreach ($props as $p) {
