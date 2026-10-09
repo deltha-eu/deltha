@@ -1,5 +1,7 @@
 <?php
-/** /moderacion — moderadores y admin: lo que ha señalado la IA local (posmoderacion, lib/moderacion.php), reportes, dominios, medios, temas y fuentes. */
+/** /moderacion — moderadores y admin, por pestañas (?t=, como /admin; 09/10/2026): IA (lo señalado por la IA local, lib/moderacion.php),
+ *  Reportes (comentarios y chat), Fuentes (propuestas, alta y edición del catálogo), Votos (cuentas que votan juntas), Temas,
+ *  Correos (listas negra y blanca de dominios) y Medios bloqueados. Los formularios sin action vuelven solos a su pestaña (POST a la misma URL). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/chat.php';
 require __DIR__ . '/../lib/propuestas.php';
@@ -211,12 +213,24 @@ try {
                                   SUM(category IS NOT NULL AND processed > NOW() - INTERVAL 1 DAY) sen24 FROM mod_queue")->fetch();
 } catch (Throwable $e) { $q = []; $qstats = null; }   // sin la migracion 062
 
+$TABS = ['ia' => 'IA', 'reportes' => 'Reportes', 'fuentes' => 'Fuentes', 'votos' => 'Votos', 'temas' => 'Temas', 'dominios' => 'Correos', 'medios' => 'Medios bloqueados'];
+$tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'ia');
+if (!isset($TABS[$tab])) $tab = 'ia';
+// pendientes en la pestaña: lo que espera decision (señalado por la IA, reportes abiertos, propuestas de fuentes)
+$pend = ['ia' => count($q)];
+try { $pend['reportes'] = (int)$pdo->query("SELECT (SELECT COUNT(DISTINCT r.comment_id) FROM comment_reports r JOIN comments c ON c.comment_id = r.comment_id WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0) + (SELECT COUNT(DISTINCT r.msg_id) FROM chat_reports r JOIN chat c ON c.msg_id = r.msg_id WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0)")->fetchColumn(); } catch (Throwable $e) { $pend['reportes'] = 0; }
+try { $pend['fuentes'] = (int)$pdo->query("SELECT COUNT(*) FROM source_proposals WHERE status = 'pending'")->fetchColumn(); } catch (Throwable $e) { $pend['fuentes'] = 0; }
 page_header('Moderación');
 echo "<div class=\"admin\"><h1>Moderación</h1>";
-if (!mod_on()) echo "<p class=\"notice\">La IA moderadora está apagada (<code>mod_enabled = 0</code>): todo se publica y nada pasa por ella. Los reportes siguen llegando aquí.</p>";
+echo "<nav class=\"tabs\">";
+foreach ($TABS as $k => $v) echo "<a href=\"/moderacion?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v" . (!empty($pend[$k]) ? " <small>{$pend[$k]}</small>" : '') . "</a>";
+echo "</nav>";
+if ($tab === 'ia') { if (!mod_on()) echo "<p class=\"notice\">La IA moderadora está apagada (<code>mod_enabled = 0</code>): todo se publica y nada pasa por ella. Los reportes siguen llegando aquí.</p>";
 else echo "<p class=\"notice\">Todo se publica al momento. La IA local (en el PC de la redacción) lo revisa después con el criterio de las <a href=\"/normas\">normas de uso</a> y señala aquí lo dudoso" . (cfg('mod_auto_hide') === '1' ? "; lo muy claro lo oculta hasta que lo veáis" : "; no oculta nada (<code>mod_auto_hide = 0</code>)") . ". Decidís vosotros. " . h(mod_worker_line()) . "</p>";
+}
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
 
+if ($tab === 'ia') {
 /* ---- revision de la IA local ---- */
 $TY = ['story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat'];
 echo "<h3 id=\"ia\">Señalado por la IA (" . count($q) . ")</h3>";
@@ -235,6 +249,7 @@ foreach ($q as $m) {
     echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está') . "\">" . ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda') . "</button></form></div></div>";
 }
 
+} elseif ($tab === 'reportes') {
 /* ---- comentarios reportados ---- */
 $reps = $pdo->query("SELECT c.comment_id, c.story_id, c.content, c.alias, c.created, c.user_id, u.login, s.title,
                             COUNT(*) n, MIN(r.created) first_rep, GROUP_CONCAT(DISTINCT r.reason ORDER BY r.reason) reasons
@@ -277,6 +292,7 @@ foreach ($creps as $r) {
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar mensaje</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_descartar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn\" title=\"el mensaje se queda; los reportes se cierran\">Descartar reporte</button></form></div></div>";
 }
+} elseif ($tab === 'fuentes') {
 /* ---- fuentes propuestas ---- */
 try { $props = $pdo->query("SELECT p.*, u.login, u.aura FROM source_proposals p JOIN users u ON u.user_id = p.user_id WHERE p.status = 'pending' ORDER BY p.created LIMIT 50")->fetchAll(); } catch (Throwable $e) { $props = []; }
 echo "<h3 id=\"fuentes\">Fuentes propuestas (" . count($props) . ")</h3>";
@@ -295,7 +311,7 @@ echo "<tr><td></td><td><button class=\"btn\">Dar de alta</button></td></tr></tab
 // buscar y editar fuentes del catalogo (09/10/2026): ?fq= por nombre, slug, descripcion, web o RSS, sin mayusculas ni tildes, en todos los tipos
 $fq = trim(mb_substr((string)($_GET['fq'] ?? ''), 0, 64));
 echo "<details class=\"editbox\"" . ($fq !== '' ? ' open' : '') . "><summary><b>Buscar y editar una fuente</b> · nombre, tipo, web, RSS, descripción, idioma, intervalo y encendida/apagada</summary>";
-echo "<form method=\"get\" action=\"/moderacion\" class=\"buscar-u\"><input type=\"search\" name=\"fq\" value=\"" . h($fq) . "\" maxlength=\"64\" placeholder=\"nombre, slug, descripción, web o RSS\"><button class=\"btn sm\">Buscar</button>" . ($fq !== '' ? " <a href=\"/moderacion#fuentes\">cerrar</a>" : '') . "</form>";
+echo "<form method=\"get\" action=\"/moderacion\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"fuentes\"><input type=\"search\" name=\"fq\" value=\"" . h($fq) . "\" maxlength=\"64\" placeholder=\"nombre, slug, descripción, web o RSS\"><button class=\"btn sm\">Buscar</button>" . ($fq !== '' ? " <a href=\"/moderacion?t=fuentes\">cerrar</a>" : '') . "</form>";
 if ($fq !== '') {
     $llano = fn(string $t): string => strtr(mb_strtolower($t), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ã' => 'a', 'õ' => 'o', 'ç' => 'c', 'ä' => 'a', 'ö' => 'o', 'ß' => 'ss']);
     $fqn = $llano($fq);
@@ -305,7 +321,7 @@ if ($fq !== '') {
     foreach (array_slice($hall, 0, 30) as $f) {
         $sid = (int)$f['source_id'];
         echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? ' · <i>apagada</i>' : '') . ' · ' . (($f['lang'] ?? '') !== '' ? h($f['lang']) : '<i>idioma ?</i>') . " · {$f['n']} noticias" . ($f['last_fetch'] ? ' · leída ' . h(hace($f['last_fetch'])) : ' · sin leer') . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : '') . " · <a href=\"/fuente/" . h($f['slug']) . "\">ver</a></summary>";
-        echo "<form method=\"post\" action=\"/moderacion?fq=" . rawurlencode($fq) . "#fuentes\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fuente_editar\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><table>";
+        echo "<form method=\"post\" action=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($fq) . "\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fuente_editar\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><table>";
         echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name']) . "\"> <small>/fuente/" . h($f['slug']) . "</small></td></tr>";
         echo "<tr><td>tipo</td><td><select name=\"kind\">"; foreach (['medio' => 'medio', 'newsletter' => 'substack/newsletter', 'youtube' => 'canal de YouTube', 'agregador' => 'agregador/foro'] as $ak => $al) echo "<option value=\"$ak\"" . ($f['kind'] === $ak ? ' selected' : '') . ">$al</option>"; echo "</select></td></tr>";
         echo "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($f['home']) . "\"></td></tr>";
@@ -346,6 +362,7 @@ foreach ($props as $p) {
     echo "<tr><td></td><td><button class=\"btn\">Aprobar y añadir al catálogo</button></td></tr></table></form>";
     echo "<form method=\"post\" class=\"repacts\"><input type=\"hidden\" name=\"act\" value=\"fprop_no\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><input type=\"text\" name=\"reply\" maxlength=\"300\" placeholder=\"motivo (se le envía)\" style=\"flex:1;min-width:180px\"> " . ($pslug !== '' ? "<label><input type=\"checkbox\" name=\"retirar\" value=\"1\"> retirarla también de sus medios</label> " : '') . "<button class=\"btn danger\">" . ($pslug !== '' ? 'No al catálogo' : 'Rechazar') . "</button></form></div>";
 }
+} elseif ($tab === 'votos') {
 /* ---- voto coordinado ---- */
 try { $vc = votos_coordinados($pdo); } catch (Throwable $e) { $vc = ['pares' => [], 'conexion' => []]; }   // sin la migracion 080
 echo "<h3 id=\"votos\">Cuentas que votan juntas (" . count($vc['pares']) . " parejas · " . count($vc['conexion']) . " envíos con varias cuentas desde una conexión)</h3>";
@@ -362,6 +379,7 @@ if ($vc['conexion']) {
     echo "</table>";
 }
 
+} elseif ($tab === 'temas') {
 $topics = $pdo->query("SELECT t.*, (SELECT COUNT(*) FROM stories s WHERE s.topic_id = t.topic_id) n FROM topics t ORDER BY t.name")->fetchAll();
 echo "<h3 id=\"temas\">Temas (" . count($topics) . ")</h3>";
 echo "<table><tr><th>tema</th><th>envíos</th><th>color</th><th></th><th>borrar (moviendo sus envíos a…)</th></tr>";
@@ -381,6 +399,7 @@ echo "</table>";
 echo "<form method=\"post\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px\"><input type=\"hidden\" name=\"act\" value=\"tema\">";
 echo "<input type=\"text\" name=\"name\" placeholder=\"nuevo tema\" maxlength=\"32\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\">Añadir tema</button></form>";
 echo "<p><small>Renombrar cambia el nombre en todos sus envíos. Borrar un tema mueve sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) al tema elegido; no se pierde nada. El tema de cada envío se cambia desde su hilo (desplegable bajo los votos). El bonus del δ lo ajusta el admin.</small></p>";
+} elseif ($tab === 'dominios') {
 $bd = $pdo->query("SELECT b.*, u.login FROM banned_domains b LEFT JOIN users u ON u.user_id = b.added_by ORDER BY b.domain")->fetchAll();
 $nauto = count(array_filter($bd, fn($b) => str_starts_with((string)$b['reason'], 'auto:')));
 echo "<h3 id=\"dominios\">Dominios de correo no válidos — lista negra (" . count($bd) . ($nauto ? ", $nauto automáticos" : "") . ")</h3>";
@@ -397,7 +416,7 @@ if ($bd) {
     echo "</table></details>";
 }
 try { $wd = $pdo->query("SELECT w.*, u.login FROM allowed_domains w LEFT JOIN users u ON u.user_id = w.added_by ORDER BY w.domain")->fetchAll(); } catch (Throwable $e) { $wd = []; }
-echo "<form method=\"post\" action=\"/moderacion#probado\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0\"><input type=\"hidden\" name=\"act\" value=\"dominio_probar\"><input type=\"text\" name=\"domain\" placeholder=\"probar un dominio: iol.ie\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\" title=\"ver qué contesta su web desde el servidor, sin tocar las listas\">Probar</button></form>";
+echo "<form method=\"post\" action=\"/moderacion?t=dominios#probado\" style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0\"><input type=\"hidden\" name=\"act\" value=\"dominio_probar\"><input type=\"text\" name=\"domain\" placeholder=\"probar un dominio: iol.ie\" required style=\"flex:1;min-width:140px\"> <button class=\"btn\" title=\"ver qué contesta su web desde el servidor, sin tocar las listas\">Probar</button></form>";
 if (!empty($probado)) echo "<pre id=\"probado\">" . h($probado) . "</pre>";
 echo "<h3 id=\"dominios-ok\">Dominios de correo admitidos — lista blanca (" . count($wd) . ")</h3>";
 echo "<p><small>Proveedores reconocidos (Gmail, Outlook, Yahoo, iCloud, Proton…) y dominios revisados a mano: se admiten, con sus subdominios, sin comprobar su web. La lista negra manda sobre esta.</small></p>";
@@ -411,6 +430,7 @@ if ($wd) {
     }
     echo "</table></details>";
 }
+} elseif ($tab === 'medios') {
 try { $bs = $pdo->query("SELECT b.*, u.login FROM banned_sources b LEFT JOIN users u ON u.user_id = b.added_by ORDER BY b.domain")->fetchAll(); } catch (Throwable $e) { $bs = []; }
 echo "<h3 id=\"medios\">Medios bloqueados (" . count($bs) . ")</h3>";
 echo "<p><small>No se admiten enlaces a estos medios (por ejemplo, los sancionados por la UE como RT o Sputnik). Se bloquea el dominio y todos sus subdominios; vale pegar el enlace entero. Se comprueba al enviar y al editar un envío.</small></p>";
@@ -423,6 +443,7 @@ if ($bs) {
         echo "<td><form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"medio_quitar\"><input type=\"hidden\" name=\"domain\" value=\"" . h($b['domain']) . "\"><button class=\"btn\">quitar</button></form></td></tr>";
     }
     echo "</table></details>";
+}
 }
 echo "</div>";
 page_footer();
