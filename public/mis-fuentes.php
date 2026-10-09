@@ -92,7 +92,7 @@ if ($u && fuentes_on()) {
     }
     if (!$resto) echo "<p class=\"end\">" . t('Ya sigues todos los del catálogo.') . "</p>";
     foreach ($resto as $m) echo $fila($m);
-    if ($k !== 'agregador' && $k !== 'youtube' && fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', "/proponer-fuente?k=$k") . "</p>";
+    if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', "/proponer-fuente?k=$k") . "</p>";
     echo "</details>";
 }
 

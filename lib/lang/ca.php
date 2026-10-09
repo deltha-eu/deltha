@@ -831,4 +831,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'buscar por nick' => 'cercar per nick',
 'nick o correo' => 'nick o correu',
 '%d coinciden con «%s».' => '%d coincideixen amb «%s».',
+'Canal de YouTube' => 'Canal de YouTube',
+'Agregador o foro' => 'Agregador o fòrum',
+'También canales de YouTube (la dirección del canal basta) y agregadores o foros con RSS.' => 'També canals de YouTube (n’hi ha prou amb l’adreça del canal) i agregadors o fòrums amb RSS.',
 ];
