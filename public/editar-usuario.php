@@ -20,6 +20,7 @@ if (!modedit_puede($p)) { http_response_code(403); page_header('Editar usuario')
 $err = null; $ok = ($_GET['ok'] ?? '') === '2' ? 'Perfil guardado y contraseña cambiada.' : (isset($_GET['ok']) ? 'Perfil guardado.' : null);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    mod_log_post($pdo, 'editar-usuario', $err, 'usuario #' . (int)$p['user_id'] . ' ' . (string)$p['login']);   // registro (migra-134)
     $login = post('login') ?: $p['login'];
     $bio   = mb_substr(post('bio'), 0, 160);
     if ($login !== $p['login']) {

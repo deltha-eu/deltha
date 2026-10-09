@@ -18,6 +18,7 @@ if (!is_mod() && !$own) {
 $back = "/hilo/{$c['story_id']}#c$id";
 $err = null;
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_mod() && (int)$c['user_id'] !== (int)user()['user_id']) mod_log_post($pdo, 'editar-comentario', $err, "comentario #" . (int)$c['comment_id']);   // registro (migra-134)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('act') === 'eliminar' && is_mod()) {
         if (post('seguro') !== '1') $err = 'Marca la casilla de confirmación para eliminar.';

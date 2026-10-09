@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (post('act') === 'anuncio') {   // admin/mod: marcar o quitar «mensaje a la comunidad» (migra-121)
         $id = (int)post('id');
-        if (is_mod()) $pdo->prepare("UPDATE chat SET anuncio = 1 - anuncio WHERE msg_id = ? AND status = 'ok' AND deleted = 0")->execute([$id]);
+        if (is_mod()) { mod_log_post($pdo, 'chat'); $pdo->prepare("UPDATE chat SET anuncio = 1 - anuncio WHERE msg_id = ? AND status = 'ok' AND deleted = 0")->execute([$id]); }   // registro (migra-134)
         redirect($base . $amp . "m=$id" . (isset($_POST['js']) ? '' : "#m$id"));
     }
     if (!$canWrite) redirect('/login');

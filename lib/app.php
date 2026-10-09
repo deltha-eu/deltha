@@ -198,6 +198,30 @@ function enlaces(string $html): string {
     }, $html);
 }
 function redirect(string $to): never { header("Location: $to"); exit; }
+/** Registro de acciones de moderadores y admin (migra-134, 09/10/2026): tabla mod_log, se ve en admin -> Registro.
+ *  Se llama al entrar en el POST de cada pagina de moderacion/administracion; apunta al terminar el script (tambien si hubo redirect),
+ *  asi que recoge la accion (pagina:act), los campos enviados (sin contraseñas, recortados) y, si se le pasa $out, el resultado. */
+function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = ''): void {   // $out: array de mensajes, texto de error o nada (por referencia: se lee al final)
+    $u = user();
+    if (!$u || !user_is_mod($u) || $_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    $campos = [];
+    foreach ($_POST as $k => $v) {
+        if (in_array($k, ['act', 't', 'js'], true) || preg_match('/pass|clave|pw|token/i', (string)$k)) continue;
+        if (is_array($v)) $v = implode(',', array_map('strval', $v));
+        $v = trim(preg_replace('/\s+/', ' ', (string)$v));
+        if ($v === '') continue;
+        $campos[] = $k . '=' . mb_strimwidth($v, 0, 120, '…');
+    }
+    if (!empty($_FILES)) foreach ($_FILES as $k => $f) if (!empty($f['name'])) $campos[] = "$k=[archivo " . (string)$f["name"] . "]";
+    $accion = $page . (($_POST['act'] ?? '') !== '' ? ':' . (string)$_POST['act'] : '');
+    $detalle = mb_strimwidth(implode(' · ', $campos), 0, 700, '…');
+    $uid = (int)$u['user_id']; $ip = client_ip();
+    register_shutdown_function(function () use ($pdo, $uid, $accion, $detalle, $extra, &$out, $ip) {
+        $res = $out ? mb_strimwidth(implode(' | ', array_map('strval', (array)$out)), 0, 500, '…') : null;
+        if ($extra !== '') $res = trim($extra . ($res !== null ? " | $res" : ''));
+        try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip) VALUES (?,?,?,?,?)")->execute([$uid, mb_substr($accion, 0, 60), $detalle ?: null, $res, $ip]); } catch (Throwable $e) {}
+    });
+}
 // Los navegadores envian los textarea con CRLF: se normaliza a LF, que es lo que esperan los parrafos (\n\n) al pintar.
 function post(string $k, string $d = ''): string { return trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST[$k] ?? $d))); }
 function client_ip(): string { return $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'; }
