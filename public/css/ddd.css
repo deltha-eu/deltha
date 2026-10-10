@@ -525,6 +525,8 @@ header.top .bell > span { display: none; }
 .chat .anuncios p { margin: 4px 0 0; display: flex; gap: 6px; align-items: baseline; }
 .chat .anuncios p .num, .chat .anuncios p b { flex: none; white-space: nowrap; }   /* numero y nick enteros: solo parte el texto (09/10/2026) */
 .chat .anuncios p span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.chat .anuncios p form.quitar { flex: none; margin: 0; }
+.chat .anuncios p form.quitar button { font-size: 16px; line-height: 1; color: var(--muted); padding: 0 2px; }
 .chat .anuncios .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--accent); text-decoration: none; }
 .chat .cm .actions button.anunbtn { display: inline-flex; align-items: center; }
 .chat .cm .actions button.anunbtn.on { color: var(--accent); }

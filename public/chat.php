@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('act') === 'anuncio') {   // admin/mod: marcar o quitar «mensaje a la comunidad» (migra-121)
         $id = (int)post('id');
         if (is_mod()) { mod_log_post($pdo, 'chat'); $pdo->prepare("UPDATE chat SET anuncio = 1 - anuncio WHERE msg_id = ? AND status = 'ok' AND deleted = 0")->execute([$id]); }   // registro (migra-134)
+        if (post('back') === 'franja') redirect($base);   // quitado desde la franja de arriba (10/10/2026): se vuelve al chat, no al mensaje
         redirect($base . $amp . "m=$id" . (isset($_POST['js']) ? '' : "#m$id"));
     }
     if (!$canWrite) redirect('/login');
@@ -155,7 +156,9 @@ if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra
     $an = array_filter($an, fn($a) => !isset($ids[(int)$a['msg_id']]));   // los que ya se ven en esta pagina no se repiten: la franja es para los que han quedado atras
     if ($an) {
         echo "<div class=\"anuncios\"><div class=\"ch\"><span class=\"anun\">" . icon('mega') . t('Mensajes a la comunidad') . "</span></div>";
-        foreach ($an as $a) echo "<p><a class=\"num\" href=\"/chat?m={$a['msg_id']}#m{$a['msg_id']}\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> <span>" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</span></p>";
+        // moderadores: una x al final para quitar la marca sin ir al mensaje (10/10/2026); los demas solo ven el enlace
+        foreach ($an as $a) echo "<p><a class=\"num\" href=\"/chat?m={$a['msg_id']}#m{$a['msg_id']}\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> <span>" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</span>"
+            . (is_mod() ? "<form method=\"post\" class=\"inline quitar\"><input type=\"hidden\" name=\"act\" value=\"anuncio\"><input type=\"hidden\" name=\"id\" value=\"{$a['msg_id']}\"><input type=\"hidden\" name=\"back\" value=\"franja\"><button class=\"link\" title=\"" . h(t('quitar la marca de mensaje a la comunidad')) . "\" aria-label=\"" . h(t('quitar la marca de mensaje a la comunidad')) . "\">×</button></form>" : '') . "</p>";
         echo "</div>";
     }
 }
