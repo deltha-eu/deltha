@@ -16,6 +16,12 @@ try {
     }
 } catch (Throwable $e) { /* tabla aun sin crear: no romper la navegacion */ }
 
+if (isset($_POST['ajax'])) {   // con fetch (app/scroll.js): solo el boton actualizado, sin recargar (10/10/2026). En /favoritos se recarga (el post quitado desaparece)
+    require_once __DIR__ . '/../lib/render.php';
+    header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-store');
+    echo fav_link(['story_id' => $id]);
+    exit;
+}
 // volver a la misma pagina, al post (ancla s{id}); desde /favoritos, sin ancla (el post quitado ya no esta)
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
 if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = "/hilo/$id";

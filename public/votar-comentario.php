@@ -42,6 +42,13 @@ try {
     }
     $pdo->commit();
 } catch (Throwable $e) { $pdo->rollBack(); }
+if (isset($_POST['ajax'])) {   // con fetch (app/scroll.js): solo el widget actualizado, sin recargar (10/10/2026)
+    require_once __DIR__ . '/../lib/render.php';
+    $st = $pdo->prepare("SELECT c.*, cv.value AS my_vote FROM comments c LEFT JOIN comment_votes cv ON cv.comment_id = c.comment_id AND cv.user_id = ? WHERE c.comment_id = ?"); $st->execute([$u['user_id'], $id]);
+    header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-store');
+    if ($c = $st->fetch()) comment_vote_widget($c, true);
+    exit;
+}
 // volver al hilo, al comentario votado (ancla c{id})
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
 if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/~i', $back)) $back = $story ? "/hilo/$story" : '/';
