@@ -10,7 +10,7 @@ if (!user()) redirect('/login');
 if (!is_mod()) { http_response_code(403); page_header('Editar usuario'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
 $id = (int)($_GET['id'] ?? post('id'));
-$st = $pdo->prepare("SELECT user_id, login, email, level, aura, avatar, bio, verified, created FROM users WHERE user_id = ?");
+$st = $pdo->prepare("SELECT user_id, login, email, level, aura, aura_suelo, avatar, bio, verified, created FROM users WHERE user_id = ?");
 $st->execute([$id]);
 $p = $st->fetch();
 if (!$p) { http_response_code(404); page_header('Editar usuario'); echo "<p class=\"end\">Ese usuario no existe.</p>"; page_footer(); exit; }
