@@ -310,6 +310,8 @@ table.modlog td code { overflow-wrap: anywhere; }
 .statspage a.tile span::after { content: " ›"; }
 /* analitica: rotulos de grupo en /analitica.php; en admin, barras, minutos y dos columnas */
 .statspage h3.anah { margin: 18px 0 0; font-size: 15px; }
+.statspage .notice { margin: 16px 0 14px; padding: 12px 14px; line-height: 1.45; }   /* aviso de la analitica: aire arriba, abajo y dentro (10/10/2026) */
+.statspage .notice + .meta { margin-top: 0; }
 .statspage .meta { color: var(--muted); font-size: 13px; }
 .admin td.num, .admin th.num { text-align: right; white-space: nowrap; }
 .anabar { display: block; height: 8px; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); border-radius: 4px; overflow: hidden; }
