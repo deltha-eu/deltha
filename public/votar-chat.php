@@ -38,6 +38,13 @@ try {
     }
     $pdo->commit();
 } catch (Throwable $e) { $pdo->rollBack(); }
+if (isset($_POST['ajax'])) {   // con fetch (app/scroll.js): solo el widget actualizado, sin recargar (10/10/2026)
+    require_once __DIR__ . '/../lib/render.php';
+    $st = $pdo->prepare("SELECT c.*, cv.value AS my_vote FROM chat c LEFT JOIN chat_votes cv ON cv.msg_id = c.msg_id AND cv.user_id = ? WHERE c.msg_id = ?"); $st->execute([$u['user_id'], $id]);
+    header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-store');
+    if ($m = $st->fetch()) comment_vote_widget($m, true, '/votar-chat', 'msg_id');
+    exit;
+}
 // volver a la misma pagina del Chat, al mensaje votado (ancla m{id})
 $back = strtok((string)($_SERVER['HTTP_REFERER'] ?? ''), '#');
 if ($back === '' || !preg_match('~^https?://' . preg_quote($_SERVER['HTTP_HOST'] ?? '', '~') . '/chat(\.php)?~i', $back)) $back = "/chat?m=$id";
