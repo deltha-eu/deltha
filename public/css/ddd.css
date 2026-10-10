@@ -279,6 +279,17 @@ main > p { padding: 0 16px; }
 .admin nav.tabs a { padding: 9px 12px 8px; color: var(--muted); font-size: 14px; white-space: nowrap; position: relative; text-decoration: none; }
 .admin nav.tabs a.on { color: var(--fg); font-weight: 700; }
 .admin nav.tabs a small { color: var(--accent); font-weight: 700; font-size: 12px; }   /* pendientes en la pestaña (moderacion, 09/10/2026) */
+/* registro de moderacion (admin -> Registro, migra-134): las URL y titulos largos se parten; en movil, cada fila es una ficha (10/10/2026) */
+table.modlog td { overflow-wrap: anywhere; vertical-align: top; }
+table.modlog td code { overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  table.modlog, table.modlog tbody, table.modlog tr, table.modlog td { display: block; width: 100%; box-sizing: border-box; }
+  table.modlog tr:first-child { display: none; }
+  table.modlog tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  table.modlog td { border: 0; padding: 1px 0; white-space: normal !important; }
+  table.modlog td:nth-child(1), table.modlog td:nth-child(2), table.modlog td:nth-child(3) { display: inline-block; width: auto; margin-right: 8px; }
+  table.modlog td:nth-child(1) { color: var(--muted); font-size: 13px; }
+}
 .admin nav.tabs a.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 2px; background: var(--accent); }
 /* tabla de usuarios: dos lineas por fila (nick / correo · registro), acciones compactas */
 .admin table.users td { padding: 10px 6px; vertical-align: middle; }
