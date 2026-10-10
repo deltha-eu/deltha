@@ -32,7 +32,7 @@ function modedit_form(PDO $pdo, array $p, string $back = ''): string {
         $max = (float)cfg('aura_max', 50);
         $h .= "<label>Aura</label><div class=\"aurarow\"><input type=\"number\" name=\"aura\" min=\"0\" max=\"" . h((string)$max) . "\" step=\"0.001\" value=\"" . h(rtrim(rtrim(number_format((float)$p['aura'], 3, '.', ''), '0'), '.')) . "\">"
             . "<input type=\"text\" name=\"aura_motivo\" maxlength=\"50\" placeholder=\"motivo del cambio (queda en el historial)\"></div>"
-            . "<small class=\"hint\">Entre 0 y " . h(num_es($max)) . " (aura_max). Sigue bajando cada día hasta " . h(num_es(cfg('aura_start', 5))) . " como la de todos.</small>";
+            . "<small class=\"hint\">Entre 0 y " . h(num_es($max)) . " (aura_max). Sigue bajando cada día hasta su suelo: el mayor entero que haya alcanzado (ahora " . h(num_es(max((float)cfg('aura_start', 5), (float)($p['aura_suelo'] ?? 0)))) . "), nunca menos de " . h(num_es(cfg('aura_start', 5))) . ".</small>";
         $modaura = (float)cfg('mod_aura', 20);
         if ((int)user()['user_id'] === $id) $h .= "<label>Nivel</label><p class=\"meta\" style=\"padding:0\">admin <small>(el tuyo lo cambia otro admin)</small></p>";
         else {

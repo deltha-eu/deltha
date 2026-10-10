@@ -17,7 +17,8 @@ function aura_add(PDO $pdo, int $user_id, float $amount, string $reason, ?int $r
     $st = $pdo->prepare("SELECT aura FROM users WHERE user_id = ?");
     $st->execute([$user_id]);
     $antes = (float)$st->fetchColumn();
-    $pdo->prepare("UPDATE users SET aura = LEAST(aura + ?, ?) WHERE user_id = ?")->execute([$add, $max, $user_id]);
+    // aura_suelo (migra-135): el mayor entero alcanzado se queda como suelo del decaimiento (de 7,2 no se baja de 7 por no entrar)
+    $pdo->prepare("UPDATE users SET aura = LEAST(aura + ?, ?), aura_suelo = GREATEST(aura_suelo, FLOOR(LEAST(aura + ?, ?))) WHERE user_id = ?")->execute([$add, $max, $add, $max, $user_id]);
     $pdo->prepare("INSERT INTO aura_log (user_id, amount, reason, ref_id) VALUES (?,?,?,?)")->execute([$user_id, $add, $reason, $ref]);
     // (hasta el 09/10/2026 aqui se daban «destacados» por cada unidad entera nueva de aura; ahora destacar se paga en aura: aura_gastar())
     return $add;
@@ -47,7 +48,9 @@ function aura_gasto_minimo(): float { return (float)cfg('aura_gasto_minimo', cfg
 /** ¿Puede este usuario pagar $amount sin bajar del suelo? (para pintar o no un boton; el descuento real lo decide aura_gastar) */
 function aura_puede_gastar(?array $u, float $amount): bool { return $u && (float)$u['aura'] - $amount >= aura_gasto_minimo() - 0.0005; }
 
-/** Decaimiento diario: una vez por dia natural, a todos los registrados, sin bajar del suelo. Devuelve filas afectadas o -1 si ya se hizo hoy. */
+/** Decaimiento diario: una vez por dia natural, a todos los registrados, sin bajar del suelo de cada uno. El suelo es el mayor de
+ *  aura_start (5) y users.aura_suelo, el mayor numero entero que esa persona ha alcanzado (migra-135, 10/10/2026): quien llego a 7,3
+ *  baja como mucho a 7 por no entrar; asi el tiempo sin usar Deltha no desanima. Devuelve filas afectadas o -1 si ya se hizo hoy. */
 function aura_daily_decay(PDO $pdo): int {
     $last = cfg('aura_last_decay', '');
     $today = date('Y-m-d');
@@ -55,9 +58,12 @@ function aura_daily_decay(PDO $pdo): int {
     $dec = (float)cfg('aura_daily_decay', 0.5);
     $floor = (float)cfg('aura_start', 5);
     $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES ('aura_last_decay', ?, 'Ultimo dia en que se aplico el decaimiento') ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)")->execute([$today]);
-    $st = $pdo->prepare("UPDATE users SET aura = GREATEST(?, aura - ?) WHERE aura > ?");
+    $pdo->exec("UPDATE users SET aura_suelo = GREATEST(aura_suelo, FLOOR(aura))");   // por si subio por otra via (admin, devoluciones) desde ayer
+    // primero el apunte, con lo que de verdad se le quita a cada uno (hasta su suelo); luego la bajada
+    $pdo->prepare("INSERT INTO aura_log (user_id, amount, reason) SELECT user_id, -LEAST(?, aura - GREATEST(?, aura_suelo)), 'daily_decay' FROM users WHERE aura > GREATEST(?, aura_suelo)")->execute([$dec, $floor, $floor]);
+    $st = $pdo->prepare("UPDATE users SET aura = GREATEST(GREATEST(?, aura_suelo), aura - ?) WHERE aura > GREATEST(?, aura_suelo)");
     $st->execute([$floor, $dec, $floor]);
-    $n = $st->rowCount();
-    if ($n) $pdo->prepare("INSERT INTO aura_log (user_id, amount, reason) SELECT user_id, ?, 'daily_decay' FROM users WHERE aura > ?")->execute([-$dec, $floor]);
-    return $n;
+    return $st->rowCount();
 }
+/** Suelo de decaimiento de un usuario: el mayor entero alcanzado, nunca menos que el aura inicial. */
+function aura_suelo(?array $u): float { return max((float)cfg('aura_start', 5), (float)($u['aura_suelo'] ?? 0)); }
