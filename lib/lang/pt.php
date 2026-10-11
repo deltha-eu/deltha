@@ -878,4 +878,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'Em fila: começa em %d min, quando a atual acabar. Clicar = tirar (a aura não é devolvida).',
 'buscar una fuente por nombre o dirección' => 'procurar uma fonte por nome ou endereço',
 'Ninguna fuente coincide con «%s».' => 'Nenhuma fonte coincide com «%s».',
+'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador retirou o teu %s «%s». Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
 ];

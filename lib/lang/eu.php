@@ -841,4 +841,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'Ilaran: %d minutu barru hasiko da, oraingoa amaitzean. Sakatu = kendu (aura ez da itzultzen).',
 'buscar una fuente por nombre o dirección' => 'bilatu iturri bat izen edo helbidearen arabera',
 'Ninguna fuente coincide con «%s».' => 'Ez dago «%s»-rekin bat datorren iturririk.',
+'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek zure %s kendu du: «%s». Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
 ];

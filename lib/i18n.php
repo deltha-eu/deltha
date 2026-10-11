@@ -36,3 +36,10 @@ function t(string $k, ...$a): string {
     $s = $I18N[$k] ?? $k;
     return $a ? vsprintf($s, $a) : $s;
 }
+/** Como t(), pero en el idioma indicado (el del destinatario de un mensaje, no el de quien lo envia). Diccionarios en cache. */
+function t_in(string $lang, string $k, ...$a): string {
+    static $D = [];
+    if (!isset($D[$lang])) { $f = __DIR__ . "/lang/$lang.php"; $D[$lang] = ($lang !== 'es' && isset(DDD_LANGS[$lang]) && is_file($f)) ? (require $f) : []; }
+    $s = $D[$lang][$k] ?? $k;
+    return $a ? vsprintf($s, $a) : $s;
+}

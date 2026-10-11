@@ -841,4 +841,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'En cua: començarà d’aquí a %d min, quan acabi la destacada actual. Prémer = treure (no es retorna l’aura).',
 'buscar una fuente por nombre o dirección' => 'cercar una font per nom o adreça',
 'Ninguna fuente coincide con «%s».' => 'Cap font coincideix amb «%s».',
+'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha retirat el teu %s «%s». Motiu: %s. Si creus que és un error, respon a aquest missatge.',
 ];

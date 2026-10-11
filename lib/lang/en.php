@@ -881,4 +881,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'Queued: it starts in %d min, when the current one ends. Click = remove (the aura is not refunded).',
 'buscar una fuente por nombre o dirección' => 'search a source by name or address',
 'Ninguna fuente coincide con «%s».' => 'No source matches “%s”.',
+'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hello. A moderator has removed your %s “%s”. Reason: %s. If you think this is a mistake, reply to this message.',
 ];
