@@ -219,22 +219,22 @@ if ($v === 'registros') {
 $parts = [];
 if (in_array($v, ['todo', 'envios'], true))
     $parts[] = "SELECT 'envio' AS kind, s.story_id, s.story_id AS ref, s.sent_date AS ts, s.user_id, s.author_alias AS alias, NULL AS value,
-                       s.title, s.status, s.revealed, s.sent_date, s.delta
+                       s.title, s.status, s.revealed, s.sent_date, s.delta, NULL AS txt
                   FROM stories s WHERE s.status IN $VIVAS AND $dS";
 if (in_array($v, ['todo', 'comentarios'], true))
     $parts[] = "SELECT 'comentario' AS kind, c.story_id, c.comment_id AS ref, c.created AS ts, c.user_id, c.alias, NULL AS value,
-                       s.title, s.status, s.revealed, s.sent_date, s.delta
+                       s.title, s.status, s.revealed, s.sent_date, s.delta, IF(c.deleted = 1, NULL, c.content) AS txt
                   FROM comments c JOIN stories s ON s.story_id = c.story_id
                  WHERE c.status='ok' AND $dC AND s.status IN $VIVAS";
 if (in_array($v, ['todo', 'votos'], true))
     $parts[] = "SELECT 'voto' AS kind, vt.story_id, vt.story_id AS ref, vt.created AS ts, vt.user_id, ta.alias, vt.value,
-                       s.title, s.status, s.revealed, s.sent_date, s.delta
+                       s.title, s.status, s.revealed, s.sent_date, s.delta, NULL AS txt
                   FROM votes vt JOIN stories s ON s.story_id = vt.story_id
              LEFT JOIN thread_aliases ta ON ta.story_id = vt.story_id AND ta.user_id = vt.user_id
                  WHERE $dV AND s.status IN $VIVAS";
 if (in_array($v, ['todo', 'portadas'], true))
     $parts[] = "SELECT 'portada' AS kind, p.story_id, p.id AS ref, p.created AS ts, NULL AS user_id, NULL AS alias, p.portada AS value,
-                       s.title, s.status, s.revealed, s.sent_date, p.delta
+                       s.title, s.status, s.revealed, s.sent_date, p.delta, NULL AS txt
                   FROM promo_log p JOIN stories s ON s.story_id = p.story_id
                  WHERE $dP AND s.status IN $VIVAS";
 
@@ -275,7 +275,10 @@ foreach ($ev as $e) {
             $rev = ghost_over($e['ts']);
             $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
             $lead = who_avatar($row, $rev, $aura, $name);
-            $txt = "<b>" . h($name) . "</b> " . t('comenta en') . " <a class=\"t\" href=\"$href#c{$e['ref']}\">" . h($e['title']) . "</a>";
+            // el comentario (recortado) y, debajo, el hilo (11/10/2026; antes solo «comenta en <hilo>»)
+            $frag = trim(preg_replace('/\s+/', ' ', (string)($e['txt'] ?? '')));
+            $txt = "<b>" . h($name) . "</b>" . ($frag !== '' ? ": <span class=\"ctxt\">" . h(mb_strimwidth($frag, 0, 220, '…')) . "</span>" : ' ' . t('comenta'))
+                 . "<br><small class=\"enhilo\">" . t('en') . " <a class=\"t\" href=\"$href#c{$e['ref']}\">" . h($e['title']) . "</a></small>";
             $ic = 'reply'; break;
         case 'voto':
             $rev = ghost_over($e['ts']);

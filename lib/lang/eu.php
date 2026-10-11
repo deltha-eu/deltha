@@ -842,4 +842,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'buscar una fuente por nombre o dirección' => 'bilatu iturri bat izen edo helbidearen arabera',
 'Ninguna fuente coincide con «%s».' => 'Ez dago «%s»-rekin bat datorren iturririk.',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek zure %s kendu du: «%s». Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
+'comenta' => 'iruzkina egiten du',
 ];

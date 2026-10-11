@@ -843,4 +843,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'buscar una fuente por nombre o dirección' => 'Quelle nach Name oder Adresse suchen',
 'Ninguna fuente coincide con «%s».' => 'Keine Quelle passt zu „%s“.',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deinen %s „%s“ entfernt. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
+'comenta' => 'kommentiert',
 ];
