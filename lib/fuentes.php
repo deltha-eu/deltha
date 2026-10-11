@@ -655,7 +655,7 @@ function fuentes_parse_asimov(string $html): array {
             if (isset($partes[0]) && $partes[0] !== '') $topic = $partes[0];
             foreach ($partes as $px) if (($t2 = strtotime($px)) !== false && $t2 > 946684800) $ts = $t2;
         }
-        $out[] = ['ext_id' => $href, 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($href, 0, 600), 'thread_url' => null, 'source' => null,
+        $out[] = ['ext_id' => strlen($href) <= 32 ? $href : substr(sha1($href), 0, 32), 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($href, 0, 600), 'thread_url' => null, 'source' => null,   // ext_id es VARCHAR(32): los slugs largos fallaban (11/10/2026); los cortos se dejan como estaban para no duplicar
                   'topic' => $topic ? mb_substr($topic, 0, 48) : null, 'author' => $author ? mb_substr($author, 0, 64) : null, 'content' => mb_substr($excerpt, 0, 2000),
                   'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ts), 'smf' => null];
     }
@@ -694,7 +694,7 @@ function fuentes_parse_publico(string $html): array {
         $excerpt = preg_match('~<p[^>]*class="epigraph[^"]*"[^>]*>(.*?)</p>~su', $a, $e) ? $dec($e[1]) : '';
         $topic = $TEMAS[$sec] ?? ucfirst(str_replace('-', ' ', $sec));
         $url = $base . $href;
-        $out[] = ['ext_id' => $url, 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($url, 0, 600), 'thread_url' => null, 'source' => null,
+        $out[] = ['ext_id' => substr(sha1($url), 0, 32), 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($url, 0, 600), 'thread_url' => null, 'source' => null,   // ext_id es VARCHAR(32): hash de la URL
                   'topic' => mb_substr($topic, 0, 48), 'author' => $author !== null && $author !== '' ? mb_substr($author, 0, 64) : null, 'content' => mb_substr($excerpt, 0, 2000),
                   'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ahora - $pos * 60), 'smf' => null];
     }
