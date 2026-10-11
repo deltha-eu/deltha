@@ -842,4 +842,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'buscar una fuente por nombre o dirección' => 'cercar una font per nom o adreça',
 'Ninguna fuente coincide con «%s».' => 'Cap font coincideix amb «%s».',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha retirat el teu %s «%s». Motiu: %s. Si creus que és un error, respon a aquest missatge.',
+'comenta' => 'comenta',
 ];

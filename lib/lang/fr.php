@@ -881,4 +881,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'buscar una fuente por nombre o dirección' => 'chercher une source par nom ou adresse',
 'Ninguna fuente coincide con «%s».' => 'Aucune source ne correspond à « %s ».',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Bonjour. Un modérateur a retiré ton %s « %s ». Motif : %s. Si tu penses que c’est une erreur, réponds à ce message.',
+'comenta' => 'commente',
 ];
