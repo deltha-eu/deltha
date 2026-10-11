@@ -372,9 +372,10 @@ nav.sub.langs small { opacity: .7; }
 @media (max-width: 480px) { .modtools .row { grid-template-columns: 1fr; gap: 2px; } }
 /* Perfil publico: pestañas Envios / Comentarios (05/10/2026) y la lista de comentarios con el hilo encima de cada uno */
 .profile .meta a.cnt { color: inherit; text-decoration: underline; text-decoration-color: var(--line2); text-underline-offset: 3px; }
-.ucoms .hilotit { padding: 10px 16px 0; font-size: 13px; color: var(--muted); }
+.ucoms .ucom { border-bottom: 1px solid var(--line); }   /* perfil > Comentarios: el comentario y, debajo, «en <hilo>» (11/10/2026) */
+.ucoms .hilotit { padding: 0 16px 12px; margin: -4px 0 0; font-size: 13px; color: var(--muted); }
 .ucoms .hilotit a { color: var(--fg); font-weight: 600; }
-.ucoms .post.reply { border-top: 0; }
+.ucoms .post.reply { border-top: 0; border-bottom: 0; }
 .ufollow .notice form.inl { display: inline; }
 .ufollow .notice button.link { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; }
 .admin input[type=color] { width: 44px; height: 32px; padding: 0; border: 1px solid var(--line2); border-radius: 6px; background: none; }
