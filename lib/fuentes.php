@@ -407,7 +407,7 @@ function fuente_renegados_completar(array &$items, int $timeout): int {
 /** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
  *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
  *  «burbuja» de votos en su pagina (skin Phantom), asi que se pinta el widget normal, a 0 hasta que su feed los incluya. */
-const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php', 'mediavida.com/foro', 'press.asimov.com/articles', 'pagint.onrender.com'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania) · Mediavida (sin feed: se lee la tabla de /foro/spy)
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php', 'mediavida.com/foro', 'press.asimov.com/articles', 'pagint.onrender.com', 'www.publico.es/'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania) · Mediavida (sin feed: se lee la tabla de /foro/spy)
 /** Foros XenForo y vBulletin: el feed trae el primer mensaje con sus fotos (emoticonos, capturas, anuncios de venta); no se descargan:
  *  el listado de un foro no lleva miniaturas. */
 function fuente_sin_fotos(array $src): bool {
@@ -505,6 +505,7 @@ function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'id="tablatemas"')) return fuentes_parse_mediavida($xml);   // Mediavida: no hay feed, se lee la tabla de hilos
     if (str_contains($xml, 'class="ap-card"')) return fuentes_parse_asimov($xml);        // Asimov Press: sin feed, se lee /articles (migra-130)
     if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"slugSeccion"')) return fuentes_parse_pagint($xml);   // Página Internacional: su API JSON (migra-130)
+    if (str_contains($xml, 'm-preview-') && str_contains($xml, 'publico.es')) return fuentes_parse_publico($xml);   // Público: sin RSS desde 2024, se lee la portada (migra-136)
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     libxml_clear_errors(); libxml_use_internal_errors($prev);
@@ -657,6 +658,45 @@ function fuentes_parse_asimov(string $html): array {
         $out[] = ['ext_id' => $href, 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($href, 0, 600), 'thread_url' => null, 'source' => null,
                   'topic' => $topic ? mb_substr($topic, 0, 48) : null, 'author' => $author ? mb_substr($author, 0, 64) : null, 'content' => mb_substr($excerpt, 0, 2000),
                   'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ts), 'smf' => null];
+    }
+    return $out;
+}
+
+/** Público (publico.es; cerro sus RSS en diciembre de 2024; migra-136, 11/10/2026): se lee la portada. Cada pieza es un <article class="… m-preview-…">
+ *  con el titular en h2.title > a (href relativo, /seccion/slug.html), la foto opcional en a.image picture img (src = version movil; se toma la
+ *  mayor de los <source srcset>), el autor en p.author > a y a veces un subtitulo en p.epigraph. No hay fecha: la primera vez que se ve una
+ *  pieza se le pone la hora de lectura menos su posicion en portada (en minutos), para que conserve el orden del periodico; en lecturas
+ *  posteriores la fecha no se toca. Solo enlaces propios (los de sus cabeceras hermanas y promociones se dejan); el tema sale de la seccion. */
+function fuentes_parse_publico(string $html): array {
+    $base = 'https://www.publico.es';
+    if (!preg_match_all('~<article\b[^>]*class="[^"]*m-preview-[^"]*"[^>]*>(.*?)</article>~su', $html, $arts)) return [];
+    $dec = fn(string $v): string => trim(html_entity_decode(strip_tags($v), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    $TEMAS = ['politica' => 'política', 'internacional' => 'internacional', 'sociedad' => 'sociedad', 'economia' => 'economía', 'culturas' => 'cultura', 'ciencias' => 'ciencia',
+              'deportes' => 'deportes', 'opinion' => 'opinión', 'espacio-publico' => 'opinión', 'mujer' => 'mujer', 'tremending' => 'tremending', 'mira' => 'vídeo'];
+    $FUERA = ['comunidad', 'public', 'cp', 'uwu', 'manana-en-publico', 'suscripcion', 'suscribete'];   // promociones, suscripcion, hemeroteca
+    $out = []; $vistos = []; $pos = 0; $ahora = time();
+    foreach ($arts[1] as $a) {
+        if (!preg_match('~<h2[^>]*class="title[^"]*"[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>(.*?)</a>~su', $a, $t)) continue;
+        $href = html_entity_decode($t[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (!str_starts_with($href, '/') || isset($vistos[$href])) continue;   // solo lo propio, una vez
+        $sec = explode('/', trim($href, '/'))[0] ?? '';
+        if ($sec === '' || in_array($sec, $FUERA, true) || !str_ends_with($href, '.html')) continue;
+        $title = $dec($t[2]);
+        if (mb_strlen($title) < 8) continue;
+        $vistos[$href] = true; $pos++;
+        $img = '';
+        if (preg_match_all('~<source[^>]+srcset="([^"\s]+)~u', $a, $ss) && $ss[1]) $img = $ss[1][1] ?? $ss[1][0];   // la segunda fuente (990 px) si la hay
+        elseif (preg_match('~<img[^>]+src="([^"]+)"~u', $a, $i)) $img = $i[1];
+        $img = html_entity_decode($img, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if ($img !== '' && !str_starts_with($img, 'http')) $img = $base . $img;
+        if (str_contains($img, '/files/avatar/')) $img = '';   // columnas de opinion: la foto es el avatar del autor; mejor la og:image del articulo al ingerir
+        $author  = preg_match('~<p[^>]*class="author[^"]*"[^>]*>.*?<a[^>]*>(.*?)</a>~su', $a, $au) ? $dec($au[1]) : null;
+        $excerpt = preg_match('~<p[^>]*class="epigraph[^"]*"[^>]*>(.*?)</p>~su', $a, $e) ? $dec($e[1]) : '';
+        $topic = $TEMAS[$sec] ?? ucfirst(str_replace('-', ' ', $sec));
+        $url = $base . $href;
+        $out[] = ['ext_id' => $url, 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($url, 0, 600), 'thread_url' => null, 'source' => null,
+                  'topic' => mb_substr($topic, 0, 48), 'author' => $author !== null && $author !== '' ? mb_substr($author, 0, 64) : null, 'content' => mb_substr($excerpt, 0, 2000),
+                  'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ahora - $pos * 60), 'smf' => null];
     }
     return $out;
 }
