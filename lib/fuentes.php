@@ -274,6 +274,7 @@ function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $ma
         catch (Throwable $e) {
             $log[] = "fuente {$src['slug']}: ERROR " . $e->getMessage();
             $pdo->prepare("UPDATE sources SET last_fetch = NOW(), last_error = ? WHERE source_id = ?")->execute([mb_substr($e->getMessage(), 0, 255), $src['source_id']]);
+            fuente_error_log($pdo, (int)$src['source_id'], $e->getMessage());
         }
     }
     return $log;
@@ -341,8 +342,19 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
     }
     $pdo->prepare("UPDATE sources SET last_fetch = NOW(), last_error = ? WHERE source_id = ?")
         ->execute([$err ? mb_substr(implode(' · ', $err), 0, 255) : null, $src['source_id']]);
-    if ($err) $log[] = "fuente {$src['slug']}: " . implode(' · ', $err);
+    if ($err) { $log[] = "fuente {$src['slug']}: " . implode(' · ', $err); fuente_error_log($pdo, (int)$src['source_id'], implode(' · ', $err)); }
     return $log;
+}
+
+/** Historial de errores de lectura (source_errors, migra-137; se ve en /moderacion -> Errores). Una fila por fuente y texto de error:
+ *  la primera vez se crea; las siguientes solo suman veces y actualizan last_seen, asi una fuente caida no llena la tabla cada media hora. */
+function fuente_error_log(PDO $pdo, int $sid, string $msg): void {
+    $msg = mb_substr(trim($msg), 0, 255);
+    if ($msg === '') return;
+    try {
+        $pdo->prepare("INSERT INTO source_errors (source_id, errhash, error, first_seen, last_seen, times) VALUES (?,?,?,NOW(),NOW(),1)
+                       ON DUPLICATE KEY UPDATE last_seen = NOW(), times = times + 1")->execute([$sid, md5($msg), $msg]);
+    } catch (Throwable $e) { /* sin la migra 137 */ }
 }
 
 /** Foros SMF (Areopago): el RSS no trae ni el autor ni el numero del mensaje dentro del hilo (#11515). Se leen de la pagina del

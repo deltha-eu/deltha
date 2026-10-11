@@ -150,6 +150,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_editar') {
     }
 }
 
+/* ---- fuentes con error (11/10/2026, /moderacion -> Errores): apagar, volver a encender o releer ahora ---- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer'], true)) {
+    require_once __DIR__ . '/../lib/fuentes.php';
+    $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
+    if (!($fsrc = $q->fetch())) $out[] = 'Esa fuente no existe.';
+    elseif (post('act') === 'fuente_apagar') { $pdo->prepare("UPDATE sources SET status = 'off' WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» apagada: no se lee ni sale en el catálogo. Se vuelve a encender desde aquí o desde admin → Fuentes."; }
+    elseif (post('act') === 'fuente_encender') { $pdo->prepare("UPDATE sources SET status = 'ok', last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» encendida; el lector la leerá en los próximos minutos."; }
+    else { try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc)); $out[] = "«{$fsrc['name']}» releída."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: ERROR " . $e->getMessage(); } }
+}
+
 /* ---- fuentes propuestas por los usuarios (lib/propuestas.php) ---- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_probar', 'fprop_ok', 'fprop_no'], true)) {
     $q = $pdo->prepare("SELECT * FROM source_proposals WHERE prop_id = ? AND status = 'pending'"); $q->execute([(int)post('pid')]);
@@ -214,13 +224,14 @@ try {
                                   SUM(category IS NOT NULL AND processed > NOW() - INTERVAL 1 DAY) sen24 FROM mod_queue")->fetch();
 } catch (Throwable $e) { $q = []; $qstats = null; }   // sin la migracion 062
 
-$TABS = ['ia' => 'IA', 'reportes' => 'Reportes', 'fuentes' => 'Fuentes', 'votos' => 'Votos', 'temas' => 'Temas', 'dominios' => 'Correos', 'medios' => 'Medios bloqueados'];
+$TABS = ['ia' => 'IA', 'reportes' => 'Reportes', 'fuentes' => 'Fuentes', 'errores' => 'Errores', 'votos' => 'Votos', 'temas' => 'Temas', 'dominios' => 'Correos', 'medios' => 'Medios bloqueados'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'ia');
 if (!isset($TABS[$tab])) $tab = 'ia';
 // pendientes en la pestaña: lo que espera decision (señalado por la IA, reportes abiertos, propuestas de fuentes)
 $pend = ['ia' => count($q)];
 try { $pend['reportes'] = (int)$pdo->query("SELECT (SELECT COUNT(DISTINCT r.comment_id) FROM comment_reports r JOIN comments c ON c.comment_id = r.comment_id WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0) + (SELECT COUNT(DISTINCT r.msg_id) FROM chat_reports r JOIN chat c ON c.msg_id = r.msg_id WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0)")->fetchColumn(); } catch (Throwable $e) { $pend['reportes'] = 0; }
 try { $pend['fuentes'] = (int)$pdo->query("SELECT COUNT(*) FROM source_proposals WHERE status = 'pending'")->fetchColumn(); } catch (Throwable $e) { $pend['fuentes'] = 0; }
+try { $pend['errores'] = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'ok' AND last_error IS NOT NULL AND last_error <> ''")->fetchColumn(); } catch (Throwable $e) { $pend['errores'] = 0; }
 page_header('Moderación');
 echo "<div class=\"admin\"><h1>Moderación</h1>";
 echo "<nav class=\"tabs\">";
@@ -363,6 +374,34 @@ foreach ($props as $p) {
     echo "<tr><td></td><td><button class=\"btn\">Aprobar y añadir al catálogo</button></td></tr></table></form>";
     echo "<form method=\"post\" class=\"repacts\"><input type=\"hidden\" name=\"act\" value=\"fprop_no\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><input type=\"text\" name=\"reply\" maxlength=\"300\" placeholder=\"motivo (se le envía)\" style=\"flex:1;min-width:180px\"> " . ($pslug !== '' ? "<label><input type=\"checkbox\" name=\"retirar\" value=\"1\"> retirarla también de sus medios</label> " : '') . "<button class=\"btn danger\">" . ($pslug !== '' ? 'No al catálogo' : 'Rechazar') . "</button></form></div>";
 }
+} elseif ($tab === 'errores') {
+/* ---- fuentes que dan error (11/10/2026): las que fallaron en su ultima lectura, con el error, y el historial (source_errors, migra-137) ---- */
+$fe = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT MAX(pub_date) FROM source_items i WHERE i.source_id = s.source_id) ult
+                     FROM sources s WHERE s.last_error IS NOT NULL AND s.last_error <> '' ORDER BY (s.status = 'ok') DESC, s.last_fetch DESC")->fetchAll();
+echo "<h3>Fuentes que dan error (" . count(array_filter($fe, fn($f) => $f['status'] === 'ok')) . " activas)</h3>";
+echo "<p><small>Fuentes cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo. Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
+if (!$fe) echo "<p>Ninguna fuente con error. 🙂</p>";
+foreach ($fe as $f) {
+    $sid = (int)$f['source_id']; $off = $f['status'] === 'off';
+    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($off ? ' · <i>apagada</i>' : '') . (!empty($f['relay']) ? ' · lector local' : '') . " · <a href=\"/fuente/" . h($f['slug']) . "\">ver</a> · <a href=\"" . h($f['home']) . "\" rel=\"noopener nofollow\" target=\"_blank\">web</a>"
+       . "<span class=\"meta\"> · {$f['n']} noticias" . ($f['ult'] ? ', la última ' . h(hace($f['ult'])) : ', ninguna') . " · intentado " . ($f['last_fetch'] ? h(hace($f['last_fetch'])) : 'nunca') . "</span></div>";
+    echo "<pre class=\"ftest err\">" . h((string)$f['last_error']) . "</pre>";
+    echo "<div class=\"repacts\">";
+    if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_apagar\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn danger\" title=\"deja de leerse y de salir en el catálogo\">Apagar</button></form>";
+    else echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_encender\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\">Encender</button></form>";
+    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_releer\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"intentar leerla ahora\">Releer</button></form>";
+    echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a></div></div>";
+}
+try {
+    $hist = $pdo->query("SELECT e.*, s.name, s.slug, s.status FROM source_errors e JOIN sources s ON s.source_id = e.source_id ORDER BY e.last_seen DESC LIMIT 100")->fetchAll();
+    echo "<h3>Historial (" . count($hist) . " últimos)</h3><p><small>Cada error distinto de cada fuente, con cuántas veces se ha repetido y cuándo fue la primera y la última. Sirve para ver si una fuente falla a ratos o lleva días caída.</small></p>";
+    if (!$hist) echo "<p>Sin errores registrados todavía.</p>";
+    else {
+        echo "<table class=\"modlog\"><tr><th>fuente</th><th>error</th><th>veces</th><th>primera</th><th>última</th></tr>";
+        foreach ($hist as $e) echo "<tr><td><a href=\"/fuente/" . h($e['slug']) . "\">" . h($e['name']) . "</a>" . ($e['status'] === 'off' ? ' <i>(apagada)</i>' : '') . "</td><td><small>" . h($e['error']) . "</small></td><td class=\"num\">{$e['times']}</td><td style=\"white-space:nowrap\">" . h(hace($e['first_seen'])) . "</td><td style=\"white-space:nowrap\">" . h(hace($e['last_seen'])) . "</td></tr>";
+        echo "</table>";
+    }
+} catch (Throwable $e) { echo "<p class=\"error\">Falta la tabla source_errors (migra-137).</p>"; }
 } elseif ($tab === 'votos') {
 /* ---- voto coordinado ---- */
 try { $vc = votos_coordinados($pdo); } catch (Throwable $e) { $vc = ['pares' => [], 'conexion' => []]; }   // sin la migracion 080
