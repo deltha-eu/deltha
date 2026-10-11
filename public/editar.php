@@ -31,10 +31,19 @@ $err = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_mod() && (int)$s['user_id'] !== (int)user()['user_id']) mod_log_post($pdo, 'editar-envio', $err, "envío #$id");   // registro (migra-134): un mod toca un envío ajeno
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'eliminar') {
+    $esMod = !$own && !$retire;   // un moderador elimina un envio ajeno: motivo obligatorio, al registro (mod_log, va en los campos) y al autor por mensaje (11/10/2026)
+    $motivo = mb_substr(trim(preg_replace('/\s+/', ' ', post('motivo'))), 0, 300);
     if (post('seguro') !== '1') $err = ($own || $retire) ? t('Marca la casilla de confirmación para retirarlo.') : 'Marca la casilla de confirmación para eliminar.';
+    elseif ($esMod && mb_strlen($motivo) < 3) $err = 'Indica el motivo: queda en el registro y se le envía al autor.';
     else {
         // no se borra fisicamente: pasa a "discard" y deja de verse en todas partes (el admin aun puede abrir el hilo)
         $pdo->prepare("UPDATE stories SET status = 'discard' WHERE story_id = ?")->execute([$id]);
+        if ($esMod && !empty($s['user_id']) && (int)$s['user_id'] !== (int)user()['user_id']) {
+            $ql = $pdo->prepare("SELECT lang FROM users WHERE user_id = ?"); $ql->execute([(int)$s['user_id']]);
+            $al = (string)$ql->fetchColumn() ?: 'es';
+            $txt = t_in($al, 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.', $isArt ? t_in($al, 'artículo') : t_in($al, 'envío'), mb_strimwidth((string)$s['title'], 0, 120, '…'), $motivo);
+            try { $pdo->prepare("INSERT INTO messages (from_id, to_id, content) VALUES (?,?,?)")->execute([(int)user()['user_id'], (int)$s['user_id'], $txt]); } catch (Throwable $e) {}
+        }
         redirect('/');
     }
 }
@@ -125,6 +134,7 @@ $own = $own || $retire;   // de aqui abajo, el apartado Retirar es el mismo para
 echo "<h3 style=\"padding:16px 16px 0\">" . ($own ? t('Retirar') : 'Eliminar') . "</h3>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"eliminar\">";
 if ($own) echo "<label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> " . t('sí, retirar este %s y sus comentarios de todas las listas (no se puede deshacer)', $isArt ? t('artículo') : t('envío')) . "</label>";
-else      echo "<label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> sí, eliminar este " . ($isArt ? 'artículo' : 'envío') . " y sus comentarios de todas las listas</label>";
+else      echo "<label>Motivo <small>(queda en el registro de moderación y se le envía al autor por mensaje)</small></label><input type=\"text\" name=\"motivo\" maxlength=\"300\" required placeholder=\"p. ej. enlace roto, duplicado, incumple las normas…\" value=\"" . h(post('motivo')) . "\">"
+             . "<label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> sí, eliminar este " . ($isArt ? 'artículo' : 'envío') . " y sus comentarios de todas las listas</label>";
 echo "<button class=\"danger\">" . ($own ? t('Retirar') : 'Eliminar') . "</button></form>";
 page_footer();

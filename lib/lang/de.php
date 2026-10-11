@@ -842,4 +842,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'En cola: empezará en %d min, cuando acabe la destacada actual. Pulsar = quitar (no se devuelve el aura).' => 'In der Warteschlange: beginnt in %d min, wenn die aktuelle endet. Klick = entfernen (Aura wird nicht erstattet).',
 'buscar una fuente por nombre o dirección' => 'Quelle nach Name oder Adresse suchen',
 'Ninguna fuente coincide con «%s».' => 'Keine Quelle passt zu „%s“.',
+'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deinen %s „%s“ entfernt. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
 ];
