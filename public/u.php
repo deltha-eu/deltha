@@ -80,15 +80,16 @@ if ($tab === 'envios') {
         echo "</div>";
     }
 } else {
-    // comentarios revelados (o todos, al dueño), el mas reciente primero, cada uno con el titulo de su hilo encima; sin responder ni votar desde aqui
+    // comentarios revelados (o todos, al dueño), el mas reciente primero: el comentario y, debajo, el enlace a su hilo (11/10/2026; antes el titulo iba encima); sin responder ni votar desde aqui
     $q = $pdo->prepare("SELECT c.*, u.login, u.avatar, s.title AS story_title FROM comments c JOIN users u ON u.user_id = c.user_id JOIN stories s ON s.story_id = c.story_id WHERE $wC ORDER BY c.created DESC LIMIT $per OFFSET " . page_offset($page));
     $q->execute();
     $rows = $q->fetchAll();
     avisos_preload_nicks($pdo, array_column($rows, 'content'));
     echo "<div class=\"ucoms\">";
     foreach ($rows as $c) {
-        echo "<p class=\"hilotit\">" . t('en') . " <a href=\"/hilo/{$c['story_id']}#c{$c['comment_id']}\">" . h($c['story_title']) . "</a></p>";
+        echo "<div class=\"ucom\">";
         comment_block($c, false, null, false, false);
+        echo "<p class=\"hilotit\">" . t('en') . " <a href=\"/hilo/{$c['story_id']}#c{$c['comment_id']}\">" . h($c['story_title']) . "</a></p></div>";
     }
     echo "</div>";
     if (!$rows) echo "<p class=\"end\">" . ($own ? t('Aún no has comentado.') : t('Nada revelado todavía: sus comentarios siguen vivos o no ha comentado.')) . "</p>";
