@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $u) {
         if (!$err) {
             try {
                 $pdo->prepare("INSERT INTO communities (slug, name, descr, color, skin, logo, cover, owner_id) VALUES (?,?,?,?,?,?,?,?)")->execute([$slug, $name, $descr ?: null, $color, $skin, $logo, $cover, $u['user_id']]);
+                try { comunidad_seguir_set($pdo, (int)$u['user_id'], (int)$pdo->lastInsertId(), true); } catch (Throwable $e) {}   // quien la crea, la sigue (migra-142)
                 redirect('/comunidad/' . rawurlencode($slug) . '?nueva=1');
             } catch (PDOException $e) { $err = t('Ya existe una comunidad con ese nombre.'); }
         }
@@ -37,11 +38,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $u) {
     }
 }
 
+// dos vistas (12/10/2026, migra-142): «Mis comunidades» (las que sigo) y «Todas»; se abre la ultima usada (cookie ddd_cv)
+$v = comunidades_vista($pdo);
+header('Cache-Control: private, no-cache');
+$mias = comunidades_seguidas($pdo, $u); $idsMias = array_map(fn($c) => (int)$c['community_id'], $mias);
 $rows = $pdo->query("SELECT c.*, u.login AS owner, (SELECT COUNT(*) FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id WHERE sc.community_id = c.community_id AND s.status IN " . DDD_COMM_PUBLIC . ") n,
-                            (SELECT MAX(sc.created) FROM story_communities sc WHERE sc.community_id = c.community_id) last
+                            (SELECT MAX(sc.created) FROM story_communities sc WHERE sc.community_id = c.community_id) last,
+                            (SELECT COUNT(*) FROM user_communities uc WHERE uc.community_id = c.community_id) nseg
                        FROM communities c JOIN users u ON u.user_id = c.owner_id WHERE c.status = 'ok' ORDER BY last DESC, c.created DESC")->fetchAll();
+$todas = $rows;
+if ($v === 'mias') $rows = array_values(array_filter($rows, fn($c) => in_array((int)$c['community_id'], $idsMias, true)));
 
 page_header(t('Comunidades'), 'comunidades');
+echo "<nav class=\"sub tipos\">" . ($u ? "<a href=\"/comunidades?v=mias\"" . ($v === 'mias' ? ' class="on"' : '') . ">" . t('Mis comunidades') . (count($mias) ? " <small>" . count($mias) . "</small>" : '') . "</a>" : '')
+   . "<a href=\"/comunidades?v=todas\"" . ($v === 'todas' ? ' class="on"' : '') . ">" . t('Todas') . " <small>" . count($todas) . "</small></a></nav>";
 echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad; además, quien creó una comunidad puede añadir a ella cualquier envío ya publicado desde su hilo (hasta %d comunidades por envío). Puede crear comunidades quien tenga aura mayor que %s (los moderadores, sin requisito de aura), hasta %d cada uno. Puedes elegir una como página de entrada en <a href="/perfil">tu perfil</a>.', h(cfg('site_name')), (int)cfg('comm_max_per_story', 3), h(num_es(cfg('comm_min_aura', 10))), (int)cfg('comm_max_per_user', 3)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($u && $quota > 0) {
@@ -56,12 +66,14 @@ if ($u && $quota > 0) {
 } elseif ($u) {
     echo "<p class=\"end\">" . ((float)$u['aura'] <= (float)cfg('comm_min_aura', 10) ? t('Para crear comunidades hace falta aura mayor que %s (tienes %s).', h(num_es(cfg('comm_min_aura', 10))), number_format((float)$u['aura'], 1, ',', '')) : t('Ya has creado tus %d comunidades.', (int)cfg('comm_max_per_user', 3))) . "</p>";
 }
-echo "<h3 style=\"padding:20px 16px 0\"" . t('>Todas las comunidades</h3>') . "";
-if (!$rows) echo "<p class=\"end\">" . t('Todavía no hay comunidades.') . "</p>";
+echo "<h3 style=\"padding:20px 16px 0\">" . ($v === 'mias' ? t('Mis comunidades') : t('Todas las comunidades')) . "</h3>";
+if (!$rows) echo "<p class=\"end\">" . ($v === 'mias' ? t('Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.') : t('Todavía no hay comunidades.')) . "</p>";
 foreach ($rows as $c) {
-    echo "<a class=\"fz comm\" href=\"/comunidad/" . rawurlencode($c['slug']) . "\">" . (!empty($c['logo']) ? "<img class=\"dot logo\" src=\"/media/comunidades/" . h($c['logo']) . "\" alt=\"\">" : "<span class=\"dot\" style=\"background:" . h($c['color']) . "\"></span>") . "<div class=\"fzt\"><b>" . h($c['name']) . "</b>";
-    echo "<span class=\"meta\"> · " . t('%d envíos', $c['n']) . " · " . t('de') . " " . h($c['owner']) . ($c['last'] ? " · " . h(hace($c['last'])) : '') . "</span>";
-    if ($c['descr']) echo "<div class=\"prev\">" . h($c['descr']) . "</div>";
-    echo "</div></a>";
+    // la fila deja de ser un solo enlace cuando hay boton «Seguir» (un form no cabe dentro de un <a>), como en el catalogo de fuentes
+    $cuerpo = (!empty($c['logo']) ? "<img class=\"dot logo\" src=\"/media/comunidades/" . h($c['logo']) . "\" alt=\"\">" : "<span class=\"dot\" style=\"background:" . h($c['color']) . "\"></span>") . "<div class=\"fzt\"><b>" . h($c['name']) . "</b>"
+           . "<span class=\"meta\"> · " . t('%d envíos', $c['n']) . ((int)$c['nseg'] ? " · " . t('%d siguen', (int)$c['nseg']) : '') . " · " . t('de') . " " . h($c['owner']) . ($c['last'] ? " · " . h(hace($c['last'])) : '') . "</span>"
+           . ($c['descr'] ? "<div class=\"prev\">" . h($c['descr']) . "</div>" : '') . "</div>";
+    if ($fav = comunidad_seguir_form($c)) echo "<div class=\"fz comm\"><a class=\"fzl\" href=\"/comunidad/" . rawurlencode($c['slug']) . "\">$cuerpo</a>$fav</div>";
+    else echo "<a class=\"fz comm\" href=\"/comunidad/" . rawurlencode($c['slug']) . "\">$cuerpo</a>";
 }
 page_footer();

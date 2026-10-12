@@ -860,4 +860,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'L\'invio era troppo grande (la foto, probabilmente) e il server l\'ha scartato per intero. Il massimo per foto è %d MB.',
 'Aquí participa %d persona' => 'Qui partecipa %d persona',
 'Aquí participan %d personas' => 'Qui partecipano %d persone',
+'Mis comunidades' => 'Le mie comunità',
+'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Non segui ancora nessuna comunità: premi «Segui» su quelle che ti interessano in <a href="/comunidades?v=todas">Tutte</a>.',
+'%d siguen' => '%d seguono',
 ];

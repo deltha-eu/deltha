@@ -859,4 +859,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'O envío era demasiado grande (a foto, seguramente) e o servidor descartouno enteiro. O máximo por foto son %d MB.',
 'Aquí participa %d persona' => 'Aquí participa %d persoa',
 'Aquí participan %d personas' => 'Aquí participan %d persoas',
+'Mis comunidades' => 'As miñas comunidades',
+'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Aínda non segues ningunha comunidade: preme «Seguir» nas que che interesen de <a href="/comunidades?v=todas">Todas</a>.',
+'%d siguen' => '%d seguen',
 ];

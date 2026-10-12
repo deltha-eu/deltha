@@ -880,4 +880,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'Gönderi çok büyüktü (muhtemelen fotoğraf) ve sunucu tamamını reddetti. Fotoğraf başına en fazla %d MB.',
 'Aquí participa %d persona' => 'Burada %d kişi katılıyor',
 'Aquí participan %d personas' => 'Burada %d kişi katılıyor',
+'Mis comunidades' => 'Topluluklarım',
+'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Henüz hiçbir topluluğu takip etmiyorsun: <a href="/comunidades?v=todas">Tümü</a> içinde ilgini çekenlerde «Takip et»e bas.',
+'%d siguen' => '%d takip ediyor',
 ];

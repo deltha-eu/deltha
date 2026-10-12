@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 199);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 200);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -337,6 +337,36 @@ function story_communities(PDO $pdo, int $story_id): array {
     return $st->fetchAll();
 }
 /** Comunidades que administra el usuario: las suyas; los mods y el admin, todas las visibles. */
+/** Seguir comunidades (migra-142, 12/10/2026): user_communities. Las que sigue el usuario, por nombre; quien crea una la sigue. */
+function comunidades_seguidas(PDO $pdo, ?array $u): array {
+    if (!$u) return [];
+    static $c = [];
+    $k = (int)$u['user_id'];
+    if (!isset($c[$k])) { try { $st = $pdo->prepare("SELECT c.* FROM user_communities uc JOIN communities c ON c.community_id = uc.community_id WHERE uc.user_id = ? AND c.status = 'ok' ORDER BY c.name"); $st->execute([$k]); $c[$k] = $st->fetchAll(); } catch (Throwable $e) { $c[$k] = []; } }
+    return $c[$k];
+}
+function comunidad_seguida(PDO $pdo, ?array $u, int $cid): bool { foreach (comunidades_seguidas($pdo, $u) as $c) if ((int)$c['community_id'] === $cid) return true; return false; }
+function comunidad_seguir_set(PDO $pdo, int $uid, int $cid, bool $on): void {
+    if ($on) $pdo->prepare("INSERT IGNORE INTO user_communities (user_id, community_id) VALUES (?,?)")->execute([$uid, $cid]);
+    else $pdo->prepare("DELETE FROM user_communities WHERE user_id = ? AND community_id = ?")->execute([$uid, $cid]);
+}
+/** Boton «Seguir» / «Siguiendo» de una comunidad (misma forma que el de las fuentes: form.seguir, app/scroll.js lo envia sin saltar). */
+function comunidad_seguir_form(array $c, bool $nombre = false): string {
+    $u = user(); if (!$u || ($c['status'] ?? 'ok') !== 'ok') return '';
+    global $pdo; $on = comunidad_seguida($pdo, $u, (int)$c['community_id']);
+    $title = h($on ? t('dejar de seguir %s', $c['name']) : t('Seguir %s', $c['name']));
+    return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/seguir-comunidad\"><input type=\"hidden\" name=\"c\" value=\"" . (int)$c['community_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
+         . "<button title=\"$title\">" . h($on ? t('Siguiendo') : ($nombre ? t('Seguir %s', $c['name']) : t('Seguir'))) . "</button></form>";
+}
+/** Vista de /comunidades que se abre sin ?v=: la ultima usada (cookie ddd_cv); sin cookie, «mias» si sigue alguna, si no «todas». */
+function comunidades_vista(PDO $pdo): string {
+    $v = (string)($_GET['v'] ?? '');
+    if (!in_array($v, ['mias', 'todas'], true)) { $v = (string)($_COOKIE['ddd_cv'] ?? ''); if (!in_array($v, ['mias', 'todas'], true)) $v = comunidades_seguidas($pdo, user()) ? 'mias' : 'todas'; }
+    if (!user()) $v = 'todas';
+    if (($_COOKIE['ddd_cv'] ?? '') !== $v && !headers_sent()) pref_cookie('ddd_cv', $v);
+    return $v;
+}
+
 function my_communities(PDO $pdo, ?array $u): array {
     if (!$u) return [];
     if (is_mod()) return $pdo->query("SELECT community_id, name, slug FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();

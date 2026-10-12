@@ -859,4 +859,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'Bidalketa handiegia zen (argazkia, ziur aski) eta zerbitzariak osorik baztertu du. Argazki bakoitzeko gehienez %d MB.',
 'Aquí participa %d persona' => 'Hemen pertsona %d-ek parte hartzen du',
 'Aquí participan %d personas' => 'Hemen %d pertsonak parte hartzen dute',
+'Mis comunidades' => 'Nire komunitateak',
+'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Oraindik ez duzu komunitaterik jarraitzen: sakatu «Jarraitu» interesatzen zaizkizunetan, <a href="/comunidades?v=todas">Guztiak</a> atalean.',
+'%d siguen' => '%d jarraitzaile',
 ];
