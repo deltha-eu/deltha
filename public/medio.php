@@ -3,6 +3,7 @@
  *  Enlazado desde el nombre del medio en cada post, igual que el tema. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
+require __DIR__ . '/../lib/fuentes.php';
 
 $m = strtolower(trim((string)($_GET['m'] ?? '')));
 if ($m === '' || !preg_match('~^[a-z0-9.-]{3,100}$~', $m)) { http_response_code(404); page_header(t('Medio')); echo "<p class=\"end\">" . t('Ese medio no existe.') . "</p>"; page_footer(); exit; }
@@ -21,7 +22,15 @@ $st->bindValue(3, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 
 page_header($m);
-echo "<p class=\"notice\">" . t('Todo lo enviado de %s, esté donde esté: en portada, en el radar o ya archivado. %d en total.', "<a href=\"https://" . h($m) . "/\" rel=\"noopener nofollow\"><b>" . h($m) . "</b></a>", $total) . "</p>";
+$intro = t('Todo lo enviado de %s, esté donde esté: en portada, en el radar o ya archivado. %d en total.', "<a href=\"https://" . h($m) . "/\" rel=\"noopener nofollow\"><b>" . h($m) . "</b></a>", $total);
+// si el dominio tiene fuente en el catalogo (12/10/2026): enlace a su ficha, boton «Seguir» y quien la sigue, como en /fuente/slug
+$src = fuentes_on() ? fuente_por_dominio($pdo, $m) : null;
+if ($src) $intro .= ' ' . t('Sus últimas noticias por RSS, en <a href="%s">%s</a>.', h(fuente_url($src)), h($src['name']));
+echo "<p class=\"notice\">$intro</p>";
+if ($src) {
+    if ($fav = fuente_fav_form($src, true)) echo "<div class=\"srcfav\">$fav</div>";
+    echo fuente_quien_sigue($pdo, $src);
+}
 foreach ($st as $s) story_post($pdo, $s, "compact");
 paginate('/medio/' . rawurlencode($m), $page, $total);
 page_footer();

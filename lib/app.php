@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 201);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 202);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -673,7 +673,9 @@ function community_skin(?string $skin): void { global $DDD_COMM_SKIN; $DDD_COMM_
 function skin_propio_link(): string {
     $u = user(); if (!$u) return '';
     $on = !empty($u['skin_propio']);
-    return "<form class=\"inline\" method=\"post\" action=\"/skin-propio\"><input type=\"hidden\" name=\"v\" value=\"" . ($on ? 0 : 1) . "\"><button class=\"link\">" . ($on ? t('ver con su plantilla') : t('ver con mi plantilla')) . "</button></form>";
+    // solo el boton, atado por form="" a un formulario que pinta page_footer(): un <form> dentro de un <p class="notice"> cerraria el parrafo (12/10/2026)
+    $GLOBALS['DDD_SKINPROP_FORM'] = "<form id=\"skinprop\" method=\"post\" action=\"/skin-propio\" hidden><input type=\"hidden\" name=\"v\" value=\"" . ($on ? 0 : 1) . "\"></form>";
+    return "<button class=\"link\" form=\"skinprop\">" . ($on ? t('ver con su plantilla') : t('ver con mi plantilla')) . "</button>";
 }
 function skin(): string {
     static $s = null;
@@ -1291,6 +1293,7 @@ function footer_links(): string {
 }
 function page_footer(): void {
     echo "</main>";
+    if (!empty($GLOBALS['DDD_SKINPROP_FORM'])) echo $GLOBALS['DDD_SKINPROP_FORM'];   // formulario de «ver con mi/su plantilla» (skin_propio_link)
     echo "<a class=\"fab\" href=\"/enviar\" aria-label=\"" . t('Enviar') . "\">" . icon('plus') . "</a>";
     // pie en flujo (movil): al final de cada pagina
     echo "<footer class=\"inflow\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a>";
