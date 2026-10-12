@@ -19,6 +19,7 @@ function contar_palabras(string $t): int {
     return $t === '' ? 0 : count(explode(' ', $t));
 }
 
+if (post_descartado()) $err = t('El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.', (int)round((int)cfg('img_max_bytes', 6000000) / 1000000));
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['title']   = mb_substr(post('title'), 0, 200);
     $f['content'] = mb_substr(post('content'), 0, $maxChars);
@@ -33,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($words > $maxWords) $err = t('El artículo tiene %d palabras; el máximo es %d.', $words, $maxWords);
     elseif (!in_array($f['topic'], array_column($topics, 'topic_id'), false)) $err = t('Elige un tema.');
 
+    if (!$err && ($ie = imagen_subida_error($_FILES['photo'] ?? [])) !== null) $err = $ie;   // la foto no entra: se avisa antes de publicar, por si quiere cambiarla (12/10/2026)
     if (!$err) {
         $image = imagen_desde_subida($_FILES['photo'] ?? []);
         $u = user();

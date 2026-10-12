@@ -851,4 +851,12 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s (Medios) y %s (Substacks)' => '%s (Hedabideak) eta %s (Substackak)',
 'La sigue %d persona' => 'Pertsona %d-ek jarraitzen du',
 'La siguen %d personas' => '%d pertsonak jarraitzen dute',
+'La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.' => 'Argazkiak gehiegi pisatzen du: gehienez %d MB. Txikitu edo aukeratu beste bat.',
+'La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.' => 'Argazkia ezin izan da igo (%d errorea). Saiatu berriro edo aukeratu beste bat.',
+'La foto no es una imagen válida: vale JPG, PNG, WebP o AVIF.' => 'Argazkia ez da irudi baliozkoa: JPG, PNG, WebP edo AVIF balio dute.',
+'La foto es demasiado pequeña (%d×%d): hace falta al menos 240×180.' => 'Argazkia txikiegia da (%d×%d): gutxienez 240×180 behar da.',
+'La foto no se ha podido procesar. Prueba con otra.' => 'Argazkia ezin izan da prozesatu. Probatu beste batekin.',
+'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'Bidalketa handiegia zen (argazkia, ziur aski) eta zerbitzariak osorik baztertu du. Argazki bakoitzeko gehienez %d MB.',
+'Aquí participa %d persona' => 'Hemen pertsona %d-ek parte hartzen du',
+'Aquí participan %d personas' => 'Hemen %d pertsonak parte hartzen dute',
 ];

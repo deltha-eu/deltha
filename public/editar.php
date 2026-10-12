@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
         else $err = t('La página del enlace no ofrece ninguna foto usable.');
     }
     if ($up = imagen_desde_subida($_FILES['photo'] ?? [])) $image = $up;
-    elseif (($_FILES['photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) $err = t('No se ha podido procesar la foto (¿demasiado pequeña o formato no válido?).');
+    elseif (($ie = imagen_subida_error($_FILES['photo'] ?? [])) !== null) $err = $ie;   // motivo concreto (12/10/2026)
 
     if (!$err && mb_strlen($title) < 8) $err = t('El titular es demasiado corto.');
     elseif (!$err && !in_array($topic, array_column($topics, 'topic_id'), false)) $err = t('Elige un tema.');

@@ -66,6 +66,22 @@ echo "<p class=\"meta\">" . t('comunidad creada por') . " <a href=\"/u/" . rawur
 if ($c['status'] !== 'ok') echo " · <b>" . t('oculta') . "</b>";
 if ($u && $u['landing'] !== 'c:' . $c['community_id']) echo " · <a href=\"/perfil#aterrizar\">" . t('entrar aquí al abrir Deltha') . "</a>";
 echo "</p></div></div>";
+// gente de la comunidad (12/10/2026): quien la tiene como pagina de entrada y quien ha publicado en ella (envios ya revelados), por aura;
+// solo con avatar quienes muestran sus fuentes en el perfil (show_follows), el resto cuenta; silenciados fuera. Como en la ficha de una fuente.
+$gm = (int)cfg('ghost_minutes', 30);
+$qg = $pdo->prepare("SELECT u.user_id, u.login, u.avatar, u.aura, u.show_follows FROM users u
+                      WHERE u.landing = ? OR u.user_id IN (SELECT s.user_id FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id
+                                                            WHERE sc.community_id = ? AND s.user_id IS NOT NULL AND s.status IN " . DDD_COMM_PUBLIC . " AND (s.revealed = 1 OR s.sent_date <= NOW() - INTERVAL $gm MINUTE))
+                      ORDER BY u.aura DESC, u.login LIMIT 400");
+$qg->execute(['c:' . (int)$c['community_id'], (int)$c['community_id']]);
+$gente = $qg->fetchAll();
+if ($gente) {
+    $vis = array_values(array_filter($gente, fn($r) => (int)$r['show_follows'] === 1 && !ghost_veiled((int)$r['user_id'])));
+    echo "<div class=\"srcquien\"><span class=\"n\">" . (count($gente) === 1 ? t('Aquí participa %d persona', 1) : t('Aquí participan %d personas', count($gente))) . "</span>";
+    foreach (array_slice($vis, 0, 24) as $r) echo "<a href=\"/u/" . rawurlencode($r['login']) . "\" title=\"" . h($r['login']) . "\">" . avatar((float)$r['aura'], $r['login'], $r['avatar']) . "</a>";
+    if (count($vis) > 24) echo "<span class=\"mas\">+" . (count($vis) - 24) . "</span>";
+    echo "</div>";
+}
 if (isset($_GET['nueva'])) echo "<p class=\"notice\">" . t('Comunidad creada. Ya se puede elegir al enviar una noticia; abajo puedes ajustar el nombre, la descripción, el color y la skin.') . "</p>";
 if (isset($_GET['ok'])) echo "<p class=\"notice\">" . t('Guardado.') . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";

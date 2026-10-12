@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
     $step = '1';
 }
 
+if (post_descartado()) $err = t('El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.', (int)round((int)cfg('img_max_bytes', 6000000) / 1000000));
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['url'] = url_limpia(post('url'));   // sin utm ni codigos de seguimiento (lib/app.php)
     if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }
@@ -69,8 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($f['image'] && (!preg_match('/^[a-f0-9]{24}\.jpg$/', $f['image']) || !is_file(DDD_MEDIA_DIR . '/' . $f['image']))) $f['image'] = null;
         if (post('quitar') === '1') $f['image'] = null;
         if ($up = imagen_desde_subida($_FILES['photo'] ?? [])) $f['image'] = $up;
+        elseif (($ie = imagen_subida_error($_FILES['photo'] ?? [])) !== null) $err = $ie;   // la foto no entra: se avisa antes de publicar (12/10/2026)
 
-        if (mb_strlen($f['title']) < 8) $err = t('El titular es demasiado corto.');
+        if ($err) {}
+        elseif (mb_strlen($f['title']) < 8) $err = t('El titular es demasiado corto.');
         elseif (!in_array($f['topic'], array_column($topics, 'topic_id'), false)) $err = t('Elige un tema.');
 
         if (!$err) {
