@@ -66,14 +66,16 @@ echo "<p class=\"meta\">" . t('comunidad creada por') . " <a href=\"/u/" . rawur
 if ($c['status'] !== 'ok') echo " · <b>" . t('oculta') . "</b>";
 if ($u && $u['landing'] !== 'c:' . $c['community_id']) echo " · <a href=\"/perfil#aterrizar\">" . t('entrar aquí al abrir Deltha') . "</a>";
 echo "</p></div></div>";
-// gente de la comunidad (12/10/2026): quien la tiene como pagina de entrada y quien ha publicado en ella (envios ya revelados), por aura;
+if ($fav = comunidad_seguir_form($c, true)) echo "<div class=\"srcfav\">$fav</div>";   // «+ Seguir <comunidad>» / «✓ Siguiendo» (migra-142)
+// gente de la comunidad (12/10/2026): quien la sigue (migra-142), quien la tiene como pagina de entrada y quien ha publicado en ella (envios ya revelados), por aura;
 // solo con avatar quienes muestran sus fuentes en el perfil (show_follows), el resto cuenta; silenciados fuera. Como en la ficha de una fuente.
 $gm = (int)cfg('ghost_minutes', 30);
 $qg = $pdo->prepare("SELECT u.user_id, u.login, u.avatar, u.aura, u.show_follows FROM users u
-                      WHERE u.landing = ? OR u.user_id IN (SELECT s.user_id FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id
+                      WHERE u.landing = ? OR u.user_id IN (SELECT uc.user_id FROM user_communities uc WHERE uc.community_id = ?)
+                         OR u.user_id IN (SELECT s.user_id FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id
                                                             WHERE sc.community_id = ? AND s.user_id IS NOT NULL AND s.status IN " . DDD_COMM_PUBLIC . " AND (s.revealed = 1 OR s.sent_date <= NOW() - INTERVAL $gm MINUTE))
                       ORDER BY u.aura DESC, u.login LIMIT 400");
-$qg->execute(['c:' . (int)$c['community_id'], (int)$c['community_id']]);
+$qg->execute(['c:' . (int)$c['community_id'], (int)$c['community_id'], (int)$c['community_id']]);
 $gente = $qg->fetchAll();
 if ($gente) {
     $vis = array_values(array_filter($gente, fn($r) => (int)$r['show_follows'] === 1 && !ghost_veiled((int)$r['user_id'])));

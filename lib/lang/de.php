@@ -860,4 +860,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'Der Beitrag war zu groß (wahrscheinlich das Foto) und der Server hat ihn ganz verworfen. Höchstens %d MB pro Foto.',
 'Aquí participa %d persona' => '%d Person macht hier mit',
 'Aquí participan %d personas' => '%d Personen machen hier mit',
+'Mis comunidades' => 'Meine Communitys',
+'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Du folgst noch keiner Community: drück „Folgen“ bei denen, die dich interessieren, unter <a href="/comunidades?v=todas">Alle</a>.',
+'%d siguen' => '%d folgen',
 ];

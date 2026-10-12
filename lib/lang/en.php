@@ -899,4 +899,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'The submission was too large (probably the photo) and the server discarded it entirely. The maximum per photo is %d MB.',
 'Aquí participa %d persona' => '%d person takes part here',
 'Aquí participan %d personas' => '%d people take part here',
+'Mis comunidades' => 'My communities',
+'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'You do not follow any community yet: press “Follow” on the ones you like in <a href="/comunidades?v=todas">All</a>.',
+'%d siguen' => '%d follow',
 ];

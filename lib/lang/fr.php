@@ -898,4 +898,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'L\'envoi était trop volumineux (la photo, sûrement) et le serveur l\'a rejeté en entier. Le maximum par photo est de %d Mo.',
 'Aquí participa %d persona' => '%d personne participe ici',
 'Aquí participan %d personas' => '%d personnes participent ici',
+'Mis comunidades' => 'Mes communautés',
+'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Tu ne suis encore aucune communauté : appuie sur « Suivre » dans celles qui t\'intéressent, dans <a href="/comunidades?v=todas">Toutes</a>.',
+'%d siguen' => '%d suivent',
 ];

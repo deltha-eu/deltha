@@ -880,6 +880,8 @@ form.plain label.radio { display: flex; gap: 8px; align-items: center; font-size
 .fz.comm .dot, .commhead .dot { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--cc, var(--line2)); margin-top: 4px; }
 .fz.comm { align-items: flex-start; }
 .fz.comm .prev { color: var(--muted); font-size: 14px; }
+.fz.comm > a.fzl { align-items: flex-start; }   /* fila con boton «Seguir» (migra-142) */
+div.fz.comm form.seguir { margin-left: auto; align-self: center; }
 .commhead { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-bottom: 1px solid var(--line); }
 .commhead .dot { width: 18px; height: 18px; margin-top: 8px; }
 .commhead h1 { padding: 0; font-size: 22px; }
