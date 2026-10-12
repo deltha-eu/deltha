@@ -27,14 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ya velado (lo ghostee yo o me ghosteo): no hay nada que hacer aqui
 if (ghost_veiled($tid)) redirect(ghost_folded($tid) ? '/perfil#ghost' : '/');
 
-page_header(t('Ghostear'));
+page_header(t('Silenciar'));
 echo "<div class=\"ghostbox\">";
-echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . t('¿Ghostear a %s?', h($p['login'])) . "</h1>";
+echo "<div class=\"profile\">" . avatar((float)$p['aura'], $p['login'], $p['avatar']) . "<div><h1>" . t('¿Silenciar a %s?', h($p['login'])) . "</h1>";
 if ($p['bio']) echo "<p class=\"bio\">" . h($p['bio']) . "</p>";
 echo "</div></div>";
 echo "<p class=\"notice\">" . t('A partir de ahora, para %s serás siempre un Ghost: no verá tu nombre en tus envíos, comentarios ni menciones, no podrá ver tu perfil ni escribirte por privado. Y tú lo verás igual: como un Ghost más, con sus comentarios plegados, por si en algún momento quieres leerlos.', h($p['login'])) . "</p>";
 echo "<p class=\"notice\">" . t('Nadie recibe aviso y no hay listas públicas. No afecta a los votos ni oculta nada al resto. Puedes deshacerlo cuando quieras desde tu perfil.') . "</p>";
 echo "<form class=\"plain\" method=\"post\" action=\"/ghostear\"><input type=\"hidden\" name=\"u\" value=\"" . h($p['login']) . "\"><input type=\"hidden\" name=\"act\" value=\"ghostear\">";
-echo "<button>" . t('Ghostear') . "</button> <a class=\"cancel\" href=\"/u/" . rawurlencode($p['login']) . "\">" . t('cancelar') . "</a></form>";
+echo "<button>" . t('Silenciar') . "</button> <a class=\"cancel\" href=\"/u/" . rawurlencode($p['login']) . "\">" . t('cancelar') . "</a></form>";
 echo "</div>";
 page_footer();

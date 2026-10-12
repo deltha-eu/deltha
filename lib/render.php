@@ -182,7 +182,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
         $pn = display_name($parent, ghost_over($parent['created']));
         echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";
     }
-    if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has ghosteado') . " · <a href=\"/perfil#ghost\">" . t('deshacer') . "</a></summary>";
+    if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has silenciado') . " · <a href=\"/perfil#ghost\">" . t('deshacer') . "</a></summary>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
     else      echo "<p>" . saltos(enlaces(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content']))) . "</p>";   // @nick → perfil, URLs → enlaces (07/10/2026)
     if ($fold) echo "</details>";

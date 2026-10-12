@@ -49,9 +49,9 @@ if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($ok)  echo "<p class=\"notice\">" . h($ok) . "</p>";
 // ghosteados (lib/ghost.php): a quien he dejado de ver, con fecha y «deshacer»; solo si hay alguno o se acaba de tocar
 if (ghost_on() && (($gl = ghost_list($pdo, (int)$u['user_id'])) || isset($_GET['ghost']))) {
-    echo "<div class=\"ghostlist\" id=\"ghost\"><h3 class=\"sec\">" . t('Ghosteados') . "</h3>";
+    echo "<div class=\"ghostlist\" id=\"ghost\"><h3 class=\"sec\">" . t('Silenciados') . "</h3>";
     if (isset($_GET['ghost'])) echo "<p class=\"notice\">" . ($_GET['ghost'] === 'quitado' ? t('Hecho: volvéis a veros con normalidad.') : t('Hecho: para ese usuario ya eres un Ghost, y él para ti.')) . "</p>";
-    if (!$gl) echo "<p class=\"end\">" . t('No has ghosteado a nadie.') . "</p>";
+    if (!$gl) echo "<p class=\"end\">" . t('No has silenciado a nadie.') . "</p>";
     foreach ($gl as $g) {
         echo "<div class=\"ulist\">" . avatar((float)$g['aura'], $g['login'], $g['avatar']) . "<div><b>" . h($g['login']) . "</b><span class=\"meta\"> · " . t('desde') . " " . h(hace($g['created'])) . "</span>";
         echo "<form class=\"inline\" method=\"post\" action=\"/ghostear\"><input type=\"hidden\" name=\"u\" value=\"" . h($g['login']) . "\"><input type=\"hidden\" name=\"act\" value=\"deshacer\"><button class=\"link\">" . t('deshacer') . "</button></form></div></div>";

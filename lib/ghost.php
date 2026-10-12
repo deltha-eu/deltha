@@ -99,5 +99,5 @@ function ghost_list(PDO $pdo, int $me): array {
  *  ya revelado ($shown) y no velado todavia. $login = nick del otro. '' si no procede. */
 function ghost_link(?int $uid, ?string $login, bool $shown, string $cls = 'replink'): string {
     if (!ghost_on() || !user() || !$uid || !$login || !$shown || $uid === (int)user()['user_id'] || ghost_veiled($uid)) return '';
-    return "<a class=\"$cls ghostlink\" href=\"/ghostear?u=" . rawurlencode($login) . "\" title=\"" . h(t('dejar de ver a este usuario: para ti y para él seréis siempre Ghost')) . "\">" . t('ghostear') . "</a>";
+    return "<a class=\"$cls ghostlink\" href=\"/ghostear?u=" . rawurlencode($login) . "\" title=\"" . h(t('dejar de ver a este usuario: para ti y para él seréis siempre Ghost')) . "\">" . t('silenciar') . "</a>";
 }

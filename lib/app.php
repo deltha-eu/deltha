@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 197);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 198);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -542,6 +542,10 @@ function page_body(array $pg): string {
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
         '{minpub}'   => num_pg($L, delta_minpub('medios')),
         '{minpubs}'  => num_pg($L, delta_minpub('substacks')),
+        // umbrales en una frase (migra-140): «1 en las dos portadas» si coinciden; si no, «1 (Medios) o 2 (Substacks)» / «… y …» (linea de los numeros)
+        '{minpubtxt}'  => abs(delta_minpub('medios') - delta_minpub('substacks')) < 0.0005 ? t_in($L, '%s en las dos portadas', num_pg($L, delta_minpub('medios'))) : t_in($L, '%s (Medios) o %s (Substacks)', num_pg($L, delta_minpub('medios')), num_pg($L, delta_minpub('substacks'))),
+        '{minpubtxt2}' => abs(delta_minpub('medios') - delta_minpub('substacks')) < 0.0005 ? t_in($L, '%s en las dos portadas', num_pg($L, delta_minpub('medios'))) : t_in($L, '%s (Medios) y %s (Substacks)', num_pg($L, delta_minpub('medios')), num_pg($L, delta_minpub('substacks'))),
+        '{nlangs}'   => (string)count(DDD_LANGS),   // idiomas de la interfaz (migra-140)
         '{minvotos}' => (string)delta_min_votes(),
         '{newttl}'   => (string)(int)cfg('nuevas_ttl_hours', 168),
         '{newttltxt}'=> dur_pg($L, (int)cfg('nuevas_ttl_hours', 168)),
