@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ?, src_mylang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $mylang, $u['user_id']]);
         try { $pdo->prepare("UPDATE users SET twofa = ? WHERE user_id = ?")->execute([post('twofa') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-095 sin aplicar */ }
         try { $pdo->prepare("UPDATE users SET show_follows = ? WHERE user_id = ?")->execute([post('show_follows') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-116 sin aplicar */ }
+        try { $pdo->prepare("UPDATE users SET skin_propio = ? WHERE user_id = ?")->execute([post('skin_propio') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-143 sin aplicar */ }
         redirect('/perfil?ok=1');
     }
 }
@@ -88,6 +89,9 @@ foreach (['auto' => t('Automático (como el sistema)'), 'light' => t('Claro'), '
 echo "</select>";
 $cur = (string)($u['skin'] ?? '');
 echo "" . t('<label>Skin</label>') . "<p class=\"skinnow\"><b>" . h($cur !== '' ? DDD_SKINS[$cur] : skin_descs()['']) . "</b> · <a href=\"/plantilla\">" . t('elegir otra') . "</a></p><small class=\"hint\">" . t('Las skins se eligen en su propia pestaña, con muestra y descripción de cada una; el tema claro/oscuro de arriba se aplica a todas.') . "</small>";
+// plantilla en comunidades y fuentes con la suya (migra-143)
+$sp = !empty($u['skin_propio']);
+echo "<label>" . t('Plantilla en comunidades y fuentes') . "</label><p class=\"radios\"><label><input type=\"radio\" name=\"skin_propio\" value=\"0\"" . (!$sp ? ' checked' : '') . "> " . t('Verlas como las diseñó quien las creó') . "</label><br><label><input type=\"radio\" name=\"skin_propio\" value=\"1\"" . ($sp ? ' checked' : '') . "> " . t('Usar siempre la mía') . "</label></p><small class=\"hint\">" . t('Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.') . "</small>";
 echo "<label id=\"aterrizar\">" . t('Al abrir Deltha, entrar en…') . "</label><select name=\"landing\"><option value=\"\"" . t('>La portada</option>')
    . (fuentes_on() ? "<option value=\"u:medio\"" . (($u['landing'] ?? '') === 'u:medio' ? ' selected' : '') . ">" . t('Mis medios') . "</option><option value=\"u:sub\"" . (($u['landing'] ?? '') === 'u:sub' ? ' selected' : '') . ">" . t('Mis substacks') . "</option>" . (fuente_kind_visible('youtube') && fuentes_activas($pdo, 'youtube') ? "<option value=\"u:yt\"" . (($u['landing'] ?? '') === 'u:yt' ? ' selected' : '') . ">" . t('Mis canales') . "</option>" : '') . (fuente_kind_visible('agregador') ? "<option value=\"u:agg\"" . (($u['landing'] ?? '') === 'u:agg' ? ' selected' : '') . ">" . t('Mis agregadores') . "</option>" : '') : '')
    . "<optgroup label=\"" . t('Un tema') . "\">";

@@ -65,6 +65,7 @@ if ($c['descr']) echo "<p class=\"bio\">" . h($c['descr']) . "</p>";
 echo "<p class=\"meta\">" . t('comunidad creada por') . " <a href=\"/u/" . rawurlencode($c['owner']) . "\">" . h($c['owner']) . "</a> · " . t('%d envíos', $total) . " · <a href=\"/comunidades\">" . t('todas las comunidades') . "</a>";
 if ($c['status'] !== 'ok') echo " · <b>" . t('oculta') . "</b>";
 if ($u && $u['landing'] !== 'c:' . $c['community_id']) echo " · <a href=\"/perfil#aterrizar\">" . t('entrar aquí al abrir Deltha') . "</a>";
+if (!empty($c['skin']) && $u) echo " · " . skin_propio_link();   // la comunidad tiene plantilla propia: conmutar «ver con mi plantilla» (migra-143)
 echo "</p></div></div>";
 if ($fav = comunidad_seguir_form($c, true)) echo "<div class=\"srcfav\">$fav</div>";   // «+ Seguir <comunidad>» / «✓ Siguiendo» (migra-142)
 // gente de la comunidad (12/10/2026): quien la sigue (migra-142), quien la tiene como pagina de entrada y quien ha publicado en ella (envios ya revelados), por aura;

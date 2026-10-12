@@ -863,4 +863,10 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Mis comunidades' => 'Le mie comunità',
 'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Non segui ancora nessuna comunità: premi «Segui» su quelle che ti interessano in <a href="/comunidades?v=todas">Tutte</a>.',
 '%d siguen' => '%d seguono',
+'Plantilla en comunidades y fuentes' => 'Skin nelle comunità e nelle fonti',
+'Verlas como las diseñó quien las creó' => 'Vederle come le ha disegnate chi le ha create',
+'Usar siempre la mía' => 'Usare sempre la mia',
+'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Alcune comunità e testate hanno una skin propria. Puoi cambiarlo in qualsiasi momento dall\'intestazione di ciascuna.',
+'ver con mi plantilla' => 'vedere con la mia skin',
+'ver con su plantilla' => 'vedere con la sua skin',
 ];

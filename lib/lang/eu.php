@@ -862,4 +862,10 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Mis comunidades' => 'Nire komunitateak',
 'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Oraindik ez duzu komunitaterik jarraitzen: sakatu «Jarraitu» interesatzen zaizkizunetan, <a href="/comunidades?v=todas">Guztiak</a> atalean.',
 '%d siguen' => '%d jarraitzaile',
+'Plantilla en comunidades y fuentes' => 'Txantiloia komunitate eta iturrietan',
+'Verlas como las diseñó quien las creó' => 'Sortu zituenak diseinatu bezala ikusi',
+'Usar siempre la mía' => 'Beti nirea erabili',
+'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Komunitate eta hedabide batzuk beren txantiloiarekin ikusten dira. Bakoitzaren goiburutik alda dezakezu hau edonoiz.',
+'ver con mi plantilla' => 'nire txantiloiarekin ikusi',
+'ver con su plantilla' => 'bere txantiloiarekin ikusi',
 ];

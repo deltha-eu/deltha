@@ -902,4 +902,10 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Mis comunidades' => 'My communities',
 'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'You do not follow any community yet: press “Follow” on the ones you like in <a href="/comunidades?v=todas">All</a>.',
 '%d siguen' => '%d follow',
+'Plantilla en comunidades y fuentes' => 'Skin in communities and sources',
+'Verlas como las diseñó quien las creó' => 'See them as their creators designed them',
+'Usar siempre la mía' => 'Always use mine',
+'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Some communities and media have their own skin. You can change this at any time from the header of each one.',
+'ver con mi plantilla' => 'view with my skin',
+'ver con su plantilla' => 'view with its skin',
 ];

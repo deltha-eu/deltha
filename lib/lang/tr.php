@@ -883,4 +883,10 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Mis comunidades' => 'Topluluklarım',
 'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Henüz hiçbir topluluğu takip etmiyorsun: <a href="/comunidades?v=todas">Tümü</a> içinde ilgini çekenlerde «Takip et»e bas.',
 '%d siguen' => '%d takip ediyor',
+'Plantilla en comunidades y fuentes' => 'Topluluk ve kaynaklarda şablon',
+'Verlas como las diseñó quien las creó' => 'Onları yaratanların tasarladığı gibi gör',
+'Usar siempre la mía' => 'Her zaman benimkini kullan',
+'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Bazı topluluklar ve yayınlar kendi şablonlarıyla görünür. Bunu her birinin başlığından istediğin zaman değiştirebilirsin.',
+'ver con mi plantilla' => 'kendi şablonumla gör',
+'ver con su plantilla' => 'onun şablonuyla gör',
 ];
