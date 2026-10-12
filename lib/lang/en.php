@@ -914,4 +914,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'este mes' => 'this month',
 'este año' => 'this year',
 'ayer' => 'yesterday',
+'(Datos desde el %s.)' => '(Data since %s.)',
 ];

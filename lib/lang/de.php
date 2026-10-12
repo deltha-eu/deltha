@@ -875,4 +875,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'este mes' => 'diesen Monat',
 'este año' => 'dieses Jahr',
 'ayer' => 'gestern',
+'(Datos desde el %s.)' => '(Daten seit dem %s.)',
 ];

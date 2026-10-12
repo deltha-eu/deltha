@@ -875,4 +875,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'este mes' => 'questo mese',
 'este año' => 'quest\'anno',
 'ayer' => 'ieri',
+'(Datos desde el %s.)' => '(Dati dal %s.)',
 ];

@@ -49,7 +49,7 @@ echo $tile($s['publicadas_total'], t('publicadas en total'), '/procesos?v=portad
 echo $tile($c['hoy'], t('comentarios hoy'), '/procesos?v=comentarios&d=hoy');
 echo $tile($c['total'], t('comentarios en total'), '/procesos?v=comentarios&d=todo');
 echo "</div>";
-echo "<h3 class=\"anah\">" . t('Salidas a los medios') . "</h3><p class=\"meta\" style=\"padding:4px 0 0\">" . t('Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.', h(cfg('site_name'))) . "</p><div class=\"grid\">";
+echo "<h3 class=\"anah\">" . t('Salidas a los medios') . "</h3><p class=\"meta\" style=\"padding:4px 0 0\">" . t('Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.', h(cfg('site_name'))) . ' ' . t('(Datos desde el %s.)', h(fecha_larga('2026-10-12', lang()))) . "</p><div class=\"grid\">";
 echo $tile($k['hoy'], t('hoy'));
 echo $tile($k['mes'], t('este mes'));
 echo $tile($k['anio'], t('este año'));

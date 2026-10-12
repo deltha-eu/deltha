@@ -911,4 +911,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'este mes' => 'este mês',
 'este año' => 'este ano',
 'ayer' => 'ontem',
+'(Datos desde el %s.)' => '(Dados desde %s.)',
 ];

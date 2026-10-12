@@ -874,4 +874,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'este mes' => 'aquest mes',
 'este año' => 'aquest any',
 'ayer' => 'ahir',
+'(Datos desde el %s.)' => '(Dades des del %s.)',
 ];

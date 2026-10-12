@@ -895,4 +895,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'este mes' => 'bu ay',
 'este año' => 'bu yıl',
 'ayer' => 'dün',
+'(Datos desde el %s.)' => '(%s tarihinden itibaren veriler.)',
 ];
