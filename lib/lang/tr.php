@@ -889,4 +889,10 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Bazı topluluklar ve yayınlar kendi şablonlarıyla görünür. Bunu her birinin başlığından istediğin zaman değiştirebilirsin.',
 'ver con mi plantilla' => 'kendi şablonumla gör',
 'ver con su plantilla' => 'onun şablonuyla gör',
+'Salidas a los medios' => 'Yayınlara çıkışlar',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Bir gönderinin başlığına tıklayıp özgün habere giden tıklamalar: %s\'nın yayınlara gönderdiği trafik.',
+'hoy' => 'bugün',
+'este mes' => 'bu ay',
+'este año' => 'bu yıl',
+'ayer' => 'dün',
 ];

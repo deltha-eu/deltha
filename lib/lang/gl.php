@@ -868,4 +868,10 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Algunhas comunidades e medios vense coa súa propia plantilla. Desde a cabeceira de cada unha podes cambiar isto en calquera momento.',
 'ver con mi plantilla' => 'ver coa miña plantilla',
 'ver con su plantilla' => 'ver coa súa plantilla',
+'Salidas a los medios' => 'Saídas aos medios',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Clics no titular dun envío que levan á noticia orixinal: o tráfico que %s manda aos medios.',
+'hoy' => 'hoxe',
+'este mes' => 'este mes',
+'este año' => 'este ano',
+'ayer' => 'onte',
 ];
