@@ -888,4 +888,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 '%s en las dos portadas' => '%s sur les deux unes',
 '%s (Medios) o %s (Substacks)' => '%s (Médias) ou %s (Substacks)',
 '%s (Medios) y %s (Substacks)' => '%s (Médias) et %s (Substacks)',
+'La sigue %d persona' => '%d personne la suit',
+'La siguen %d personas' => '%d personnes la suivent',
 ];

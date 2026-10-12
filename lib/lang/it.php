@@ -850,4 +850,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '%s en las dos portadas' => '%s su entrambe le prime pagine',
 '%s (Medios) o %s (Substacks)' => '%s (Media) o %s (Substack)',
 '%s (Medios) y %s (Substacks)' => '%s (Media) e %s (Substack)',
+'La sigue %d persona' => 'La segue %d persona',
+'La siguen %d personas' => 'La seguono %d persone',
 ];

@@ -889,4 +889,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '%s en las dos portadas' => '%s on both front pages',
 '%s (Medios) o %s (Substacks)' => '%s (Media) or %s (Substacks)',
 '%s (Medios) y %s (Substacks)' => '%s (Media) and %s (Substacks)',
+'La sigue %d persona' => '%d person follows it',
+'La siguen %d personas' => '%d people follow it',
 ];

@@ -886,4 +886,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '%s en las dos portadas' => '%s nas duas capas',
 '%s (Medios) o %s (Substacks)' => '%s (Meios) ou %s (Newsletters)',
 '%s (Medios) y %s (Substacks)' => '%s (Meios) e %s (Newsletters)',
+'La sigue %d persona' => 'Segue-a %d pessoa',
+'La siguen %d personas' => 'Seguem-na %d pessoas',
 ];
