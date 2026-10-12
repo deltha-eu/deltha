@@ -905,4 +905,10 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Algumas comunidades e meios veem-se com a sua própria skin. No cabeçalho de cada uma podes mudar isto quando quiseres.',
 'ver con mi plantilla' => 'ver com a minha skin',
 'ver con su plantilla' => 'ver com a skin dela',
+'Salidas a los medios' => 'Saídas para os meios',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Cliques no título de um envio que levam à notícia original: o tráfego que o %s envia aos meios.',
+'hoy' => 'hoje',
+'este mes' => 'este mês',
+'este año' => 'este ano',
+'ayer' => 'ontem',
 ];

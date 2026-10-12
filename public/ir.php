@@ -13,4 +13,5 @@ if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true)
 $url = url_limpia((string)$s['url']);   // los envios antiguos pueden llevar utm: se sale limpio
 if (!preg_match('~^https?://~i', $url)) redirect('/hilo/' . $id);
 story_cuenta($pdo, $s, 'clicks');
+try { $pdo->exec("INSERT INTO clicks_daily (day, n) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE n = n + 1"); } catch (Throwable $e) {}   // salidas por dia (migra-144): /estadisticas, hoy / mes / año
 header('Location: ' . str_replace(["\r", "\n"], '', $url), true, 302);

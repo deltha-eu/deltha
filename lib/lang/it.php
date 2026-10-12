@@ -869,4 +869,10 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Alcune comunità e testate hanno una skin propria. Puoi cambiarlo in qualsiasi momento dall\'intestazione di ciascuna.',
 'ver con mi plantilla' => 'vedere con la mia skin',
 'ver con su plantilla' => 'vedere con la sua skin',
+'Salidas a los medios' => 'Uscite verso le testate',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Clic sul titolo di un invio che portano alla notizia originale: il traffico che %s manda alle testate.',
+'hoy' => 'oggi',
+'este mes' => 'questo mese',
+'este año' => 'quest\'anno',
+'ayer' => 'ieri',
 ];

@@ -20,6 +20,9 @@ $s = $pdo->query("SELECT SUM(status='destacadas' AND portada='medios') medios, S
 $anon = 0;
 try { $anon = (int)$pdo->query("SELECT COUNT(*) FROM presence WHERE seen >= NOW() - INTERVAL $onlineMin MINUTE")->fetchColumn(); } catch (Throwable $e) {}
 $c = $pdo->query("SELECT COUNT(*) total, SUM(created >= CURDATE()) hoy FROM comments WHERE status='ok'")->fetch();
+// salidas a medios por dia (clicks_daily, migra-144): cuanto trafico derivamos; hoy, este mes y este año
+$k = ['hoy' => 0, 'mes' => 0, 'anio' => 0];
+try { $k = $pdo->query("SELECT COALESCE(SUM(IF(day = CURDATE(), n, 0)),0) hoy, COALESCE(SUM(IF(day >= DATE_FORMAT(CURDATE(), '%Y-%m-01'), n, 0)),0) mes, COALESCE(SUM(IF(day >= DATE_FORMAT(CURDATE(), '%Y-01-01'), n, 0)),0) anio FROM clicks_daily")->fetch() ?: $k; } catch (Throwable $e) {}
 $n = fn($v) => number_format((int)$v, 0, ',', '.');
 // una ficha: enlace si hay lista detras (las de usuarios llevan a /usuarios, que pide login si no lo hay)
 $tile = function ($num, string $label, ?string $href = null) use ($n) {
@@ -45,6 +48,11 @@ echo $tile($s['publicadas_hoy'], t('publicadas hoy'), '/procesos?v=portadas&d=ho
 echo $tile($s['publicadas_total'], t('publicadas en total'), '/procesos?v=portadas&d=todo');
 echo $tile($c['hoy'], t('comentarios hoy'), '/procesos?v=comentarios&d=hoy');
 echo $tile($c['total'], t('comentarios en total'), '/procesos?v=comentarios&d=todo');
+echo "</div>";
+echo "<h3 class=\"anah\">" . t('Salidas a los medios') . "</h3><p class=\"meta\" style=\"padding:4px 0 0\">" . t('Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.', h(cfg('site_name'))) . "</p><div class=\"grid\">";
+echo $tile($k['hoy'], t('hoy'));
+echo $tile($k['mes'], t('este mes'));
+echo $tile($k['anio'], t('este año'));
 echo "</div>";
 if (user()) echo "<p class=\"end\"><a href=\"/usuarios\">" . t('Ver los últimos registrados') . "</a>" . (ana_on() ? " · <a href=\"/analitica\">" . t('Analítica: visitantes, sesiones y páginas vistas') . "</a>" : '') . "</p>";
 echo "</div>";

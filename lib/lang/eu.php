@@ -868,4 +868,10 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Komunitate eta hedabide batzuk beren txantiloiarekin ikusten dira. Bakoitzaren goiburutik alda dezakezu hau edonoiz.',
 'ver con mi plantilla' => 'nire txantiloiarekin ikusi',
 'ver con su plantilla' => 'bere txantiloiarekin ikusi',
+'Salidas a los medios' => 'Hedabideetarako irteerak',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Bidalketa baten izenburuan egindako klikak, jatorrizko albistera daramatenak: %s-k hedabideei bidaltzen dien trafikoa.',
+'hoy' => 'gaur',
+'este mes' => 'hilabete honetan',
+'este año' => 'aurten',
+'ayer' => 'atzo',
 ];

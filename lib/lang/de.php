@@ -869,4 +869,10 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Manche Communitys und Medien haben einen eigenen Skin. Du kannst das jederzeit in der Kopfzeile jeder einzelnen ändern.',
 'ver con mi plantilla' => 'mit meinem Skin ansehen',
 'ver con su plantilla' => 'mit ihrem Skin ansehen',
+'Salidas a los medios' => 'Ausgänge zu den Medien',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Klicks auf die Überschrift eines Beitrags, die zum Originalartikel führen: der Traffic, den %s an die Medien schickt.',
+'hoy' => 'heute',
+'este mes' => 'diesen Monat',
+'este año' => 'dieses Jahr',
+'ayer' => 'gestern',
 ];

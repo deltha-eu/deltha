@@ -908,4 +908,10 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Some communities and media have their own skin. You can change this at any time from the header of each one.',
 'ver con mi plantilla' => 'view with my skin',
 'ver con su plantilla' => 'view with its skin',
+'Salidas a los medios' => 'Outbound to the media',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Clicks on a submission headline that lead to the original story: the traffic %s sends to the media.',
+'hoy' => 'today',
+'este mes' => 'this month',
+'este año' => 'this year',
+'ayer' => 'yesterday',
 ];

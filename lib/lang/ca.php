@@ -868,4 +868,10 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Algunes comunitats i mitjans es veuen amb la seva pròpia plantilla. Des de la capçalera de cadascuna pots canviar això en qualsevol moment.',
 'ver con mi plantilla' => 'veure amb la meva plantilla',
 'ver con su plantilla' => 'veure amb la seva plantilla',
+'Salidas a los medios' => 'Sortides als mitjans',
+'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Clics al titular d\'un enviament que porten a la notícia original: el trànsit que %s envia als mitjans.',
+'hoy' => 'avui',
+'este mes' => 'aquest mes',
+'este año' => 'aquest any',
+'ayer' => 'ahir',
 ];
