@@ -27,7 +27,7 @@ function ana_hit(): void {
     if (($_GET['auto'] ?? '') === '1') return;   // recarga automatica (meta refresh del chat y de procesos, refresh_meta()): no es una lectura nueva
     $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
     $path = (string)(parse_url($uri, PHP_URL_PATH) ?: '/');
-    if (preg_match('~^/(admin|moderacion|api/|app/|css/|img/|media/)~', $path)) return;
+    if (preg_match('~^/(admin|moderacion|api/|app/|css/|img/|media/|ir(\.php)?$)~', $path)) return;   // /ir (salida al medio) no es una pagina vista: se cuenta aparte (clicks_daily, migra-144/145)
     parse_str((string)(parse_url($uri, PHP_URL_QUERY) ?? ''), $q);
     $keep = [];
     foreach (['id', 'c', 't', 'portada', 'k', 'u', 'p'] as $k) if (isset($q[$k]) && is_scalar($q[$k]) && (string)$q[$k] !== '') $keep[$k] = (string)$q[$k];
