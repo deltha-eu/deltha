@@ -506,6 +506,7 @@ function fecha_larga(string $ymd, string $lang = 'es'): string {
         'de' => ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
         'it' => ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'],
         'pt' => ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],
+        'tr' => ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'],
     ];
     $d = (int)date('j', $t); $y = date('Y', $t); $m = ($M[$lang] ?? $M['es'])[(int)date('n', $t) - 1];
     // catalan: «d'abril», «d'agost», «d'octubre» (apostrofo ante vocal)
@@ -514,7 +515,7 @@ function fecha_larga(string $ymd, string $lang = 'es'): string {
         'gl', 'pt' => "$d de $m de $y",
         'eu'       => "{$y}ko $m $d",
         'de'       => "$d. $m $y",
-        'en', 'fr', 'it' => "$d $m $y",
+        'en', 'fr', 'it', 'tr' => "$d $m $y",
         default    => "$d de $m de $y",
     };
 }
@@ -523,7 +524,7 @@ function bonus_temas_txt(string $L): string {
     global $pdo;
     try { $rows = $pdo->query("SELECT name, bonus FROM topics WHERE bonus > 0 ORDER BY bonus DESC, name")->fetchAll(); } catch (Throwable $e) { $rows = []; }
     if (!$rows) return '—';
-    $and = ['es' => 'y', 'ca' => 'i', 'gl' => 'e', 'eu' => 'eta', 'en' => 'and', 'fr' => 'et', 'de' => 'und', 'it' => 'e', 'pt' => 'e'][$L] ?? 'y';
+    $and = ['es' => 'y', 'ca' => 'i', 'gl' => 'e', 'eu' => 'eta', 'en' => 'and', 'fr' => 'et', 'de' => 'und', 'it' => 'e', 'pt' => 'e', 'tr' => 've'][$L] ?? 'y';
     $vals = array_unique(array_map(fn($r) => (float)$r['bonus'], $rows));
     $names = array_map(fn($r) => h($r['name']), $rows);
     $join = fn(array $a) => count($a) > 1 ? implode(', ', array_slice($a, 0, -1)) . " $and " . end($a) : ($a[0] ?? '');
@@ -815,13 +816,14 @@ function dur_pg(string $lang, int $hours): string {
         'de' => [['Stunde', 'Stunden'], ['Tag', 'Tage'], ['Woche', 'Wochen'], ['eine', 'ein', 'eine']],
         'it' => [['ora', 'ore'], ['giorno', 'giorni'], ['settimana', 'settimane'], ["un'", 'un', 'una']],
         'pt' => [['hora', 'horas'], ['dia', 'dias'], ['semana', 'semanas'], ['uma', 'um', 'uma']],
+        'tr' => [['saat', 'saat'], ['gün', 'gün'], ['hafta', 'hafta'], ['bir', 'bir', 'bir']],   // en turco el nombre no lleva plural tras un numero
     ];
     [$h, $d, $w, $one] = $W[$lang] ?? $W['es'];
     $NUM = ['es' => ['dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete'], 'ca' => ['dues', 'tres', 'quatre', 'cinc', 'sis', 'set'],
             'gl' => ['dúas', 'tres', 'catro', 'cinco', 'seis', 'sete'], 'eu' => ['bi', 'hiru', 'lau', 'bost', 'sei', 'zazpi'],
             'en' => ['two', 'three', 'four', 'five', 'six', 'seven'], 'fr' => ['deux', 'trois', 'quatre', 'cinq', 'six', 'sept'],
             'de' => ['zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben'], 'it' => ['due', 'tre', 'quattro', 'cinque', 'sei', 'sette'],
-            'pt' => ['duas', 'três', 'quatro', 'cinco', 'seis', 'sete']];
+            'pt' => ['duas', 'três', 'quatro', 'cinco', 'seis', 'sete'], 'tr' => ['iki', 'üç', 'dört', 'beş', 'altı', 'yedi']];
     $DOS_M = ['ca' => 'dos', 'gl' => 'dous', 'pt' => 'dois'];   // «dos» masculino (dias): el resto de unidades son femeninas en estas lenguas
     if ($hours > 0 && $hours % 168 === 0)     { $n = intdiv($hours, 168); $u = $w; $a = $one[2]; }
     elseif ($hours > 0 && $hours % 24 === 0)  { $n = intdiv($hours, 24);  $u = $d; $a = $one[1]; }
@@ -922,7 +924,7 @@ function alias_user(PDO $pdo, int $story_id, int $user_id): string {
 
 /* ---- idioma de un texto (envios) ------------------------------------
  * Deteccion barata por palabras frecuentes y distintivas de cada idioma de la interfaz: sirve para titular + entradilla.
- * Devuelve el codigo (es, en, pt, ca, gl, eu, fr, de, it) o '' si no esta claro (texto corto o empate): '' = se ve para todos. */
+ * Devuelve el codigo (es, en, pt, ca, gl, eu, fr, de, it, tr) o '' si no esta claro (texto corto o empate): '' = se ve para todos. */
 function lang_detect(string $text): string {
     // [palabras casi exclusivas del idioma (pesan 3), palabras frecuentes que comparte con otros (pesan 1)]
     static $W = [
@@ -935,6 +937,7 @@ function lang_detect(string $text): string {
         'fr' => [['les','des','est','pour','dans','qui','pas','sur','une','ce','et','du','au','plus','avec','par','sont','cette','à','elle','ne'], ['le','la','de','un','que','en','il','se','on']],
         'de' => [['der','die','das','und','ist','nicht','mit','für','ein','eine','den','dem','von','zu','sich','auf','auch','wird','werden','sind','im','als','bei','nach','über','hat','einer','einem'], ['es','an']],
         'it' => [['il','gli','della','nel','che','è','sono','anche','più','alla','dei','delle','essere','si','da','di','nella','sul'], ['la','le','un','una','con','del','per','in','al','lo','e','non']],
+        'tr' => [['ve','bir','bu','için','ile','çok','daha','olarak','gibi','ama','var','yok','değil','olan','sonra','kadar','veya','her','göre','ise','nasıl','neden','oldu','yeni','ilk','büyük','karşı','üzerine','değil','şu','hem'], ['da','de','ne','mi','ki','o','en','ya']],
     ];
     $t = mb_strtolower($text);
     preg_match_all('/\p{L}+/u', $t, $m);
