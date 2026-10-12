@@ -56,20 +56,7 @@ if ($src['last_error'] && is_admin()) $intro .= " <b>" . h($src['last_error']) .
 if (!empty($src['skin']) && user()) $intro .= ' · ' . skin_propio_link();   // la fuente tiene plantilla propia (migra-143)
 echo "<p class=\"notice\">$intro</p>";
 if ($fav = fuente_fav_form($src, true)) echo "<div class=\"srcfav\">$fav</div>";   // «+ Seguir <medio>» / «✓ Siguiendo»
-// quien la sigue (12/10/2026): avatares de quienes muestran sus fuentes en el perfil (users.show_follows), por aura; el resto solo cuenta.
-// A quien tengo silenciado (o me silencio) no lo veo (ghost_veiled). Enlazan a su perfil.
-if ($medio) {
-    $qs = $pdo->prepare("SELECT u.user_id, u.login, u.avatar, u.aura, u.show_follows FROM user_media um JOIN users u ON u.user_id = um.user_id WHERE um.source_id = ? ORDER BY u.aura DESC, u.login LIMIT 400");
-    $qs->execute([(int)$src['source_id']]);
-    $seg = $qs->fetchAll(); $nSeg = count($seg);
-    if ($nSeg) {
-        $vis = array_values(array_filter($seg, fn($r) => (int)$r['show_follows'] === 1 && !ghost_veiled((int)$r['user_id'])));
-        $html = "<div class=\"srcquien\"><span class=\"n\">" . ($nSeg === 1 ? t('La sigue %d persona', 1) : t('La siguen %d personas', $nSeg)) . "</span>";
-        foreach (array_slice($vis, 0, 24) as $r) $html .= "<a href=\"/u/" . rawurlencode($r['login']) . "\" title=\"" . h($r['login']) . "\">" . avatar((float)$r['aura'], $r['login'], $r['avatar']) . "</a>";
-        if (count($vis) > 24) $html .= "<span class=\"mas\">+" . (count($vis) - 24) . "</span>";
-        echo $html . "</div>";
-    }
-}
+if ($medio) echo fuente_quien_sigue($pdo, $src);   // «La siguen N personas» con avatares (12/10/2026)
 
 foreach ($rows as $i) fuente_post($src, $i, ($medio || $view === 'portada') ? 'full' : 'compact', $sent);
 if (!$rows) echo "<p class=\"end\">" . ($src['last_fetch'] ? t('No hay nada en esta vista ahora mismo.') : t('El lector aún no ha pasado por esta fuente.')) . "</p>";

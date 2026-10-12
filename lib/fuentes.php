@@ -224,6 +224,20 @@ function fuente_fav_form(array $src, bool $nombre = false): string {
     return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/fav-fuente\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$src['source_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
          . "<button title=\"$title\">" . h($on ? t('Siguiendo') : ($nombre ? t('Seguir %s', $src['name']) : t('Seguir'))) . "</button></form>";
 }
+/** Fila «La siguen N personas» de un medio o substack (/fuente/slug y /medio/dominio, 12/10/2026): avatares de quienes muestran sus
+ *  fuentes en el perfil (users.show_follows), por aura; el resto solo cuenta. A quien tengo silenciado (o me silencio) no lo veo
+ *  (ghost_veiled). Enlazan a su perfil. Vacio si nadie la sigue. */
+function fuente_quien_sigue(PDO $pdo, array $src): string {
+    $qs = $pdo->prepare("SELECT u.user_id, u.login, u.avatar, u.aura, u.show_follows FROM user_media um JOIN users u ON u.user_id = um.user_id WHERE um.source_id = ? ORDER BY u.aura DESC, u.login LIMIT 400");
+    $qs->execute([(int)$src['source_id']]);
+    $seg = $qs->fetchAll(); $nSeg = count($seg);
+    if (!$nSeg) return '';
+    $vis = array_values(array_filter($seg, fn($r) => (int)$r['show_follows'] === 1 && !ghost_veiled((int)$r['user_id'])));
+    $html = "<div class=\"srcquien\"><span class=\"n\">" . ($nSeg === 1 ? t('La sigue %d persona', 1) : t('La siguen %d personas', $nSeg)) . "</span>";
+    foreach (array_slice($vis, 0, 24) as $r) $html .= "<a href=\"/u/" . rawurlencode($r['login']) . "\" title=\"" . h($r['login']) . "\">" . avatar((float)$r['aura'], $r['login'], $r['avatar']) . "</a>";
+    if (count($vis) > 24) $html .= "<span class=\"mas\">+" . (count($vis) - 24) . "</span>";
+    return $html . "</div>";
+}
 /** Fuentes de un tipo que se ofrecen en el menu: de los favoritos del usuario, los que han publicado mas recientemente (una noticia
  *  por fuente: «los tres ultimos sin repetir fuente») o, si no tiene favoritos (o no tiene cuenta), las destacadas en admin
  *  (sources.featured, fuentes_destacadas()); si no hay ninguna destacada, en medios, substacks y canales las que han publicado mas

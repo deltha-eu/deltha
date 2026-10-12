@@ -3093,6 +3093,7 @@ form.seguir.on button:hover { background: var(--hover); color: var(--fg); }
 .srcquien a { display: inline-flex; }
 .srcquien .av, .srcquien .avatar { width: 26px; height: 26px; font-size: 12px; }
 .srcquien .mas { margin-left: 4px; }
+.notice button.link { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }   /* «ver con mi plantilla» dentro del aviso (12/10/2026) */
 .hilo .stats form.seguir button { max-width: 160px; }
 .rail details.rail-dd.medios .list a.more { color: var(--muted); font-size: 12px; }
 .rail details.rail-dd.medios .list a.more.on::before { content: none; }
