@@ -870,4 +870,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s en las dos portadas' => 'her iki ön sayfada %s',
 '%s (Medios) o %s (Substacks)' => '%s (Medya) veya %s (Substacks)',
 '%s (Medios) y %s (Substacks)' => '%s (Medya) ve %s (Substacks)',
+'La sigue %d persona' => '%d kişi takip ediyor',
+'La siguen %d personas' => '%d kişi takip ediyor',
 ];

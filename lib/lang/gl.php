@@ -849,4 +849,6 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 '%s en las dos portadas' => '%s nas dúas portadas',
 '%s (Medios) o %s (Substacks)' => '%s (Medios) ou %s (Substacks)',
 '%s (Medios) y %s (Substacks)' => '%s (Medios) e %s (Substacks)',
+'La sigue %d persona' => 'Séguea %d persoa',
+'La siguen %d personas' => 'Séguena %d persoas',
 ];

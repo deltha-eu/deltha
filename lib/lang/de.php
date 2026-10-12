@@ -850,4 +850,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '%s en las dos portadas' => '%s auf beiden Titelseiten',
 '%s (Medios) o %s (Substacks)' => '%s (Medien) bzw. %s (Substacks)',
 '%s (Medios) y %s (Substacks)' => '%s (Medien) und %s (Substacks)',
+'La sigue %d persona' => '%d Person folgt ihr',
+'La siguen %d personas' => '%d Personen folgen ihr',
 ];
