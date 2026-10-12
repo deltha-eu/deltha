@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 page_header(t('Escribir un artículo'), 'originales');   // sin <h1>: el titulo ya va en la cabecera
-echo "<p class=\"notice\">" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', $maxWords) . "</p>";
+echo "<p class=\"notice\">" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', $maxWords) . ' <b>' . t('No se permiten textos ya publicados en otros sitios ni extractos de ellos.') . '</b>' . "</p>";
 if (!user()) echo "<p class=\"notice\">" . t('Escribes como anónimo. Si <a href="/login">entras</a>, firmarás con un alias y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">";

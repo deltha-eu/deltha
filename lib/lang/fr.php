@@ -882,4 +882,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Ninguna fuente coincide con «%s».' => 'Aucune source ne correspond à « %s ».',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Bonjour. Un modérateur a retiré ton %s « %s ». Motif : %s. Si tu penses que c’est une erreur, réponds à ce message.',
 'comenta' => 'commente',
+'No se permiten textos ya publicados en otros sitios ni extractos de ellos.' => 'Les textes déjà publiés ailleurs, ou des extraits de ceux-ci, ne sont pas admis.',
+'Moderan personas, con la ayuda de una IA propia.' => 'La modération est faite par des personnes, avec l\'aide de notre propre IA.',
+'Todo se publica al momento. Después, cuando está activada, lo revisa una IA que funciona en nuestros propios equipos: no hay terceros mirando lo que escribes. La IA nunca borra nada: señala lo dudoso y, como mucho, lo oculta de forma provisional. La decisión es siempre de una persona.' => 'Tout est publié immédiatement. Ensuite, quand elle est activée, une IA qui tourne sur nos propres machines le relit : il n\'y a pas de tiers qui regardent ce que tu écris. L\'IA ne supprime jamais rien : elle signale ce qui est douteux et, tout au plus, le masque provisoirement. La décision revient toujours à une personne.',
 ];

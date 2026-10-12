@@ -883,4 +883,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Ninguna fuente coincide con «%s».' => 'No source matches “%s”.',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hello. A moderator has removed your %s “%s”. Reason: %s. If you think this is a mistake, reply to this message.',
 'comenta' => 'comments',
+'No se permiten textos ya publicados en otros sitios ni extractos de ellos.' => 'Texts already published elsewhere, or excerpts from them, are not allowed.',
+'Moderan personas, con la ayuda de una IA propia.' => 'Moderation is done by people, with the help of our own AI.',
+'Todo se publica al momento. Después, cuando está activada, lo revisa una IA que funciona en nuestros propios equipos: no hay terceros mirando lo que escribes. La IA nunca borra nada: señala lo dudoso y, como mucho, lo oculta de forma provisional. La decisión es siempre de una persona.' => 'Everything is published straight away. Afterwards, when it is switched on, it is reviewed by an AI that runs on our own machines: there are no third parties looking at what you write. The AI never deletes anything: it flags what looks doubtful and, at most, hides it provisionally. The decision is always made by a person.',
 ];

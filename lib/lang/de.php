@@ -844,4 +844,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Ninguna fuente coincide con «%s».' => 'Keine Quelle passt zu „%s“.',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deinen %s „%s“ entfernt. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
 'comenta' => 'kommentiert',
+'No se permiten textos ya publicados en otros sitios ni extractos de ellos.' => 'Bereits anderswo veröffentlichte Texte oder Auszüge daraus sind nicht erlaubt.',
+'Moderan personas, con la ayuda de una IA propia.' => 'Moderiert wird von Menschen, mit Hilfe einer eigenen KI.',
+'Todo se publica al momento. Después, cuando está activada, lo revisa una IA que funciona en nuestros propios equipos: no hay terceros mirando lo que escribes. La IA nunca borra nada: señala lo dudoso y, como mucho, lo oculta de forma provisional. La decisión es siempre de una persona.' => 'Alles wird sofort veröffentlicht. Danach prüft es, wenn sie aktiviert ist, eine KI, die auf unseren eigenen Rechnern läuft: Keine Dritten schauen mit, was du schreibst. Die KI löscht nie etwas: Sie markiert Zweifelhaftes und blendet es höchstens vorläufig aus. Die Entscheidung trifft immer ein Mensch.',
 ];

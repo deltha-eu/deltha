@@ -151,7 +151,7 @@ a.hint { text-decoration: none; }
   <h1><?= t('¿Qué se puede publicar?') ?></h1>
   <ul>
     <li><b><?= t('Todo lo que permite la ley.') ?></b> <?= t('El límite no lo pone una línea editorial ni un gusto: lo pone la ley. Fuera quedan los insultos, los delitos de odio, las amenazas y todo lo que sea delito.') ?></li>
-    <li><b><?= t('Modera una IA que vive en nuestros servidores.') ?></b> <?= t('Ningún envío ni comentario sale de ellos para ser revisado: no hay terceros mirando lo que escribes. Cuando duda, decide una persona.') ?></li>
+    <li><b><?= t('Moderan personas, con la ayuda de una IA propia.') ?></b> <?= t('Todo se publica al momento. Después, cuando está activada, lo revisa una IA que funciona en nuestros propios equipos: no hay terceros mirando lo que escribes. La IA nunca borra nada: señala lo dudoso y, como mucho, lo oculta de forma provisional. La decisión es siempre de una persona.') ?></li>
     <li><b><?= t('Y hay un correo para todo lo demás.') ?></b> <?= t('Quejas, felicitaciones y propuestas:') ?> <b>info@deltha.eu</b>.</li>
   </ul>
   <p class="hint"><?= t('Pulsa para continuar') ?></p>

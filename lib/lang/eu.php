@@ -843,4 +843,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Ninguna fuente coincide con «%s».' => 'Ez dago «%s»-rekin bat datorren iturririk.',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek zure %s kendu du: «%s». Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
 'comenta' => 'iruzkina egiten du',
+'No se permiten textos ya publicados en otros sitios ni extractos de ellos.' => 'Ez da onartzen beste leku batzuetan argitaratutako testurik, ezta haien zatirik ere.',
+'Moderan personas, con la ayuda de una IA propia.' => 'Pertsonek moderatzen dute, gure AA baten laguntzaz.',
+'Todo se publica al momento. Después, cuando está activada, lo revisa una IA que funciona en nuestros propios equipos: no hay terceros mirando lo que escribes. La IA nunca borra nada: señala lo dudoso y, como mucho, lo oculta de forma provisional. La decisión es siempre de una persona.' => 'Dena berehala argitaratzen da. Gero, aktibatuta dagoenean, gure ekipoetan dabilen AA batek berrikusten du: ez dago hirugarrenik idazten duzuna begira. AAk ez du inoiz ezer ezabatzen: zalantzazkoa dena seinalatzen du eta, gehienez ere, behin-behinean ezkutatzen du. Erabakia beti pertsona batena da.',
 ];
