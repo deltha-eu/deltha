@@ -863,4 +863,10 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Mis comunidades' => 'Meine Communitys',
 'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Du folgst noch keiner Community: drück „Folgen“ bei denen, die dich interessieren, unter <a href="/comunidades?v=todas">Alle</a>.',
 '%d siguen' => '%d folgen',
+'Plantilla en comunidades y fuentes' => 'Skin in Communitys und Quellen',
+'Verlas como las diseñó quien las creó' => 'So sehen, wie ihre Ersteller sie gestaltet haben',
+'Usar siempre la mía' => 'Immer meinen verwenden',
+'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Manche Communitys und Medien haben einen eigenen Skin. Du kannst das jederzeit in der Kopfzeile jeder einzelnen ändern.',
+'ver con mi plantilla' => 'mit meinem Skin ansehen',
+'ver con su plantilla' => 'mit ihrem Skin ansehen',
 ];

@@ -881,6 +881,9 @@ form.plain label.radio { display: flex; gap: 8px; align-items: center; font-size
 .fz.comm { align-items: flex-start; }
 .fz.comm .prev { color: var(--muted); font-size: 14px; }
 .fz.comm > a.fzl { align-items: flex-start; }   /* fila con boton «Seguir» (migra-142) */
+.commhead form.inline, .notice form.inline { display: inline; margin: 0; }   /* «ver con mi plantilla» (migra-143) */
+.commhead form.inline button.link, .notice form.inline button.link { font: inherit; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; }
+form.plain p.radios { margin: 0; } form.plain p.radios label { display: inline; font-weight: 400; }
 div.fz.comm form.seguir { margin-left: auto; align-self: center; }
 .commhead { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-bottom: 1px solid var(--line); }
 .commhead .dot { width: 18px; height: 18px; margin-top: 8px; }

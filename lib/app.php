@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 200);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 201);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -88,7 +88,7 @@ session_name(DDD_SESSION);
 if (isset($_COOKIE[DDD_SESSION])) {
     session_arranca();
     if (!empty($_SESSION['uid'])) {
-        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang, src_mylang FROM users WHERE user_id = ? AND verified = 1");
+        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang, src_mylang, skin_propio FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
         if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas)
@@ -667,7 +667,14 @@ function theme(): ?string {
 /** Plantilla propia de la comunidad que se esta viendo (su pagina y sus hilos): la fija la pagina antes de page_header().
  *  Manda sobre la del usuario, pero no sobre ?skin= (probar). '' = la comunidad no tiene plantilla propia. */
 $DDD_COMM_SKIN = '';
-function community_skin(?string $skin): void { global $DDD_COMM_SKIN; $DDD_COMM_SKIN = isset(DDD_SKINS[(string)$skin]) ? (string)$skin : ''; }
+/** La comunidad o la fuente imponen su plantilla, salvo que el usuario haya pedido en su perfil «usar siempre la mía» (users.skin_propio, migra-143). */
+function community_skin(?string $skin): void { global $DDD_COMM_SKIN; $DDD_COMM_SKIN = isset(DDD_SKINS[(string)$skin]) && empty(user()['skin_propio']) ? (string)$skin : ''; }
+/** Enlace para conmutar esa preferencia desde la propia comunidad (cabecera): «ver con mi plantilla» / «ver con la suya». */
+function skin_propio_link(): string {
+    $u = user(); if (!$u) return '';
+    $on = !empty($u['skin_propio']);
+    return "<form class=\"inline\" method=\"post\" action=\"/skin-propio\"><input type=\"hidden\" name=\"v\" value=\"" . ($on ? 0 : 1) . "\"><button class=\"link\">" . ($on ? t('ver con su plantilla') : t('ver con mi plantilla')) . "</button></form>";
+}
 function skin(): string {
     static $s = null;
     if ($s !== null) return $s;

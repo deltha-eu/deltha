@@ -862,4 +862,10 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Mis comunidades' => 'As miñas comunidades',
 'Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.' => 'Aínda non segues ningunha comunidade: preme «Seguir» nas que che interesen de <a href="/comunidades?v=todas">Todas</a>.',
 '%d siguen' => '%d seguen',
+'Plantilla en comunidades y fuentes' => 'Plantilla en comunidades e fontes',
+'Verlas como las diseñó quien las creó' => 'Velas como as deseñou quen as creou',
+'Usar siempre la mía' => 'Usar sempre a miña',
+'Algunas comunidades y medios se ven con su propia plantilla. Desde la cabecera de cada una puedes cambiar esto en cualquier momento.' => 'Algunhas comunidades e medios vense coa súa propia plantilla. Desde a cabeceira de cada unha podes cambiar isto en calquera momento.',
+'ver con mi plantilla' => 'ver coa miña plantilla',
+'ver con su plantilla' => 'ver coa súa plantilla',
 ];

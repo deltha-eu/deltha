@@ -53,6 +53,7 @@ if ($medio) {
 }
 $intro .= ' ' . t('Se lee cada %d min · última lectura: %s.', (int)$src['interval_min'], h($last));
 if ($src['last_error'] && is_admin()) $intro .= " <b>" . h($src['last_error']) . "</b>";
+if (!empty($src['skin']) && user()) $intro .= ' · ' . skin_propio_link();   // la fuente tiene plantilla propia (migra-143)
 echo "<p class=\"notice\">$intro</p>";
 if ($fav = fuente_fav_form($src, true)) echo "<div class=\"srcfav\">$fav</div>";   // «+ Seguir <medio>» / «✓ Siguiendo»
 // quien la sigue (12/10/2026): avatares de quienes muestran sus fuentes en el perfil (users.show_follows), por aura; el resto solo cuenta.
