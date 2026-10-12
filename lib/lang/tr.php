@@ -872,4 +872,12 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s (Medios) y %s (Substacks)' => '%s (Medya) ve %s (Substacks)',
 'La sigue %d persona' => '%d kişi takip ediyor',
 'La siguen %d personas' => '%d kişi takip ediyor',
+'La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.' => 'Fotoğraf çok büyük: en fazla %d MB. Küçült ya da başka bir tane seç.',
+'La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.' => 'Fotoğraf yüklenemedi (hata %d). Tekrar dene ya da başka bir tane seç.',
+'La foto no es una imagen válida: vale JPG, PNG, WebP o AVIF.' => 'Fotoğraf geçerli bir görsel değil: yalnızca JPG, PNG, WebP veya AVIF.',
+'La foto es demasiado pequeña (%d×%d): hace falta al menos 240×180.' => 'Fotoğraf çok küçük (%d×%d): en az 240×180 gerekli.',
+'La foto no se ha podido procesar. Prueba con otra.' => 'Fotoğraf işlenemedi. Başka bir tane dene.',
+'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'Gönderi çok büyüktü (muhtemelen fotoğraf) ve sunucu tamamını reddetti. Fotoğraf başına en fazla %d MB.',
+'Aquí participa %d persona' => 'Burada %d kişi katılıyor',
+'Aquí participan %d personas' => 'Burada %d kişi katılıyor',
 ];

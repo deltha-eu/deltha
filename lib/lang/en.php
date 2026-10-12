@@ -891,4 +891,12 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '%s (Medios) y %s (Substacks)' => '%s (Media) and %s (Substacks)',
 'La sigue %d persona' => '%d person follows it',
 'La siguen %d personas' => '%d people follow it',
+'La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.' => 'The photo is too large: the maximum is %d MB. Shrink it or choose another.',
+'La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.' => 'The photo could not be uploaded (error %d). Try again or choose another.',
+'La foto no es una imagen válida: vale JPG, PNG, WebP o AVIF.' => 'The photo is not a valid image: JPG, PNG, WebP or AVIF only.',
+'La foto es demasiado pequeña (%d×%d): hace falta al menos 240×180.' => 'The photo is too small (%d×%d): at least 240×180 is needed.',
+'La foto no se ha podido procesar. Prueba con otra.' => 'The photo could not be processed. Try another one.',
+'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'The submission was too large (probably the photo) and the server discarded it entirely. The maximum per photo is %d MB.',
+'Aquí participa %d persona' => '%d person takes part here',
+'Aquí participan %d personas' => '%d people take part here',
 ];

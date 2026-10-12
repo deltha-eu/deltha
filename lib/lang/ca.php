@@ -851,4 +851,12 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '%s (Medios) y %s (Substacks)' => '%s (Mitjans) i %s (Substacks)',
 'La sigue %d persona' => 'La segueix %d persona',
 'La siguen %d personas' => 'La segueixen %d persones',
+'La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.' => 'La foto pesa massa: el màxim són %d MB. Redueix-la o tria\'n una altra.',
+'La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.' => 'La foto no s\'ha pogut pujar (error %d). Torna-ho a provar o tria\'n una altra.',
+'La foto no es una imagen válida: vale JPG, PNG, WebP o AVIF.' => 'La foto no és una imatge vàlida: val JPG, PNG, WebP o AVIF.',
+'La foto es demasiado pequeña (%d×%d): hace falta al menos 240×180.' => 'La foto és massa petita (%d×%d): cal almenys 240×180.',
+'La foto no se ha podido procesar. Prueba con otra.' => 'La foto no s\'ha pogut processar. Prova amb una altra.',
+'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'L\'enviament era massa gran (la foto, segurament) i el servidor l\'ha descartat sencer. El màxim per foto són %d MB.',
+'Aquí participa %d persona' => 'Aquí participa %d persona',
+'Aquí participan %d personas' => 'Aquí participen %d persones',
 ];

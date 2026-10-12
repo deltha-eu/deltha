@@ -119,6 +119,28 @@ function comunidad_imagen_desde_subida(array $file, int $w, int $h): ?string {
     return $ok ? $name : null;
 }
 
+/** Por que no ha entrado la foto subida (12/10/2026): texto para el usuario, o null si no se intento subir nada o entro bien.
+ *  Antes fallaba en silencio y la noticia se publicaba sin foto. Se llama despues de imagen_desde_subida() con el mismo $_FILES. */
+function imagen_subida_error(array $file): ?string {
+    $e = $file['error'] ?? UPLOAD_ERR_NO_FILE;
+    $mb = (int)round((int)cfg('img_max_bytes', 6000000) / 1000000);
+    if ($e === UPLOAD_ERR_NO_FILE) return null;
+    if ($e === UPLOAD_ERR_INI_SIZE || $e === UPLOAD_ERR_FORM_SIZE) return t('La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.', $mb);
+    if ($e !== UPLOAD_ERR_OK) return t('La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.', (int)$e);
+    if (!is_uploaded_file($file['tmp_name'])) return t('La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.', 0);
+    $bytes = @file_get_contents($file['tmp_name']);
+    if ($bytes === false || strlen($bytes) > (int)cfg('img_max_bytes', 6000000)) return t('La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.', $mb);
+    $src = imagen_decodificar($bytes);
+    if (!$src) return t('La foto no es una imagen válida: vale JPG, PNG, WebP o AVIF.');
+    [$sw, $sh] = [imagesx($src), imagesy($src)]; imagedestroy($src);
+    if ($sw < 240 || $sh < 180) return t('La foto es demasiado pequeña (%d×%d): hace falta al menos 240×180.', $sw, $sh);
+    return t('La foto no se ha podido procesar. Prueba con otra.');
+}
+/** Si el POST entero supero post_max_size, PHP lo descarta y llega vacio: avisar en vez de pintar el formulario en blanco (12/10/2026). */
+function post_descartado(): bool {
+    return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && empty($_POST) && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0;
+}
+
 function imagen_desde_subida(array $file): ?string {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return null;
     if (!is_uploaded_file($file['tmp_name'])) return null;

@@ -852,4 +852,12 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '%s (Medios) y %s (Substacks)' => '%s (Media) e %s (Substack)',
 'La sigue %d persona' => 'La segue %d persona',
 'La siguen %d personas' => 'La seguono %d persone',
+'La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.' => 'La foto pesa troppo: il massimo è %d MB. Riducila o scegline un\'altra.',
+'La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.' => 'La foto non si è potuta caricare (errore %d). Riprova o scegline un\'altra.',
+'La foto no es una imagen válida: vale JPG, PNG, WebP o AVIF.' => 'La foto non è un\'immagine valida: vanno bene JPG, PNG, WebP o AVIF.',
+'La foto es demasiado pequeña (%d×%d): hace falta al menos 240×180.' => 'La foto è troppo piccola (%d×%d): serve almeno 240×180.',
+'La foto no se ha podido procesar. Prueba con otra.' => 'La foto non si è potuta elaborare. Prova con un\'altra.',
+'El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.' => 'L\'invio era troppo grande (la foto, probabilmente) e il server l\'ha scartato per intero. Il massimo per foto è %d MB.',
+'Aquí participa %d persona' => 'Qui partecipa %d persona',
+'Aquí participan %d personas' => 'Qui partecipano %d persone',
 ];
