@@ -874,4 +874,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'este mes' => 'hilabete honetan',
 'este año' => 'aurten',
 'ayer' => 'atzo',
+'(Datos desde el %s.)' => '(Datuak %s-tik.)',
 ];

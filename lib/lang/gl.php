@@ -874,4 +874,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'este mes' => 'este mes',
 'este año' => 'este ano',
 'ayer' => 'onte',
+'(Datos desde el %s.)' => '(Datos desde o %s.)',
 ];
