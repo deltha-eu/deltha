@@ -843,4 +843,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Ninguna fuente coincide con «%s».' => 'Ningunha fonte coincide con «%s».',
 'Hola. Un moderador ha retirado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ola. Un moderador retirou o teu %s «%s». Motivo: %s. Se cres que é un erro, responde a esta mensaxe.',
 'comenta' => 'comenta',
+'No se permiten textos ya publicados en otros sitios ni extractos de ellos.' => 'Non se permiten textos xa publicados noutros sitios nin extractos deles.',
+'Moderan personas, con la ayuda de una IA propia.' => 'Moderan persoas, coa axuda dunha IA propia.',
+'Todo se publica al momento. Después, cuando está activada, lo revisa una IA que funciona en nuestros propios equipos: no hay terceros mirando lo que escribes. La IA nunca borra nada: señala lo dudoso y, como mucho, lo oculta de forma provisional. La decisión es siempre de una persona.' => 'Todo se publica ao momento. Despois, cando está activada, revísao unha IA que funciona nos nosos propios equipos: non hai terceiros mirando o que escribes. A IA nunca borra nada: sinala o dubidoso e, como moito, ocúltao de forma provisional. A decisión é sempre dunha persoa.',
 ];

@@ -27,13 +27,8 @@ try {
                 $col = $v === 1 ? 'votes_pos' : 'votes_neg';
                 $pdo->prepare("UPDATE stories SET $col = GREATEST(0, $col - 1) WHERE story_id = ?")->execute([$id]);
             }
-        } else {
-            // cambio de sentido
-            $pdo->prepare("UPDATE votes SET value=? WHERE story_id=? AND user_id=?")->execute([$v, $id, $u['user_id']]);
-            $pdo->prepare($v === 1
-                ? "UPDATE stories SET votes_pos = votes_pos + 1, votes_neg = votes_neg - 1 WHERE story_id = ?"
-                : "UPDATE stories SET votes_neg = votes_neg + 1, votes_pos = votes_pos - 1 WHERE story_id = ?")->execute([$id]);
         }
+        // la flecha contraria no hace nada: el voto a un envio es definitivo (12/10/2026). Solo se anula con la misma flecha dentro del plazo.
         if ($s['status'] === 'nuevas') eff_votes_update($pdo, $id);   // el δ en vivo refleja el voto al momento (si cuenta)
     }
     $pdo->commit();
