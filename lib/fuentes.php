@@ -532,6 +532,7 @@ function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'class="ap-card"')) return fuentes_parse_asimov($xml);        // Asimov Press: sin feed, se lee /articles (migra-130)
     if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"slugSeccion"')) return fuentes_parse_pagint($xml);   // Página Internacional: su API JSON (migra-130)
     if (str_contains($xml, 'm-preview-') && str_contains($xml, 'publico.es')) return fuentes_parse_publico($xml);   // Público: sin RSS desde 2024, se lee la portada (migra-136)
+    if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"rendered"') && str_contains($xml, '"link"')) return fuentes_parse_wpjson($xml);   // WordPress sin RSS: su API REST /wp-json/wp/v2/posts (migra-150, Rebelión)
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     libxml_clear_errors(); libxml_use_internal_errors($prev);
@@ -723,6 +724,31 @@ function fuentes_parse_publico(string $html): array {
         $out[] = ['ext_id' => substr(sha1($url), 0, 32), 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($url, 0, 600), 'thread_url' => '', 'source' => null,   // ext_id es VARCHAR(32): hash de la URL
                   'topic' => mb_substr($topic, 0, 48), 'author' => $author !== null && $author !== '' ? mb_substr($author, 0, 64) : null, 'content' => mb_substr($excerpt, 0, 2000),
                   'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ahora - $pos * 60), 'smf' => null];
+    }
+    return $out;
+}
+
+/** WordPress que ha quitado el RSS pero deja abierta su API REST (migra-150, Rebelión: /feed/ da 410). Como «RSS» de la fuente se pone
+ *  https://sitio/wp-json/wp/v2/posts?per_page=20&_embed=1 y el lector lo trata como un feed mas: titulo, enlace, fecha (date_gmt),
+ *  resumen (excerpt), y con _embed la foto destacada, el autor y la primera categoria. Sirve para cualquier otro WordPress igual. */
+function fuentes_parse_wpjson(string $json): array {
+    $data = json_decode($json, true);
+    if (!is_array($data)) return [];
+    $dec = fn($v): string => trim(html_entity_decode(strip_tags((string)$v), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    $out = [];
+    foreach ($data as $p) {
+        if (!is_array($p) || empty($p['link']) || empty($p['title']['rendered'])) continue;
+        $url = (string)$p['link']; $title = $dec($p['title']['rendered']);
+        if (mb_strlen($title) < 4) continue;
+        $gmt = (string)($p['date_gmt'] ?? ''); $ts = $gmt !== '' ? strtotime($gmt . ' UTC') : strtotime((string)($p['date'] ?? 'now'));
+        $emb = is_array($p['_embedded'] ?? null) ? $p['_embedded'] : [];
+        $img = (string)($emb['wp:featuredmedia'][0]['source_url'] ?? ($emb['wp:featuredmedia'][0]['media_details']['sizes']['large']['source_url'] ?? ($p['jetpack_featured_media_url'] ?? '')));
+        $author = $dec($emb['author'][0]['name'] ?? '');
+        $topic = $dec($emb['wp:term'][0][0]['name'] ?? '');
+        $out[] = ['ext_id' => substr(sha1($url), 0, 32), 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($url, 0, 600), 'thread_url' => '', 'source' => null,
+                  'topic' => $topic !== '' ? mb_substr($topic, 0, 48) : null, 'author' => $author !== '' ? mb_substr($author, 0, 64) : null,
+                  'content' => mb_substr($dec($p['excerpt']['rendered'] ?? ''), 0, 2000), 'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0,
+                  'pub_date' => date('Y-m-d H:i:s', $ts ?: time()), 'smf' => null];
     }
     return $out;
 }
