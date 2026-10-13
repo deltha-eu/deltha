@@ -1,4 +1,4 @@
-# Delta de Dirac — v0 (web privada)
+# Deltha
 
 PHP 8.1+ (gd, mbstring, pdo_mysql, curl) · MySQL/MariaDB · Apache 2.4 (o nginx). Las fotos (envíos, avatares, feeds de medios) se aceptan en JPEG, PNG, GIF, WebP y **AVIF**: para AVIF hace falta un `php-gd` compilado con libavif (el de Ubuntu 24.04/Debian 12 lo trae; `php -r 'var_dump(gd_info()["AVIF Support"]);'`) o, si no, `libavif-bin` (`avifdec`) o ImageMagick (`imagen_decodificar()` en `lib/imagen.php` prueba en ese orden; rutas configurables en `config.avifdec` y `config.imagemagick`). Admin → Fuentes → «probar foto» dice qué hay instalado y con qué se decodificó. Sin framework, sin composer, sin JS obligatorio, sin recursos de terceros. Cero cookies para quien no inicia sesión.
 
@@ -202,7 +202,7 @@ El código vive en un repositorio Git en `F:\Deltha` (`.gitignore` excluye `delt
 - Desplegar: `F:\Deltha\desplegar.ps1 "qué he cambiado"` (hace `git add -A`, `commit` y `git push deploy main`).
 - Ver qué hay pendiente: `git status`; historial: `git log --oneline`; volver atrás: `git revert <hash>` y desplegar.
 - Solo se despliega la rama `main`; otras ramas se pueden empujar sin efecto en producción.
-- Modo antiguo (zip) sigue disponible: `scp deltha.zip root@165.245.212.46:/root/` y `bash /root/desplegar.sh` sin `--git`.
+- Modo antiguo (zip) sigue disponible: `scp deltha.zip root@IP_DROPLET:/root/` y `bash /root/desplegar.sh` sin `--git`.
 
 ## Verificación en dos pasos (por correo)
 Opcional, con casilla en el perfil (`users.twofa`), y exigible a todos los administradores con `config.twofa_admin = 1` (apagado de serie: encenderlo cuando conste que el correo llega). Tras acertar usuario y contraseña, `login.php` envía un código de seis cifras al correo de la cuenta (`lib/twofa.php`: caduca a los `twofa_minutes`, 5 intentos por código, 5 envíos por hora, guardado como HMAC en `login_codes`) y manda a `/login2.php`; hasta escribirlo la sesión solo lleva `pending_uid`. Sin aplicación de códigos ni códigos de recuperación: el acceso se recupera con el propio correo. Las cuentas sin correo válido (p. ej. `nick@localhost` de `install.sh`) nunca lo piden. Urgencia si el correo no llega: `UPDATE users SET twofa = 0 WHERE login = '…';` y `UPDATE config SET cvalue = '0' WHERE ckey = 'twofa_admin';`. `sql/migra-095-dos-pasos-correo.sql`.
