@@ -1,5 +1,6 @@
-# Despliega F:\Deltha en el droplet con Git: guarda los cambios (commit) y los empuja al repo
-# del droplet, cuyo hook post-receive los pone en /var/www/deltha, aplica migraciones y pasa php -l.
+# Despliega Deltha: guarda los cambios (commit), los sube a GitHub (origin) y los empuja al repo
+# del droplet (deploy), cuyo hook post-receive los pone en /var/www/deltha, aplica migraciones y pasa php -l.
+# Solo este PC (con la clave ssh del droplet) puede desplegar; GitHub es para colaborar y para Claude.
 # Uso (PowerShell, desde cualquier carpeta):
 #   F:\Deltha\desplegar.ps1 "mensaje del cambio"
 #   F:\Deltha\desplegar.ps1            (mensaje automatico con fecha y hora)
@@ -14,4 +15,9 @@ if ($LASTEXITCODE -ne 0) {
 } else {
   Write-Host "Sin cambios nuevos; se empuja lo que haya pendiente."
 }
+# Traer lo que haya en GitHub (PR fusionados, trabajo del otro PC) antes de desplegar
+git pull --rebase origin main
+if ($LASTEXITCODE -ne 0) { Write-Host "Conflicto al traer de GitHub; resuelvelo (git status) y repite"; exit 1 }
+git push origin main
+if ($LASTEXITCODE -ne 0) { Write-Host "Fallo al subir a GitHub; no se despliega"; exit 1 }
 git push deploy main
