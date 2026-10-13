@@ -11,5 +11,5 @@ $url = (string)$st->fetchColumn();
 header('X-Robots-Tag: noindex, nofollow');
 header('Cache-Control: no-store');
 if (!preg_match('~^https?://~i', $url)) { http_response_code(404); exit; }
-try { $pdo->exec("INSERT INTO clicks_daily (day, n) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE n = n + 1"); } catch (Throwable $e) {}
+salida_cuenta($pdo, source_of($url));   // salidas por dia y por medio (migra-144/147)
 header('Location: ' . str_replace(["\r", "\n"], '', url_con_utm($url)), true, 302);

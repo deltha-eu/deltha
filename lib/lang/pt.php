@@ -912,4 +912,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'este año' => 'este ano',
 'ayer' => 'ontem',
 '(Datos desde el %s.)' => '(Dados desde %s.)',
+'Medios con más salidas: %s' => 'Meios com mais saídas: %s',
+'Todavía no hay salidas en este periodo.' => 'Ainda não há saídas neste período.',
 ];

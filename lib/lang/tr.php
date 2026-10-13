@@ -896,4 +896,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'este año' => 'bu yıl',
 'ayer' => 'dün',
 '(Datos desde el %s.)' => '(%s tarihinden itibaren veriler.)',
+'Medios con más salidas: %s' => 'En çok çıkış yapılan kaynaklar: %s',
+'Todavía no hay salidas en este periodo.' => 'Bu dönemde henüz çıkış yok.',
 ];

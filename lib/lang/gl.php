@@ -875,4 +875,6 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'este año' => 'este ano',
 'ayer' => 'onte',
 '(Datos desde el %s.)' => '(Datos desde o %s.)',
+'Medios con más salidas: %s' => 'Medios con máis saídas: %s',
+'Todavía no hay salidas en este periodo.' => 'Aínda non hai saídas neste período.',
 ];

@@ -4,7 +4,7 @@
 require __DIR__ . '/../lib/app.php';
 
 $id = (int)($_GET['id'] ?? 0);
-$st = $pdo->prepare("SELECT story_id, user_id, url, status FROM stories WHERE story_id = ?");
+$st = $pdo->prepare("SELECT story_id, user_id, url, source, status FROM stories WHERE story_id = ?");
 $st->execute([$id]);
 $s = $st->fetch();
 header('X-Robots-Tag: noindex, nofollow');
@@ -13,6 +13,6 @@ if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true)
 $url = url_limpia((string)$s['url']);   // los envios antiguos pueden llevar utm: se sale limpio
 if (!preg_match('~^https?://~i', $url)) redirect('/hilo/' . $id);
 story_cuenta($pdo, $s, 'clicks');
-try { $pdo->exec("INSERT INTO clicks_daily (day, n) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE n = n + 1"); } catch (Throwable $e) {}   // salidas por dia (migra-144): /estadisticas, hoy / mes / año
+salida_cuenta($pdo, (string)($s['source'] ?? source_of($url)));   // salidas por dia y por medio (migra-144/147): /estadisticas
 $url = url_con_utm($url);   // utm_source=deltha (13/10/2026, lib/app.php)
 header('Location: ' . str_replace(["\r", "\n"], '', $url), true, 302);

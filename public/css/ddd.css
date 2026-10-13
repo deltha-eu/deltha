@@ -314,6 +314,9 @@ table.modlog td code { overflow-wrap: anywhere; }
 .statspage p.notice { margin: 16px 0 14px; padding: 12px 14px; line-height: 1.45; }   /* aviso de la analitica: aire arriba, abajo y dentro (10/10/2026). p.notice: gana a los skins que quitan el margen inferior */
 .statspage p.notice + .meta { margin: 0 0 4px; }
 .statspage .meta { color: var(--muted); font-size: 13px; }
+.statspage ol.topmedios { margin: 10px 0 0; padding: 0 0 0 26px; max-width: 480px; }   /* top de medios con mas salidas (13/10/2026) */
+.statspage ol.topmedios li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.statspage ol.topmedios li b { font-family: var(--serif); }
 .admin td.num, .admin th.num { text-align: right; white-space: nowrap; }
 .anabar { display: block; height: 8px; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); border-radius: 4px; overflow: hidden; }
 .anabar i { display: block; height: 100%; background: var(--accent); }
