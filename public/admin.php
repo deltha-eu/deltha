@@ -26,6 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st->execute([trim((string)$v), (string)$k]);
         }
         $out[] = 'Config guardada.';
+    } elseif ($act === 'aviso') {
+        // aviso a la comunidad (13/10/2026): texto de hasta 150 palabras + interruptor; sustituye los avisos grises de cabecera mientras este activado
+        $txt = trim(str_replace(["\r\n", "\r"], "\n", (string)post('aviso_txt')));
+        $palabras = $txt === '' ? 0 : count(preg_split('/\s+/u', $txt, -1, PREG_SPLIT_NO_EMPTY));
+        if ($palabras > 150) $out[] = "El aviso tiene $palabras palabras; el máximo son 150. No se ha guardado.";
+        else {
+            $up = $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES (?,?,?) ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)");
+            $up->execute(['aviso_txt', mb_substr($txt, 0, 2000), 'Aviso a la comunidad: texto (hasta 150 palabras) que sustituye los avisos grises de cabecera']);
+            $on = post('aviso_on') === '1' && $txt !== '';
+            $up->execute(['aviso_on', $on ? '1' : '0', 'Aviso a la comunidad: 1 = activado']);
+            $out[] = $on ? "Aviso guardado y activado ($palabras palabras): se ve en todas las cabeceras." : ($txt === '' && post('aviso_on') === '1' ? 'No se activa un aviso vacío.' : 'Aviso guardado, desactivado.');
+        }
     } elseif ($act === 'pagina') {
         // slug base + idioma: la española es «que-es»; las traducciones, «que-es.en», «que-es.fr»…
         $base = in_array(post('slug'), ['privacidad', 'normas', 'algoritmo', 'que-es', 'empezar'], true) ? post('slug') : 'privacidad';
@@ -387,7 +399,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'registro' => 'Registro'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'avisos' => 'Avisos', 'registro' => 'Registro'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -564,6 +576,16 @@ if ($tab === 'usuarios') {
 } elseif ($tab === 'analitica') {
     require __DIR__ . '/../lib/analitica-admin.php';
     ana_admin($pdo);
+
+} elseif ($tab === 'avisos') {   // aviso a la comunidad (13/10/2026)
+    $atxt = (string)cfg('aviso_txt', ''); $aon = (string)cfg('aviso_on', '0') === '1';
+    try { $r = $pdo->query("SELECT ckey, cvalue FROM config WHERE ckey IN ('aviso_txt','aviso_on')")->fetchAll(PDO::FETCH_KEY_PAIR); $atxt = (string)($r['aviso_txt'] ?? $atxt); $aon = ($r['aviso_on'] ?? ($aon ? '1' : '0')) === '1'; } catch (Throwable $e) {}
+    echo "<h3>Avisos a la comunidad</h3><p><small>Un texto de hasta <b>150 palabras</b> que, mientras la casilla esté marcada, <b>sustituye a todos los avisos grises de cabecera</b> (los que explican cada sección: portadas, radar, fuentes, comunidades, estadísticas…) en todas las páginas públicas; en las que no tienen aviso gris, sale arriba del todo. Texto plano: los saltos de línea se respetan y las direcciones http(s) salen como enlaces. Se enseña tal cual en todos los idiomas. Al desmarcar la casilla, vuelven las explicaciones normales.</small></p>";
+    echo "<form method=\"post\" class=\"plain\">$T<input type=\"hidden\" name=\"act\" value=\"aviso\">";
+    echo "<p><textarea name=\"aviso_txt\" rows=\"6\" maxlength=\"2000\" style=\"width:100%;max-width:720px\" placeholder=\"Escribe aquí el aviso…\">" . h($atxt) . "</textarea></p>";
+    echo "<p><label><input type=\"checkbox\" name=\"aviso_on\" value=\"1\"" . ($aon ? ' checked' : '') . "> <b>Activado</b>: sustituir los avisos de cabecera por este texto</label></p>";
+    echo "<p><button class=\"btn\">Guardar</button>" . ($aon && $atxt !== '' ? " <small>Ahora mismo <b>activo</b>: " . count(preg_split('/\\s+/u', trim($atxt), -1, PREG_SPLIT_NO_EMPTY)) . " palabras.</small>" : " <small>Ahora mismo desactivado.</small>") . "</p></form>";
+    if ($atxt !== '') echo "<h4>Vista previa</h4><p class=\"notice aviso\">" . preg_replace('~(https?://[^\\s<]+)~u', '<a href="$1" rel="noopener">$1</a>', saltos(h($atxt))) . "</p>";
 
 } elseif ($tab === 'registro') {   // registro de acciones de moderadores y admin (mod_log, migra-134)
     $rq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64)); $ru = trim(mb_substr((string)($_GET['u'] ?? ''), 0, 32));
