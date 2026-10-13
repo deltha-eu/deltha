@@ -252,6 +252,15 @@ const DDD_URL_TRACK = ['fbclid', 'gclid', 'gclsrc', 'dclid', 'gbraid', 'wbraid',
     'mc_cid', 'mc_eid', '_hsenc', '_hsmi', '__hssc', '__hstc', '__hsfp', 'hsctatracking', 'mkt_tok', 'vero_id', 'vero_conv', 'oly_enc_id', 'oly_anon_id', 's_cid', '_ga', '_gl',
     'ref_src', 'ref_url', 'srsltid', 'xtor', 'smid', 'smtyp', 'cmpid', 'ocid', 'triedredirect', 'at_medium', 'at_campaign', 'at_custom1', 'at_custom2', 'at_custom3', 'at_custom4', 'pk_campaign', 'pk_kwd', 'pk_source', 'pk_medium',
     'mtm_campaign', 'mtm_source', 'mtm_medium', 'mtm_kwd', 'mtm_content', 'mtm_cid', 'mtm_group', 'mtm_placement'];
+/** URL de salida a un medio con nuestro utm (13/10/2026): utm_source=deltha&utm_medium=referral, detras de la query y antes del
+ *  #fragmento, para que el medio vea en su analitica de donde le llega el trafico aunque se pierda el referer (apps, lectores).
+ *  Se parte de la URL limpia (url_limpia) para no acumular utm ajenos. La usan /ir (envios) y fuente_post() (medios y substacks). */
+function url_con_utm(?string $url): string {
+    $url = url_limpia($url);
+    if (!preg_match('~^https?://~i', $url)) return $url;
+    $frag = ''; if (($p = strpos($url, '#')) !== false) { $frag = substr($url, $p); $url = substr($url, 0, $p); }
+    return $url . (str_contains($url, '?') ? '&' : '?') . 'utm_source=deltha&utm_medium=referral' . $frag;
+}
 function url_limpia(?string $url): string {
     $url = trim((string)$url);
     if ($url === '' || !preg_match('~^https?://~i', $url)) return $url;
