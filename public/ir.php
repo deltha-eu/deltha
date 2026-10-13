@@ -14,4 +14,5 @@ $url = url_limpia((string)$s['url']);   // los envios antiguos pueden llevar utm
 if (!preg_match('~^https?://~i', $url)) redirect('/hilo/' . $id);
 story_cuenta($pdo, $s, 'clicks');
 try { $pdo->exec("INSERT INTO clicks_daily (day, n) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE n = n + 1"); } catch (Throwable $e) {}   // salidas por dia (migra-144): /estadisticas, hoy / mes / año
+$url = url_con_utm($url);   // utm_source=deltha (13/10/2026, lib/app.php)
 header('Location: ' . str_replace(["\r", "\n"], '', $url), true, 302);
