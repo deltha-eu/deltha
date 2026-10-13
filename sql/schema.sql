@@ -1,15 +1,712 @@
--- Delta de Dirac — esquema v0 (web privada)
--- MySQL 8 / MariaDB 10.6+, InnoDB, utf8mb4
--- Uso:  mysql -u root -p < sql/schema.sql
+-- Deltha — esquema completo (MySQL 8, InnoDB, utf8mb4)
+-- Regenerado el 12/10/2026 a partir de la base real (mysqldump --no-data deltha): las 45 tablas tal como estan
+-- en produccion con las migraciones 001-137 aplicadas. Antes este fichero solo traia las 25 del esquema v0.
+--
+-- Uso (instalacion nueva; lo hacen install.sh y scripts/install-droplet.sh):
+--   mysql -e "CREATE DATABASE IF NOT EXISTS deltha CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+--   mysql deltha < sql/schema.sql
+--   for f in sql/migra-*.sql; do mysql --force deltha < "$f"; done
+-- La ESTRUCTURA sale entera de aqui. Los DATOS de partida (config, paginas, temas, fuentes...) salen de los INSERT
+-- del final y de las migraciones: por eso se siguen pasando todas, con --force, para que los ALTER/CREATE que ya
+-- estan hechos fallen sin cortar los INSERT/UPDATE que van detras en el mismo fichero.
+-- Este fichero no elige base de datos (no lleva USE) ni borra nada (no lleva DROP): se carga sobre la base que se le indique.
+-- Comprobacion: scripts/probar-esquema.sh monta una base de prueba y compara su estructura con la real.
+-- Al añadir una migracion que cambie la estructura, hay que reflejarla tambien aqui.
 
-CREATE DATABASE IF NOT EXISTS deltha CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE deltha;
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
 
-CREATE TABLE config (
-    ckey    VARCHAR(64) NOT NULL PRIMARY KEY,
-    cvalue  VARCHAR(255) NOT NULL,
-    descr   VARCHAR(255) DEFAULT NULL
-) ENGINE=InnoDB;
+CREATE TABLE `agent_item_seen` (
+  `user_id` int unsigned NOT NULL,
+  `item_id` int unsigned NOT NULL,
+  `score` tinyint unsigned NOT NULL DEFAULT '0',
+  `note` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `source` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `sent` tinyint(1) NOT NULL DEFAULT '0',
+  `model` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`item_id`),
+  KEY `idx_ais_user` (`user_id`,`created`),
+  CONSTRAINT `fk_ais_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `agent_seen` (
+  `user_id` int unsigned NOT NULL,
+  `story_id` int unsigned NOT NULL,
+  `result` enum('leased','comment','skip','fail') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'leased',
+  `comment_id` int unsigned DEFAULT NULL,
+  `note` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `model` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `leased_until` datetime DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`story_id`),
+  KEY `idx_agent_created` (`user_id`,`created`),
+  KEY `fk_as_story` (`story_id`),
+  CONSTRAINT `fk_as_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_as_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `agent_sent` (
+  `item_id` int unsigned NOT NULL,
+  `user_id` int unsigned NOT NULL,
+  `story_id` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`item_id`),
+  KEY `idx_sent_user` (`user_id`,`created`),
+  KEY `fk_ase_story` (`story_id`),
+  CONSTRAINT `fk_ase_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_ase_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `agents` (
+  `user_id` int unsigned NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `persona` text COLLATE utf8mb4_unicode_ci,
+  `per_day` tinyint unsigned NOT NULL DEFAULT '4',
+  `min_age_min` smallint unsigned NOT NULL DEFAULT '20',
+  `max_age_h` smallint unsigned NOT NULL DEFAULT '24',
+  `max_comments` tinyint unsigned NOT NULL DEFAULT '6',
+  `replies` tinyint(1) NOT NULL DEFAULT '0',
+  `skip_users` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `topics` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `submits_per_day` tinyint unsigned NOT NULL DEFAULT '0',
+  `submit_kinds` enum('medio','newsletter','ambos') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ambos',
+  `submit_topics` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `submit_langs` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `submit_review` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = la IA local evalua las candidatas antes de enviar',
+  `submit_brief` text COLLATE utf8mb4_unicode_ci COMMENT 'criterio de envio: que es una buena noticia para este agente',
+  `next_submit` datetime DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_ag_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `allowed_domains` (
+  `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `added_by` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`domain`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `ana_daily` (
+  `day` date NOT NULL,
+  `visitors` int unsigned NOT NULL DEFAULT '0',
+  `sessions` int unsigned NOT NULL DEFAULT '0',
+  `pageviews` int unsigned NOT NULL DEFAULT '0',
+  `logged` int unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`day`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `aura_log` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned NOT NULL,
+  `amount` decimal(7,3) NOT NULL,
+  `reason` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ref_id` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `bajas` (
+  `baja_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `login` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `registrado` datetime NOT NULL,
+  `aura` decimal(6,3) NOT NULL DEFAULT '0.000',
+  `envios` int unsigned NOT NULL DEFAULT '0',
+  `comentarios` int unsigned NOT NULL DEFAULT '0',
+  `todo` tinyint(1) NOT NULL DEFAULT '0',
+  `motivo` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `motivo_txt` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`baja_id`),
+  KEY `idx_created` (`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `banned_domains` (
+  `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `added_by` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`domain`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `banned_sources` (
+  `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `added_by` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`domain`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `chat` (
+  `msg_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned DEFAULT NULL,
+  `alias` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `anon_key` char(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reply_to` int unsigned DEFAULT NULL,
+  `content` varchar(1000) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content_orig` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `likes` int unsigned NOT NULL DEFAULT '0',
+  `dislikes` int unsigned NOT NULL DEFAULT '0',
+  `deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `deleted_at` datetime DEFAULT NULL,
+  `status` enum('ok','gone','pending_mod') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ok',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `edited_at` datetime DEFAULT NULL,
+  `anuncio` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'mensaje a la comunidad (admin/mod)',
+  PRIMARY KEY (`msg_id`),
+  KEY `idx_created` (`status`,`created`),
+  KEY `idx_reply` (`reply_to`),
+  KEY `idx_user` (`user_id`,`created`),
+  KEY `idx_anon` (`anon_key`,`created`),
+  KEY `idx_anuncio` (`anuncio`,`msg_id`),
+  CONSTRAINT `fk_chat_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `chat_reports` (
+  `report_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `msg_id` int unsigned NOT NULL,
+  `user_id` int unsigned DEFAULT NULL,
+  `fp` char(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reason` enum('insulto','odio','acoso','datos','ilegal','spam','otro') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'otro',
+  `status` enum('open','deleted','dismissed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'open',
+  `decided_by` int unsigned DEFAULT NULL,
+  `decided` datetime DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`report_id`),
+  UNIQUE KEY `uq_user` (`msg_id`,`user_id`),
+  UNIQUE KEY `uq_fp` (`msg_id`,`fp`),
+  KEY `idx_status` (`status`,`created`),
+  CONSTRAINT `fk_chr_msg` FOREIGN KEY (`msg_id`) REFERENCES `chat` (`msg_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `chat_votes` (
+  `msg_id` int unsigned NOT NULL,
+  `user_id` int unsigned NOT NULL,
+  `value` tinyint NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`msg_id`,`user_id`),
+  KEY `idx_user` (`user_id`,`created`),
+  CONSTRAINT `fk_chv_msg` FOREIGN KEY (`msg_id`) REFERENCES `chat` (`msg_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_chv_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `comment_reports` (
+  `report_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `comment_id` int unsigned NOT NULL,
+  `user_id` int unsigned DEFAULT NULL,
+  `fp` char(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reason` enum('insulto','odio','acoso','datos','ilegal','spam','otro') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'otro',
+  `status` enum('open','deleted','dismissed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'open',
+  `decided_by` int unsigned DEFAULT NULL,
+  `decided` datetime DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`report_id`),
+  UNIQUE KEY `uq_user` (`comment_id`,`user_id`),
+  UNIQUE KEY `uq_fp` (`comment_id`,`fp`),
+  KEY `idx_status` (`status`,`created`),
+  CONSTRAINT `fk_cr_comment` FOREIGN KEY (`comment_id`) REFERENCES `comments` (`comment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `comment_votes` (
+  `comment_id` int unsigned NOT NULL,
+  `user_id` int unsigned NOT NULL,
+  `value` tinyint NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`comment_id`,`user_id`),
+  KEY `idx_user` (`user_id`,`created`),
+  CONSTRAINT `fk_cv_comment` FOREIGN KEY (`comment_id`) REFERENCES `comments` (`comment_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cv_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `comments` (
+  `comment_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `story_id` int unsigned NOT NULL,
+  `parent_id` int unsigned DEFAULT NULL,
+  `root_id` int unsigned DEFAULT NULL,
+  `user_id` int unsigned DEFAULT NULL,
+  `alias` varchar(48) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `anon_key` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `aura` decimal(5,2) NOT NULL DEFAULT '5.00',
+  `likes` int unsigned NOT NULL DEFAULT '0',
+  `dislikes` int unsigned NOT NULL DEFAULT '0',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content_orig` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending_mod','rejected','ok') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ok',
+  `deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `edited_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`comment_id`),
+  KEY `idx_story` (`story_id`,`created`),
+  KEY `fk_c_user` (`user_id`),
+  KEY `idx_root` (`story_id`,`root_id`,`created`),
+  KEY `idx_created` (`created`),
+  FULLTEXT KEY `ft_comments` (`content`),
+  CONSTRAINT `fk_c_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`),
+  CONSTRAINT `fk_c_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `communities` (
+  `community_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(48) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descr` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `color` char(7) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '#534AB7',
+  `logo` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `skin` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `owner_id` int unsigned NOT NULL,
+  `status` enum('ok','hidden') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ok',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`community_id`),
+  UNIQUE KEY `uq_slug` (`slug`),
+  UNIQUE KEY `uq_name` (`name`),
+  KEY `idx_owner` (`owner_id`),
+  CONSTRAINT `fk_co_owner` FOREIGN KEY (`owner_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `config` (
+  `ckey` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cvalue` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`ckey`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `favorites` (
+  `user_id` int unsigned NOT NULL,
+  `story_id` int unsigned NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`story_id`),
+  KEY `idx_fav_created` (`user_id`,`created`),
+  KEY `fk_fav_story` (`story_id`),
+  CONSTRAINT `fk_fav_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_fav_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `hits` (
+  `hit_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `ts` datetime NOT NULL,
+  `fp` char(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `logged` tinyint(1) NOT NULL DEFAULT '0',
+  `new_session` tinyint(1) NOT NULL DEFAULT '0',
+  `path` varchar(190) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ref_host` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `device` enum('desktop','mobile','tablet') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'desktop',
+  `country` char(2) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `lang` char(2) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`hit_id`),
+  KEY `ix_ts` (`ts`),
+  KEY `ix_fp_ts` (`fp`,`ts`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `image_generic` (
+  `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hash` char(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`domain`,`hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `image_seen` (
+  `seen_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hash` char(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `page` char(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `seen` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`seen_id`),
+  KEY `idx_imgseen_hash` (`domain`,`hash`),
+  KEY `idx_imgseen_file` (`file`),
+  KEY `idx_imgseen_seen` (`seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `login_codes` (
+  `user_id` int unsigned NOT NULL,
+  `code_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expires` datetime NOT NULL,
+  `tries` tinyint unsigned NOT NULL DEFAULT '0',
+  `sent` datetime NOT NULL,
+  `sends` tinyint unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_lc_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `messages` (
+  `msg_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `from_id` int unsigned NOT NULL,
+  `to_id` int unsigned NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`msg_id`),
+  KEY `idx_to_unread` (`to_id`,`read_at`),
+  KEY `idx_from` (`from_id`,`created`),
+  KEY `idx_pair` (`from_id`,`to_id`,`msg_id`),
+  CONSTRAINT `fk_m_from` FOREIGN KEY (`from_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `fk_m_to` FOREIGN KEY (`to_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `mod_log` (
+  `log_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned NOT NULL,
+  `action` varchar(60) NOT NULL,
+  `detail` varchar(800) DEFAULT NULL,
+  `result` varchar(600) DEFAULT NULL,
+  `ip` varchar(45) DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  KEY `user_id` (`user_id`,`log_id`),
+  KEY `created` (`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `mod_queue` (
+  `item_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `item_type` enum('story','comment','chat') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'story',
+  `ref_id` int unsigned NOT NULL,
+  `status` enum('queued','processing','ok','flag','hidden','needs_human','human_ok','human_removed','reject') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'queued',
+  `priority` tinyint unsigned NOT NULL DEFAULT '0',
+  `attempts` tinyint unsigned NOT NULL DEFAULT '0',
+  `verdict` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `reason` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `score` decimal(4,3) DEFAULT NULL,
+  `prev_status` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `leased_until` datetime DEFAULT NULL,
+  `model` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `decided_by` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `processed` datetime DEFAULT NULL,
+  PRIMARY KEY (`item_id`),
+  KEY `idx_status` (`status`,`created`),
+  KEY `idx_ref` (`item_type`,`ref_id`),
+  KEY `idx_lease` (`status`,`priority`,`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `notifications` (
+  `notif_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned NOT NULL,
+  `from_id` int unsigned DEFAULT NULL,
+  `from_name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `kind` enum('mention_comment','reply_comment','mention_chat','reply_chat','dm') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ref_id` int unsigned NOT NULL DEFAULT '0',
+  `story_id` int unsigned DEFAULT NULL,
+  `snippet` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`notif_id`),
+  KEY `idx_user_unread` (`user_id`,`read_at`),
+  KEY `idx_user_list` (`user_id`,`created`),
+  KEY `idx_dm_open` (`user_id`,`from_id`,`kind`,`read_at`),
+  KEY `fk_n_from` (`from_id`),
+  CONSTRAINT `fk_n_from` FOREIGN KEY (`from_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_n_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `pages` (
+  `slug` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `pins` (
+  `pin_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `what` enum('story','item') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ref_id` int unsigned NOT NULL,
+  `grupo` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` int unsigned NOT NULL,
+  `by_admin` tinyint(1) NOT NULL DEFAULT '0',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `starts` datetime DEFAULT NULL COMMENT 'cuando empieza a verse; NULL o pasado = en marcha; futuro = en cola',
+  `expires` datetime DEFAULT NULL,
+  PRIMARY KEY (`pin_id`),
+  UNIQUE KEY `uq_ref` (`what`,`ref_id`),
+  KEY `idx_grupo` (`what`,`grupo`,`by_admin`,`expires`),
+  KEY `idx_user` (`user_id`),
+  CONSTRAINT `fk_pin_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `presence` (
+  `fp` char(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `seen` datetime NOT NULL,
+  PRIMARY KEY (`fp`),
+  KEY `ix_seen` (`seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `promo_log` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `story_id` int unsigned NOT NULL,
+  `portada` enum('medios','substacks','canales') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delta` decimal(8,3) NOT NULL,
+  `candidates` smallint unsigned NOT NULL,
+  `commenters` smallint unsigned NOT NULL DEFAULT '0',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_story` (`story_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `reg_attempts` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `fp` char(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `ix_fp` (`fp`,`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `reg_log` (
+  `reg_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `login` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `email` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `user_id` int unsigned DEFAULT NULL,
+  `estado` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pendiente',
+  `motivo` varchar(160) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `activated` datetime DEFAULT NULL,
+  PRIMARY KEY (`reg_id`),
+  KEY `idx_reglog_created` (`created`),
+  KEY `idx_reglog_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `source_errors` (
+  `err_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `source_id` int unsigned NOT NULL,
+  `errhash` char(32) NOT NULL,
+  `error` varchar(255) NOT NULL,
+  `first_seen` datetime NOT NULL,
+  `last_seen` datetime NOT NULL,
+  `times` int unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`err_id`),
+  UNIQUE KEY `uq_src_err` (`source_id`,`errhash`),
+  KEY `last_seen` (`last_seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `source_items` (
+  `item_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `source_id` smallint unsigned NOT NULL,
+  `ext_id` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phase` enum('nuevas','portada') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'nuevas',
+  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `url` varchar(600) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `thread_url` varchar(600) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `source` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `topic` varchar(48) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `author` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
+  `image` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `votes` int NOT NULL DEFAULT '0',
+  `negatives` int NOT NULL DEFAULT '0',
+  `comments` int NOT NULL DEFAULT '0',
+  `pub_date` datetime NOT NULL,
+  `first_seen` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_seen` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`item_id`),
+  UNIQUE KEY `uq_ext` (`source_id`,`ext_id`),
+  KEY `idx_phase_date` (`source_id`,`phase`,`pub_date`),
+  KEY `idx_phase_votes` (`source_id`,`phase`,`votes`),
+  KEY `idx_seen` (`last_seen`),
+  FULLTEXT KEY `ft_items` (`title`,`content`),
+  CONSTRAINT `fk_si_source` FOREIGN KEY (`source_id`) REFERENCES `sources` (`source_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `source_proposals` (
+  `prop_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned NOT NULL,
+  `kind` enum('medio','newsletter','youtube','agregador') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'medio',
+  `name` varchar(48) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `home` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `feed` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descr` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `note` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lang` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `test_items` smallint unsigned NOT NULL DEFAULT '0',
+  `test_info` varchar(600) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pending','ok','rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `reply` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `source_id` smallint unsigned DEFAULT NULL,
+  `reviewed_by` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed` datetime DEFAULT NULL,
+  PRIMARY KEY (`prop_id`),
+  KEY `idx_fp_status` (`status`,`created`),
+  KEY `idx_fp_user` (`user_id`,`created`),
+  CONSTRAINT `fk_fp_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `sources` (
+  `source_id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `kind` enum('agregador','medio','newsletter','youtube') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'medio',
+  `name` varchar(48) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `home` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descr` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lang` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `skin` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `topic_id` smallint unsigned DEFAULT NULL,
+  `feed_portada` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `feed_nuevas` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `interval_min` smallint unsigned NOT NULL DEFAULT '5',
+  `status` enum('ok','off') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ok',
+  `featured` tinyint(1) NOT NULL DEFAULT '0',
+  `relay` tinyint(1) NOT NULL DEFAULT '0',
+  `last_fetch` datetime DEFAULT NULL,
+  `last_error` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listed` tinyint(1) NOT NULL DEFAULT '1',
+  `added_by` int unsigned DEFAULT NULL,
+  PRIMARY KEY (`source_id`),
+  UNIQUE KEY `uq_slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `stories` (
+  `story_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `content_type` enum('link','article') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'link',
+  `user_id` int unsigned DEFAULT NULL,
+  `author_alias` varchar(48) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `revealed` tinyint(1) NOT NULL DEFAULT '0',
+  `topic_id` smallint unsigned NOT NULL,
+  `community_id` int unsigned DEFAULT NULL,
+  `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `url` varchar(600) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `source` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lang` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `image` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pending_mod','rejected','nuevas','destacadas','archived','discard') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'nuevas',
+  `portada` enum('medios','substacks','canales') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sent_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `edited_at` datetime DEFAULT NULL,
+  `indexable` tinyint(1) NOT NULL DEFAULT '0',
+  `published_date` datetime DEFAULT NULL,
+  `votes_pos` int NOT NULL DEFAULT '0',
+  `votes_neg` int NOT NULL DEFAULT '0',
+  `eff_pos` int NOT NULL DEFAULT '0',
+  `eff_neg` int NOT NULL DEFAULT '0',
+  `comments` int NOT NULL DEFAULT '0',
+  `views` int unsigned NOT NULL DEFAULT '0' COMMENT 'entradas al hilo',
+  `clicks` int unsigned NOT NULL DEFAULT '0' COMMENT 'salidas al medio (/ir.php)',
+  `delta` decimal(8,3) NOT NULL DEFAULT '0.000',
+  `delta_calc` datetime DEFAULT NULL,
+  PRIMARY KEY (`story_id`),
+  KEY `idx_status_sent` (`status`,`sent_date`),
+  KEY `idx_status_delta` (`status`,`delta`),
+  KEY `idx_status_pub` (`status`,`published_date`),
+  KEY `idx_source` (`source`),
+  KEY `fk_st_user` (`user_id`),
+  KEY `fk_st_topic` (`topic_id`),
+  KEY `idx_comm` (`community_id`,`sent_date`),
+  KEY `idx_portada` (`portada`,`status`,`published_date`),
+  KEY `idx_lang` (`lang`),
+  FULLTEXT KEY `ft_stories` (`title`,`content`),
+  CONSTRAINT `fk_st_topic` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topic_id`),
+  CONSTRAINT `fk_st_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `story_communities` (
+  `story_id` int unsigned NOT NULL,
+  `community_id` int unsigned NOT NULL,
+  `added_by` int unsigned DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`story_id`,`community_id`),
+  KEY `idx_comm` (`community_id`,`created`),
+  KEY `fk_sc_user` (`added_by`),
+  CONSTRAINT `fk_sc_comm` FOREIGN KEY (`community_id`) REFERENCES `communities` (`community_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sc_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sc_user` FOREIGN KEY (`added_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `thread_aliases` (
+  `story_id` int unsigned NOT NULL,
+  `user_id` int unsigned NOT NULL,
+  `alias` varchar(48) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`story_id`,`user_id`),
+  KEY `fk_ta_user` (`user_id`),
+  CONSTRAINT `fk_ta_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`),
+  CONSTRAINT `fk_ta_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `topics` (
+  `topic_id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `bonus` decimal(4,2) NOT NULL DEFAULT '0.00',
+  `color` char(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '#534AB7',
+  PRIMARY KEY (`topic_id`),
+  UNIQUE KEY `uq_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `user_ghosts` (
+  `user_id` int unsigned NOT NULL,
+  `target_id` int unsigned NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`target_id`),
+  KEY `idx_ghost_target` (`target_id`),
+  CONSTRAINT `fk_ug_target` FOREIGN KEY (`target_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ug_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `user_media` (
+  `user_id` int unsigned NOT NULL,
+  `source_id` smallint unsigned NOT NULL,
+  `pos` smallint unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`user_id`,`source_id`),
+  KEY `fk_um_source` (`source_id`),
+  CONSTRAINT `fk_um_source` FOREIGN KEY (`source_id`) REFERENCES `sources` (`source_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_um_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `users` (
+  `user_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `login` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pass` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `verified` tinyint(1) NOT NULL DEFAULT '0',
+  `token` char(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `token_sent` datetime DEFAULT NULL,
+  `reset_token` char(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reset_sent` datetime DEFAULT NULL,
+  `level` enum('normal','mod','admin') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal',
+  `avatar` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bio` varchar(160) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `theme` enum('auto','light','dark') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'auto',
+  `skin` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `landing` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `lang` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `src_mylang` tinyint(1) NOT NULL DEFAULT '0',
+  `show_follows` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 = los medios y substacks que sigue se ven en su ficha',
+  `aura` decimal(6,3) NOT NULL DEFAULT '5.000',
+  `aura_suelo` decimal(8,3) NOT NULL DEFAULT '0.000',
+  `pin_credits` smallint unsigned NOT NULL DEFAULT '0',
+  `pin_mark` smallint unsigned NOT NULL DEFAULT '0',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_seen` datetime DEFAULT NULL,
+  `twofa` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `uq_login` (`login`),
+  UNIQUE KEY `uq_email` (`email`),
+  KEY `ix_last_seen` (`last_seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `votes` (
+  `story_id` int unsigned NOT NULL,
+  `user_id` int unsigned NOT NULL,
+  `value` tinyint NOT NULL,
+  `fp` char(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`story_id`,`user_id`),
+  KEY `fk_v_user` (`user_id`),
+  KEY `idx_created` (`created`),
+  KEY `idx_story_fp` (`story_id`,`fp`),
+  CONSTRAINT `fk_v_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`),
+  CONSTRAINT `fk_v_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ---------------------------------------------------------------------------------------------
+-- Datos de partida del esquema v0 (config, temas y primeras fuentes). El resto lo ponen las migraciones.
+-- ---------------------------------------------------------------------------------------------
 
 INSERT INTO config (ckey, cvalue, descr) VALUES
 ('site_name',           'Deltha', 'Nombre del sitio'),
@@ -35,7 +732,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('aura_comentario',     '0.02', 'Aura por comentario'),
 ('aura_daily_cap',      '2',    'Tope de aura que se puede ganar al dia'),
 ('aura_daily_decay',    '0.5',  'Aura que se pierde cada dia (nunca por debajo de aura_start)'),
-('aura_deadline',       '2026-12-31', 'Fecha del reparto de propiedad entre usuarios con aura maxima'),
+('aura_deadline',       '2027-12-31', 'Fecha del reparto de propiedad entre usuarios con aura maxima'),
 ('aura_anon',           '5',    'Aura del anonimo'),
 ('aura_start',          '5',    'Aura inicial del registrado'),
 ('aura_max',            '30',   'Tope de aura'),
@@ -90,36 +787,6 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('mod_lease_sec',       '300',  'Segundos que el worker tiene reservado un elemento antes de que vuelva a la cola'),
 ('mod_worker_seen',     '',     'Ultima conexion del worker de IA local (lo escribe /api/moderacion.php)');
 
-CREATE TABLE users (
-    user_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    login       VARCHAR(32) NOT NULL,
-    email       VARCHAR(128) NOT NULL,
-    pass        VARCHAR(255) NOT NULL,
-    level       ENUM('normal','mod','admin') NOT NULL DEFAULT 'normal',   -- mod: modera (migra-008); ademas modera quien tenga aura >= mod_aura
-    avatar      VARCHAR(64) DEFAULT NULL,           -- fichero en /media/avatars
-    bio         VARCHAR(160) DEFAULT NULL,
-    theme       ENUM('auto','light','dark') NOT NULL DEFAULT 'auto',
-    skin        VARCHAR(16) NOT NULL DEFAULT '',   -- plantilla visual ('' = la del sitio, config.skin_default)
-    landing     VARCHAR(24) NOT NULL DEFAULT '',   -- aterrizaje: '' portada | t:ID tema | c:ID comunidad
-    lang        VARCHAR(5) NOT NULL DEFAULT '',    -- idioma de la interfaz: '' navegador | es | en | fr
-    src_mylang  TINYINT(1) NOT NULL DEFAULT 0,     -- 1 = mostrar solo fuentes en mi idioma (migra-051)
-    show_follows TINYINT(1) NOT NULL DEFAULT 1,    -- 1 = los medios y substacks que sigue se ven en su ficha publica (migra-116)
-    aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,
-    pin_credits SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- «destacados» disponibles: uno por cada unidad entera NUEVA que alcanza el aura (migra-111)
-    pin_mark    SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- maximo entero de aura ya alcanzado: no se vuelve a premiar la misma unidad
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_login (login),
-    UNIQUE KEY uq_email (email)
-) ENGINE=InnoDB;
-
-CREATE TABLE topics (
-    topic_id    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name        VARCHAR(32) NOT NULL,
-    bonus       DECIMAL(4,2) NOT NULL DEFAULT 0.00,   -- se SUMA al delta de los envios del tema con apoyo neto (antes coef multiplicador; migra-080)
-    color       CHAR(7) NOT NULL DEFAULT '#534AB7',   -- velo de la foto
-    UNIQUE KEY uq_name (name)
-) ENGINE=InnoDB;
-
 INSERT INTO topics (name, bonus, color) VALUES
 ('actualidad', 0.00, '#534AB7'),
 ('politica',   0.00, '#993C1D'),
@@ -130,401 +797,17 @@ INSERT INTO topics (name, bonus, color) VALUES
 ('ocio',       0.00, '#993556'),
 ('relatos',    0.30, '#6B3FA0');
 
--- content_type: link = enlace externo | article = original (texto propio, pestaña Originales; no va a portada)
-CREATE TABLE stories (
-    story_id        INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    content_type    ENUM('link','article') NOT NULL DEFAULT 'link',
-    user_id         INT UNSIGNED DEFAULT NULL,       -- NULL = anonimo
-    author_alias    VARCHAR(48) DEFAULT NULL,        -- alias Ghost del autor en este hilo
-    revealed        TINYINT(1) NOT NULL DEFAULT 0,
-    topic_id        SMALLINT UNSIGNED NOT NULL,
-    community_id    INT UNSIGNED DEFAULT NULL,       -- comunidad (opcional), segunda clasificacion
-    title           VARCHAR(200) NOT NULL,
-    url             VARCHAR(600) DEFAULT NULL,
-    source          VARCHAR(100) DEFAULT NULL,       -- dominio de la fuente (eldiario.es)
-    content         TEXT,
-    image           VARCHAR(64) DEFAULT NULL,        -- nombre de fichero en /media
-    status          ENUM('pending_mod','rejected','nuevas','destacadas','archived','discard')
-                    NOT NULL DEFAULT 'nuevas',        -- nuevas = en el radar; destacadas = en una portada
-    portada         ENUM('medios','substacks','canales') DEFAULT NULL,   -- portada de destino de un enlace; NULL = original (articulo)
-    sent_date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at       DATETIME DEFAULT NULL,           -- ultima edicion (autor en plazo o moderacion)
-    indexable       TINYINT(1) NOT NULL DEFAULT 0,   -- articulo abierto a buscadores por su autor (migra-049)
-    published_date  DATETIME DEFAULT NULL,
-    votes_pos       INT NOT NULL DEFAULT 0,
-    votes_neg       INT NOT NULL DEFAULT 0,
-    eff_pos         INT NOT NULL DEFAULT 0,          -- votos que cuentan en el delta: uno por conexion (votes.fp) y solo de cuentas maduras (migra-080)
-    eff_neg         INT NOT NULL DEFAULT 0,
-    comments        INT NOT NULL DEFAULT 0,
-    views           INT UNSIGNED NOT NULL DEFAULT 0, -- entradas al hilo (migra-120)
-    clicks          INT UNSIGNED NOT NULL DEFAULT 0, -- salidas al medio por /ir.php (migra-120)
-    delta           DECIMAL(8,3) NOT NULL DEFAULT 0.000,
-    delta_calc      DATETIME DEFAULT NULL,
-    KEY idx_status_sent (status, sent_date),
-    KEY idx_status_delta (status, delta),
-    KEY idx_status_pub (status, published_date),
-    KEY idx_portada (portada, status, published_date),
-    KEY idx_source (source),
-    KEY idx_comm (community_id, sent_date),
-    CONSTRAINT fk_st_user  FOREIGN KEY (user_id)  REFERENCES users(user_id),
-    CONSTRAINT fk_st_topic FOREIGN KEY (topic_id) REFERENCES topics(topic_id)
-) ENGINE=InnoDB;
-
--- Alias Ghost de cada registrado en cada hilo (estable dentro del hilo)
-CREATE TABLE thread_aliases (
-    story_id    INT UNSIGNED NOT NULL,
-    user_id     INT UNSIGNED NOT NULL,
-    alias       VARCHAR(48) NOT NULL,
-    PRIMARY KEY (story_id, user_id),
-    CONSTRAINT fk_ta_story FOREIGN KEY (story_id) REFERENCES stories(story_id),
-    CONSTRAINT fk_ta_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)
-) ENGINE=InnoDB;
-
-CREATE TABLE comments (
-    comment_id  INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    story_id    INT UNSIGNED NOT NULL,
-    parent_id   INT UNSIGNED DEFAULT NULL,           -- comentario al que responde
-    root_id     INT UNSIGNED DEFAULT NULL,           -- raiz de la conversacion (NULL = es raiz)
-    user_id     INT UNSIGNED DEFAULT NULL,           -- NULL = anonimo
-    alias       VARCHAR(48) NOT NULL,                -- lo que se muestra mientras no hay revelado
-    anon_key    CHAR(16) DEFAULT NULL,               -- hash truncado (ip+hilo+secreto) para agrupar anonimos; no reversible
-    aura        DECIMAL(6,3) NOT NULL DEFAULT 5.000,  -- aura del autor en el momento de comentar (para el halo)
-    likes       INT UNSIGNED NOT NULL DEFAULT 0,      -- soles (me gusta): contador de comment_votes (migra-073)
-    dislikes    INT UNSIGNED NOT NULL DEFAULT 0,      -- lagrimas (no me gusta)
-    content     TEXT NOT NULL,
-    content_orig TEXT DEFAULT NULL,                  -- texto original si fue borrado por moderacion
-    status      ENUM('pending_mod','rejected','ok') NOT NULL DEFAULT 'ok',
-    deleted     TINYINT(1) NOT NULL DEFAULT 0,        -- borrado por moderacion: content sustituido por el aviso
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at   DATETIME DEFAULT NULL,               -- ultima edicion (autor en plazo o moderacion)
-    KEY idx_story (story_id, created),
-    KEY idx_root (story_id, root_id, created),
-    KEY idx_created (created),
-    CONSTRAINT fk_c_story FOREIGN KEY (story_id) REFERENCES stories(story_id),
-    CONSTRAINT fk_c_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)
-) ENGINE=InnoDB;
-
--- Solo registrados votan
-CREATE TABLE votes (
-    story_id    INT UNSIGNED NOT NULL,
-    user_id     INT UNSIGNED NOT NULL,
-    value       TINYINT NOT NULL,
-    fp          CHAR(16) DEFAULT NULL,               -- huella HMAC(ip + envio) truncada, nunca la IP: varias cuentas desde la misma conexion cuentan como un voto (migra-080)
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (story_id, user_id),
-    KEY idx_created (created),
-    KEY idx_story_fp (story_id, fp),
-    CONSTRAINT fk_v_story FOREIGN KEY (story_id) REFERENCES stories(story_id),
-    CONSTRAINT fk_v_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)
-) ENGINE=InnoDB;
-
--- Reacciones a comentarios: sol (1) o lagrima (-1), una por persona y comentario; se puede cambiar o retirar (migra-073)
-CREATE TABLE comment_votes (
-    comment_id  INT UNSIGNED NOT NULL,
-    user_id     INT UNSIGNED NOT NULL,
-    value       TINYINT NOT NULL,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (comment_id, user_id),
-    KEY idx_user (user_id, created),
-    CONSTRAINT fk_cv_comment FOREIGN KEY (comment_id) REFERENCES comments(comment_id) ON DELETE CASCADE,
-    CONSTRAINT fk_cv_user    FOREIGN KEY (user_id)    REFERENCES users(user_id)       ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE mod_queue (
-    item_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    item_type   ENUM('story','comment','chat') NOT NULL DEFAULT 'story',
-    ref_id      INT UNSIGNED NOT NULL,
-    status      ENUM('queued','processing','ok','flag','hidden','needs_human','human_ok','human_removed','reject') NOT NULL DEFAULT 'queued',
-    priority    TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    attempts    TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    verdict     TEXT DEFAULT NULL,
-    reason      VARCHAR(64) DEFAULT NULL,
-    category    VARCHAR(16) DEFAULT NULL,
-    score       DECIMAL(4,3) DEFAULT NULL,
-    prev_status VARCHAR(16) DEFAULT NULL,
-    leased_until DATETIME DEFAULT NULL,
-    model       VARCHAR(80) DEFAULT NULL,
-    decided_by  INT UNSIGNED DEFAULT NULL,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    processed   DATETIME DEFAULT NULL,
-    KEY idx_status (status, created),
-    KEY idx_ref (item_type, ref_id),
-    KEY idx_lease (status, priority, item_id)
-) ENGINE=InnoDB;
-
-CREATE TABLE promo_log (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    story_id    INT UNSIGNED NOT NULL,
-    portada     ENUM('medios','substacks','canales') DEFAULT NULL,  -- portada en la que se publico
-    delta       DECIMAL(8,3) NOT NULL,
-    candidates  SMALLINT UNSIGNED NOT NULL,              -- enlaces que habia en el radar de esa portada
-    commenters  SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- comentaristas unicos en el momento de publicar (instrumentacion)
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY idx_story (story_id)
-) ENGINE=InnoDB;
-
-CREATE TABLE aura_log (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT UNSIGNED NOT NULL,
-    amount      DECIMAL(7,3) NOT NULL,
-    reason      VARCHAR(64) NOT NULL,
-    ref_id      INT UNSIGNED DEFAULT NULL,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY idx_user (user_id)
-) ENGINE=InnoDB;
-
--- Mensajes privados entre registrados
-CREATE TABLE messages (
-    msg_id      INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    from_id     INT UNSIGNED NOT NULL,
-    to_id       INT UNSIGNED NOT NULL,
-    content     TEXT NOT NULL,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    read_at     DATETIME DEFAULT NULL,
-    KEY idx_to_unread (to_id, read_at),
-    KEY idx_from (from_id, created),
-    KEY idx_pair (from_id, to_id, msg_id),
-    CONSTRAINT fk_m_from FOREIGN KEY (from_id) REFERENCES users(user_id),
-    CONSTRAINT fk_m_to   FOREIGN KEY (to_id)   REFERENCES users(user_id)
-) ENGINE=InnoDB;
-
--- Reportes de comentarios (cualquiera puede reportar; los revisan los moderadores)
-CREATE TABLE comment_reports (
-    report_id   INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    comment_id  INT UNSIGNED NOT NULL,
-    user_id     INT UNSIGNED DEFAULT NULL,
-    fp          CHAR(16) DEFAULT NULL,
-    reason      ENUM('insulto','odio','acoso','datos','ilegal','spam','otro') NOT NULL DEFAULT 'otro',
-    status      ENUM('open','deleted','dismissed') NOT NULL DEFAULT 'open',
-    decided_by  INT UNSIGNED DEFAULT NULL,             -- moderador que cerro los reportes (migra-082)
-    decided     DATETIME DEFAULT NULL,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_user (comment_id, user_id),
-    UNIQUE KEY uq_fp   (comment_id, fp),
-    KEY idx_status (status, created),
-    CONSTRAINT fk_cr_comment FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
-) ENGINE=InnoDB;
-
--- Comunidades creadas por los usuarios (segunda clasificacion, ortogonal a los temas)
-CREATE TABLE communities (
-    community_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    slug         VARCHAR(40) NOT NULL,
-    name         VARCHAR(48) NOT NULL,
-    descr        VARCHAR(200) DEFAULT NULL,
-    color        CHAR(7) NOT NULL DEFAULT '#534AB7',
-    owner_id     INT UNSIGNED NOT NULL,
-    status       ENUM('ok','hidden') NOT NULL DEFAULT 'ok',
-    created      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_slug (slug),
-    UNIQUE KEY uq_name (name),
-    KEY idx_owner (owner_id),
-    CONSTRAINT fk_co_owner FOREIGN KEY (owner_id) REFERENCES users(user_id)
-) ENGINE=InnoDB;
-
--- Fuentes externas (solo lectura): otros sitios pintados con Deltha a partir de su RSS (migra-028)
--- Un envio puede estar en varias comunidades (la principal sigue en stories.community_id; las demas las «adopta» el dueño
--- de la comunidad desde el hilo, o los mods). Tope config.comm_max_per_story. Migracion 037.
-CREATE TABLE story_communities (
-    story_id     INT UNSIGNED NOT NULL,
-    community_id INT UNSIGNED NOT NULL,
-    added_by     INT UNSIGNED DEFAULT NULL,
-    created      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (story_id, community_id),
-    KEY idx_comm (community_id, created),
-    CONSTRAINT fk_sc_story FOREIGN KEY (story_id)     REFERENCES stories(story_id)         ON DELETE CASCADE,
-    CONSTRAINT fk_sc_comm  FOREIGN KEY (community_id) REFERENCES communities(community_id) ON DELETE CASCADE,
-    CONSTRAINT fk_sc_user  FOREIGN KEY (added_by)     REFERENCES users(user_id)            ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE sources (
-    source_id    SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    slug         VARCHAR(24) NOT NULL,                      -- /fuente.php?f=slug
-    kind         ENUM('agregador','medio','newsletter','youtube') NOT NULL DEFAULT 'medio',   -- agregador: fases y votos (Meneame) | medio: ultimas noticias, elegible en «Mis medios» | newsletter: idem, en «Mis substacks» | youtube: canal, idem, en «Mis canales»
-    name         VARCHAR(48) NOT NULL,
-    home         VARCHAR(200) NOT NULL,                     -- web de la fuente
-    descr        VARCHAR(200) DEFAULT NULL,
-    lang         VARCHAR(5) NOT NULL DEFAULT '',            -- idioma (es, en…; '' = sin saber, se detecta del RSS) (migra-051)
-    skin         VARCHAR(16) NOT NULL DEFAULT '',           -- plantilla forzada al verla ('' = la de cada cual)
-    topic_id     SMALLINT UNSIGNED DEFAULT NULL,            -- tema propuesto al enviar una noticia de este medio
-    feed_portada VARCHAR(300) NOT NULL,                     -- RSS de lo publicado
-    feed_nuevas  VARCHAR(300) NOT NULL DEFAULT '',          -- RSS de la cola (vacio = la fuente no tiene cola)
-    interval_min SMALLINT UNSIGNED NOT NULL DEFAULT 5,      -- cada cuantos minutos se leen los feeds
-    status       ENUM('ok','off') NOT NULL DEFAULT 'ok',
-    listed       TINYINT(1) NOT NULL DEFAULT 1,             -- 1 = en el catalogo publico; 0 = añadida por un usuario, solo la ven quienes la siguen hasta que se modera (migra-108)
-    added_by     INT UNSIGNED DEFAULT NULL,                 -- quien la añadio (NULL = admin o moderacion)
-    featured     TINYINT(1) NOT NULL DEFAULT 0,           -- medio que ven quienes no han elegido (anonimos); se marca en admin
-    last_fetch   DATETIME DEFAULT NULL,
-    last_error   VARCHAR(255) DEFAULT NULL,
-    UNIQUE KEY uq_slug (slug)
-) ENGINE=InnoDB;
-
-CREATE TABLE source_items (
-    item_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    source_id   SMALLINT UNSIGNED NOT NULL,
-    ext_id      VARCHAR(32) NOT NULL,                       -- id en la fuente (meneame:link_id o guid)
-    phase       ENUM('nuevas','portada') NOT NULL DEFAULT 'nuevas',
-    title       VARCHAR(200) NOT NULL,
-    url         VARCHAR(600) NOT NULL,                      -- el articulo (en Meneame, /go?id=N redirige al original)
-    thread_url  VARCHAR(600) NOT NULL,                      -- el hilo en la fuente (comentarios)
-    source      VARCHAR(100) DEFAULT NULL,                  -- dominio del medio original
-    topic       VARCHAR(48) DEFAULT NULL,                   -- sub / categoria en la fuente
-    author      VARCHAR(64) DEFAULT NULL,
-    content     TEXT,                                       -- entradilla en texto plano
-    image       VARCHAR(100) DEFAULT NULL,                  -- ruta relativa a /media: fuentes/x.webp (miniatura del agregador) o x.jpg (og:image procesada)
-    votes       INT NOT NULL DEFAULT 0,
-    negatives   INT NOT NULL DEFAULT 0,
-    comments    INT NOT NULL DEFAULT 0,
-    pub_date    DATETIME NOT NULL,                          -- fecha del feed (en portada, la de publicacion)
-    first_seen  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_seen   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_ext (source_id, ext_id),
-    KEY idx_phase_date (source_id, phase, pub_date),
-    KEY idx_phase_votes (source_id, phase, votes),
-    KEY idx_seen (last_seen),
-    CONSTRAINT fk_si_source FOREIGN KEY (source_id) REFERENCES sources(source_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min) VALUES
+('meneame',  'agregador', 'Menéame',          'https://www.meneame.net/',        NULL, 'orange', NULL, 'https://www.meneame.net/rss', 'https://www.meneame.net/rss?status=queued', 5),
+('jotdown',  'medio',     'Jot Down',         'https://www.jotdown.es/',         'Contemporary Culture Mag', '', 3, 'https://www.jotdown.es/feed/', '', 60),
+('mercurio', 'medio',     'Revista Mercurio', 'https://www.revistamercurio.es/', 'Revista de libros y cultura', '', 3, 'https://revistamercurio.es/feed/', '', 60);
 
 INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min) VALUES
 ('meneame',  'agregador', 'Menéame',          'https://www.meneame.net/',        NULL, 'orange', NULL, 'https://www.meneame.net/rss', 'https://www.meneame.net/rss?status=queued', 5),
 ('jotdown',  'medio',     'Jot Down',         'https://www.jotdown.es/',         'Contemporary Culture Mag', '', 3, 'https://www.jotdown.es/feed/', '', 60),
 ('mercurio', 'medio',     'Revista Mercurio', 'https://www.revistamercurio.es/', 'Revista de libros y cultura', '', 3, 'https://revistamercurio.es/feed/', '', 60);
-UPDATE sources SET featured = 1 WHERE slug IN ('jotdown', 'mercurio');
-INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min, featured) VALUES
-('anfibia',        'medio', 'Revista Anfibia',      'https://www.revistaanfibia.com/',      'Crónicas y ensayos desde Buenos Aires', '', 3, 'https://www.revistaanfibia.com/feed/',       '', 30, 1),
-('natgeo',         'medio', 'National Geographic',  'https://www.nationalgeographic.com.es/', 'Ciencia, naturaleza e historia',      '', 4, 'https://www.nationalgeographic.com.es/feeds/rss',  '', 30, 0),
-('bbc',            'medio', 'BBC Mundo',            'https://www.bbc.com/mundo',            'Noticias internacionales en español',   '', 1, 'https://feeds.bbci.co.uk/mundo/rss.xml',     '', 15, 0),
-('cgtn',           'medio', 'CGTN Español',         'https://espanol.cgtn.com/',            'Televisión china en español',           '', 1, 'https://espanol.cgtn.com/rss',               '', 30, 0),
-('pijamasurf',     'medio', 'Pijama Surf',          'https://pijamasurf.com/',              'Información alternativa',               '', 3, 'https://pijamasurf.com/feed/',               '', 30, 0),
-('culturainquieta','medio', 'Cultura Inquieta',     'https://culturainquieta.com/',         'Arte, música y cultura',                '', 3, 'https://culturainquieta.com/feed/',          '', 30, 0),
-('hipertextual',   'medio', 'Hipertextual',         'https://hipertextual.com/',            'Tecnología y ciencia',                  '', 6, 'https://hipertextual.com/feed',              '', 60, 0);
-INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min, featured) VALUES
-('jorgecarrion',   'newsletter', 'Jorge Carrión',        'https://jorgecarrion21.substack.com/',  'Newsletter (Substack)', '', 3, 'https://jorgecarrion21.substack.com/feed',  '', 1440, 1),
-('periodismo',     'newsletter', 'Periodismo',           'https://periodismo.substack.com/',      'Newsletter (Substack)', '', 1, 'https://periodismo.substack.com/feed',      '', 1440, 0),
-('sergioparra',    'newsletter', 'Sergio Parra',         'https://sergioparra.substack.com/',     'Newsletter (Substack)', '', 4, 'https://sergioparra.substack.com/feed',     '', 1440, 1),
-('error500',       'newsletter', 'Error500',             'https://www.error500.net/',             'Antonio Ortiz · newsletter', '', 6, 'https://www.error500.net/feed',          '', 1440, 1),
-('uriondo',        'newsletter', 'Uriondo',              'https://uriondo.substack.com/',         'Newsletter (Substack)', '', 1, 'https://uriondo.substack.com/feed',         '', 1440, 0),
-('martinsacristan','newsletter', 'Martín Sacristán',     'https://martinsacristan.substack.com/', 'Newsletter (Substack)', '', 3, 'https://martinsacristan.substack.com/feed', '', 1440, 0);
 
--- Medios elegidos por cada usuario («Mis medios», hasta config.media_max_per_user)
-CREATE TABLE user_media (
-    user_id   INT UNSIGNED NOT NULL,
-    source_id SMALLINT UNSIGNED NOT NULL,
-    pos       SMALLINT UNSIGNED NOT NULL DEFAULT 1,
-    PRIMARY KEY (user_id, source_id),
-    CONSTRAINT fk_um_user   FOREIGN KEY (user_id)   REFERENCES users(user_id)     ON DELETE CASCADE,
-    CONSTRAINT fk_um_source FOREIGN KEY (source_id) REFERENCES sources(source_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- Noticias destacadas (migra-111): envios ('story', las portadas) y noticias RSS ('item', /ultimo.php) que salen los primeros de su
--- lista con halo. Admin: una por grupo, sin caducidad. Usuarios: una activa por usuario, caduca a los pin_user_minutes; cuesta un pin_credit.
-CREATE TABLE pins (
-    pin_id      INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    what        ENUM('story','item') NOT NULL,
-    ref_id      INT UNSIGNED NOT NULL,                  -- stories.story_id | source_items.item_id
-    grupo       VARCHAR(16) NOT NULL,                   -- portada (medios|substacks|canales) o tipo de fuente (medio|newsletter)
-    user_id     INT UNSIGNED NOT NULL,
-    by_admin    TINYINT(1) NOT NULL DEFAULT 0,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    starts      DATETIME DEFAULT NULL,                  -- cuando empieza a verse (migra-114); NULL o pasado = en marcha; futuro = en cola tras la destacada de usuario anterior del grupo
-    expires     DATETIME DEFAULT NULL,                  -- NULL = no caduca (admin)
-    UNIQUE KEY uq_ref (what, ref_id),
-    KEY idx_grupo (what, grupo, by_admin, expires),
-    KEY idx_user (user_id),
-    CONSTRAINT fk_pin_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- Favoritos: envios y articulos guardados por cada usuario desde el hilo; pestaña Favoritos del perfil. Migracion 043.
-CREATE TABLE favorites (
-    user_id     INT UNSIGNED NOT NULL,
-    story_id    INT UNSIGNED NOT NULL,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, story_id),
-    KEY idx_fav_created (user_id, created),
-    CONSTRAINT fk_fav_user  FOREIGN KEY (user_id)  REFERENCES users(user_id)   ON DELETE CASCADE,
-    CONSTRAINT fk_fav_story FOREIGN KEY (story_id) REFERENCES stories(story_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- Fuentes propuestas por los usuarios, pendientes de moderacion (migra-057)
-CREATE TABLE source_proposals (
-    prop_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT UNSIGNED NOT NULL,                       -- quien la propone
-    kind        ENUM('medio','newsletter','youtube') NOT NULL DEFAULT 'medio',
-    name        VARCHAR(48) NOT NULL,
-    home        VARCHAR(200) NOT NULL,                       -- web
-    feed        VARCHAR(300) NOT NULL,                       -- RSS (el dado o el encontrado en la web)
-    descr       VARCHAR(200) DEFAULT NULL,
-    note        VARCHAR(500) DEFAULT NULL,                   -- nota de quien propone para moderacion
-    lang        VARCHAR(5) NOT NULL DEFAULT '',              -- idioma que declara el feed ('' = no lo dice)
-    test_items  SMALLINT UNSIGNED NOT NULL DEFAULT 0,        -- noticias leidas en la ultima prueba (0 = no se lee)
-    test_info   VARCHAR(600) DEFAULT NULL,                   -- ultimos titulos o el error de la prueba
-    status      ENUM('pending','ok','rejected') NOT NULL DEFAULT 'pending',
-    reply       VARCHAR(300) DEFAULT NULL,                   -- motivo del rechazo (se le envia por mensaje)
-    source_id   SMALLINT UNSIGNED DEFAULT NULL,              -- la fuente creada al aprobarla
-    reviewed_by INT UNSIGNED DEFAULT NULL,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    reviewed    DATETIME DEFAULT NULL,
-    KEY idx_fp_status (status, created),
-    KEY idx_fp_user (user_id, created),
-    CONSTRAINT fk_fp_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- Lista blanca de dominios de correo (migra-058; la negra es banned_domains, migra-012)
-CREATE TABLE IF NOT EXISTS allowed_domains (
-    domain   VARCHAR(120) NOT NULL PRIMARY KEY,
-    reason   VARCHAR(120) DEFAULT NULL,
-    added_by INT UNSIGNED DEFAULT NULL,
-    created  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
--- Avisos (campanita): menciones @nick, respuestas y privados (migra-068; lib/avisos.php)
-CREATE TABLE IF NOT EXISTS notifications (
-    notif_id    INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT UNSIGNED NOT NULL,                    -- a quien avisa
-    from_id     INT UNSIGNED DEFAULT NULL,                -- quien lo provoca (NULL = anonimo del Chat o cuenta borrada)
-    from_name   VARCHAR(64) NOT NULL DEFAULT '',          -- como firmaba entonces: alias del hilo (comentarios), alias anonimo (Chat) o nick
-    kind        ENUM('mention_comment','reply_comment','mention_chat','reply_chat','dm') NOT NULL,
-    ref_id      INT UNSIGNED NOT NULL DEFAULT 0,          -- comment_id | chat.msg_id | messages.msg_id (el ultimo de la racha)
-    story_id    INT UNSIGNED DEFAULT NULL,                -- hilo del comentario (para construir el enlace)
-    snippet     VARCHAR(120) NOT NULL DEFAULT '',         -- trozo del texto en el momento de crearlo (si luego se edita o borra, el aviso sigue teniendo sentido)
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    read_at     DATETIME DEFAULT NULL,
-    KEY idx_user_unread (user_id, read_at),
-    KEY idx_user_list (user_id, created),                -- la lista va por fecha: un aviso de privado agrupado sube al recibir otro mensaje
-    KEY idx_dm_open (user_id, from_id, kind, read_at),   -- los privados seguidos de la misma persona se agrupan en un aviso mientras no se lea
-    CONSTRAINT fk_n_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_n_from FOREIGN KEY (from_id) REFERENCES users(user_id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
--- Historico permanente de registros (migra-102): una fila por intento de alta, pase o no del formulario. Sin FK: sobrevive al borrado de la cuenta.
-CREATE TABLE reg_log (
-    reg_id      INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    login       VARCHAR(64) NOT NULL DEFAULT '',
-    email       VARCHAR(128) NOT NULL DEFAULT '',
-    user_id     INT UNSIGNED DEFAULT NULL,
-    estado      VARCHAR(16) NOT NULL DEFAULT 'pendiente',
-    motivo      VARCHAR(160) NOT NULL DEFAULT '',
-    activated   DATETIME DEFAULT NULL,
-    KEY idx_reglog_created (created),
-    KEY idx_reglog_user (user_id)
-) ENGINE=InnoDB;
-
--- Fotos genericas de los medios (migra-118): que imagen salio de que pagina, y las que han resultado ser logo o relleno.
-CREATE TABLE image_seen (
-    seen_id  INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    domain   VARCHAR(120) NOT NULL,
-    hash     CHAR(40) NOT NULL,
-    page     CHAR(32) NOT NULL,
-    file     VARCHAR(40) DEFAULT NULL,
-    seen     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY idx_imgseen_hash (domain, hash),
-    KEY idx_imgseen_file (file),
-    KEY idx_imgseen_seen (seen)
-) ENGINE=InnoDB;
-
-CREATE TABLE image_generic (
-    domain   VARCHAR(120) NOT NULL,
-    hash     CHAR(40) NOT NULL,
-    created  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (domain, hash)
-) ENGINE=InnoDB;
+INSERT INTO sources (slug, kind, name, home, descr, skin, topic_id, feed_portada, feed_nuevas, interval_min) VALUES
+('meneame',  'agregador', 'Menéame',          'https://www.meneame.net/',        NULL, 'orange', NULL, 'https://www.meneame.net/rss', 'https://www.meneame.net/rss?status=queued', 5),
+('jotdown',  'medio',     'Jot Down',         'https://www.jotdown.es/',         'Contemporary Culture Mag', '', 3, 'https://www.jotdown.es/feed/', '', 60),
+('mercurio', 'medio',     'Revista Mercurio', 'https://www.revistamercurio.es/', 'Revista de libros y cultura', '', 3, 'https://revistamercurio.es/feed/', '', 60);

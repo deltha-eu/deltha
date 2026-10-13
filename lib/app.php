@@ -539,7 +539,7 @@ function page_get(PDO $pdo, string $slug, ?string $lang = null): array {
 function num_es($v): string { $s = rtrim(rtrim(number_format((float)$v, 3, ',', '.'), '0'), ','); return $s === '' ? '0' : $s; }
 /** Numero de las paginas editables: coma decimal salvo en ingles (0,05 / 0.05) */
 function num_pg(string $lang, $v): string { $s = num_es($v); return $lang === 'en' ? strtr($s, [',' => '.', '.' => ',']) : $s; }
-/** Fecha larga de una Y-m-d en el idioma de la pagina (para {auradl}): «31 de diciembre de 2026», «31 December 2026»,
+/** Fecha larga de una Y-m-d en el idioma de la pagina (para {auradl}): «31 de diciembre de 2027», «31 December 2027»,
  *  «31. Dezember 2026», «2026ko abenduaren 31»… */
 function fecha_larga(string $ymd, string $lang = 'es'): string {
     $t = strtotime($ymd) ?: time();
@@ -626,7 +626,7 @@ function page_body(array $pg): string {
         '{propaura}' => num_pg($L, cfg('source_propose_aura', 6)),
         // pagina «¿Que es Deltha?»
         '{skins}'    => (string)count(DDD_SKINS),
-        '{auradl}'   => fecha_larga(cfg('aura_deadline', '2026-12-31'), $L),
+        '{auradl}'   => fecha_larga(cfg('aura_deadline', '2027-12-31'), $L),
     ]);
 }
 
