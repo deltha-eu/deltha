@@ -67,7 +67,7 @@ function fprop_norm(string $url): string {
  *  'titles' => [hasta 5], 'error' => '' o el motivo].
  */
 function fprop_probar(string $feed, string $home): array {
-    $r = ['feed' => $feed, 'items' => 0, 'lang' => '', 'last' => null, 'titles' => [], 'error' => '', 'title' => ''];
+    $r = ['feed' => $feed, 'items' => 0, 'lang' => '', 'last' => null, 'titles' => [], 'error' => '', 'title' => '', 'descr' => ''];
     $timeout = max(3, min(8, (int)cfg('sources_timeout_sec', 8)));
     $cands = [];
     if ($feed !== '') $cands[] = $feed;
@@ -89,6 +89,9 @@ function fprop_probar(string $feed, string $home): array {
             $r['error'] = '';
             // nombre del feed: su primer <title> (el del canal; los de las noticias van despues)
             if (preg_match('#<title[^>]*>\s*(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?\s*</title>#si', $body, $tt)) $r['title'] = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($tt[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+            // descripcion del canal (13/10/2026): el primer <description> (RSS) o <subtitle> (Atom) antes del primer item/entry
+            $cab = preg_split('#<(item|entry)\b#i', $body, 2)[0];
+            if (preg_match('#<(?:description|subtitle)[^>]*>\s*(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?\s*</(?:description|subtitle)>#si', $cab, $dd)) $r['descr'] = mb_substr(trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($dd[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8'))), 0, 200);
             return $r;
         }
         // no es un feed: si es una pagina, buscar sus RSS anunciados; si no anuncia ninguno, probar /feed
@@ -105,6 +108,31 @@ function fprop_probar(string $feed, string $home): array {
     }
     $r['error'] = mb_substr(implode(' · ', $errores) ?: 'no se ha podido probar', 0, 580);
     return $r;
+}
+
+/** Rellena el alta de una fuente a partir de su web (13/10/2026, admin y moderacion): busca el RSS (fprop_probar), y de el saca nombre
+ *  (<title> del canal), descripcion, idioma; el tipo se adivina por la direccion (substack → newsletter, youtube → canal). Lo que ya
+ *  venga relleno en $f se respeta. Devuelve $f completado y 'error' si no se pudo leer nada. */
+function fprop_rellenar(array $f): array {
+    $home = trim((string)($f['home'] ?? ''));
+    if ($home !== '' && !preg_match('#^https?://#i', $home)) $home = 'https://' . $home;
+    $f['home'] = $home; $f['error'] = '';
+    if (!preg_match('#^https?://[^\s]+$#i', $home)) { $f['error'] = 'Pon la web (https://…).'; return $f; }
+    $host = strtolower((string)parse_url($home, PHP_URL_HOST));
+    if (empty($f['kind']) || $f['kind'] === 'medio') {
+        if (str_contains($host, 'substack.com')) $f['kind'] = 'newsletter';
+        elseif (str_contains($host, 'youtube.com') || str_contains($host, 'youtu.be')) $f['kind'] = 'youtube';
+    }
+    $feed = trim((string)($f['feed'] ?? ''));
+    if (($f['kind'] ?? '') === 'youtube' && $feed === '') { $e = null; $feed = (string)(youtube_feed_de($home, $e) ?? ''); }
+    $r = fprop_probar($feed, $home);
+    if (!$r['items']) { $f['error'] = 'No se ha podido leer ningún RSS de esa web: ' . (string)$r['error']; return $f; }
+    $f['feed'] = (string)$r['feed'];
+    if (trim((string)($f['name'] ?? '')) === '' && $r['title'] !== '') $f['name'] = mb_substr(preg_replace('/\s*[|\-–—:]\s*(RSS|Feed|Noticias|News|Últimas noticias|Portada).*$/iu', '', $r['title']), 0, 48);
+    if (trim((string)($f['descr'] ?? '')) === '' && $r['descr'] !== '') $f['descr'] = $r['descr'];
+    if (trim((string)($f['lang'] ?? '')) === '' && preg_match('/^[a-z]{2}$/', (string)$r['lang'])) $f['lang'] = (string)$r['lang'];
+    $f['items'] = (int)$r['items']; $f['titles'] = $r['titles'];
+    return $f;
 }
 
 /** Texto guardado de la prueba (source_proposals.test_info). */

@@ -72,6 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try { $pdo->prepare("INSERT INTO topics (name, bonus, color) VALUES (?,?,?)")->execute([$name, $bonus, $col]); $out[] = "Tema «" . h($name) . "» creado."; }
             catch (PDOException $e) { $out[] = 'Ese tema ya existe.'; }
         }
+    } elseif ($act === 'fuente_nueva' && (post('rellenar') !== '' || trim(post('name')) === '')) {
+        // «Rellenar desde la web» (13/10/2026): con solo la web se buscan RSS, nombre, descripcion e idioma y se devuelve el formulario relleno, sin crear
+        require_once __DIR__ . '/../lib/propuestas.php';
+        $rf = fprop_rellenar(['name' => post('name'), 'kind' => post('kind'), 'home' => post('home'), 'feed' => post('feed_portada'), 'descr' => post('descr'), 'lang' => post('lang')]);
+        $fuentePre = ['name' => $rf['name'], 'kind' => $rf['kind'], 'home' => $rf['home'], 'feed_portada' => $rf['feed'], 'descr' => $rf['descr'], 'lang' => $rf['lang'], 'interval_min' => (int)post('interval_min') ?: 60,
+                      'slug' => trim(post('slug')) !== '' ? post('slug') : substr(preg_replace('/[^a-z0-9]+/', '-', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', (string)$rf['name']))), 0, 24)];
+        $fuentePre['slug'] = trim($fuentePre['slug'], '-');
+        $out[] = $rf['error'] !== '' ? $rf['error'] : 'Datos tomados de la web (RSS: ' . h($rf['feed']) . ', ' . (int)$rf['items'] . ' noticias). Revísalos y pulsa «Crear fuente».';
     } elseif ($act === 'fuente' || $act === 'fuente_nueva') {
         // alta / edicion de una fuente externa (Meneame, medios con RSS)
         $id = (int)post('source_id');
@@ -620,8 +628,8 @@ if ($tab === 'usuarios') {
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
-        $h .= "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($f['name'] ?? '') . "\"></td></tr>";
-        $h .= "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\" placeholder=\"minúsculas, números o guion: sale en /fuente/slug\"></td></tr>";
+        $h .= "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\"" . ($act === 'fuente_nueva' ? ' placeholder="vacío = tomarlo de la web"' : ' required') . " value=\"" . h($f['name'] ?? '') . "\"></td></tr>";
+        $h .= "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\"" . ($act === 'fuente_nueva' ? '' : ' required') . " pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($f['slug'] ?? '') . "\" placeholder=\"minúsculas, números o guion: sale en /fuente/slug\"></td></tr>";
         $h .= "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . (($f['kind'] ?? 'medio') === 'medio' ? ' selected' : '') . ">medio (últimas noticias, elegible en «Mis medios»)</option><option value=\"newsletter\"" . (($f['kind'] ?? '') === 'newsletter' ? ' selected' : '') . ">newsletter / Substack (igual que un medio, en «Mis substacks»)</option><option value=\"youtube\"" . (($f['kind'] ?? '') === 'youtube' ? ' selected' : '') . ">canal de YouTube (igual que un medio, en «Mis canales»)</option><option value=\"agregador\"" . (($f['kind'] ?? '') === 'agregador' ? ' selected' : '') . ">agregador (portada + cola, votos)</option></select></td></tr>";
         $h .= "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($f['home'] ?? '') . "\" placeholder=\"https://…\"></td></tr>";
         $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/ (canal de YouTube: vacío, se saca de la web)\"></td></tr>";
@@ -642,7 +650,7 @@ if ($tab === 'usuarios') {
         $h .= "<tr><td>estado</td><td><select name=\"status\" class=\"auto\"><option value=\"ok\">activa</option><option value=\"off\"" . (($f['status'] ?? 'ok') === 'off' ? ' selected' : '') . ">apagada</option></select></td></tr>";
         $h .= "<tr><td>lector local</td><td><label><input type=\"checkbox\" name=\"relay\" value=\"1\"" . (!empty($f['relay']) ? ' checked' : '') . "> la web de esta fuente rechaza al servidor (403/503): el feed y las fotos los trae el <b>lector local</b> del PC de la redacción (<code>local/lector</code>); el servidor no la lee. Lector visto: " . h((string)cfg('relay_worker_seen', '') ?: 'nunca') . "</label></td></tr>";
         $h .= "<tr><td>destacado</td><td><label><input type=\"checkbox\" name=\"featured\" value=\"1\"" . (!empty($f['featured']) ? ' checked' : '') . "> lo ve en «Mis fuentes» (menú y /mis-fuentes) quien no sigue ninguna fuente de ese tipo o no tiene cuenta. Si no hay ninguna destacada del tipo, se enseñan las que han publicado más recientemente</label></td></tr>";
-        $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button></td></tr>";
+        $h .= "<tr><td></td><td><button class=\"btn\">" . ($act === 'fuente_nueva' ? 'Crear fuente' : 'Guardar') . "</button>" . ($act === 'fuente_nueva' ? " <button class=\"btn sm\" name=\"rellenar\" value=\"1\" formnovalidate title=\"con solo la web: busca el RSS y saca nombre, slug, descripción e idioma; luego revisas y creas\">Rellenar desde la web</button>" : '') . "</td></tr>";
         return $h . "</table></form>";
     };
     echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/fuentes\">catálogo público</a>, «Todas las fuentes»). <b>Medio</b>: sus últimas noticias, que los usuarios siguen con el botón «Seguir», sin límite («Mis medios»; en el menú salen los <code>media_max_per_user</code> más recientes), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Canal de YouTube</b>: igual que un medio, en el grupo «Mis canales»; en «web» va la dirección del canal (<code>https://www.youtube.com/@nombre</code>) y el RSS se deja vacío: se calcula al guardar (solo vídeos largos, sin shorts ni directos, salvo <code>youtube_shorts=1</code>). La miniatura se guarda en /media y el vídeo se ve en YouTube. <code>sources_youtube=0</code> los apaga todos. <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
@@ -693,7 +701,7 @@ if ($tab === 'usuarios') {
         echo $fuente_form($f, 'fuente');
         echo "<p><form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
     }
-    echo "<h3>Nueva fuente</h3>" . $fuente_form(['interval_min' => 60, 'kind' => $fk], 'fuente_nueva');
+    echo "<h3>Nueva fuente</h3>" . $fuente_form($fuentePre ?? ['interval_min' => 60, 'kind' => $fk], 'fuente_nueva');
 
 } elseif ($tab === 'lateral') {
     require_once __DIR__ . '/../lib/lateral.php';

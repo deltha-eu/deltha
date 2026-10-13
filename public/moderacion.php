@@ -103,6 +103,13 @@ $altaF = ['name' => '', 'kind' => 'medio', 'home' => '', 'feed' => '', 'descr' =
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_alta') {
     require_once __DIR__ . '/../lib/fuentes.php';
     foreach ($altaF as $k => $v) $altaF[$k] = trim(post($k));
+    // «Rellenar desde la web» o nombre vacio (13/10/2026): se leen nombre, RSS, descripcion e idioma de la web y se devuelve el formulario relleno, sin crear
+    if (post('rellenar') !== '' || $altaF['name'] === '') {
+        $rf = fprop_rellenar($altaF);
+        $altaF = array_intersect_key($rf, $altaF) + $altaF;
+        $out[] = $rf['error'] !== '' ? $rf['error'] : 'Datos tomados de la web (RSS: ' . h($rf['feed']) . ', ' . (int)$rf['items'] . ' noticias). Revísalos y pulsa «Dar de alta».';
+        goto alta_fin;
+    }
     $name = mb_substr($altaF['name'], 0, 48);
     $kind = in_array($altaF['kind'], ['medio', 'newsletter', 'youtube', 'agregador'], true) ? $altaF['kind'] : 'medio';
     $home = $altaF['home']; $feed = $altaF['feed'];
@@ -128,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_alta') {
             } catch (PDOException $e) { $out[] = 'No se ha podido crear la fuente: ' . $e->getMessage(); }
         }
     }
+    alta_fin:
 }
 
 /* ---- editar una fuente del catalogo (09/10/2026): lo basico (nombre, tipo, web, RSS, descripcion, idioma, intervalo, encendida);
@@ -310,16 +318,16 @@ try { $props = $pdo->query("SELECT p.*, u.login, u.aura FROM source_proposals p 
 echo "<h3 id=\"fuentes\">Fuentes propuestas (" . count($props) . ")</h3>";
 echo "<p><small>Medios, substacks y canales propuestos (aura " . h((string)cfg('source_propose_aura', 6)) . " o más) o añadidos por su cuenta desde «Mis medios» (aura " . h((string)cfg('source_add_aura', 5)) . " o más): estos últimos ya funcionan para quien los añadió, pero no salen en el catálogo público hasta que los apruebes. Al proponerlos se prueba el RSS; compruébalo (títulos recientes, idioma, que sea el medio que dice) y apruébalo o recházalo. Al aprobar entra activo y sin destacar; en los dos casos quien lo propuso recibe un mensaje tuyo.</small></p>";
 // alta directa (09/10/2026): un moderador da de alta una fuente sin esperar a que alguien la proponga
-echo "<details class=\"editbox\"" . ($altaF['name'] !== '' || $altaF['home'] !== '' ? ' open' : '') . "><summary><b>Dar de alta una fuente</b> · sin propuesta: nombre, tipo y web; el RSS se busca solo si no lo pones</summary>";
+echo "<details class=\"editbox\"" . ($altaF['name'] !== '' || $altaF['home'] !== '' ? ' open' : '') . "><summary><b>Dar de alta una fuente</b> · basta la web: «Rellenar desde la web» busca el RSS y saca nombre, descripción e idioma</summary>";
 echo "<form method=\"post\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fuente_alta\"><table>";
-echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($altaF['name']) . "\"></td></tr>";
+echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" value=\"" . h($altaF['name']) . "\" placeholder=\"vacío = tomarlo de la web\"></td></tr>";
 echo "<tr><td>tipo</td><td><select name=\"kind\">"; foreach (['medio' => 'medio', 'newsletter' => 'substack/newsletter', 'youtube' => 'canal de YouTube', 'agregador' => 'agregador/foro'] as $ak => $al) echo "<option value=\"$ak\"" . ($altaF['kind'] === $ak ? ' selected' : '') . ">$al</option>"; echo "</select></td></tr>";
 echo "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($altaF['home']) . "\" placeholder=\"https://…\"> <small>en un canal de YouTube, la dirección del canal</small></td></tr>";
 echo "<tr><td>RSS</td><td><input type=\"url\" name=\"feed\" value=\"" . h($altaF['feed']) . "\" placeholder=\"vacío = buscarlo en la web\"></td></tr>";
 echo "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h($altaF['descr']) . "\"></td></tr>";
 echo "<tr><td>idioma</td><td><select name=\"lang\"><option value=\"\">— detectar del RSS —</option>"; foreach (DDD_LANGS as $lc => $ln) echo "<option value=\"$lc\"" . ($altaF['lang'] === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>"; echo "</select></td></tr>";
 echo "<tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . h($altaF['interval_min']) . "\" placeholder=\"60\"> minutos (vacío: 60; substack 1440; YouTube 180)</td></tr>";
-echo "<tr><td></td><td><button class=\"btn\">Dar de alta</button></td></tr></table></form></details>";
+echo "<tr><td></td><td><button class=\"btn\">Dar de alta</button> <button class=\"btn sm\" name=\"rellenar\" value=\"1\" formnovalidate title=\"con solo la web: busca el RSS y saca nombre, descripción e idioma; luego revisas y das de alta\">Rellenar desde la web</button></td></tr></table></form></details>";
 // buscar y editar fuentes del catalogo (09/10/2026): ?fq= por nombre, slug, descripcion, web o RSS, sin mayusculas ni tildes, en todos los tipos
 $fq = trim(mb_substr((string)($_GET['fq'] ?? ''), 0, 64));
 echo "<details class=\"editbox\"" . ($fq !== '' ? ' open' : '') . "><summary><b>Buscar y editar una fuente</b> · nombre, tipo, web, RSS, descripción, idioma, intervalo y encendida/apagada</summary>";
