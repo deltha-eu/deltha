@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS clicks_source (
   source VARCHAR(100) NOT NULL,
   n      INT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (day, source)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO clicks_source (day, source, n)
     SELECT CURDATE(), source, SUM(clicks) FROM stories WHERE source IS NOT NULL AND source <> '' AND clicks > 0 GROUP BY source
     ON DUPLICATE KEY UPDATE n = GREATEST(n, VALUES(n));
