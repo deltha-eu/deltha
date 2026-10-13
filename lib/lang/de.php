@@ -878,4 +878,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '(Datos desde el %s.)' => '(Daten seit dem %s.)',
 'Medios con más salidas: %s' => 'Medien mit den meisten Weiterleitungen: %s',
 'Todavía no hay salidas en este periodo.' => 'In diesem Zeitraum gibt es noch keine Weiterleitungen.',
+'%s de aura' => '%s Aura',
 ];
