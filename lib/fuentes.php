@@ -931,6 +931,7 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     $yt = ($src['kind'] ?? '') === 'youtube';   // canal de YouTube: la foto lleva el triangulo de «reproducir» y el enlace abre el video en YouTube
     $author = $i['author'] ?: $src['name'];
     $rel = 'rel="noopener nofollow"';
+    $out = ($medio && !$yt) ? '/ir-fuente?i=' . (int)$i['item_id'] : $i['url'];   // medios y substacks salen por /ir-fuente: cuenta la salida y añade utm_source=deltha (13/10/2026); $i['url'] sigue siendo la clave de $sent y de enviar
     global $pdo;
     // destacar (migra-111) solo existe para los envios: una noticia RSS se envia al radar y se destaca alli (decidido el 04/10/2026)
     echo "<article class=\"post $mode ext" . ($medio ? ' medio' : '') . "\" id=\"x{$i['item_id']}\">";
@@ -943,17 +944,17 @@ function fuente_post(array $src, array $i, string $mode = 'full', array $sent = 
     $meta[] = h(hace($i['pub_date']));
     echo "<div class=\"l1\"><b>" . h($author) . "</b><span class=\"meta\"><span class=\"sep\"> · </span>" . implode(' · ', $meta) . "</span></div>";
     $isThumb = $i['image'] && str_starts_with($i['image'], 'fuentes/');
-    if ($isThumb) echo "<a class=\"thumb\" href=\"" . h($i['url']) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a>";
-    $foto = ($i['image'] && !$isThumb) ? "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . ($yt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($i['url']) . "\" $rel" . ($yt ? youtube_attr($i['url']) : '') . " style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>" : '';
+    if ($isThumb) echo "<a class=\"thumb\" href=\"" . h($out) . "\" $rel style=\"background-image:url('/media/" . h($i['image']) . "')\"></a>";
+    $foto = ($i['image'] && !$isThumb) ? "<div class=\"media" . ($mode === 'full' ? '' : ' sm') . ($yt ? ' yt' : '') . "\"><a class=\"pic\" href=\"" . h($out) . "\" $rel" . ($yt ? youtube_attr($i['url']) : '') . " style=\"background-image:url('/media/" . h($i['image']) . "')\"></a></div>" : '';
     if (foco()) echo $foto;   // sin distracciones: la foto, antes del titular, flota a su derecha
-    echo "<h2><a href=\"" . h($i['url']) . "\" $rel>" . h(sin_emojis($i['title']) ?: $i['title']) . "</a></h2>";   // tambien lo ya guardado con emojis
+    echo "<h2><a href=\"" . h($out) . "\" $rel>" . h(sin_emojis($i['title']) ?: $i['title']) . "</a></h2>";   // tambien lo ya guardado con emojis
     if ($i['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($i['content'], 0, $mode === 'full' ? 240 : 160, '…')) . "</p>";
     if (!foco()) echo $foto;
     echo "<div class=\"actions\">";
     if ($medio) {
         if (isset($sent[$i['url']])) echo "<a class=\"sent\" href=\"/hilo/" . (int)$sent[$i['url']] . "\" title=\"" . h(t('ya está en Deltha: ver el hilo')) . "\">" . icon('reply') . "<span>" . t('en Deltha') . "</span></a>";
         elseif (user() || cfg('anon_can_submit') === '1') echo "<a class=\"send\" href=\"" . h(fuente_enviar_url($src, $i)) . "\" title=\"" . h(t('enviar esta noticia al radar')) . "\">" . icon('plus') . "<span>" . t('enviar al radar') . "</span></a>";
-        echo "<a class=\"share ext\" href=\"" . h($i['url']) . "\" $rel>" . icon('link') . "<span>" . h($yt ? t('ver en %s', 'YouTube') : t('leer en %s', $src['name'])) . "</span></a>";
+        echo "<a class=\"share ext\" href=\"" . h($out) . "\" $rel>" . icon('link') . "<span>" . h($yt ? t('ver en %s', 'YouTube') : t('leer en %s', $src['name'])) . "</span></a>";
         echo fuente_fav_form($src);   // «+ Seguir»: el medio o substack de esta noticia, a «Mis medios» / «Mis substacks»
     } else {
         echo "<a href=\"" . h($i['thread_url']) . "\" rel=\"noopener\" title=\"" . h(t('comentarios en %s', $src['name'])) . "\">" . icon('reply') . "<span>" . (int)$i['comments'] . "</span></a>";
