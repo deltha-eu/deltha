@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 203);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 204);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1194,6 +1194,18 @@ function refresh_meta(int $seconds): string {
  *  de page_header() (hoy, el hilo de un original). */
 $DDD_CRUMB = null;
 function page_crumb(string $href, string $label): void { global $DDD_CRUMB; $DDD_CRUMB = [$href, $label]; }
+/** Aviso a la comunidad (13/10/2026, admin → Avisos): un texto de hasta 150 palabras que, mientras este activado, sustituye a todos los
+ *  avisos grises de cabecera (<p class="notice">) de las paginas publicas. Se hace al vuelo: page_header() abre un buffer y
+ *  page_footer() cambia los notice por el aviso antes de enviar. Admin y moderacion quedan fuera. Vacio = no hay aviso activo. */
+function aviso_comunidad(): string {
+    static $h = null;
+    if ($h !== null) return $h;
+    $txt = trim((string)cfg('aviso_txt', ''));
+    if ((string)cfg('aviso_on', '0') !== '1' || $txt === '') return $h = '';
+    $html = saltos(h($txt));
+    $html = preg_replace('~(https?://[^\s<]+)~u', '<a href="$1" rel="noopener">$1</a>', $html);   // enlaces sueltos, pinchables
+    return $h = "<p class=\"notice aviso\">$html</p>";
+}
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $robots = robots_meta();   // antes del primer echo: tambien manda la cabecera X-Robots-Tag
@@ -1233,6 +1245,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     nav_tabs($tab, 'tabs-top');
     nav_fuentes($tab);
     echo "<main>";
+    if (aviso_comunidad() !== '' && !preg_match('~/(admin|moderacion)(\.php)?$~', (string)$_SERVER['SCRIPT_NAME'])) { $GLOBALS['DDD_AVISO_OB'] = true; ob_start(); }   // aviso a la comunidad: se sustituyen los notice en page_footer()
 }
 /* Dos menus: arriba el contenido (las dos portadas, el radar del que se nutren y los originales), abajo la comunidad y las
  * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
@@ -1309,6 +1322,13 @@ function footer_links(): string {
     return $h;
 }
 function page_footer(): void {
+    if (!empty($GLOBALS['DDD_AVISO_OB'])) {   // aviso a la comunidad (aviso_comunidad): cada <p class="notice"> de la pagina pasa a ser el aviso
+        $GLOBALS['DDD_AVISO_OB'] = false;
+        $cuerpo = (string)ob_get_clean();
+        $cuerpo = preg_replace('~<p class="notice(?: [^"]*)?">.*?</p>~su', aviso_comunidad(), $cuerpo, -1, $n);
+        if (!$n) $cuerpo = aviso_comunidad() . $cuerpo;   // pagina sin aviso gris: el aviso va arriba del todo
+        echo $cuerpo;
+    }
     echo "</main>";
     if (!empty($GLOBALS['DDD_SKINPROP_FORM'])) echo $GLOBALS['DDD_SKINPROP_FORM'];   // formulario de «ver con mi/su plantilla» (skin_propio_link)
     echo "<a class=\"fab\" href=\"/enviar\" aria-label=\"" . t('Enviar') . "\">" . icon('plus') . "</a>";
