@@ -885,7 +885,8 @@ form.plain label.radio { display: flex; gap: 8px; align-items: center; font-size
 .fz.comm .dot, .commhead .dot { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--cc, var(--line2)); margin-top: 4px; }
 .fz.comm { align-items: flex-start; }
 .fz.comm .prev { color: var(--muted); font-size: 14px; }
-.fz.comm > a.fzl { align-items: flex-start; }   /* fila con boton «Seguir» (migra-142) */
+.fz.comm > a.fzl { display: flex; gap: 10px; align-items: flex-start; flex: 1; min-width: 0; color: inherit; text-decoration: none; }   /* fila con boton «Seguir» (migra-142): el enlace es un flex como la fila y encoge; el boton va fuera (13/10/2026) */
+.fz.comm .fzt .meta { white-space: normal; }   /* movil: la linea de meta baja de linea en vez de pasar por debajo del boton */
 .commhead form.inline, .notice form.inline { display: inline; margin: 0; }   /* «ver con mi plantilla» (migra-143) */
 .commhead form.inline button.link, .notice form.inline button.link { font: inherit; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; }
 form.plain p.radios { margin: 0; } form.plain p.radios label { display: inline; font-weight: 400; }
