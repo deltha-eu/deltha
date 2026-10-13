@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 202);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 203);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -252,6 +252,14 @@ const DDD_URL_TRACK = ['fbclid', 'gclid', 'gclsrc', 'dclid', 'gbraid', 'wbraid',
     'mc_cid', 'mc_eid', '_hsenc', '_hsmi', '__hssc', '__hstc', '__hsfp', 'hsctatracking', 'mkt_tok', 'vero_id', 'vero_conv', 'oly_enc_id', 'oly_anon_id', 's_cid', '_ga', '_gl',
     'ref_src', 'ref_url', 'srsltid', 'xtor', 'smid', 'smtyp', 'cmpid', 'ocid', 'triedredirect', 'at_medium', 'at_campaign', 'at_custom1', 'at_custom2', 'at_custom3', 'at_custom4', 'pk_campaign', 'pk_kwd', 'pk_source', 'pk_medium',
     'mtm_campaign', 'mtm_source', 'mtm_medium', 'mtm_kwd', 'mtm_content', 'mtm_cid', 'mtm_group', 'mtm_placement'];
+/** Apunta una salida a un medio (13/10/2026): total por dia (clicks_daily, migra-144) y por dia y dominio (clicks_source, migra-147),
+ *  para «Salidas a los medios» de /estadisticas y su top de medios. La llaman /ir (envios) e /ir-fuente (fichas). Nunca rompe. */
+function salida_cuenta(PDO $pdo, ?string $dominio): void {
+    try { $pdo->exec("INSERT INTO clicks_daily (day, n) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE n = n + 1"); } catch (Throwable $e) {}
+    $dominio = strtolower(trim((string)$dominio));
+    if ($dominio === '') return;
+    try { $pdo->prepare("INSERT INTO clicks_source (day, source, n) VALUES (CURDATE(), ?, 1) ON DUPLICATE KEY UPDATE n = n + 1")->execute([mb_substr($dominio, 0, 100)]); } catch (Throwable $e) {}
+}
 /** URL de salida a un medio con nuestro utm (13/10/2026): utm_source=deltha&utm_medium=referral, detras de la query y antes del
  *  #fragmento, para que el medio vea en su analitica de donde le llega el trafico aunque se pierda el referer (apps, lectores).
  *  Se parte de la URL limpia (url_limpia) para no acumular utm ajenos. La usan /ir (envios) y fuente_post() (medios y substacks). */

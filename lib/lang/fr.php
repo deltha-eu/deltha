@@ -914,4 +914,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'este año' => 'cette année',
 'ayer' => 'hier',
 '(Datos desde el %s.)' => '(Données depuis le %s.)',
+'Medios con más salidas: %s' => 'Médias avec le plus de sorties : %s',
+'Todavía no hay salidas en este periodo.' => 'Pas encore de sorties sur cette période.',
 ];

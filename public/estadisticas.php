@@ -50,10 +50,25 @@ echo $tile($c['hoy'], t('comentarios hoy'), '/procesos?v=comentarios&d=hoy');
 echo $tile($c['total'], t('comentarios en total'), '/procesos?v=comentarios&d=todo');
 echo "</div>";
 echo "<h3 class=\"anah\">" . t('Salidas a los medios') . "</h3><p class=\"meta\" style=\"padding:4px 0 0\">" . t('Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.', h(cfg('site_name'))) . ' ' . t('(Datos desde el %s.)', h(fecha_larga('2026-10-12', lang()))) . "</p><div class=\"grid\">";
-echo $tile($k['hoy'], t('hoy'));
-echo $tile($k['mes'], t('este mes'));
-echo $tile($k['anio'], t('este año'));
+echo $tile($k['hoy'], t('hoy'), '/estadisticas?v=medios&p=hoy');
+echo $tile($k['mes'], t('este mes'), '/estadisticas?v=medios&p=mes');
+echo $tile($k['anio'], t('este año'), '/estadisticas?v=medios&p=anio');
 echo "</div>";
+// top de medios (13/10/2026, clicks_source migra-147): al pulsar una ficha, los diez dominios con mas salidas en ese periodo
+if (($_GET['v'] ?? '') === 'medios') {
+    $P = ['hoy' => [t('hoy'), "day = CURDATE()"], 'mes' => [t('este mes'), "day >= DATE_FORMAT(CURDATE(), '%Y-%m-01')"], 'anio' => [t('este año'), "day >= DATE_FORMAT(CURDATE(), '%Y-01-01')"]];
+    $p = isset($P[(string)($_GET['p'] ?? '')]) ? (string)$_GET['p'] : 'mes';
+    $top = [];
+    try { $top = $pdo->query("SELECT source, SUM(n) n FROM clicks_source WHERE {$P[$p][1]} GROUP BY source ORDER BY n DESC, source LIMIT 10")->fetchAll(); } catch (Throwable $e) {}
+    echo "<h3 class=\"anah\" id=\"medios\">" . t('Medios con más salidas: %s', $P[$p][0]) . "</h3>";
+    echo "<p class=\"meta\" style=\"padding:4px 0 0\">"; foreach ($P as $pk => $pv) echo ($pk === $p ? "<b>" . h($pv[0]) . "</b>" : "<a href=\"/estadisticas?v=medios&amp;p=$pk#medios\">" . h($pv[0]) . "</a>") . ($pk !== 'anio' ? ' · ' : ''); echo "</p>";
+    if (!$top) echo "<p class=\"end\">" . t('Todavía no hay salidas en este periodo.') . "</p>";
+    else {
+        echo "<ol class=\"topmedios\">";
+        foreach ($top as $i => $r) echo "<li><a href=\"/medio/" . rawurlencode($r['source']) . "\">" . h($r['source']) . "</a><b>" . $n($r['n']) . "</b></li>";
+        echo "</ol>";
+    }
+}
 if (user()) echo "<p class=\"end\"><a href=\"/usuarios\">" . t('Ver los últimos registrados') . "</a>" . (ana_on() ? " · <a href=\"/analitica\">" . t('Analítica: visitantes, sesiones y páginas vistas') . "</a>" : '') . "</p>";
 echo "</div>";
 page_footer();

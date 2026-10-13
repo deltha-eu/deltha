@@ -875,4 +875,6 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'este año' => 'aquest any',
 'ayer' => 'ahir',
 '(Datos desde el %s.)' => '(Dades des del %s.)',
+'Medios con más salidas: %s' => 'Mitjans amb més sortides: %s',
+'Todavía no hay salidas en este periodo.' => 'Encara no hi ha sortides en aquest període.',
 ];

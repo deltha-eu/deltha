@@ -875,4 +875,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'este año' => 'aurten',
 'ayer' => 'atzo',
 '(Datos desde el %s.)' => '(Datuak %s-tik.)',
+'Medios con más salidas: %s' => 'Irteera gehien dituzten hedabideak: %s',
+'Todavía no hay salidas en este periodo.' => 'Oraindik ez dago irteerarik aldi honetan.',
 ];

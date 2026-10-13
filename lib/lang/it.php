@@ -876,4 +876,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'este año' => 'quest\'anno',
 'ayer' => 'ieri',
 '(Datos desde el %s.)' => '(Dati dal %s.)',
+'Medios con más salidas: %s' => 'Testate con più uscite: %s',
+'Todavía no hay salidas en este periodo.' => 'Non ci sono ancora uscite in questo periodo.',
 ];
