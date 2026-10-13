@@ -120,7 +120,10 @@ function pin_tag(array $pin): string {
     if ((int)$pin['by_admin']) return "<span class=\"pintag\">" . t('destacada') . "</span>";
     if (!pin_activo($pin)) return (is_admin() || pin_mio($pin)) ? "<span class=\"pintag cola\">" . t('en cola · empieza en %d min', pin_min_hasta((string)$pin['starts'])) . "</span>" : '';
     $min = pin_min_hasta((string)$pin['expires']);
-    return "<span class=\"pintag\">" . t('destacada por %s', "<a href=\"/u/" . rawurlencode((string)$pin['login']) . "\">" . h((string)$pin['login']) . "</a>") . " · " . t('%d min', $min) . "</span>";
+    // lo que costo (13/10/2026): pins.cost si lo hay (migra-154); si no, el precio actual del grupo. Que se vea que se pago con aura.
+    $coste = isset($pin['cost']) && $pin['cost'] !== null ? (float)$pin['cost'] : pin_cost((string)$pin['grupo']);
+    $paga = $coste > 0 ? " <small class=\"pincost\">(" . t('%s de aura', num_es($coste)) . ")</small>" : '';
+    return "<span class=\"pintag\">" . t('destacada por %s', "<a href=\"/u/" . rawurlencode((string)$pin['login']) . "\">" . h((string)$pin['login']) . "</a>") . $paga . " · " . t('%d min', $min) . "</span>";
 }
 
 /** Destaca algo. Devuelve '' si bien o el motivo si no. $enPortada: false si es un envio del radar (solo el admin puede: lo publica). */
@@ -154,8 +157,14 @@ function pin_poner(PDO $pdo, array $u, string $what, int $ref, string $grupo, bo
     $st = $pdo->prepare("SELECT MAX(expires) FROM pins WHERE by_admin = 0 AND what = ? AND grupo = ? AND expires > NOW()");
     $st->execute([$what, $grupo]);
     $desde = (string)($st->fetchColumn() ?: '');
-    if ($desde === '') $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, NOW(), NOW() + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, pin_minutos($grupo)]);
-    else $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, ?, ? + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, $desde, $desde, pin_minutos($grupo)]);
+    // cost: lo que se pago (migra-154), para la etiqueta «destacada por nick (0,5 de aura)» aunque el precio cambie despues
+    try {
+        if ($desde === '') $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires, cost) VALUES (?,?,?,?,0, NOW(), NOW() + INTERVAL ? MINUTE, ?)")->execute([$what, $ref, $grupo, $uid, pin_minutos($grupo), pin_cost($grupo)]);
+        else $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires, cost) VALUES (?,?,?,?,0, ?, ? + INTERVAL ? MINUTE, ?)")->execute([$what, $ref, $grupo, $uid, $desde, $desde, pin_minutos($grupo), pin_cost($grupo)]);
+    } catch (PDOException $e) {   // migra-154 aun sin aplicar: sin la columna
+        if ($desde === '') $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, NOW(), NOW() + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, pin_minutos($grupo)]);
+        else $pdo->prepare("INSERT INTO pins (what, ref_id, grupo, user_id, by_admin, starts, expires) VALUES (?,?,?,?,0, ?, ? + INTERVAL ? MINUTE)")->execute([$what, $ref, $grupo, $uid, $desde, $desde, pin_minutos($grupo)]);
+    }
     return '';
 }
 /** Quita una destacada: el admin, cualquiera; un usuario, solo la suya (no se devuelve el aura). */

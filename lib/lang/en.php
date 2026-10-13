@@ -917,4 +917,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '(Datos desde el %s.)' => '(Data since %s.)',
 'Medios con más salidas: %s' => 'Media with the most outbound clicks: %s',
 'Todavía no hay salidas en este periodo.' => 'There are no outbound clicks in this period yet.',
+'%s de aura' => '%s aura',
 ];

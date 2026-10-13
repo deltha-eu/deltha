@@ -877,4 +877,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 '(Datos desde el %s.)' => '(Datos desde o %s.)',
 'Medios con más salidas: %s' => 'Medios con máis saídas: %s',
 'Todavía no hay salidas en este periodo.' => 'Aínda non hai saídas neste período.',
+'%s de aura' => '%s de aura',
 ];

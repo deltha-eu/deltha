@@ -878,4 +878,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '(Datos desde el %s.)' => '(Dati dal %s.)',
 'Medios con más salidas: %s' => 'Testate con più uscite: %s',
 'Todavía no hay salidas en este periodo.' => 'Non ci sono ancora uscite in questo periodo.',
+'%s de aura' => '%s di aura',
 ];
