@@ -200,15 +200,18 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
     if (!fuentes_on() || !fuente_kind_visible($kind)) return;   // canales y agregadores: solo desde fuentes_nivel_aura
     foreach ([$kind => $title] as $kind => $title) {
         $mylang = fuentes_solo_mi_idioma();   // «solo fuentes en mi idioma»: fuera las de otro idioma (las de idioma desconocido se ven)
-        // cinco noticias de cinco fuentes distintas: la mas reciente de cada una (si un medio publica seis seguidas no acapara el modulo)
-        $st = $pdo->prepare("SELECT i.title, i.url, s.name, s.slug, s.source_id FROM source_items i JOIN sources s ON s.source_id = i.source_id
-                              WHERE s.kind = ? AND s.status = 'ok' AND s.listed = 1 AND i.phase = 'portada'" . ($mylang ? " AND s.lang IN ('', ?)" : "") . " ORDER BY i.pub_date DESC LIMIT 80");
+        // cinco noticias de cinco fuentes distintas: las cinco fuentes que han publicado mas recientemente y la ultima noticia de cada una.
+        // (Antes se cogian las 80 noticias mas recientes y se quitaban repetidas: si dos fuentes acababan de entrar con 40 items cada
+        // una, el modulo se quedaba en dos filas. 14/10/2026.)
+        $st = $pdo->prepare("SELECT s.source_id, s.name, s.slug, MAX(i.pub_date) AS ult FROM source_items i JOIN sources s ON s.source_id = i.source_id
+                              WHERE s.kind = ? AND s.status = 'ok' AND s.listed = 1 AND i.phase = 'portada'" . ($mylang ? " AND s.lang IN ('', ?)" : "") . "
+                              GROUP BY s.source_id, s.name, s.slug ORDER BY ult DESC LIMIT 5");
         $st->execute($mylang ? [$kind, lang()] : [$kind]);
-        $rows = []; $vistas = [];
+        $rows = [];
+        $it = $pdo->prepare("SELECT title, url FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC, item_id DESC LIMIT 1");
         foreach ($st->fetchAll() as $r) {
-            if (isset($vistas[(int)$r['source_id']])) continue;
-            $vistas[(int)$r['source_id']] = true; $rows[] = $r;
-            if (count($rows) === 5) break;
+            $it->execute([(int)$r['source_id']]);
+            if ($n = $it->fetch()) $rows[] = $r + $n;
         }
         if (!$rows) continue;
         // «todos» lleva al catalogo filtrado por este grupo (/fuentes?k=medio|newsletter)
