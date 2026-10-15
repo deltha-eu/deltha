@@ -269,7 +269,7 @@ function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'):
 /* ---- lectura de feeds (cron) ---------------------------------------- */
 
 /** Llamada cada minuto desde promocionar.php: lee las fuentes cuyo intervalo haya vencido. Devuelve lineas de log. */
-function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $maxSec = null): array {
+function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $maxSec = null, string $kind = ''): array {   // $kind: solo ese tipo (boton de admin, 15/10/2026)
     if (!fuentes_on()) return [];
     $log = [];
     // Tope por pasada: con muchas fuentes vencidas a la vez (p. ej. 50 substacks recien dados de alta, cada una con 20 fotos que
@@ -279,7 +279,7 @@ function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $ma
     $maxN   = $maxN   ?? max(1, (int)cfg('sources_per_tick', 3));
     $maxSec = $maxSec ?? max(5, (int)cfg('sources_tick_seconds', 40));
     $t0 = time(); $n = 0;
-    $due = array_values(array_filter(fuentes_activas($pdo), fn($src) => empty($src['relay']) && ($force || !$src['last_fetch'] || time() - strtotime($src['last_fetch']) >= max(1, (int)$src['interval_min']) * 60 - 5)));   // relay = 1: la lee el lector local (TIBERIO), no el cron
+    $due = array_values(array_filter(fuentes_activas($pdo, $kind), fn($src) => empty($src['relay']) && ($force || !$src['last_fetch'] || time() - strtotime($src['last_fetch']) >= max(1, (int)$src['interval_min']) * 60 - 5)));   // relay = 1: la lee el lector local (TIBERIO), no el cron
     usort($due, fn($a, $b) => strcmp((string)$a['last_fetch'], (string)$b['last_fetch']));   // NULL ('') primero, luego la mas antigua
     foreach ($due as $i => $src) {
         if ($n >= $maxN || time() - $t0 >= $maxSec) { $log[] = "fuentes: " . (count($due) - $i) . " pendientes para la proxima pasada"; break; }
