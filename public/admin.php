@@ -131,8 +131,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($act === 'fuente_leer_todas') {
         // desde la web, como mucho ~25 s (Cloudflare corta a los 100 s con un 524): las mas atrasadas primero; el resto lo sigue el cron
         @set_time_limit(90);
-        $out = fuentes_tick($pdo, true, 50, 25);
-        if (!$out) $out[] = 'No hay fuentes activas.';
+        $lk = (string)post('kind');   // '' = todas; o solo un tipo (newsletter | medio | youtube | agregador), 15/10/2026
+        if (!in_array($lk, ['newsletter', 'medio', 'youtube', 'agregador'], true)) $lk = '';
+        $out = fuentes_tick($pdo, true, 50, 25, $lk);
+        if (!$out) $out[] = $lk === '' ? 'No hay fuentes activas.' : 'No hay fuentes activas de ese tipo (o están apagadas en Config).';
         elseif (str_contains((string)end($out), 'pendientes')) $out[] = 'Las que faltan las lee el cron en los próximos minutos (o vuelve a pulsar el botón).';
     } elseif ($act === 'fuente_foto') {
         // diagnostico: por que no hay foto en la ultima noticia sin foto de esta fuente
@@ -676,7 +678,10 @@ if ($tab === 'usuarios') {
         return $h . "</table></form>";
     };
     echo "<h3>Fuentes externas</h3><p><small>Sitios con RSS «pintados» con Deltha, solo lectura (<a href=\"/fuentes\">catálogo público</a>, «Todas las fuentes»). <b>Medio</b>: sus últimas noticias, que los usuarios siguen con el botón «Seguir», sin límite («Mis medios»; en el menú salen los <code>media_max_per_user</code> más recientes), con botón «enviar a Nuevas» (tema propuesto: el de aquí). <b>Newsletter</b>: igual que un medio, pero se elige en el grupo aparte «Mis substacks» (hasta <code>news_max_per_user</code>). <b>Destacado</b>: los medios que ven en el menú y el pie los anónimos y las cuentas que aún no han elegido (hasta <code>media_max_per_user</code>). <b>Canal de YouTube</b>: igual que un medio, en el grupo «Mis canales»; en «web» va la dirección del canal (<code>https://www.youtube.com/@nombre</code>) y el RSS se deja vacío: se calcula al guardar (solo vídeos largos, sin shorts ni directos, salvo <code>youtube_shorts=1</code>). La miniatura se guarda en /media y el vídeo se ve en YouTube. <code>sources_youtube=0</code> los apaga todos. <b>Agregador</b> (Menéame): portada + cola con fases y votos de la fuente. El cron las lee cada <code>interval_min</code> minutos; las imágenes se guardan en /media (og:image si el RSS no trae). <code>sources_enabled=0</code> en Config apaga todo.</small></p>";
-    echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><button class=\"btn\">Leer todas las fuentes ahora</button><small>sin esperar al intervalo; tarda unos segundos por fuente (feeds e imágenes)</small></form>";
+    // «Leer ahora»: todas o solo un tipo (los botones llevan name=kind; el de la subpestaña abierta va primero), 15/10/2026
+    $lb = "<button class=\"btn\" name=\"kind\" value=\"\">Leer todas las fuentes ahora</button>";
+    foreach ([$fk => $FK[$fk] ?? ''] + $FK as $k => $v) if ($v !== '') $lb .= " <button class=\"btn sm\" name=\"kind\" value=\"$k\">solo " . ($k === 'newsletter' ? 'substacks' : ($k === 'youtube' ? 'canales' : mb_strtolower($v))) . "</button>";
+    echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><input type=\"hidden\" name=\"k\" value=\"" . h($fk) . "\">$lb<small>sin esperar al intervalo; como mucho 50 fuentes y ~25 s por pulsación, las más atrasadas primero; el resto lo sigue el cron</small></form>";
     $nk = $pdo->query("SELECT kind, COUNT(*) FROM sources GROUP BY kind")->fetchAll(PDO::FETCH_KEY_PAIR);
     echo "<nav class=\"sub\">";
     foreach ($FK as $k => $v) echo "<a href=\"/admin?t=fuentes&amp;k=$k\"" . ($k === $fk && $fq === '' ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
