@@ -879,4 +879,13 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Medios con más salidas: %s' => 'Medien mit den meisten Weiterleitungen: %s',
 'Todavía no hay salidas en este periodo.' => 'In diesem Zeitraum gibt es noch keine Weiterleitungen.',
 '%s de aura' => '%s Aura',
+// topes de envio (lib/topes.php, 15/10/2026)
+'Has llegado al máximo de %d envíos por hora. Espera un rato antes de enviar otra noticia.' => 'Du hast das Maximum von %d Einsendungen pro Stunde erreicht. Warte eine Weile, bevor du eine weitere Nachricht einsendest.',
+'Sin cuenta se pueden enviar %d noticias por hora y ya las has enviado. <a href="/registro">Regístrate</a> para enviar sin ese límite.' => 'Ohne Konto können %d Nachrichten pro Stunde eingesendet werden, und die hast du schon eingesendet. <a href="/registro">Registriere dich</a>, um ohne dieses Limit einzusenden.',
+'Hoy ya se han enviado %d noticias de %s, el máximo diario por medio. Prueba con una de otro medio o vuelve mañana.' => 'Heute wurden schon %d Nachrichten von %s eingesendet, das Tagesmaximum pro Medium. Versuche eine von einem anderen Medium oder komm morgen wieder.',
+'De %s ya se han enviado hoy %d noticias de un máximo de %d al día.' => 'Von %s wurden heute schon %d Nachrichten eingesendet, von maximal %d pro Tag.',
+'ese canal de YouTube' => 'dieser YouTube-Kanal',
+'Sin cuenta se pueden enviar %d noticias por hora.' => 'Ohne Konto können %d Nachrichten pro Stunde eingesendet werden.',
+'este publicador ha llegado al máximo diario de envíos' => 'dieser Herausgeber hat das Tagesmaximum an Einsendungen erreicht',
+'%d hoy de %s' => '%d heute von %s',
 ];

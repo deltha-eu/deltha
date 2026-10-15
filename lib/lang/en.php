@@ -918,4 +918,13 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Medios con más salidas: %s' => 'Media with the most outbound clicks: %s',
 'Todavía no hay salidas en este periodo.' => 'There are no outbound clicks in this period yet.',
 '%s de aura' => '%s aura',
+// topes de envio (lib/topes.php, 15/10/2026)
+'Has llegado al máximo de %d envíos por hora. Espera un rato antes de enviar otra noticia.' => 'You have reached the maximum of %d submissions per hour. Wait a while before sending another story.',
+'Sin cuenta se pueden enviar %d noticias por hora y ya las has enviado. <a href="/registro">Regístrate</a> para enviar sin ese límite.' => 'Without an account you can send %d stories per hour, and you have already sent them. <a href="/registro">Sign up</a> to send without that limit.',
+'Hoy ya se han enviado %d noticias de %s, el máximo diario por medio. Prueba con una de otro medio o vuelve mañana.' => 'Today %d stories from %s have already been sent, the daily maximum per outlet. Try one from another outlet or come back tomorrow.',
+'De %s ya se han enviado hoy %d noticias de un máximo de %d al día.' => 'From %s, %d stories have already been sent today out of a maximum of %d per day.',
+'ese canal de YouTube' => 'that YouTube channel',
+'Sin cuenta se pueden enviar %d noticias por hora.' => 'Without an account you can send %d stories per hour.',
+'este publicador ha llegado al máximo diario de envíos' => 'this publisher has reached the daily maximum of submissions',
+'%d hoy de %s' => '%d today from %s',
 ];

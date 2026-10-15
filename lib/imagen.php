@@ -365,9 +365,12 @@ function imagen_candidatas_cuerpo(string $html, string $pageUrl): array {
 /** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null).
  *  $conImagen = false: no descarga la og:image (el llamante ya tiene foto, p. ej. la del RSS de un medio). */
 function extraer_meta(string $url, bool $conImagen = true): array {
-    $out = ['title' => '', 'description' => '', 'image' => null];
+    $out = ['title' => '', 'description' => '', 'image' => null, 'channel' => null];   // channel: id del canal (UC…) si es un video de YouTube (topes de envio, 15/10/2026)
     $html = http_get($url, (int)cfg('og_timeout_sec', 3), og_max_bytes());
     if (!$html) return $out;
+    if (preg_match('/itemprop=["\']channelId["\'][^>]*content=["\'](UC[\w-]{20,40})["\']/i', $html, $m)
+     || preg_match('/content=["\'](UC[\w-]{20,40})["\'][^>]*itemprop=["\']channelId["\']/i', $html, $m)
+     || preg_match('/"channelId"\s*:\s*"(UC[\w-]{20,40})"/', $html, $m)) $out['channel'] = $m[1];
     $raw = $html;   // para la og:image, el HTML tal cual (sin la conversion de charset)
     // charset: si no es utf-8, convertir
     if (preg_match('/charset=["\']?([\w-]+)/i', $html, $m) && strcasecmp($m[1], 'utf-8') !== 0) {
