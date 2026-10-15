@@ -878,4 +878,13 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Medios con más salidas: %s' => 'Medios con máis saídas: %s',
 'Todavía no hay salidas en este periodo.' => 'Aínda non hai saídas neste período.',
 '%s de aura' => '%s de aura',
+// topes de envio (lib/topes.php, 15/10/2026)
+'Has llegado al máximo de %d envíos por hora. Espera un rato antes de enviar otra noticia.' => 'Chegaches ao máximo de %d envíos por hora. Agarda un anaco antes de enviar outra noticia.',
+'Sin cuenta se pueden enviar %d noticias por hora y ya las has enviado. <a href="/registro">Regístrate</a> para enviar sin ese límite.' => 'Sen conta pódense enviar %d noticias por hora e xa as enviaches. <a href="/registro">Rexístrate</a> para enviar sen ese límite.',
+'Hoy ya se han enviado %d noticias de %s, el máximo diario por medio. Prueba con una de otro medio o vuelve mañana.' => 'Hoxe xa se enviaron %d noticias de %s, o máximo diario por medio. Proba cunha doutro medio ou volve mañá.',
+'De %s ya se han enviado hoy %d noticias de un máximo de %d al día.' => 'De %s xa se enviaron hoxe %d noticias dun máximo de %d ao día.',
+'ese canal de YouTube' => 'esa canle de YouTube',
+'Sin cuenta se pueden enviar %d noticias por hora.' => 'Sen conta pódense enviar %d noticias por hora.',
+'este publicador ha llegado al máximo diario de envíos' => 'este publicador chegou ao máximo diario de envíos',
+'%d hoy de %s' => '%d hoxe de %s',
 ];

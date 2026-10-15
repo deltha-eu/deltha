@@ -878,4 +878,13 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Medios con más salidas: %s' => 'Irteera gehien dituzten hedabideak: %s',
 'Todavía no hay salidas en este periodo.' => 'Oraindik ez dago irteerarik aldi honetan.',
 '%s de aura' => '%s aura',
+// topes de envio (lib/topes.php, 15/10/2026)
+'Has llegado al máximo de %d envíos por hora. Espera un rato antes de enviar otra noticia.' => 'Orduko %d bidalketako gehienezkora iritsi zara. Itxaron pixka bat beste albiste bat bidali aurretik.',
+'Sin cuenta se pueden enviar %d noticias por hora y ya las has enviado. <a href="/registro">Regístrate</a> para enviar sin ese límite.' => 'Konturik gabe orduko %d albiste bidal daitezke, eta dagoeneko bidali dituzu. <a href="/registro">Erregistratu</a> muga hori gabe bidaltzeko.',
+'Hoy ya se han enviado %d noticias de %s, el máximo diario por medio. Prueba con una de otro medio o vuelve mañana.' => 'Gaur dagoeneko %2$s-(e)ko %1$d albiste bidali dira, hedabide bakoitzeko eguneko gehienezkoa. Saiatu beste hedabide batekoa bidaltzen edo itzuli bihar.',
+'De %s ya se han enviado hoy %d noticias de un máximo de %d al día.' => '%s-(e)tik gaur dagoeneko %d albiste bidali dira, eguneko gehienez %d.',
+'ese canal de YouTube' => 'YouTubeko kanal hori',
+'Sin cuenta se pueden enviar %d noticias por hora.' => 'Konturik gabe orduko %d albiste bidal daitezke.',
+'este publicador ha llegado al máximo diario de envíos' => 'argitaratzaile hau eguneko bidalketa-mugara iritsi da',
+'%d hoy de %s' => 'gaur %d, %s-(e)koak',
 ];

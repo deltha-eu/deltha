@@ -3,14 +3,16 @@ require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/imagen.php';
 require __DIR__ . '/../lib/aura.php';
 require __DIR__ . '/../lib/moderacion.php';
+require __DIR__ . '/../lib/topes.php';   // topes de ritmo: por persona y por publicador (15/10/2026)
 
 if (!user() && cfg('anon_can_submit') !== '1') redirect('/login');
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();   // alfabetico, como en el resto de selectores
 $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
-$err = null;
+$err = null; $aviso = null;
 $step = post('step') ?: '1';
-$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null, 'lang' => ''];   // lang: '' = detectar al guardar
+$anonKey = user() ? null : envio_anon_key();
+$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null, 'lang' => '', 'pub' => null];   // lang: '' = detectar al guardar; pub: publicador (tope diario)
 
 // Prerrelleno por GET (boton «enviar al radar» de un medio en /fuente, o un marcador): ?url=…&title=…&content=…&topic=ID
 // equivale a haber pasado el paso 1 con esa URL; titular y entradilla del feed mandan sobre los de la pagina si vienen.
@@ -37,6 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $d->execute([$f['url']]);
         if ($dup = $d->fetchColumn()) { $err = t('Ese enlace ya está enviado: <a href="/hilo/%d">verlo</a>.', $dup); $step = '1'; }
     }
+    // tope por persona (anonimo por huella, cuenta por user_id): se avisa ya en el paso 1, antes de rellenar nada
+    if (!$err && $f['url'] !== '' && ($tp = envio_tope_persona($pdo, user(), (string)$anonKey))) { $err = $tp; $step = '1'; }
 
     if (!$err && $step === '1') {
         if ($f['url'] === '') redirect('/articulo');
@@ -56,10 +60,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($pre['content'] !== '') $f['content'] = $pre['content'];
                 if ($pre['topic'] && in_array($pre['topic'], array_column($topics, 'topic_id'), false)) $f['topic'] = $pre['topic'];
             }
+            // tope diario del publicador (dominio o canal de YouTube): si ya esta lleno, se dice aqui y no se pasa al paso 2
+            $f['pub'] = envio_pub_key($f['url'], $m['channel'] ?? null);
+            if ($te = envio_tope_publicador($pdo, $f['pub'])) { $err = $te; $step = '1'; }
+            else $aviso = envio_aviso_publicador($pdo, $f['pub']);
         }
-        $step = '2';
+        if (!$err) $step = '2';
     } elseif (!$err) {
         // paso 2 -> guardar
+        // publicador: el dominio sale de la URL (no del formulario); el canal de YouTube viene del paso 1 (campo oculto) y, si no
+        // viene, se vuelve a leer la pagina: asi no se salta el tope quien llame al paso 2 directamente
+        $f['pub'] = envio_pub_key($f['url']);
+        if ($f['pub'] === null && preg_match('/(^|\.)(youtube\.com|youtu\.be)$/', preg_replace('/^m\./', '', (string)source_of($f['url'])))) {
+            $pubForm = envio_pub_key_valida((string)post('pub'));
+            if ($pubForm !== null && str_starts_with($pubForm, 'yt:')) $f['pub'] = $pubForm;
+            else { $mm = extraer_meta($f['url'], false); $f['pub'] = envio_pub_key($f['url'], $mm['channel'] ?? null); }
+        }
+        if ($te = envio_tope_publicador($pdo, $f['pub'])) $err = $te;
         $f['lang'] = lang_post();   // idioma elegido ('' = detectar)
         $f['title']   = mb_substr(texto_plano(post('title')), 0, 200);     // sin etiquetas HTML (08/10/2026)
         $f['content'] = mb_substr(texto_plano(post('content')), 0, 2000);
@@ -80,9 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $u = user();
             $status = 'nuevas';   // posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
             $pdo->beginTransaction();
-            $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status)
-                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), $f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
+            $pdo->prepare("INSERT INTO stories (content_type, user_id, anon_key, topic_id, community_id, title, url, source, pub_key, lang, content, image, status)
+                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                ->execute([$u['user_id'] ?? null, $u ? null : $anonKey, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), $f['pub'], $f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
             $sid = (int)$pdo->lastInsertId();
             $pdo->prepare("UPDATE stories SET portada = ? WHERE story_id = ?")->execute([portada_de($pdo, ['url' => $f['url'], 'source' => source_of($f['url'])]), $sid]);   // Medios o Substacks (el ciclo lo recalcula)
             if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
@@ -97,8 +114,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 page_header(t('Enviar'));
-if (!user()) echo "<p class=\"notice\">" . t('Envías como anónimo. Si <a href="/login">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30)) . "</p>";
+if (!user()) echo "<p class=\"notice\">" . t('Envías como anónimo. Si <a href="/login">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30))
+    . ((int)cfg('send_anon_per_hour', 3) > 0 ? ' ' . t('Sin cuenta se pueden enviar %d noticias por hora.', (int)cfg('send_anon_per_hour', 3)) : '') . "</p>";
 if ($err) echo "<p class=\"error\">$err</p>";
+if (!$err && $aviso) echo "<p class=\"notice\">$aviso</p>";   // «de este medio ya van N de 5 hoy»: avisa, no impide
 
 if ($step === '1') {
     echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"step\" value=\"1\">";
@@ -109,6 +128,7 @@ if ($step === '1') {
 } else {
     echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"step\" value=\"2\">";
     echo "<input type=\"hidden\" name=\"url\" value=\"" . h($f['url']) . "\">";
+    if ($f['pub'] !== null && str_starts_with($f['pub'], 'yt:')) echo "<input type=\"hidden\" name=\"pub\" value=\"" . h($f['pub']) . "\">";   // canal de YouTube leido en el paso 1
     if ($f['url']) echo "<p class=\"meta\">" . h(source_of($f['url'])) . "" . t(' · <a href="/enviar">cambiar enlace</a>') . "</p>";
     echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
     echo "" . t('<label>Entradilla</label>') . "<textarea name=\"content\" maxlength=\"2000\">" . h($f['content']) . "</textarea>";

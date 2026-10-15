@@ -899,4 +899,13 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Medios con más salidas: %s' => 'En çok çıkış yapılan kaynaklar: %s',
 'Todavía no hay salidas en este periodo.' => 'Bu dönemde henüz çıkış yok.',
 '%s de aura' => '%s aura',
+// topes de envio (lib/topes.php, 15/10/2026)
+'Has llegado al máximo de %d envíos por hora. Espera un rato antes de enviar otra noticia.' => 'Saatte en fazla %d gönderime ulaştınız. Başka bir haber göndermeden önce biraz bekleyin.',
+'Sin cuenta se pueden enviar %d noticias por hora y ya las has enviado. <a href="/registro">Regístrate</a> para enviar sin ese límite.' => 'Hesapsız saatte %d haber gönderilebilir ve bunları zaten gönderdiniz. Bu sınır olmadan göndermek için <a href="/registro">kaydolun</a>.',
+'Hoy ya se han enviado %d noticias de %s, el máximo diario por medio. Prueba con una de otro medio o vuelve mañana.' => 'Bugün %2$s kaynağından zaten %1$d haber gönderildi; bu, yayın başına günlük en yüksek sayı. Başka bir yayından bir haber deneyin ya da yarın tekrar gelin.',
+'De %s ya se han enviado hoy %d noticias de un máximo de %d al día.' => '%s kaynağından bugün zaten %d haber gönderildi; günlük en fazla %d.',
+'ese canal de YouTube' => 'o YouTube kanalı',
+'Sin cuenta se pueden enviar %d noticias por hora.' => 'Hesapsız saatte %d haber gönderilebilir.',
+'este publicador ha llegado al máximo diario de envíos' => 'bu yayıncı günlük gönderim sınırına ulaştı',
+'%d hoy de %s' => 'bugün %2$s kaynağından %1$d',
 ];

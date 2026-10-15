@@ -253,6 +253,21 @@ if ($ids) {
     foreach ($pdo->query("SELECT user_id, login, avatar, aura FROM users WHERE user_id IN (" . implode(',', $ids) . ")") as $r) $U[(int)$r['user_id']] = $r;
 }
 
+// publicadores que pasan del tope diario (lib/topes.php, 15/10/2026): «· N hoy de dominio» en rojo junto al envio
+$TOPE = []; $maxPub = (int)cfg('send_domain_per_day', 5);
+if ($maxPub > 0 && ($sids = array_values(array_unique(array_map(fn($e) => (int)$e['story_id'], array_filter($ev, fn($e) => $e['kind'] === 'envio')))))) {
+    try {
+        $pk = $pdo->query("SELECT story_id, pub_key FROM stories WHERE pub_key IS NOT NULL AND story_id IN (" . implode(',', $sids) . ")")->fetchAll(PDO::FETCH_KEY_PAIR);
+        if ($pk) {
+            $in = implode(',', array_fill(0, count(array_unique($pk)), '?'));
+            $st = $pdo->prepare("SELECT pub_key, COUNT(*) FROM stories WHERE pub_key IN ($in) AND sent_date >= NOW() - INTERVAL 1 DAY AND status NOT IN ('rejected','discard') GROUP BY pub_key");
+            $st->execute(array_values(array_unique($pk)));
+            $cnt = $st->fetchAll(PDO::FETCH_KEY_PAIR);
+            foreach ($pk as $sid => $k) if (($cnt[$k] ?? 0) >= $maxPub) $TOPE[(int)$sid] = [$k, (int)$cnt[$k]];
+        }
+    } catch (Throwable $e) {}   // sin la columna (migracion pendiente) no se marca nada
+}
+
 $ventana = $d === 'hoy' ? t('solo hoy') : ($d === 'todo' ? t('todo el histórico') : t('últimos %d días', $DIAS));
 echo "<p class=\"notice\">" . t('Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.', $ventana, (int)cfg('ghost_minutes', 30)) . "</p>";
 if (!$ev) echo "<p class=\"end\">" . t('Todavía no hay actividad de este tipo.') . "</p>";
@@ -270,6 +285,7 @@ foreach ($ev as $e) {
             $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
             $lead = who_avatar($row, $rev, $aura, $name);
             $txt = "<b>" . h($name) . "</b> " . t('envía') . " $title";
+            if (isset($TOPE[$sid])) $txt .= " <span class=\"tope\" title=\"" . h(t('este publicador ha llegado al máximo diario de envíos')) . "\">" . h(t('%d hoy de %s', $TOPE[$sid][1], str_starts_with($TOPE[$sid][0], 'yt:') ? t('ese canal de YouTube') : $TOPE[$sid][0])) . "</span>";
             $ic = 'new'; break;
         case 'comentario':
             $rev = ghost_over($e['ts']);
