@@ -1273,6 +1273,22 @@ details.editbox form.plain { padding-top: 0; }
   [data-skin="orange"] .post .media, [data-skin="orange"] .post .media.sm { width: 80px; }
   [data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { font-size: 17px; }
 }
+/* (15/10/2026) noticias de fuentes (/fuente, Mis medios): no hay caja de votos y la barra lleva tres cosas (enviar al radar, leer en…, Seguir).
+   Con display: contents las tres caian en la misma celda «actions» y el form.seguir, sin area, se colocaba solo en la columna de votos, encima
+   del titular. Aqui la rejilla no tiene columna de votos y la barra es una fila flexible que salta de linea si no cabe. */
+[data-skin="orange"] .post.ext.full, [data-skin="orange"] .post.ext.compact { grid-template-columns: 24px minmax(0, 1fr) 96px; grid-template-areas: "h2 h2 media" "av l1 media" "lead lead media" "actions actions actions"; }
+[data-skin="orange"] .post.ext .thumb { grid-area: media; width: 96px; aspect-ratio: 4 / 3; margin: 0; border-radius: 5px; }
+[data-skin="orange"] .post.ext.full .actions, [data-skin="orange"] .post.ext.compact .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; grid-area: actions; margin-top: 6px; }
+[data-skin="orange"] .post.ext .actions > a { grid-area: auto; margin-top: 0; }
+[data-skin="orange"] .post.ext .actions > a.share { margin-left: auto; padding-right: 8px; }
+[data-skin="orange"] .post.ext .actions > a.share span { white-space: normal; }
+[data-skin="orange"] .post.ext .actions form.seguir { order: -1; }   /* «+ Seguir» el primero, como en las demas skins */
+[data-skin="orange"] .post.ext .actions form.seguir button { border-color: var(--or); color: var(--or); }
+[data-skin="orange"] .post.ext .actions form.seguir button:hover { background: var(--or); color: #fff; }
+@media (max-width: 420px) {
+  [data-skin="orange"] .post.ext.full, [data-skin="orange"] .post.ext.compact { grid-template-columns: 22px minmax(0, 1fr) 80px; }
+  [data-skin="orange"] .post.ext .thumb { width: 80px; }
+}
 /* el hilo: misma caja, sin rejilla */
 [data-skin="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 12px 14px 12px; background: var(--bg); }   /* 12 abajo (antes 8): el enlace al medio quedaba pegado al borde */
 [data-skin="orange"] .hilo .main h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; }
