@@ -18,7 +18,7 @@ $st->bindValue(2, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 
 page_header(t('Originales'), 'originales');
-echo "<p class=\"notice\">" . t('Textos propios de la comunidad, hasta %d palabras, del más reciente al más antiguo. No van a las portadas: se leen, se votan y se comentan aquí. <a href="/articulo">Escribe el tuyo</a>.', (int)cfg('article_max_words', 1000)) . ' ' . t('No se permiten textos ya publicados en otros sitios ni extractos de ellos.') . "</p>";
+echo "<p class=\"notice keep\">" . t('Textos propios de la comunidad, hasta %d palabras, del más reciente al más antiguo. No van a las portadas: se leen, se votan y se comentan aquí. <a href="/articulo">Escribe el tuyo</a>.', (int)cfg('article_max_words', 1000)) . ' ' . t('No se permiten textos ya publicados en otros sitios ni extractos de ellos.') . "</p>";
 $n = 0;
 if ($page === 1) foreach ($pins as $s) { story_post($pdo, $s, 'full'); $n++; }   // destacadas, las primeras
 foreach ($st as $s) { story_post($pdo, $s, 'full'); $n++; }

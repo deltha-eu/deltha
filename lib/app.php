@@ -1196,7 +1196,8 @@ $DDD_CRUMB = null;
 function page_crumb(string $href, string $label): void { global $DDD_CRUMB; $DDD_CRUMB = [$href, $label]; }
 /** Aviso a la comunidad (13/10/2026, admin → Avisos): un texto de hasta 150 palabras que, mientras este activado, sustituye a todos los
  *  avisos grises de cabecera (<p class="notice">) de las paginas publicas. Se hace al vuelo: page_header() abre un buffer y
- *  page_footer() cambia los notice por el aviso antes de enviar. Admin y moderacion quedan fuera. Vacio = no hay aviso activo. */
+ *  page_footer() cambia los notice por el aviso antes de enviar (salvo los <p class="notice keep">, que llevan una accion y se quedan
+ *  debajo del aviso). Admin y moderacion quedan fuera. Vacio = no hay aviso activo. */
 function aviso_comunidad(): string {
     static $h = null;
     if ($h !== null) return $h;
@@ -1325,9 +1326,11 @@ function page_footer(): void {
     if (!empty($GLOBALS['DDD_AVISO_OB'])) {   // aviso a la comunidad (aviso_comunidad): cada <p class="notice"> de la pagina pasa a ser el aviso
         $GLOBALS['DDD_AVISO_OB'] = false;
         $cuerpo = (string)ob_get_clean();
-        $cuerpo = preg_replace('~<p class="notice(?: [^"]*)?">.*?</p>~su', aviso_comunidad(), $cuerpo, 1, $n);   // el primero pasa a ser el aviso…
-        if (!$n) $cuerpo = aviso_comunidad() . $cuerpo;   // pagina sin aviso gris: el aviso va arriba del todo
-        else $cuerpo = preg_replace('~<p class="notice(?: [^"]*)?">.*?</p>~su', '', $cuerpo);   // …y los demas se quitan: /usuarios y /mis-fuentes llevan dos y salia duplicado (16/10/2026)
+        // los <p class="notice keep"> no se tocan: llevan una accion (el «Escribe el tuyo» de /originales se perdia mientras habia aviso, 16/10/2026)
+        $re = '~<p class="notice(?![^"]*\\b(?:keep|aviso)\\b)(?: [^"]*)?">.*?</p>~su';   // tampoco el propio aviso ya insertado
+        $cuerpo = preg_replace($re, aviso_comunidad(), $cuerpo, 1, $n);   // el primero pasa a ser el aviso…
+        if (!$n) $cuerpo = aviso_comunidad() . $cuerpo;   // pagina sin aviso gris (o solo con keep): el aviso va arriba del todo
+        else $cuerpo = preg_replace($re, '', $cuerpo);   // …y los demas se quitan: /usuarios y /mis-fuentes llevan dos y salia duplicado (16/10/2026)
         echo $cuerpo;
     }
     echo "</main>";
