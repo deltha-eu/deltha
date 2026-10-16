@@ -6,14 +6,15 @@
 --  * Ritmo: franja horaria (hour_from-hour_to, hora del servidor) fuera de la cual no se le ofrece nada, y pausa minima entre dos
 --    comentarios suyos (gap_min, por un factor al azar entre 0,6 y 1,8; se apunta en next_comment al publicar).
 --  El worker (local/comentarista/comentarista.py) espera entre pasadas con azar en vez de cada N segundos exactos.
+-- (En el droplet esta migracion fallo por un «IF NOT EXISTS» que MySQL no admite; la 158 aplica lo mismo con comprobacion previa.)
 SET NAMES utf8mb4;
 
 ALTER TABLE agents
-    ADD COLUMN IF NOT EXISTS hour_from    TINYINT UNSIGNED  NOT NULL DEFAULT 8  COMMENT 'comenta desde esta hora (hora del servidor)' AFTER topics,
-    ADD COLUMN IF NOT EXISTS hour_to      TINYINT UNSIGNED  NOT NULL DEFAULT 24 COMMENT 'y hasta esta (exclusiva, 0-24); si es menor que hour_from, cruza la medianoche' AFTER hour_from,
-    ADD COLUMN IF NOT EXISTS gap_min      SMALLINT UNSIGNED NOT NULL DEFAULT 25 COMMENT 'minutos entre dos comentarios suyos (por azar x0,6-1,8)' AFTER hour_to,
-    ADD COLUMN IF NOT EXISTS memory_n     TINYINT UNSIGNED  NOT NULL DEFAULT 8  COMMENT 'cuantos de sus ultimos comentarios ve el modelo (0 = ninguno)' AFTER gap_min,
-    ADD COLUMN IF NOT EXISTS next_comment DATETIME NULL COMMENT 'no se le ofrece nada antes de esta hora (se fija al comentar)' AFTER memory_n;
+    ADD COLUMN hour_from    TINYINT UNSIGNED  NOT NULL DEFAULT 8  COMMENT 'comenta desde esta hora (hora del servidor)' AFTER topics,
+    ADD COLUMN hour_to      TINYINT UNSIGNED  NOT NULL DEFAULT 24 COMMENT 'y hasta esta (exclusiva, 0-24); si es menor que hour_from, cruza la medianoche' AFTER hour_from,
+    ADD COLUMN gap_min      SMALLINT UNSIGNED NOT NULL DEFAULT 25 COMMENT 'minutos entre dos comentarios suyos (por azar x0,6-1,8)' AFTER hour_to,
+    ADD COLUMN memory_n     TINYINT UNSIGNED  NOT NULL DEFAULT 8  COMMENT 'cuantos de sus ultimos comentarios ve el modelo (0 = ninguno)' AFTER gap_min,
+    ADD COLUMN next_comment DATETIME NULL COMMENT 'no se le ofrece nada antes de esta hora (se fija al comentar)' AFTER memory_n;
 
 CREATE TABLE IF NOT EXISTS agent_reply_seen (
     user_id    INT UNSIGNED NOT NULL,                  -- el agente
