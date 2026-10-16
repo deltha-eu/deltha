@@ -1,11 +1,16 @@
-﻿# Estado del moderador de Deltha en este PC: modelo (llama-server) y worker (moderador.py).
+﻿# Estado del moderador de Deltha en este PC: modelo (Strata o llama-server, segun moderador.ini) y worker (moderador.py).
 # Uso:  powershell -ExecutionPolicy Bypass -File .\estado.ps1
 Write-Host ""
-Write-Host "=== Modelo (llama-server) ===" -ForegroundColor Cyan
-$srv = @(Get-Process llama-server -ErrorAction SilentlyContinue)
-if ($srv.Count -eq 0)     { Write-Host "  No está cargado." -ForegroundColor Yellow }
-elseif ($srv.Count -eq 1) { Write-Host "  Cargado una vez (PID $($srv[0].Id), $([math]::Round($srv[0].WorkingSet64/1MB)) MB de RAM)." -ForegroundColor Green }
-else                      { Write-Host "  ¡Cargado $($srv.Count) veces! PIDs: $($srv.Id -join ', ')  → cierra las ventanas sobrantes o: Stop-Process -Id <PID>" -ForegroundColor Red }
+Write-Host "=== Modelo ===" -ForegroundColor Cyan
+$ini = Get-Content (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "moderador.ini") -Raw -ErrorAction SilentlyContinue
+$motor = if ($ini -match '(?m)^motor\s*=\s*(\S+)') { $Matches[1] } else { "strata" }
+Write-Host "  Motor (moderador.ini): $motor"
+if ($motor -eq "llama") {
+    $srv = @(Get-Process llama-server -ErrorAction SilentlyContinue)
+    if ($srv.Count -eq 0)     { Write-Host "  llama-server: no está cargado." -ForegroundColor Yellow }
+    elseif ($srv.Count -eq 1) { Write-Host "  llama-server cargado una vez (PID $($srv[0].Id), $([math]::Round($srv[0].WorkingSet64/1MB)) MB de RAM)." -ForegroundColor Green }
+    else                      { Write-Host "  ¡llama-server cargado $($srv.Count) veces! PIDs: $($srv.Id -join ', ')  → cierra las ventanas sobrantes o: Stop-Process -Id <PID>" -ForegroundColor Red }
+}
 
 $port = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($port) {
@@ -15,7 +20,9 @@ if ($port) {
 
 try {
     $h = Invoke-RestMethod -Uri "http://127.0.0.1:8080/health" -TimeoutSec 3
-    Write-Host "  /health: $($h.status)" -ForegroundColor Green
+    $txt = if ($h -is [string]) { $h.Trim() } elseif ($h.status) { $h.status } else { ($h | ConvertTo-Json -Compress) }
+    Write-Host "  /health: $txt" -ForegroundColor Green
+    try { $m = Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/models" -TimeoutSec 3; Write-Host "  /v1/models: $(($m.data | ForEach-Object { $_.id }) -join ', ')" } catch {}
 } catch { Write-Host "  /health: no responde (o aún está cargando)" -ForegroundColor Yellow }
 
 Write-Host ""

@@ -1,6 +1,6 @@
 ﻿# Arranca de una vez todo lo que Deltha necesita en este PC, cada cosa en su ventana minimizada y sin duplicar lo que ya este en marcha:
 #   1) lector de feeds        (local\lector\lector.ps1)          no usa el modelo: sale el primero
-#   2) modelo + moderador     (local\moderador\arrancar.ps1)     carga llama-server y, cuando responde, el worker de moderacion
+#   2) modelo + moderador     (local\moderador\arrancar.ps1)     carga el modelo (Strata o llama-server) y, cuando responde, el worker de moderacion
 #   3) agentes comentaristas  (local\comentarista\arrancar.ps1)  se lanza cuando el modelo ya responde (asi no lo cargan dos a la vez)
 # Uso:  powershell -ExecutionPolicy Bypass -File .\arrancar-todo.ps1 [-SinComentarista] [-SinLector]
 # Es lo que lanza el acceso directo de Inicio que crea instalar-arranque.ps1 (el de esta carpeta).
@@ -19,7 +19,7 @@ if (-not $SinLector) { Lanzar "lector de feeds" (Join-Path $here "lector\lector.
 Lanzar "modelo y moderador" (Join-Path $here "moderador\arrancar.ps1")
 
 if (-not $SinComentarista) {
-    Write-Host "Esperando a que el modelo responda para lanzar los agentes (puede tardar un minuto)..."
+    Write-Host "Esperando a que el modelo responda para lanzar los agentes (Strata tarda varios minutos)..."
     $up = $false
     for ($i = 0; $i -lt 180; $i++) { if (ModeloArriba) { $up = $true; break }; Start-Sleep -Seconds 2 }
     if ($up) { Lanzar "agentes comentaristas" (Join-Path $here "comentarista\arrancar.ps1") }

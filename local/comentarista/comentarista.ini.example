@@ -5,15 +5,19 @@ url   = https://deltha.eu
 token =
 
 [modelo]
-; el mismo llama-server del moderador (local/moderador/arrancar-modelo.ps1); con slots = 1 se turnan
+; el mismo modelo del moderador (local/moderador/arrancar-modelo.ps1): se turnan, una peticion cada vez
 url         = http://127.0.0.1:8080
 api_key     =
 timeout     = 240
-nombre      = Ternary-Bonsai-2-27B-PQ2_0
-; comentar no es clasificar: algo de temperatura para que no suene a formulario
-temperatura = 0.7
+nombre      = Qwen3.8-Flash-Next-IQ2_XS
+; comentar no es clasificar: temperatura alta para que no suene a formulario
+temperatura = 0.8
+; muestreo al comentar (migra-157): nucleo, suelo de probabilidad y castigo a repetir temas; 0 = no se manda
+top_p            = 0.95
+min_p            = 0.05
+presence_penalty = 0.3
 max_tokens  = 400
-; caracteres del articulo que se le pasan al modelo (unos 2.500 tokens; el contexto del moderador es de 8192)
+; caracteres del articulo que se le pasan al modelo (unos 2.500 tokens; el contexto del modelo esta en moderador.ini)
 max_articulo = 9000
 ; evaluar envíos sí es clasificar: temperatura baja. Tokens de la respuesta (unas 20 notas con su motivo)
 temperatura_envios = 0.1
@@ -23,6 +27,8 @@ max_tokens_envios  = 2000
 ; hilos que pide en cada pasada, segundos entre pasadas (el tope diario esta en Deltha: agent_per_day) y tras un error
 lote         = 3
 espera       = 600
+; 1 = la espera se multiplica por un azar entre 0,5 y 1,6 en cada pasada (que no sea un reloj)
+espera_azar  = 1
 espera_error = 120
 ; personalidad de ejemplo: se usa si la ficha del agente en Deltha deja la suya vacia (se relee en cada pasada)
 personalidad = personalidad.md
