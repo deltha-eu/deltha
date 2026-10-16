@@ -13,6 +13,13 @@
 declare(strict_types=1);
 
 function ana_on(): bool { return (string)cfg('analytics_enabled', '1') === '1'; }
+/** ¿Ve la analitica completa (ahora, hoy, por fechas, paginas, procedencia, paises…) en /analitica? El admin siempre; cualquier registrado
+ *  desde config.analytics_full_aura (10; 0 = solo el admin). Lo pidio Angel el 16/10/2026: abrirla a los usuarios a partir de aura 10. */
+function ana_full(): bool {
+    if (is_admin()) return true;
+    $u = user(); $min = (float)cfg('analytics_full_aura', 10);
+    return $u && $min > 0 && (float)($u['aura'] ?? 0) >= $min;
+}
 
 /** Registrar la pagina actual. Se llama desde page_header(); nunca rompe la pagina. */
 function ana_hit(): void {

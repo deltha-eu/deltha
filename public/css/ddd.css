@@ -329,6 +329,16 @@ table.modlog td code { overflow-wrap: anywhere; }
 .anaform { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 14px; }
 .anaform input[type=date] { font: inherit; padding: 4px 6px; border: 1px solid var(--line2); border-radius: 6px; background: var(--bg); color: var(--fg); }
 .anaform a { text-decoration: underline; text-underline-offset: 2px; }
+/* (16/10/2026) la analitica completa de admin, tambien en /analitica desde aura analytics_full_aura: fuera de .admin hay que darle sus tablas,
+   botones y cifras alineadas a la derecha */
+.anafull { margin-top: 28px; padding-top: 8px; border-top: 1px solid var(--line); }
+.anafull h2 { font-size: 18px; margin: 10px 0 0; }
+.anafull h3 { margin: 24px 0 10px; }
+.anafull p { margin: 10px 0; }
+.anafull table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.anafull td, .anafull th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.anafull td.num, .anafull th.num { text-align: right; white-space: nowrap; }
+.anafull .btn { font: inherit; font-size: 13px; border: 1px solid var(--line2); background: none; color: var(--fg); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
 nav.sub.fecha { border-bottom: 0; padding-top: 0; }
 nav.sub.fecha a { font-size: 13px; padding: 6px 9px; }
 nav.sub.fecha > span.meta { font-size: 13px; padding: 6px 9px; color: var(--muted); white-space: nowrap; }   /* «ordenar por» en /usuarios.php: a la altura de los enlaces */

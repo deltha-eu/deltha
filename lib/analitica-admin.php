@@ -1,10 +1,13 @@
 <?php
-/** admin -> Analitica: lo que se esta leyendo ahora, el dia de hoy y un rango de fechas con paginas, procedencia,
+/** admin -> Analitica (y /analitica para aura >= analytics_full_aura, 16/10/2026: $base es la URL a la que apuntan el formulario y los
+ *  atajos de fechas): lo que se esta leyendo ahora, el dia de hoy y un rango de fechas con paginas, procedencia,
  *  paises, dispositivos e idiomas. Todo desde hits (detalle, analytics_keep_days dias) y ana_daily (totales, siempre). */
 declare(strict_types=1);
 
-function ana_admin(PDO $pdo): void {
+function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
     $n = fn($v) => number_format((int)$v, 0, ',', '.');
+    $bu = parse_url($base); parse_str((string)($bu['query'] ?? ''), $bq);   // el formulario GET necesita la ruta y los parametros fijos como hidden
+    $link = fn(string $f, string $t) => h($base . (str_contains($base, '?') ? '&' : '?') . "from=$f&to=$t");
     $from = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($_GET['from'] ?? '')) ? $_GET['from'] : date('Y-m-d', strtotime('-29 days'));
     $to   = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($_GET['to'] ?? ''))   ? $_GET['to']   : date('Y-m-d');
     if ($from > $to) [$from, $to] = [$to, $from];
@@ -35,11 +38,12 @@ function ana_admin(PDO $pdo): void {
     echo "</div></div>";
 
     // ---- rango ----
-    echo "<h3>Por fechas</h3><form method=\"get\" class=\"anaform\"><input type=\"hidden\" name=\"t\" value=\"analitica\">";
+    echo "<h3>Por fechas</h3><form method=\"get\" class=\"anaform\" action=\"" . h($bu['path'] ?? '/') . "\">";
+    foreach ($bq as $k => $v) echo "<input type=\"hidden\" name=\"" . h((string)$k) . "\" value=\"" . h((string)$v) . "\">";
     echo "del <input type=\"date\" name=\"from\" value=\"$from\"> al <input type=\"date\" name=\"to\" value=\"$to\"> <button class=\"btn\">Ver</button> ";
     foreach ([['hoy', 0], ['7 días', 6], ['30 días', 29], ['90 días', 89], ['este año', -1]] as [$l, $d]) {
         $f = $d === -1 ? date('Y-01-01') : date('Y-m-d', strtotime("-$d days"));
-        echo "<a href=\"/admin?t=analitica&from=$f&to=$hoy\">$l</a> ";
+        echo "<a href=\"" . $link($f, $hoy) . "\">$l</a> ";
     }
     echo "</form>";
     // dias: cerrados desde ana_daily, hoy desde hits
@@ -87,7 +91,7 @@ function ana_admin(PDO $pdo): void {
     $top('Idioma del navegador (sesiones)', "SELECT lang k, COUNT(*) c FROM hits WHERE $where AND new_session = 1 GROUP BY lang ORDER BY c DESC LIMIT 12", fn($r) => $r['k'] === '' ? '<i>desconocido</i>' : h($r['k']));
     $top('Horas del día (páginas)', "SELECT HOUR(ts) k, COUNT(*) c FROM hits WHERE $where GROUP BY k ORDER BY k", fn($r) => sprintf('%02d h', $r['k']));
     echo "</div></div>";
-    echo "<p><small>Visitantes = huellas distintas del día (HMAC de IP+navegador+día, truncado; la IP no se guarda y la huella cambia a diario, por eso el mes suma los días). Sesión = primera página tras " . (int)cfg('analytics_session_minutes', 30) . " min sin actividad. No se cuentan bots conocidos, precargas, POST, admin ni moderación. Cambia <code>analytics_enabled</code>, <code>analytics_session_minutes</code> y <code>analytics_keep_days</code> en Config.</small></p>";
+    echo "<p><small>Visitantes = huellas distintas del día (HMAC de IP+navegador+día, truncado; la IP no se guarda y la huella cambia a diario, por eso el mes suma los días). Sesión = primera página tras " . (int)cfg('analytics_session_minutes', 30) . " min sin actividad. No se cuentan bots conocidos, precargas, POST, admin ni moderación." . (is_admin() ? " Cambia <code>analytics_enabled</code>, <code>analytics_session_minutes</code>, <code>analytics_keep_days</code> y <code>analytics_full_aura</code> en Config." : '') . "</small></p>";
 }
 
 /** Ruta legible: los hilos con su titular, las portadas y paginas con su nombre */

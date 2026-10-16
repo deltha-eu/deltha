@@ -737,6 +737,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('aura_start',          '5',    'Aura inicial del registrado'),
 ('aura_max',            '30',   'Tope de aura'),
 ('mod_aura',            '20',   'Aura desde la que cualquier registrado modera aunque su nivel sea normal (0 = solo por nivel mod/admin)'),
+('analytics_full_aura', '10',   'Aura desde la que un registrado ve en /analitica la analitica completa (ahora, hoy, fechas, paginas, procedencia, paises); 0 = solo el admin'),
 ('thread_ttl_hours',    '48',   'Vida del hilo (destacadas -> archivo)'),
 ('nuevas_ttl_hours',    '168',  'Horas que puede pasar un envio en el radar sin llegar a portada antes de archivarse (168 = una semana; 0 = nunca)'),
 ('ghost_minutes',       '30',   'Minutos que dura el alias Ghost de cada envio/comentario antes de mostrar el nombre real'),
