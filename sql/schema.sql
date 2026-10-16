@@ -287,6 +287,19 @@ CREATE TABLE `favorites` (
   CONSTRAINT `fk_fav_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `forums` (
+  `forum_id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(48) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descr` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `status` enum('on','off') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'on',
+  `position` tinyint unsigned NOT NULL DEFAULT '1',
+  `orden` enum('fecha','actividad') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'fecha',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`forum_id`),
+  UNIQUE KEY `uq_forum_slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `hits` (
   `hit_id` int unsigned NOT NULL AUTO_INCREMENT,
   `ts` datetime NOT NULL,
@@ -576,6 +589,7 @@ CREATE TABLE `stories` (
   `image` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` enum('pending_mod','rejected','nuevas','destacadas','archived','discard') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'nuevas',
   `portada` enum('medios','substacks','canales') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `forum_id` smallint unsigned DEFAULT NULL COMMENT 'foro del texto propio (content_type = article); NULL en los enlaces',
   `sent_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `edited_at` datetime DEFAULT NULL,
   `indexable` tinyint(1) NOT NULL DEFAULT '0',
@@ -599,6 +613,7 @@ CREATE TABLE `stories` (
   KEY `idx_comm` (`community_id`,`sent_date`),
   KEY `idx_portada` (`portada`,`status`,`published_date`),
   KEY `idx_lang` (`lang`),
+  KEY `idx_forum` (`forum_id`,`status`,`sent_date`),
   FULLTEXT KEY `ft_stories` (`title`,`content`),
   CONSTRAINT `fk_st_topic` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topic_id`),
   CONSTRAINT `fk_st_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
@@ -787,6 +802,11 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('mod_flag_score',      '0.60', 'Confianza minima para señalar a los moderadores; por debajo se da por bueno'),
 ('mod_lease_sec',       '300',  'Segundos que el worker tiene reservado un elemento antes de que vuelva a la cola'),
 ('mod_worker_seen',     '',     'Ultima conexion del worker de IA local (lo escribe /api/moderacion.php)');
+
+INSERT INTO forums (slug, name, descr, status, position, orden) VALUES
+('originales', 'Originales', 'Textos propios de la comunidad. No se permiten textos ya publicados en otros sitios ni extractos de ellos.', 'on', 1, 'fecha'),
+('deltha',     'Deltha',     'Dudas, propuestas de mejora y conversación sobre el propio sitio.', 'on', 2, 'actividad'),
+('areopago',   'Areópago',   'El foro Areópago, en Deltha.', 'off', 3, 'actividad');
 
 INSERT INTO topics (name, bonus, color) VALUES
 ('actualidad', 0.00, '#534AB7'),

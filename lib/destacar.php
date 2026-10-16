@@ -13,18 +13,22 @@
  *  Cola (migra-114): en cada grupo solo hay una destacada de usuario a la vez; si alguien destaca mientras otra esta en marcha, la suya
  *  queda en cola (pins.starts en el futuro) y empieza cuando a la actual se le acabe su media hora; varias esperan por orden.
  *  Originales (migra-125): grupo 'originales', mismo boton en /originales y en el hilo; sin halo automatico en la primera (solo
- *  las que ponga el admin o un usuario con credito); la de usuario dura pin_user_minutes_originales (4 h). */
+ *  las que ponga el admin o un usuario con credito); la de usuario dura pin_user_minutes_originales (4 h).
+ *  Foros (migra-159): el grupo de un texto propio es el slug de su foro ('originales', 'deltha', 'areopago'…: una destacada por foro);
+ *  todos los foros usan la config de Originales (pin_cost_originales, pin_user_minutes_originales). pin_es_foro() distingue. */
 /*  En todos los grupos, nunca dos destacadas a la vez: la de usuario tiene prioridad y la del admin se oculta mientras dure (vuelve sola al acabar). */
 declare(strict_types=1);
 
 function pins_on(): bool { return (string)cfg('pins_enabled', '1') === '1'; }
-/** Minutos que dura una destacada de usuario: en Originales, pin_user_minutes_originales (240); en las portadas, pin_user_minutes (30). */
-function pin_minutos(string $grupo = ''): int { return max(1, (int)($grupo === 'originales' ? cfg('pin_user_minutes_originales', 240) : cfg('pin_user_minutes', 30))); }
+/** ¿Es el grupo un foro (y no una portada)? Los foros comparten la config de Originales. */
+function pin_es_foro(string $grupo): bool { return $grupo !== '' && !isset(DDD_PORTADAS[$grupo]); }
+/** Minutos que dura una destacada de usuario: en los foros, pin_user_minutes_originales (240); en las portadas, pin_user_minutes (30). */
+function pin_minutos(string $grupo = ''): int { return max(1, (int)(pin_es_foro($grupo) ? cfg('pin_user_minutes_originales', 240) : cfg('pin_user_minutes', 30))); }
 
-/** Grupo de un envio: su portada o, para los textos propios, 'originales' (migra-125) ('' = no se destaca: archivados). */
+/** Grupo de un envio: su portada o, para los textos propios, el slug de su foro (migra-159; antes siempre 'originales') ('' = no se destaca: archivados). */
 function pin_grupo_story(array $s): string {
     if (!in_array($s['status'] ?? '', ['nuevas', 'destacadas'], true)) return '';
-    if (($s['content_type'] ?? '') === 'article') return 'originales';
+    if (($s['content_type'] ?? '') === 'article') return (string)((foro_de($s)['slug'] ?? '') ?: 'originales');
     return (string)($s['portada'] ?? '');
 }
 /** ¿Esta el envio donde se destaca? En las portadas, solo lo publicado (un usuario no saca nada del radar; el admin si, y lo publica
@@ -37,7 +41,7 @@ function pin_en_portada(array $s): bool {
 function pin_grupo_item(array $src): string { $k = (string)($src['kind'] ?? ''); return in_array($k, ['medio', 'newsletter'], true) ? $k : ''; }
 /** Nombre de un grupo para los textos: portada o grupo del rail. */
 function pin_grupo_nombre(string $what, string $grupo): string {
-    if ($what === 'story') return $grupo === 'originales' ? t('Originales') : t(DDD_PORTADAS[$grupo] ?? $grupo);
+    if ($what === 'story') return pin_es_foro($grupo) ? (string)(foro($grupo)['name'] ?? ($grupo === 'originales' ? t('Originales') : $grupo)) : t(DDD_PORTADAS[$grupo] ?? $grupo);
     return t($grupo === 'medio' ? 'Mis medios' : 'Mis substacks');
 }
 
@@ -84,7 +88,7 @@ function pin_halo_primera(?bool $set = null): bool {
 }
 /** Lo que usa destacar, en aura (migra-132; antes «creditos» por cada unidad nueva de aura): pin_cost (0,5) en las portadas y
  *  pin_cost_originales (1) en Originales. Se descuenta con aura_gastar() (lib/aura.php), que no deja bajar de aura_gasto_minimo. */
-function pin_cost(string $grupo): float { require_once __DIR__ . '/aura.php'; return max(0.0, (float)($grupo === 'originales' ? cfg('pin_cost_originales', 1) : cfg('pin_cost', 0.5))); }
+function pin_cost(string $grupo): float { require_once __DIR__ . '/aura.php'; return max(0.0, (float)(pin_es_foro($grupo) ? cfg('pin_cost_originales', 1) : cfg('pin_cost', 0.5))); }
 /** ¿Tiene el usuario actual aura para un destacado en este grupo? */
 function pin_puede_usar(string $grupo): bool { require_once __DIR__ . '/aura.php'; return aura_puede_gastar(user(), pin_cost($grupo)); }
 
@@ -193,7 +197,7 @@ function pins_ids(PDO $pdo, string $what, string $grupo): array {
 function pins_stories(PDO $pdo, string $portada): array {
     $ids = pins_ids($pdo, 'story', $portada);
     if (!$ids) return [];
-    $st = $pdo->prepare(story_query_base() . " WHERE s.story_id IN (" . implode(',', $ids) . ") AND s.status " . ($portada === 'originales' ? "IN ('nuevas','destacadas') AND s.content_type = 'article'" : "= 'destacadas'"));
+    $st = $pdo->prepare(story_query_base() . " WHERE s.story_id IN (" . implode(',', $ids) . ") AND s.status " . (pin_es_foro($portada) ? "IN ('nuevas','destacadas') AND s.content_type = 'article'" : "= 'destacadas'"));
     $st->execute();
     $rows = array_column($st->fetchAll(), null, 'story_id');
     $out = [];

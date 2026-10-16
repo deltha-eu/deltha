@@ -124,7 +124,7 @@ if ($step === '1') {
     echo "" . t('<label>Enlace a una noticia</label>') . "<input type=\"url\" name=\"url\" value=\"" . h($f['url']) . "\" placeholder=\"https://…\" autofocus>";
     echo "" . t('<button>Continuar</button>') . "</form>";
     echo "<p class=\"or\">" . t('— o —') . "</p>";
-    echo "<a class=\"choice\" href=\"/articulo\">" . icon('art') . "<div>" . t('<b>Escribe un artículo</b>') . "<span>" . t('Texto propio de hasta %d palabras, con foto si quieres. Se publica en Originales, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', (int)cfg('article_max_words', 1000)) . "</span></div></a>";
+    echo "<a class=\"choice\" href=\"/articulo\">" . icon('art') . "<div>" . t('<b>Abre un hilo en los foros</b>') . "<span>" . t('Texto propio de hasta %d palabras, con foto si quieres. Abre un hilo en el foro que elijas, donde se lee, se vota y se comenta; no pasa por el radar ni va a las portadas.', (int)cfg('article_max_words', 1000)) . "</span></div></a>";
 } else {
     echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\"><input type=\"hidden\" name=\"step\" value=\"2\">";
     echo "<input type=\"hidden\" name=\"url\" value=\"" . h($f['url']) . "\">";

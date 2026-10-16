@@ -13,14 +13,14 @@ if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true)
     page_footer();
     exit;
 }
-if ($s['content_type'] === 'article') { foco_por_defecto(); page_crumb('/originales', t('Originales')); }   // cabecera «Originales › Hilo»: se vuelve a la lista con un clic;   // un original se abre en modo sin distracciones salvo que el lector lo haya quitado
+if ($s['content_type'] === 'article') { foco_por_defecto(); $fo = foro_de($s); page_crumb($fo ? foro_url($fo) : '/foros', $fo ? (string)$fo['name'] : t('Foros')); }   // cabecera «Originales › Hilo» (el foro del hilo, migra-159): se vuelve a la lista con un clic; un texto propio se abre en modo sin distracciones salvo que el lector lo haya quitado
 if (!empty($s['comm_skin'])) community_skin($s['comm_skin']);   // el hilo se ve con la plantilla de su comunidad
 $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
 $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
 $aura = $s['user_id'] ? (float)($s['author_aura'] ?? 5) : (float)cfg('aura_anon', 5);
 $open = in_array($s['status'], ['nuevas', 'destacadas'], true);
 $can_comment = $open && (user() || cfg('anon_can_comment') === '1');
-$tab = $s['content_type'] === 'article' ? 'originales' : (['destacadas' => (string)$s['portada'], 'nuevas' => 'radar'][$s['status']] ?? '');
+$tab = $s['content_type'] === 'article' ? 'foros' : (['destacadas' => (string)$s['portada'], 'nuevas' => 'radar'][$s['status']] ?? '');
 
 // my_vote: sol (1) o lagrima (-1) que el usuario actual ya puso a cada comentario (NULL si ninguno o anonimo)
 $cs = $pdo->prepare("SELECT c.*, u.login, u.avatar, cv.value AS my_vote FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
