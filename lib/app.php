@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 209);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 210);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1264,7 +1264,7 @@ function nav_tabs(string $tab, string $cls): void {
         'plantilla'    => ['/plantilla', t('Skin'), 'skin'],   // solo en el muelle (movil): el rail ya tiene su desplegable
         'procesos'     => ['/procesos', t('Procesos'), 'proc'],
         'estadisticas' => ['/estadisticas', t('Estadísticas'), 'stats'],
-        'analitica'    => ['/analitica', t('Analítica'), 'stats'],   // solo registrados y solo en el rail (en movil, desde Estadisticas)
+        'analitica'    => ['/analitica', t('Analítica'), 'stats'],   // solo registrados y solo en el rail (en movil, desde Estadisticas); la completa, desde aura analytics_full_aura (ana_full)
         'mensajes'     => ['/mensajes', t('Mensajes'), 'msg'],
     ];
     if (!portada_canales_on()) unset($tabs['canales']);
