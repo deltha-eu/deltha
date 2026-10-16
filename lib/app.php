@@ -1325,8 +1325,9 @@ function page_footer(): void {
     if (!empty($GLOBALS['DDD_AVISO_OB'])) {   // aviso a la comunidad (aviso_comunidad): cada <p class="notice"> de la pagina pasa a ser el aviso
         $GLOBALS['DDD_AVISO_OB'] = false;
         $cuerpo = (string)ob_get_clean();
-        $cuerpo = preg_replace('~<p class="notice(?: [^"]*)?">.*?</p>~su', aviso_comunidad(), $cuerpo, -1, $n);
+        $cuerpo = preg_replace('~<p class="notice(?: [^"]*)?">.*?</p>~su', aviso_comunidad(), $cuerpo, 1, $n);   // el primero pasa a ser el aviso…
         if (!$n) $cuerpo = aviso_comunidad() . $cuerpo;   // pagina sin aviso gris: el aviso va arriba del todo
+        else $cuerpo = preg_replace('~<p class="notice(?: [^"]*)?">.*?</p>~su', '', $cuerpo);   // …y los demas se quitan: /usuarios y /mis-fuentes llevan dos y salia duplicado (16/10/2026)
         echo $cuerpo;
     }
     echo "</main>";

@@ -5,7 +5,7 @@
  *  sin ?v         todos los registrados
  *  ?n=usuario | mod | admin   filtro por nivel (tercera fila de pestañas), combinable con vista y orden. Moderador = nivel mod o, sin ser
  *                 admin, aura >= config.mod_aura (como user_is_mod()); usuario = el resto
- *  ?q=texto      buscador (09/10/2026): nick que contenga el texto; los admin buscan tambien por correo. Se combina con todo lo demas
+ *  ?q=texto      buscador (09/10/2026): nick que contenga el texto; moderadores y admin buscan tambien por correo (16/10: antes solo admin). Se combina con todo lo demas
  *  ?o=registro | acceso | aura | envios | comentarios   orden (fecha de registro, ultima conexion, mas aura, mas envios, mas comentarios);
  *                 se combina con la vista; envios = publicados o en el radar (no rechazados ni descartados) */
 require __DIR__ . '/../lib/app.php';
@@ -25,10 +25,10 @@ $n = (string)($_GET['n'] ?? '');
 if (!isset($NIVELES[$n])) $n = '';
 $WHERE .= $NIVELES[$n][1];
 $WHERE .= ghost_sql_not_in('user_id');
-// buscador: por nick; el admin tambien por correo (es la misma busqueda que admin -> Usuarios)
+// buscador: por nick; moderadores y admin tambien por correo (es la misma busqueda que admin -> Usuarios)
 $q = mb_substr(trim((string)($_GET['q'] ?? '')), 0, 64);
 $qArgs = [];
-if ($q !== '') { $like = '%' . addcslashes($q, '%_\\') . '%'; $WHERE .= is_admin() ? " AND (login LIKE ? OR email LIKE ?)" : " AND login LIKE ?"; $qArgs = is_admin() ? [$like, $like] : [$like]; }   // los velados por ghosteo (en ambos sentidos) no salen: su perfil no esta disponible (lib/ghost.php)
+if ($q !== '') { $like = '%' . addcslashes($q, '%_\\') . '%'; $WHERE .= is_mod() ? " AND (login LIKE ? OR email LIKE ?)" : " AND login LIKE ?"; $qArgs = is_mod() ? [$like, $like] : [$like]; }   // los velados por ghosteo (en ambos sentidos) no salen: su perfil no esta disponible (lib/ghost.php)
 $ORDERS = ['registro' => t('fecha de registro'), 'acceso' => t('última conexión'), 'aura' => t('más aura'), 'envios' => t('más envíos'), 'comentarios' => t('más comentarios')];
 $o = (string)($_GET['o'] ?? ($v === 'conectados' ? 'acceso' : 'registro'));
 if (!isset($ORDERS[$o])) $o = 'registro';
@@ -71,9 +71,9 @@ echo "<nav class=\"sub fecha\">";
 foreach ($NIVELES as $k => [$label]) echo "<a href=\"" . $url($v, $o, $k) . "\"" . ($k === $n ? ' class="on"' : '') . ">" . h($label) . "</a>";
 echo "</nav>";
 echo "<p class=\"notice\">" . t('La gente de %s y sus <a href="/comunidades"><b>comunidades</b></a>', h(cfg('site_name'))) . (community_quota($pdo, user()) > 0 ? " · <a href=\"/comunidades#crear\">" . t('crear una comunidad') . "</a>" : "") . ".</p>";
-// buscador (09/10/2026): nick (admin: nick o correo); conserva vista, orden y nivel
+// buscador (09/10/2026): nick (moderadores y admin: nick o correo); conserva vista, orden y nivel
 echo "<form class=\"buscar-u\" method=\"get\" action=\"/usuarios\">" . ($v !== '' ? "<input type=\"hidden\" name=\"v\" value=\"" . h($v) . "\">" : '') . ($o !== ($v === 'conectados' ? 'acceso' : 'registro') ? "<input type=\"hidden\" name=\"o\" value=\"" . h($o) . "\">" : '') . ($n !== '' ? "<input type=\"hidden\" name=\"n\" value=\"" . h($n) . "\">" : '')
-   . "<input type=\"search\" name=\"q\" value=\"" . h($q) . "\" maxlength=\"64\" placeholder=\"" . h(is_admin() ? t('nick o correo') : t('buscar por nick')) . "\"><button>" . t('Buscar') . "</button>" . ($q !== '' ? " <a href=\"" . h(str_replace('&amp;q=' . rawurlencode($q), '', str_replace('?q=' . rawurlencode($q), '', $url($v, $o, $n)))) . "\">" . t('todos') . "</a>" : '') . "</form>";
+   . "<input type=\"search\" name=\"q\" value=\"" . h($q) . "\" maxlength=\"64\" placeholder=\"" . h(is_mod() ? t('nick o correo') : t('buscar por nick')) . "\"><button>" . t('Buscar') . "</button>" . ($q !== '' ? " <a href=\"" . h(str_replace('&amp;q=' . rawurlencode($q), '', str_replace('?q=' . rawurlencode($q), '', $url($v, $o, $n)))) . "\">" . t('todos') . "</a>" : '') . "</form>";
 echo "<p class=\"notice\">" . ($q !== '' ? t('%d coinciden con «%s».', $total, h($q)) : t('%d en total. Pulsa en un nombre para ver su perfil público.', $total)) . "</p>";
 echo user_create_form('usuarios');   // solo admin: «+ Crear un usuario»
 foreach ($rows as $r) {
