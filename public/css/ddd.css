@@ -3160,6 +3160,11 @@ nav.sub.cvista { margin-bottom: 4px; }
   html[data-foco][data-skin="flujo"] .post.full, html[data-foco][data-skin="flujo"] .post.compact { grid-template-columns: 22px minmax(0, 1fr) 224px; grid-template-rows: auto auto auto 1fr; }
   html[data-foco][data-skin="orange"] .post .media, html[data-foco][data-skin="orange"] .post .media.sm,
   html[data-foco][data-skin="flujo"] .post .media, html[data-foco][data-skin="flujo"] .post .media.sm { float: none; width: 224px; margin: 0 0 8px; }
+  /* (16/10/2026) tarjetas de fuentes (/fuente, Mis medios, Mis substacks: .post.ext, sin caja de votos): la regla de arriba les metia cuatro
+     columnas con un grid-template-areas de tres, y el titular caia en las dos primeras (62 + 24 px) con la foto en la tercera. Misma rejilla
+     de tres columnas que fuera de foco, con la foto a 224 px y la entradilla a 1fr. */
+  html[data-foco][data-skin="orange"] .post.ext.full, html[data-foco][data-skin="orange"] .post.ext.compact { grid-template-columns: 24px minmax(0, 1fr) 224px; grid-template-rows: auto auto 1fr auto; }
+  html[data-foco][data-skin="orange"] .post.ext .thumb { width: 224px; aspect-ratio: 16 / 9; }
   html[data-foco] .hilo .post.main h2 { font-size: 22px; line-height: 1.2; margin-bottom: 8px; }   /* 01/10: de 30 a 22; manda sobre el tamaño propio de cada skin (zen lo tenia a 28) */
   html[data-foco] .hilo .post.main .para { font-size: 18px; line-height: 1.65; }
 }
