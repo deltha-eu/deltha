@@ -9,11 +9,15 @@
  *  ofrecen a cada uno, el tope diario y la publicacion del comentario por el mismo camino que /comentar: alias Ghost del
  *  hilo, contador del hilo, cola de moderacion, avisos. Sin aura (un bot no debe ganar aura: con mod_aura llegaria a moderar).
  *  agent_seen recuerda que hilos ha visto cada agente y que hizo con cada uno.
+ *  migra-157 (memoria y ritmo): el lease lleva los ultimos comentarios del agente (memory_n), le ofrece las respuestas de otros
+ *  a comentarios suyos (agent_reply_seen; unico caso con dos comentarios en un hilo), y respeta su franja horaria y una pausa
+ *  al azar entre comentarios (hour_from/hour_to, gap_min, next_comment).
  */
 declare(strict_types=1);
 
 const AGENT_DEFAULTS = ['enabled' => 0, 'persona' => '', 'per_day' => 4, 'min_age_min' => 20, 'max_age_h' => 24, 'max_comments' => 6, 'replies' => 0, 'skip_users' => '', 'topics' => '',
-                        'submits_per_day' => 0, 'submit_kinds' => 'ambos', 'submit_topics' => '', 'submit_langs' => '', 'submit_review' => 0, 'submit_brief' => ''];
+                        'submits_per_day' => 0, 'submit_kinds' => 'ambos', 'submit_topics' => '', 'submit_langs' => '', 'submit_review' => 0, 'submit_brief' => '',
+                        'hour_from' => 8, 'hour_to' => 24, 'gap_min' => 25, 'memory_n' => 8];
 
 /** Tabla creada (migra-089). */
 function agents_on(): bool {
@@ -48,6 +52,14 @@ function agent_save(PDO $pdo, int $uid, array $f): void {
         ->execute([$uid, $f['enabled'], $f['persona'], $f['per_day'], $f['min_age_min'], $f['max_age_h'], $f['max_comments'], $f['replies'], $f['skip_users'], $f['topics'],
                    $f['submits_per_day'], $f['submit_kinds'], $f['submit_topics'], $f['submit_langs']]);
     if (agent_review_on()) $pdo->prepare("UPDATE agents SET submit_review = ?, submit_brief = ? WHERE user_id = ?")->execute([(int)($f['submit_review'] ?? 0), (string)($f['submit_brief'] ?? ''), $uid]);
+    if (agent_human_on()) $pdo->prepare("UPDATE agents SET hour_from = ?, hour_to = ?, gap_min = ?, memory_n = ? WHERE user_id = ?")
+        ->execute([(int)($f['hour_from'] ?? 8), (int)($f['hour_to'] ?? 24), (int)($f['gap_min'] ?? 25), (int)($f['memory_n'] ?? 8), $uid]);
+}
+/** Columnas y tabla de memoria y ritmo (migra-157). */
+function agent_human_on(): bool {
+    static $on = null; global $pdo;
+    if ($on !== null) return $on;
+    try { $pdo->query("SELECT hour_from, next_comment FROM agents LIMIT 1"); $pdo->query("SELECT 1 FROM agent_reply_seen LIMIT 1"); return $on = true; } catch (Throwable $e) { return $on = false; }
 }
 /** Columnas y tabla de la evaluacion de envios (migra-117). */
 function agent_review_on(): bool {
@@ -70,7 +82,8 @@ function agent_from_post(): array {
             'submits_per_day' => $n('ag_submits_per_day', 0, 0, 48), 'submit_kinds' => in_array(post('ag_submit_kinds'), ['medio', 'newsletter', 'ambos'], true) ? post('ag_submit_kinds') : 'ambos',
             'submit_topics' => mb_substr($stopics, 0, 120),
             'submit_langs' => mb_substr(implode(',', array_values(array_filter(array_map('strval', (array)($_POST['ag_submit_langs'] ?? [])), fn($x) => isset(DDD_LANGS[$x])))), 0, 40),
-            'submit_review' => post('ag_submit_review') === '1' ? 1 : 0, 'submit_brief' => mb_substr(trim(post('ag_submit_brief')), 0, 4000)];
+            'submit_review' => post('ag_submit_review') === '1' ? 1 : 0, 'submit_brief' => mb_substr(trim(post('ag_submit_brief')), 0, 4000),
+            'hour_from' => $n('ag_hour_from', 8, 0, 24), 'hour_to' => $n('ag_hour_to', 24, 0, 24), 'gap_min' => $n('ag_gap_min', 25, 0, 1440), 'memory_n' => $n('ag_memory_n', 8, 0, 30)];
 }
 
 /** Seccion «Agente» de la ficha de moderacion (solo admin). $a = agent_get() o null. */
@@ -89,6 +102,13 @@ function agent_form(PDO $pdo, int $uid, ?array $a): string {
     $h .= "<label>y como mucho (horas) <input type=\"number\" name=\"ag_max_age_h\" min=\"1\" max=\"720\" value=\"" . (int)$v['max_age_h'] . "\"></label>";
     $h .= "<label>Solo hilos con ≤ comentarios <input type=\"number\" name=\"ag_max_comments\" min=\"0\" max=\"250\" value=\"" . (int)$v['max_comments'] . "\"></label></div>";
     $h .= "<label><input type=\"checkbox\" name=\"ag_replies\" value=\"1\"" . ((int)$v['replies'] ? ' checked' : '') . "> puede responder a un comentario del hilo (sin marcar, solo comenta el artículo)</label>";
+    if (agent_human_on()) {
+        $h .= "<div class=\"agrow\"><label>Comenta de las <input type=\"number\" name=\"ag_hour_from\" min=\"0\" max=\"24\" value=\"" . (int)$v['hour_from'] . "\"></label>";
+        $h .= "<label>a las <input type=\"number\" name=\"ag_hour_to\" min=\"0\" max=\"24\" value=\"" . (int)$v['hour_to'] . "\"></label>";
+        $h .= "<label>Pausa entre comentarios (min) <input type=\"number\" name=\"ag_gap_min\" min=\"0\" max=\"1440\" value=\"" . (int)$v['gap_min'] . "\"></label>";
+        $h .= "<label>Recuerda sus últimos <input type=\"number\" name=\"ag_memory_n\" min=\"0\" max=\"30\" value=\"" . (int)$v['memory_n'] . "\"></label></div>";
+        $h .= "<small class=\"hint\">Horas del servidor (" . date('H:i') . " ahora); 8 a 24 = de día, 0 a 24 = siempre. La pausa se multiplica por un azar entre 0,6 y 1,8 para que no sea un reloj. Con «puede responder» marcado, también vuelve a un hilo cuando alguien contesta a un comentario suyo (como mínimo " . (int)cfg('agent_reply_min_min', 4) . " min después). Los últimos comentarios se le enseñan al modelo para que no se repita ni se contradiga.</small>";
+    }
     $h .= "<label>No comenta los hilos enviados por (nicks separados por comas: los otros bots, por ejemplo)</label><input type=\"text\" name=\"ag_skip_users\" maxlength=\"300\" value=\"" . h((string)$v['skip_users']) . "\">";
     $sel = array_map('intval', array_filter(explode(',', (string)$v['topics'])));
     $h .= "<label>Temas en los que comenta (ninguno marcado = todos)</label><div class=\"agtopics\">";
@@ -124,6 +144,7 @@ function agent_form(PDO $pdo, int $uid, ?array $a): string {
         $hoy = agent_today($pdo, $uid);
         $h .= "<p class=\"meta\" style=\"padding:0\">Hoy " . $hoy . " de " . (int)$v['per_day'] . " comentarios · " . $envHoy . " de " . (int)$v['submits_per_day'] . " envíos" . (!empty($a['next_submit']) && (int)$v['submits_per_day'] > 0 ? " (próximo hacia las " . date('H:i', strtotime((string)$a['next_submit'])) . ")" : "") . " · vistos: " . (int)($c['comment'] ?? 0) . " comentados, " . (int)($c['skip'] ?? 0) . " pasados, " . (int)($c['fail'] ?? 0) . " fallos"
             . agent_review_resumen($pdo, $uid, $v)
+            . (agent_human_on() ? (agent_awake($a) ? "" : " · <b>ahora no comenta</b> (" . (agent_in_hours($a) ? "en pausa hasta las " . date('H:i', strtotime((string)$a['next_comment'])) : "fuera de su horario") . ")") : "")
             . " · worker visto " . h((string)cfg('agent_worker_seen', '') ?: 'nunca') . " · <a href=\"/admin?t=agentes&amp;a=$uid\">registro</a></p>";
     }
     $h .= "</details>";
@@ -139,6 +160,83 @@ function agent_today(PDO $pdo, int $uid): int {
 function agent_quota_left(PDO $pdo, array $a): int { return max(0, (int)$a['per_day'] - agent_today($pdo, (int)$a['user_id'])); }
 
 function agent_list(string $s): array { return array_values(array_filter(array_map('trim', explode(',', $s)), fn($x) => $x !== '')); }
+
+/** ¿Esta dentro de su franja horaria? (hora del servidor; hour_to exclusiva; si hour_to < hour_from, cruza la medianoche) */
+function agent_in_hours(array $a): bool {
+    if (!isset($a['hour_from'])) return true;
+    $h = (int)date('G'); $f = (int)$a['hour_from']; $t = (int)$a['hour_to'];
+    if ($f === $t) return true;
+    return $f < $t ? ($h >= $f && $h < $t) : ($h >= $f || $h < $t);
+}
+/** ¿Se le puede ofrecer trabajo ahora? Franja horaria y pausa (next_comment) tras su ultimo comentario. */
+function agent_awake(array $a): bool {
+    if (!agent_in_hours($a)) return false;
+    return empty($a['next_comment']) || strtotime((string)$a['next_comment']) <= time();
+}
+/** Tras publicar: proxima vez que se le ofrece algo = ahora + gap_min por un azar entre 0,6 y 1,8. */
+function agent_rest(PDO $pdo, array $a): void {
+    if (!agent_human_on()) return;
+    $min = (int)round(max(0, (int)($a['gap_min'] ?? 0)) * (0.6 + random_int(0, 1200) / 1000));
+    $pdo->prepare("UPDATE agents SET next_comment = NOW() + INTERVAL ? MINUTE WHERE user_id = ?")->execute([$min, (int)$a['user_id']]);
+}
+/** Sus ultimos comentarios (memory_n), del mas nuevo al mas viejo: para que el modelo no se repita ni se contradiga. */
+function agent_recent(PDO $pdo, array $a): array {
+    $n = (int)($a['memory_n'] ?? 0);
+    if ($n <= 0) return [];
+    $st = $pdo->prepare("SELECT c.comment_id, c.story_id, c.parent_id, c.content, c.created, s.title FROM comments c JOIN stories s ON s.story_id = c.story_id
+                          WHERE c.user_id = ? AND c.deleted = 0 ORDER BY c.created DESC LIMIT " . min(30, $n));
+    $st->execute([(int)$a['user_id']]);
+    $out = [];
+    foreach ($st->fetchAll() as $c) $out[] = ['id' => (int)$c['comment_id'], 'story_id' => (int)$c['story_id'], 'reply' => (int)$c['parent_id'] > 0, 'when' => $c['created'],
+                                           'title' => mb_substr((string)$c['title'], 0, 120), 'text' => mb_substr((string)$c['content'], 0, 600)];
+    return $out;
+}
+/** Los comentarios del hilo como los ve el worker (id, padre, quien, texto), con los del agente marcados. */
+function agent_thread_comments(PDO $pdo, int $story_id, int $uid, int $limit = 14): array {
+    $cs = $pdo->prepare("SELECT c.comment_id, c.parent_id, c.user_id, c.alias, c.content, c.created, u.login FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
+                          WHERE c.story_id = ? AND c.status = 'ok' AND c.deleted = 0 ORDER BY c.created ASC LIMIT " . max(1, $limit));
+    $cs->execute([$story_id]);
+    $out = [];
+    foreach ($cs->fetchAll() as $c) $out[] = ['id' => (int)$c['comment_id'], 'parent' => (int)$c['parent_id'] ?: null, 'mine' => (int)$c['user_id'] === $uid,
+        'who' => display_name($c, ghost_over($c['created'])), 'text' => mb_substr((string)$c['content'], 0, 1200)];
+    return $out;
+}
+/** Respuestas de otros a comentarios del agente que aun no ha contestado ni descartado (migra-157): con agent_reply_min_min
+ *  minutos de antiguedad como poco (que no conteste al segundo) y agent_reply_max_h horas como mucho, en hilos abiertos y de
+ *  gente que no sea de skip_users. Devuelve items como agent_lease con reply_to (id de la respuesta) y own (su comentario). */
+function agent_reply_lease(PDO $pdo, array $a, int $n): array {
+    if (!agent_human_on() || !(int)$a['replies'] || $n <= 0) return [];
+    $uid = (int)$a['user_id'];
+    $minM = max(0, (int)cfg('agent_reply_min_min', 4)); $maxH = max(1, (int)cfg('agent_reply_max_h', 36));
+    $skip = agent_list((string)$a['skip_users']); $p = [$uid, $uid, $uid];
+    $w = "";
+    if ($skip) { $w = " AND (u.login IS NULL OR u.login NOT IN (" . implode(',', array_fill(0, count($skip), '?')) . "))"; $p = array_merge($p, $skip); }
+    $st = $pdo->prepare("SELECT r.comment_id, r.story_id, r.parent_id, s.content_type, s.title, s.url, s.source, s.content, s.sent_date, s.comments, s.status, t.name AS topic, su.login AS author
+                           FROM comments r JOIN comments own ON own.comment_id = r.parent_id AND own.user_id = ? AND own.deleted = 0
+                           JOIN stories s ON s.story_id = r.story_id JOIN topics t ON t.topic_id = s.topic_id
+                           LEFT JOIN users u ON u.user_id = r.user_id LEFT JOIN users su ON su.user_id = s.user_id
+                           LEFT JOIN agent_reply_seen z ON z.comment_id = r.comment_id AND z.user_id = ?
+                          WHERE r.status = 'ok' AND r.deleted = 0 AND (r.user_id IS NULL OR r.user_id <> ?)
+                            AND r.created <= NOW() - INTERVAL $minM MINUTE AND r.created >= NOW() - INTERVAL $maxH HOUR
+                            AND s.status IN ('nuevas','candidatas','destacadas') AND z.comment_id IS NULL$w
+                          ORDER BY r.created ASC LIMIT " . max(1, min(10, $n)));
+    $st->execute($p);
+    $items = [];
+    foreach ($st->fetchAll() as $s) {
+        $items[] = ['agent' => $a['login'], 'story_id' => (int)$s['story_id'], 'kind' => $s['content_type'], 'title' => $s['title'], 'url' => $s['url'], 'source' => $s['source'],
+                    'lead' => $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'],
+                    'topic' => $s['topic'], 'author' => $s['author'] ?: '', 'sent' => $s['sent_date'], 'status' => $s['status'],
+                    'comments' => agent_thread_comments($pdo, (int)$s['story_id'], $uid), 'reply_to' => (int)$s['comment_id'], 'own' => (int)$s['parent_id']];
+    }
+    return $items;
+}
+/** El worker no contesta a esa respuesta (o fallo): no se le vuelve a ofrecer. */
+function agent_reply_skip(PDO $pdo, int $uid, int $comment_id, string $result, string $note, string $model = ''): void {
+    if (!agent_human_on()) return;
+    $pdo->prepare("INSERT INTO agent_reply_seen (user_id, comment_id, result, note, model) VALUES (?, ?, ?, ?, ?)
+                   ON DUPLICATE KEY UPDATE result = VALUES(result), note = VALUES(note), model = VALUES(model)")
+        ->execute([$uid, $comment_id, $result === 'fail' ? 'fail' : 'skip', mb_substr($note, 0, 300), mb_substr($model, 0, 80) ?: null]);
+}
 
 /** Hilos candidatos para un agente: abiertos, con la edad y los comentarios de su ficha, no suyos ni de los nicks excluidos,
  *  de sus temas y no vistos ya por el (o con la reserva caducada). Los reserva (agent_seen.leased) y devuelve lo que
@@ -160,15 +258,10 @@ function agent_lease(PDO $pdo, array $a, int $n): array {
                           WHERE " . implode(' AND ', $w) . " ORDER BY s.sent_date DESC LIMIT " . max(1, min(10, $n)));
     $st->execute($p);
     $items = [];
-    $cs = $pdo->prepare("SELECT c.comment_id, c.parent_id, c.user_id, c.alias, c.content, c.created, u.login FROM comments c LEFT JOIN users u ON u.user_id = c.user_id
-                          WHERE c.story_id = ? AND c.status = 'ok' AND c.deleted = 0 ORDER BY c.created ASC LIMIT 12");
     foreach ($st->fetchAll() as $s) {
         $pdo->prepare("INSERT INTO agent_seen (user_id, story_id, result, leased_until) VALUES (?, ?, 'leased', NOW() + INTERVAL $lease SECOND)
                        ON DUPLICATE KEY UPDATE result = 'leased', leased_until = VALUES(leased_until)")->execute([$uid, $s['story_id']]);
-        $cs->execute([$s['story_id']]);
-        $comments = [];
-        foreach ($cs->fetchAll() as $c) $comments[] = ['id' => (int)$c['comment_id'], 'parent' => (int)$c['parent_id'] ?: null,
-            'who' => display_name($c, ghost_over($c['created'])), 'text' => mb_substr((string)$c['content'], 0, 1200)];
+        $comments = agent_thread_comments($pdo, (int)$s['story_id'], $uid);
         $items[] = ['agent' => $a['login'], 'story_id' => (int)$s['story_id'], 'kind' => $s['content_type'], 'title' => $s['title'], 'url' => $s['url'], 'source' => $s['source'],
                     'lead' => $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'],
                     'topic' => $s['topic'], 'author' => $s['author'] ?: '', 'sent' => $s['sent_date'], 'status' => $s['status'], 'comments' => $comments];
@@ -176,8 +269,10 @@ function agent_lease(PDO $pdo, array $a, int $n): array {
     return $items;
 }
 
-/** Publica el comentario del agente. Devuelve [comment_id, null] o [0, 'error']. */
-function agent_comment(PDO $pdo, array $a, int $story_id, string $content, ?int $parent, string $model, string $note): array {
+/** Publica el comentario del agente. Devuelve [comment_id, null] o [0, 'error'].
+ *  $reply_to (migra-157): id de la respuesta de otro a un comentario suyo que esta contestando; es el unico caso en que se
+ *  admite un segundo comentario en el mismo hilo, y el padre es esa respuesta. */
+function agent_comment(PDO $pdo, array $a, int $story_id, string $content, ?int $parent, string $model, string $note, int $reply_to = 0): array {
     $uid = (int)$a['user_id'];
     $content = trim(preg_replace("/\r\n?/", "\n", $content));
     if (mb_strlen($content) < 2) return [0, 'comentario vacio'];
@@ -186,8 +281,19 @@ function agent_comment(PDO $pdo, array $a, int $story_id, string $content, ?int 
     if (agent_quota_left($pdo, $a) <= 0) return [0, 'tope diario alcanzado'];
     $q = $pdo->prepare("SELECT status FROM stories WHERE story_id = ?"); $q->execute([$story_id]);
     if (!in_array($q->fetchColumn(), ['nuevas', 'candidatas', 'destacadas'], true)) return [0, 'el hilo ya no admite comentarios'];
-    $q = $pdo->prepare("SELECT 1 FROM comments WHERE story_id = ? AND user_id = ? LIMIT 1"); $q->execute([$story_id, $uid]);
-    if ($q->fetchColumn()) return [0, 'el agente ya ha comentado en ese hilo'];
+    if ($reply_to > 0) {
+        if (!agent_human_on() || !(int)$a['replies']) return [0, 'este agente no contesta respuestas'];
+        $q = $pdo->prepare("SELECT r.comment_id FROM comments r JOIN comments own ON own.comment_id = r.parent_id AND own.user_id = ?
+                             WHERE r.comment_id = ? AND r.story_id = ? AND r.status = 'ok' AND r.deleted = 0 AND (r.user_id IS NULL OR r.user_id <> ?)");
+        $q->execute([$uid, $reply_to, $story_id, $uid]);
+        if (!$q->fetchColumn()) return [0, 'esa respuesta no es a un comentario suyo'];
+        $q = $pdo->prepare("SELECT 1 FROM comments WHERE parent_id = ? AND user_id = ? LIMIT 1"); $q->execute([$reply_to, $uid]);
+        if ($q->fetchColumn()) return [0, 'ya ha contestado a esa respuesta'];
+        $parent = $reply_to;
+    } else {
+        $q = $pdo->prepare("SELECT 1 FROM comments WHERE story_id = ? AND user_id = ? LIMIT 1"); $q->execute([$story_id, $uid]);
+        if ($q->fetchColumn()) return [0, 'el agente ya ha comentado en ese hilo'];
+    }
     $root = null; $pr = null;
     if ($parent) {
         if (!(int)$a['replies']) $parent = null;
@@ -205,10 +311,16 @@ function agent_comment(PDO $pdo, array $a, int $story_id, string $content, ?int 
     $cid = (int)$pdo->lastInsertId();
     $pdo->prepare("UPDATE stories SET comments = comments + 1 WHERE story_id = ?")->execute([$story_id]);
     mod_enqueue($pdo, 'comment', $cid);   // la IA moderadora lo revisa como a cualquiera
-    $pdo->prepare("INSERT INTO agent_seen (user_id, story_id, result, comment_id, note, model, leased_until) VALUES (?, ?, 'comment', ?, ?, ?, NULL)
-                   ON DUPLICATE KEY UPDATE result = 'comment', comment_id = VALUES(comment_id), note = VALUES(note), model = VALUES(model), leased_until = NULL")
-        ->execute([$uid, $story_id, $cid, mb_substr($note, 0, 300), mb_substr($model, 0, 80)]);
+    if ($reply_to > 0)
+        $pdo->prepare("INSERT INTO agent_reply_seen (user_id, comment_id, result, answer_id, note, model) VALUES (?, ?, 'comment', ?, ?, ?)
+                       ON DUPLICATE KEY UPDATE result = 'comment', answer_id = VALUES(answer_id), note = VALUES(note), model = VALUES(model)")
+            ->execute([$uid, $reply_to, $cid, mb_substr($note, 0, 300), mb_substr($model, 0, 80)]);
+    else
+        $pdo->prepare("INSERT INTO agent_seen (user_id, story_id, result, comment_id, note, model, leased_until) VALUES (?, ?, 'comment', ?, ?, ?, NULL)
+                       ON DUPLICATE KEY UPDATE result = 'comment', comment_id = VALUES(comment_id), note = VALUES(note), model = VALUES(model), leased_until = NULL")
+            ->execute([$uid, $story_id, $cid, mb_substr($note, 0, 300), mb_substr($model, 0, 80)]);
     $pdo->commit();
+    agent_rest($pdo, $a);   // pausa al azar antes del siguiente (migra-157)
     // avisos como los de cualquier comentario (respuesta al autor del comentario padre, @menciones)
     avisos_comment($pdo, ['comment_id' => $cid, 'story_id' => $story_id, 'user_id' => $uid, 'alias' => $alias, 'content' => $content], $pr);
     return [$cid, null];

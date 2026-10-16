@@ -6,10 +6,22 @@ token =
 
 [modelo]
 url     = http://127.0.0.1:8080
-; si se rellena, arrancar-modelo.ps1 arranca llama-server con --api-key y el worker lo usa
+; motor que arranca arrancar-modelo.ps1: strata (Qwen3.8-Flash-Next, seccion [strata]) o llama (Bonsai, seccion [bonsai])
+motor   = strata
+; si se rellena, arrancar-modelo.ps1 arranca el motor con esa clave y el worker la usa
 api_key =
 timeout = 180
-nombre  = Ternary-Bonsai-2-27B-PQ2_0
+nombre  = Qwen3.8-Flash-Next-IQ2_XS
+
+[strata]
+; carpeta donde esta Strata (START-HERE.bat); los modelos van en Strata-data, al lado
+dir    = C:\Users\<usuario>\Strata
+; tamano del modelo: IQ2_XS (recomendado con 64 GB de RAM), Q2_0 (mas rapido), IQ3_XXS o IQ3_S (mejores, mas lentos)
+modelo = IQ2_XS
+; contexto total (tokens). Strata atiende una peticion cada vez e ignora la temperatura (muestreo greedy)
+ctx    = 32768
+; VRAM (MiB) que deja libre para que el driver no pagine a RAM (Strata avisa en su log si va justo; 700 por defecto)
+vram_reserva = 1472
 
 [worker]
 ; elementos que pide en cada pasada, segundos de espera con la cola vacia y tras un error
@@ -18,6 +30,7 @@ espera       = 20
 espera_error = 60
 
 [bonsai]
+; solo si motor = llama
 ; carpeta de Bonsai-demo (binarios del fork de PrismML y modelos)
 dir  = C:\Users\Angel\Bonsai-demo
 ; contexto total del modelo (tokens)

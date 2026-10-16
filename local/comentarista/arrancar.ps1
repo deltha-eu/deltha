@@ -9,8 +9,8 @@ try { $null = Invoke-WebRequest -Uri "http://127.0.0.1:8080/health" -TimeoutSec 
 if (-not $up) {
     $modelo = Join-Path (Split-Path -Parent $here) "moderador\arrancar-modelo.ps1"
     Start-Process powershell -WindowStyle Minimized -ArgumentList @("-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
-        "`$host.UI.RawUI.WindowTitle = 'Deltha · modelo (llama-server)'; & '$modelo'")
-    Write-Host "Cargando el modelo (puede tardar un minuto)..."
+        "`$host.UI.RawUI.WindowTitle = 'Deltha · modelo'; & '$modelo'")
+    Write-Host "Cargando el modelo (Strata tarda varios minutos la primera vez)..."
     for ($i = 0; $i -lt 180; $i++) {
         Start-Sleep -Seconds 2
         try { $r = Invoke-WebRequest -Uri "http://127.0.0.1:8080/health" -TimeoutSec 2 -UseBasicParsing; if ($r.StatusCode -eq 200) { $up = $true; break } } catch {}

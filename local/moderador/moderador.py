@@ -87,7 +87,7 @@ def cargar_config(ruta: Path) -> configparser.ConfigParser:
     cfg = configparser.ConfigParser()
     cfg.read_dict({
         "deltha": {"url": "https://deltha.eu", "token": ""},
-        "modelo": {"url": "http://127.0.0.1:8080", "api_key": "", "timeout": "180", "nombre": "Ternary-Bonsai-2-27B-PQ2_0"},
+        "modelo": {"url": "http://127.0.0.1:8080", "api_key": "", "timeout": "180", "nombre": "Qwen3.8-Flash-Next-IQ2_XS"},
         "worker": {"lote": "4", "espera": "20", "espera_error": "60"},
     })
     if ruta.exists():
@@ -107,7 +107,11 @@ def http_json(url, datos=None, cabeceras=None, timeout=30):
         req.add_header(k, v)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return json.loads(r.read().decode("utf-8") or "{}")
+            cuerpo = r.read().decode("utf-8") or "{}"
+            try:
+                return json.loads(cuerpo)
+            except ValueError:
+                return {"_texto": cuerpo[:500]}
     except urllib.error.HTTPError as e:
         detalle = e.read().decode("utf-8", "replace")[:500]
         raise RuntimeError(f"HTTP {e.code} en {url}: {detalle}") from None
@@ -138,8 +142,10 @@ class Modelo:
         self.formato = "json_schema"   # si el servidor no lo admite, se baja a json_object y luego a texto libre
 
     def listo(self):
+        # llama-server devuelve {"status":"ok"}; Strata responde 200 con otro cuerpo: vale cualquier 200 que no diga lo contrario
         try:
-            return http_json(self.base + "/health", cabeceras=self.cab, timeout=5).get("status") == "ok"
+            r = http_json(self.base + "/health", cabeceras=self.cab, timeout=5)
+            return str(r.get("status", "ok")).lower() in ("ok", "ready", "healthy") if isinstance(r, dict) else True
         except Exception:
             return False
 
@@ -148,7 +154,8 @@ class Modelo:
             "messages": mensajes,
             "temperature": 0,
             "max_tokens": 400,
-            "chat_template_kwargs": {"enable_thinking": False},   # Qwen híbrido: sin razonamiento, respuesta directa
+            "chat_template_kwargs": {"enable_thinking": False},   # Qwen híbrido (llama-server): sin razonamiento, respuesta directa
+            "reasoning_effort": "none",                            # lo mismo para Strata (sin esto razona en modo high)
         }
         if self.formato == "json_schema":
             p["response_format"] = {"type": "json_schema", "json_schema": {"name": "veredicto", "strict": True, "schema": ESQUEMA}}
