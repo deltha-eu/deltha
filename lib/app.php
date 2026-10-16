@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 210);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 211);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -668,9 +668,9 @@ function save_theme_pref(string $t): void {
 /** Tema claro/oscuro: users.theme o, sin cuenta, la cookie ddd_theme (solo si se eligio en el menu). null = sigue al sistema. */
 /** Modo «sin distracciones» (solo cambia el escritorio de tres columnas): sin columna derecha, la central se ensancha hasta ocupar su
  *  sitio y las fotos dejan de ir como tarjeta bajo el texto para ir a la derecha del titular, al ancho que tenia esa columna. Pensado para
- *  leer los originales. Es una preferencia del navegador, no de la cuenta (depende de la pantalla): cookie ddd_foco, con o sin sesion;
- *  se cambia en el menu lateral (/cambiar-skin?z=…). Tres estados: sin cookie = solo en Originales (la lista /originales y el hilo
- *  de un original: esas paginas llaman a foco_por_defecto() antes de pintar); '1' = siempre; '0' = nunca.
+ *  leer los hilos de los foros. Es una preferencia del navegador, no de la cuenta (depende de la pantalla): cookie ddd_foco, con o sin sesion;
+ *  se cambia en el menu lateral (/cambiar-skin?z=…). Tres estados: sin cookie = solo en Foros (la lista /foros y el hilo
+ *  de un texto propio: esas paginas llaman a foco_por_defecto() antes de pintar); '1' = siempre; '0' = nunca.
  *  page_header() lo marca en <html data-foco="1">. */
 $DDD_FOCO_DEF = false;
 function foco_por_defecto(bool $on = true): void { global $DDD_FOCO_DEF; $DDD_FOCO_DEF = $on; }
@@ -808,6 +808,21 @@ function youtube_attr(?string $url): string {
 function portada_canales_on(): bool { return (string)cfg('portada_canales', '1') === '1' && (string)cfg('sources_youtube', '1') === '1'; }   // con los canales apagados (admin > Config) tampoco hay portada Canales
 /** Portadas en uso, en su orden: clave => etiqueta (sin Canales si esta apagada). */
 function portadas(): array { $p = DDD_PORTADAS; if (!portada_canales_on()) unset($p['canales']); return $p; }
+/* ---- Foros (migra-159, 16/10/2026): la seccion Foros (/foros) agrupa los textos propios (content_type = article) por foro. Tabla forums:
+ *  slug (URL /foros?f=slug y grupo de destacados en pins), nombre, descr (aviso de cabecera), status on/off (apagado = solo lo ve el
+ *  admin), position (orden de pestañas) y orden de los hilos ('fecha' = hilo mas reciente arriba; 'actividad' = ultimo mensaje arriba).
+ *  Lo que era Originales es el foro «originales»; cada original es un hilo. ---- */
+/** Foros por orden de pestaña; sin $todos, solo los activos (el admin ve tambien los apagados, marcados en la pestaña). Una consulta por pagina. */
+function foros(bool $todos = false): array {
+    static $all = null; global $pdo;
+    if ($all === null) { try { $all = array_column($pdo->query("SELECT * FROM forums ORDER BY position, forum_id")->fetchAll(), null, 'slug'); } catch (Throwable $e) { $all = []; } }   // sin migra-159: sin foros
+    return $todos ? $all : array_filter($all, fn($f) => $f['status'] === 'on');
+}
+/** El foro de un slug (incluidos los apagados: sus hilos y su URL siguen abriendose; en la lista solo lo ve el admin). */
+function foro(string $slug): ?array { return foros(true)[$slug] ?? null; }
+/** El foro de un envio (por stories.forum_id); null para los enlaces y los originales anteriores a la migracion. */
+function foro_de(array $s): ?array { $id = (int)($s['forum_id'] ?? 0); if (!$id) return null; foreach (foros(true) as $f) if ((int)$f['forum_id'] === $id) return $f; return null; }
+function foro_url(array $f): string { return '/foros?f=' . rawurlencode((string)$f['slug']); }
 /** Minutos minimos entre dos publicaciones en Canales. */
 function canales_gap(): int { return max(1, (int)cfg('canales_gap_min', 15)); }
 /** Instante de la ultima publicacion en Canales (0 = nunca). */
@@ -1248,7 +1263,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     echo "<main>";
     if (aviso_comunidad() !== '' && !preg_match('~/(admin|moderacion)(\.php)?$~', (string)$_SERVER['SCRIPT_NAME'])) { $GLOBALS['DDD_AVISO_OB'] = true; ob_start(); }   // aviso a la comunidad: se sustituyen los notice en page_footer()
 }
-/* Dos menus: arriba el contenido (las dos portadas, el radar del que se nutren y los originales), abajo la comunidad y las
+/* Dos menus: arriba el contenido (las dos portadas, el radar del que se nutren y los foros), abajo la comunidad y las
  * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
 function nav_tabs(string $tab, string $cls): void {
     $tabs = in_array($cls, ['tabs-top', 'rail-top'], true) ? [
@@ -1256,7 +1271,7 @@ function nav_tabs(string $tab, string $cls): void {
         'substacks'    => ['/?portada=substacks', t('Substacks'), 'letter'],
         'canales'      => ['/?portada=canales', t('Canales'), 'play'],
         'radar'        => ['/radar', t('Radar'), 'radar'],
-        'originales'   => ['/originales', t('Originales'), 'art'],
+        'foros'        => ['/foros', t('Foros'), 'art'],   // antes «Originales» (migra-159): dentro, una pestaña por foro
         'chat'         => ['/chat', t('Chat'), 'chat'],
     ] : [
         'temas'        => ['/temas', t('Temas'), 'tag'],            // solo en el rail (01/10): en modo sin distracciones no hay columna derecha, que era
@@ -1326,7 +1341,7 @@ function page_footer(): void {
     if (!empty($GLOBALS['DDD_AVISO_OB'])) {   // aviso a la comunidad (aviso_comunidad): cada <p class="notice"> de la pagina pasa a ser el aviso
         $GLOBALS['DDD_AVISO_OB'] = false;
         $cuerpo = (string)ob_get_clean();
-        // los <p class="notice keep"> no se tocan: llevan una accion (el «Escribe el tuyo» de /originales se perdia mientras habia aviso, 16/10/2026)
+        // los <p class="notice keep"> no se tocan: llevan una accion (el «Escribe el tuyo» de /foros se perdia mientras habia aviso, 16/10/2026)
         $re = '~<p class="notice(?![^"]*\\b(?:keep|aviso)\\b)(?: [^"]*)?">.*?</p>~su';   // tampoco el propio aviso ya insertado
         $cuerpo = preg_replace($re, aviso_comunidad(), $cuerpo, 1, $n);   // el primero pasa a ser el aviso…
         if (!$n) $cuerpo = aviso_comunidad() . $cuerpo;   // pagina sin aviso gris (o solo con keep): el aviso va arriba del todo
