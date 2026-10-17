@@ -15,6 +15,13 @@ El cron llama cada minuto, pero el ciclo solo se ejecuta una vez por ventana de 
 
 La zona horaria la fija `lib/app.php` (`[app] timezone` en config.ini, por defecto Europe/Madrid) para que web y cron compartan el mismo `NOW()`. Si el cron no promociona nada, ejecutarlo a mano y comparar: `php scripts/promocionar.php` y `php -r 'echo date("P");'`.
 
+## Colaborar (ramas, PR y migraciones)
+- `main` es lo que está desplegado. Todo lo de un colaborador va en una rama propia y entra por **pull request**; nunca push directo a `main`. Ángel revisa, fusiona y despliega (`desplegar.ps1`, que hace push a GitHub y al droplet; el hook del droplet aplica las migraciones pendientes y pasa `php -l`).
+- **Si el PR lleva migración, dilo en el título** (p. ej. «feat: … (migra-163)») y en la descripción. El hook la aplica sola al desplegar, pero quien fusiona tiene que verlo venir.
+- Las migraciones van en `sql/migra-NNN-nombre.sql`, numeradas seguidas: antes de crear una, mira el último número que haya en `sql/` **en `main`** (no en tu rama), porque otros también van metiendo. Deben poder ejecutarse más de una vez sin efectos (`INSERT IGNORE`, `ADD COLUMN IF NOT EXISTS`…) y añadir lo nuevo también a `sql/schema.sql` si crean tablas o claves de config.
+- Si tocas `public/css/ddd.css`, sube `DDD_CSS_VER` en `lib/app.php` (si no, los navegadores siguen con el CSS cacheado). Cadenas nuevas de interfaz: en español en el código y su traducción en los nueve diccionarios de `lib/lang/`.
+- Después de fusionar, la rama se borra (GitHub lo hace solo si está activado «Automatically delete head branches»).
+
 ## Acceso privado (clave temporal)
 `config.access_key` (admin → Config; `sql/migra-006-clave.sql`). Mientras no esté vacía, quien no tenga la clave es redirigido a `/delta/clave.php` (la antigua presentación de diapositivas `/delta/` se eliminó el 21/09/2026: su contenido es ahora la página `/que-es.php`, ver «Qué hay»); `clave.php` que deja una cookie técnica `ddd_k` (HMAC de la clave, 30 días). Los usuarios logueados pasan sin clave (`/login.php` queda exento). Cambiar la clave invalida todas las cookies; vaciarla abre la web.
 
