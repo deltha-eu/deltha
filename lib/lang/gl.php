@@ -915,4 +915,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 '<button>Abrir el hilo</button>' => '<button>Abrir o fío</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Abre un fío nos foros</b>',
 'Solo en Foros' => 'Só en Foros',
+'cerrar este aviso' => 'pechar este aviso',
 ];

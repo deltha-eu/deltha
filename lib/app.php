@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 211);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 212);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1219,10 +1219,15 @@ function aviso_comunidad(): string {
     if ($h !== null) return $h;
     $txt = trim((string)cfg('aviso_txt', ''));
     if ((string)cfg('aviso_on', '0') !== '1' || $txt === '') return $h = '';
+    // (17/10/2026) se puede cerrar con la × (pedido por Kosako): cookie ddd_av con la huella del texto, un año; si el aviso cambia, vuelve a salir
+    if (($_COOKIE[DDD_AVISO_COOKIE] ?? '') === aviso_clave($txt)) return $h = '';
     $html = saltos(h($txt));
     $html = preg_replace('~(https?://[^\s<]+)~u', '<a href="$1" rel="noopener">$1</a>', $html);   // enlaces sueltos, pinchables
-    return $h = "<p class=\"notice aviso\">$html</p>";
+    return $h = "<p class=\"notice aviso\"><a class=\"x\" href=\"/cerrar-aviso?k=" . aviso_clave($txt) . "\" rel=\"nofollow\" title=\"" . h(t('cerrar este aviso')) . "\" aria-label=\"" . h(t('cerrar este aviso')) . "\">×</a>$html</p>";
 }
+const DDD_AVISO_COOKIE = 'ddd_av';
+/** Huella corta del texto del aviso: es lo que guarda la cookie de «ya lo he cerrado» y lo que comprueba /cerrar-aviso. */
+function aviso_clave(string $txt): string { return substr(sha1($txt), 0, 12); }
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $robots = robots_meta();   // antes del primer echo: tambien manda la cabecera X-Robots-Tag

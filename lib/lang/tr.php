@@ -936,4 +936,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '<button>Abrir el hilo</button>' => '<button>Konuyu aç</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Forumlarda bir konu aç</b>',
 'Solo en Foros' => 'Yalnızca Forumlarda',
+'cerrar este aviso' => 'bu duyuruyu kapat',
 ];

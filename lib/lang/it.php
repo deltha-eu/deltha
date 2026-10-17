@@ -916,4 +916,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '<button>Abrir el hilo</button>' => '<button>Apri la discussione</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Apri una discussione nei forum</b>',
 'Solo en Foros' => 'Solo nei Forum',
+'cerrar este aviso' => 'chiudi questo avviso',
 ];

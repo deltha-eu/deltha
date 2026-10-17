@@ -245,7 +245,9 @@ form.plain .showpw label { display: flex; align-items: center; gap: 6px; }
 .choice:hover { background: var(--hover); }
 .or { text-align: center; color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
 .notice { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
-.notice.aviso { border-left: 4px solid var(--accent); line-height: 1.45; }
+.notice.aviso { border-left: 4px solid var(--accent); line-height: 1.45; position: relative; padding-right: 40px; }
+.notice.aviso .x { position: absolute; right: 8px; top: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 20px; line-height: 1; color: var(--muted); text-decoration: none; }   /* cerrar el aviso a la comunidad (17/10/2026) */
+.notice.aviso .x:hover { background: color-mix(in srgb, var(--accent) 15%, var(--bg)); color: var(--fg); }
 .pintag .pincost { font-size: 11px; opacity: .8; font-weight: 400; }   /* «(0,5 de aura)»: lo que costo destacar (13/10/2026) */   /* aviso a la comunidad (admin → Avisos, 13/10/2026) */
 .error { margin: 10px 16px; padding: 10px 12px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--neg) 12%, var(--bg)); color: var(--fg); font-weight: 600; border: 1px solid var(--neg); }   /* --neg es gris en casi todas las skins: sin negrita ni borde se confundia con un .notice (07/10/2026) */
 .error::before { content: "⚠ "; }

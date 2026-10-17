@@ -916,4 +916,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '<button>Abrir el hilo</button>' => '<button>Thema eröffnen</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Eröffne ein Thema in den Foren</b>',
 'Solo en Foros' => 'Nur in den Foren',
+'cerrar este aviso' => 'diesen Hinweis schließen',
 ];
