@@ -42,7 +42,7 @@ function envio_pub_key(?string $url, ?string $channel = null): ?string {
 function envio_pub_key_valida(string $k): ?string {
     $k = trim($k);
     if ($k === '') return null;
-    if (preg_match('/^yt:UC[\w-]{20,40}$/', $k) || preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $k)) return $k;
+    if (preg_match('/^yt:(?:UC[\w-]{20,40}|@[\w.-]{3,60})$/', $k) || preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $k)) return $k;   // canal por id (UC…) o por handle (@nombre, del oEmbed)
     return null;
 }
 
