@@ -96,8 +96,15 @@ function ana_tick(PDO $pdo): array {
     return $out;
 }
 
-/** Sumas de ana_daily entre dos fechas (incluidas) */
+/** Primer dia que cuenta (config analytics_since, '2026-10-06': el dia que Deltha se abrio al publico; '' = todo). Lo anterior era la beta
+ *  cerrada y no se enseña en ninguna cifra, ni en /analitica ni en la analitica completa; los datos siguen en ana_daily/hits. 17/10/2026. */
+function ana_since(): string {
+    $d = (string)cfg('analytics_since', '2026-10-06');
+    return preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) ? $d : '';
+}
+/** Sumas de ana_daily entre dos fechas (incluidas), nunca antes de ana_since() */
 function ana_sum(PDO $pdo, string $from, string $to): array {
+    if (($since = ana_since()) !== '' && $from < $since) $from = $since;
     $st = $pdo->prepare("SELECT COALESCE(SUM(visitors),0) visitors, COALESCE(SUM(sessions),0) sessions, COALESCE(SUM(pageviews),0) pageviews, COALESCE(SUM(logged),0) logged, COUNT(*) days FROM ana_daily WHERE day BETWEEN ? AND ?");
     $st->execute([$from, $to]);
     return array_map('intval', $st->fetch());

@@ -11,6 +11,9 @@ function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
     $from = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($_GET['from'] ?? '')) ? $_GET['from'] : date('Y-m-d', strtotime('-29 days'));
     $to   = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($_GET['to'] ?? ''))   ? $_GET['to']   : date('Y-m-d');
     if ($from > $to) [$from, $to] = [$to, $from];
+    $since = ana_since();   // nada anterior a la apertura al publico (analytics_since): el rango se acota y el detalle tambien
+    if ($since !== '' && $from < $since) $from = $since;
+    if ($since !== '' && $to < $since) $to = $since;
     $hoy = date('Y-m-d');
     $keep = max(7, (int)cfg('analytics_keep_days', 90));
     $detFrom = date('Y-m-d', strtotime("-$keep days"));
@@ -43,9 +46,12 @@ function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
     echo "del <input type=\"date\" name=\"from\" value=\"$from\"> al <input type=\"date\" name=\"to\" value=\"$to\"> <button class=\"btn\">Ver</button> ";
     foreach ([['hoy', 0], ['7 días', 6], ['30 días', 29], ['90 días', 89], ['este año', -1]] as [$l, $d]) {
         $f = $d === -1 ? date('Y-01-01') : date('Y-m-d', strtotime("-$d days"));
+        if ($since !== '' && $f < $since) $f = $since;
         echo "<a href=\"" . $link($f, $hoy) . "\">$l</a> ";
     }
+    if ($since !== '') echo "<a href=\"" . $link($since, $hoy) . "\">desde la apertura</a> ";
     echo "</form>";
+    if ($since !== '') echo "<p><small>Se cuenta desde el " . date('d/m/Y', strtotime($since)) . ", el día que Deltha se abrió al público; lo anterior (la beta) no entra en ninguna cifra (<code>analytics_since</code> en Config).</small></p>";
     // dias: cerrados desde ana_daily, hoy desde hits
     $st = $pdo->prepare("SELECT * FROM ana_daily WHERE day BETWEEN ? AND ? ORDER BY day");
     $st->execute([$from, $to]);
@@ -69,7 +75,7 @@ function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
     } else echo "<p>Sin datos en ese rango.</p>";
 
     // ---- detalle (solo dentro de la ventana de hits) ----
-    $dFrom = max($from, $detFrom);
+    $dFrom = max($from, $detFrom);   // $from ya viene acotado por analytics_since
     if ($dFrom > $to) { echo "<p><small>El detalle (páginas, procedencia, países…) solo se conserva $keep días; este rango queda fuera.</small></p>"; return; }
     if ($dFrom > $from) echo "<p><small>El detalle de abajo cubre del $dFrom al $to (se conserva $keep días); los totales de arriba, todo el rango.</small></p>";
     $where = "ts >= '$dFrom' AND ts < '$to' + INTERVAL 1 DAY";
