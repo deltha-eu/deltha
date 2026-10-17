@@ -55,6 +55,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $m = extraer_meta($f['url'], empty($pre['image']));   // con foto del RSS no hace falta bajar la og:image
             $f['title'] = texto_plano($m['title']); $f['content'] = texto_plano($m['description']);
             $f['image'] = !empty($pre['image']) ? $pre['image'] : $m['image'];
+            // (17/10/2026) la pagina no da nada util (webs solo-JavaScript, como Killbait) pero la noticia esta en el catalogo por RSS:
+            // se toman del item su foto (copiada: la del item caduca) y, si faltan, titular y entradilla. Vale aunque la URL se pegue a mano.
+            if (empty($f['image']) || $f['title'] === '') {
+                $q = $pdo->prepare("SELECT i.item_id, i.title, i.content, i.image FROM source_items i JOIN sources s ON s.source_id = i.source_id WHERE i.url = ? AND s.status = 'ok' ORDER BY i.pub_date DESC LIMIT 1");
+                $q->execute([$f['url']]);
+                if ($it = $q->fetch()) {
+                    if (empty($f['image']) && $it['image'] && ($copia = imagen_copiar((string)$it['image']))) $f['image'] = $copia;
+                    if ($f['title'] === '' && $it['title'] !== '') $f['title'] = texto_plano((string)$it['title']);
+                    if ($f['content'] === '' && (string)$it['content'] !== '') $f['content'] = texto_plano((string)$it['content']);
+                }
+            }
             if ($pre) {
                 if ($pre['title'] !== '') $f['title'] = $pre['title'];
                 if ($pre['content'] !== '') $f['content'] = $pre['content'];
