@@ -915,4 +915,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '<button>Abrir el hilo</button>' => '<button>Obrir el fil</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Obre un fil als fòrums</b>',
 'Solo en Foros' => 'Només als Fòrums',
+'cerrar este aviso' => 'tancar aquest avís',
 ];

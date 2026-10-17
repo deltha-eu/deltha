@@ -952,4 +952,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '<button>Abrir el hilo</button>' => '<button>Abrir o tópico</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Abre um tópico nos fóruns</b>',
 'Solo en Foros' => 'Só nos Fóruns',
+'cerrar este aviso' => 'fechar este aviso',
 ];

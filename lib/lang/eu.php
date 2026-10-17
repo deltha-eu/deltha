@@ -915,4 +915,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '<button>Abrir el hilo</button>' => '<button>Ireki haria</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Ireki hari bat foroetan</b>',
 'Solo en Foros' => 'Foroetan bakarrik',
+'cerrar este aviso' => 'itxi ohar hau',
 ];

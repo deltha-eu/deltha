@@ -954,4 +954,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 '<button>Abrir el hilo</button>' => '<button>Ouvrir le fil</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Ouvrez un fil dans les forums</b>',
 'Solo en Foros' => 'Seulement dans les Forums',
+'cerrar este aviso' => 'fermer cet avis',
 ];

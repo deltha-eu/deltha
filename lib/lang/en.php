@@ -955,4 +955,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '<button>Abrir el hilo</button>' => '<button>Start the thread</button>',
 '<b>Abre un hilo en los foros</b>' => '<b>Start a thread in the forums</b>',
 'Solo en Foros' => 'Only in Forums',
+'cerrar este aviso' => 'close this notice',
 ];
