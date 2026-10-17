@@ -208,6 +208,12 @@ function imagen_de_pagina(string $bytes, string $pageUrl, string $imgUrl = ''): 
  *  original, para que tambien se retire si la imagen resulta ser la generica del medio. Devuelve el nombre nuevo o null. */
 function imagen_copiar(string $orig): ?string {
     global $pdo;
+    // miniatura de agregador (/media/fuentes/slug-id.ext, guardada tal cual del feed): se procesa como una foto normal (recorte 4:3, JPEG
+    // limpio) en vez de copiarla; asi «enviar al radar» desde una fuente de ese tipo lleva foto (17/10/2026)
+    if (preg_match('~^fuentes/[A-Za-z0-9_.-]+\.(?:jpg|jpeg|png|webp|gif|avif)$~i', $orig) && is_file(DDD_MEDIA_DIR . '/' . $orig)) {
+        $bytes = @file_get_contents(DDD_MEDIA_DIR . '/' . $orig);
+        return $bytes ? imagen_desde_bytes($bytes) : null;
+    }
     if (!preg_match('/^[a-f0-9]{24}\.jpg$/', $orig) || !is_file(DDD_MEDIA_DIR . '/' . $orig)) return null;
     $copia = bin2hex(random_bytes(12)) . '.jpg';
     if (!@copy(DDD_MEDIA_DIR . '/' . $orig, DDD_MEDIA_DIR . '/' . $copia)) return null;
