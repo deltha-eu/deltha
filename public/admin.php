@@ -5,6 +5,13 @@ const DDD_CFG_GRUPOS = [
     'sources_youtube'     => ['Canales (YouTube)', '«Mis canales»: activado = los canales de YouTube se ven y se leen; desactivado = fuera de todo salvo admin > Fuentes, y tampoco hay portada Canales (los vídeos de YouTube van a Medios).', '1'],
     'sources_agregadores' => ['Agregadores', '«Mis agregadores»: activado = los agregadores (Menéame, Mediatize, Renegados…) se ven y se leen; desactivado = fuera de todo salvo admin > Fuentes.', '0'],
 ];
+/** Opciones de processes_votes_who (quién ve la pestaña Votos de /procesos): valor => etiqueta. */
+const DDD_PROCESSES_VOTES_WHO = [
+    'todos'       => 'Todos, también los anónimos',
+    'usuarios'    => 'Solo usuarios registrados',
+    'moderadores' => 'Solo moderadores',
+    'admin'       => 'Solo admin',
+];
 require __DIR__ . '/../lib/ciclo.php';
 require __DIR__ . '/../lib/fuentes.php';
 if (!is_admin()) { http_response_code(403); exit('Solo admin'); }
@@ -23,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach (DDD_CFG_GRUPOS as $k => [, $descr]) if (isset($_POST['cfg'][$k])) { $up->execute([$k, $_POST['cfg'][$k] === '1' ? '1' : '0', $descr]); unset($_POST['cfg'][$k]); }
         foreach (($_POST['cfg'] ?? []) as $k => $v) {
             if ($k === 'skin_default' && !isset(DDD_SKINS[(string)$v])) $v = 'editorial';   // solo skins existentes
+            if ($k === 'processes_votes_who' && !isset(DDD_PROCESSES_VOTES_WHO[(string)$v])) $v = 'todos';   // solo grupos existentes
             $st->execute([trim((string)$v), (string)$k]);
         }
         $out[] = 'Config guardada.';
@@ -544,6 +552,12 @@ if ($tab === 'usuarios') {
     foreach ($pdo->query("SELECT * FROM config ORDER BY ckey") as $c) {
         if (isset(DDD_CFG_GRUPOS[$c['ckey']])) continue;   // van arriba, como interruptores
         if (str_starts_with($c['ckey'], 'logo_')) continue;   // se gestiona en la pestaña Logo (logo_light, logo_dark, logo_icon)
+        if ($c['ckey'] === 'processes_votes_who') {   // quien ve la pestaña Votos de /procesos
+            echo "<tr><td><code>processes_votes_who</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><select name=\"cfg[processes_votes_who]\">";
+            foreach (DDD_PROCESSES_VOTES_WHO as $k => $lbl) echo "<option value=\"$k\"" . ($c['cvalue'] === $k ? ' selected' : '') . ">" . h($lbl) . "</option>";
+            echo "</select></td></tr>";
+            continue;
+        }
         if ($c['ckey'] === 'skin_default') {   // la skin por defecto se elige entre todas las que hay (DDD_SKINS)
             echo "<tr><td><code>skin_default</code><br><small>Skin por defecto (anónimos y quien no elija): cualquiera de las " . count(DDD_SKINS) . "</small></td><td style=\"width:45%\"><select name=\"cfg[skin_default]\">";
             foreach (DDD_SKINS as $k => $v) echo "<option value=\"$k\"" . ($c['cvalue'] === $k ? ' selected' : '') . ">" . h($v) . " ($k)</option>";
