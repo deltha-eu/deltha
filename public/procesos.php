@@ -9,7 +9,7 @@
  *  ?v=todo          flujo cronologico de toda la actividad
  *  ?v=moderacion    lo que espera a un moderador (con lo que ha dicho la IA) y el historico de decisiones:
  *                   retirado o se queda, quien lo decidio y por que. A la vista de todo el mundo.
- *  ?v=envios | comentarios | votos | portadas   flujo filtrado
+ *  ?v=envios | comentarios | votos | portadas   flujo filtrado (Votos solo si lo permite processes_votes_who)
  *  ?v=registros   SOLO ADMIN: historico permanente de registros (tabla reg_log, migra-102): cada intento de alta, la mas reciente primero,
  *                   con su correo y como acabo: activada, a medias (sin confirmar el correo, o borrada por no activar) o rechazada en el formulario.
  *  &d=hoy | todo    solo lo de hoy / sin ventana de dias (desde /estadisticas). «todo»
@@ -26,6 +26,16 @@ require __DIR__ . '/../lib/render.php';
 
 $VIEWS = ['cola' => t('Radar'), 'todo' => t('Todo'), 'moderacion' => t('Moderación'), 'envios' => t('Envíos'), 'comentarios' => t('Comentarios'), 'votos' => t('Votos'), 'portadas' => t('Portadas')];
 if (is_admin()) $VIEWS['registros'] = t('Registros');   // solo admin: ni la pestaña ni la vista existen para los demas
+/* Quien ve la pestaña Votos (config processes_votes_who): todos | usuarios | moderadores | admin.
+ * Los roles superiores incluyen a los inferiores; sin la pestaña tampoco salen los votos en el flujo «Todo». */
+$votosQuien = (string)cfg('processes_votes_who', 'todos');
+$veVotos = match ($votosQuien) {
+    'usuarios'    => user() !== null,
+    'moderadores' => is_mod(),
+    'admin'       => is_admin(),
+    default       => true,
+};
+if (!$veVotos) unset($VIEWS['votos']);
 $v = (string)($_GET['v'] ?? 'cola');
 if (!isset($VIEWS[$v])) $v = 'cola';
 $page = page_num();
@@ -226,7 +236,7 @@ if (in_array($v, ['todo', 'comentarios'], true))
                        s.title, s.status, s.revealed, s.sent_date, s.delta, IF(c.deleted = 1, NULL, c.content) AS txt
                   FROM comments c JOIN stories s ON s.story_id = c.story_id
                  WHERE c.status='ok' AND $dC AND s.status IN $VIVAS";
-if (in_array($v, ['todo', 'votos'], true))
+if ($veVotos && in_array($v, ['todo', 'votos'], true))
     $parts[] = "SELECT 'voto' AS kind, vt.story_id, vt.story_id AS ref, vt.created AS ts, vt.user_id, ta.alias, vt.value,
                        s.title, s.status, s.revealed, s.sent_date, s.delta, NULL AS txt
                   FROM votes vt JOIN stories s ON s.story_id = vt.story_id

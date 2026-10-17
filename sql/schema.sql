@@ -759,6 +759,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('per_page',            '20',   'Envios por pagina'),
 ('cycle_minutes',       '5',    'Minutos entre ciclos del cron; los ciclos alternan portada (Medios, Substacks) y corren en un minuto imprevisible de cada ventana'),
 ('procesos_days',       '7',    'Dias de actividad que muestra el flujo de /procesos.php'),
+('processes_votes_who', 'todos', 'Quien ve la pestaña Votos de /procesos y los votos del flujo «Todo»: todos | usuarios | moderadores | admin'),
 ('msg_enabled',         '1',    '1 = mensajes privados entre registrados activos'),
 ('msg_per_hour',        '30',   'Mensajes privados maximos que puede enviar un usuario por hora'),
 ('notif_enabled',       '1',    '1 = avisos (campanita): menciones @nick, respuestas y privados'),
