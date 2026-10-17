@@ -55,6 +55,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $m = extraer_meta($f['url'], empty($pre['image']));   // con foto del RSS no hace falta bajar la og:image
             $f['title'] = texto_plano($m['title']); $f['content'] = texto_plano($m['description']);
             $f['image'] = !empty($pre['image']) ? $pre['image'] : $m['image'];
+            // (17/10/2026) video de YouTube: la pagina del video desde el servidor sale a veces vacia o con la de consentimiento, y entonces
+            // no habia titular ni foto. El oEmbed publico (sin clave) da titular, canal y miniatura; se usa si falta algo.
+            if (($yid = youtube_video_id($f['url'])) !== '' && ($f['title'] === '' || empty($f['image']) || $f['content'] === '')) {
+                $oe = json_decode((string)http_get('https://www.youtube.com/oembed?format=json&url=' . rawurlencode('https://www.youtube.com/watch?v=' . $yid), 5, 200000), true);
+                if (is_array($oe)) {
+                    if ($f['title'] === '' && !empty($oe['title'])) $f['title'] = mb_substr(texto_plano((string)$oe['title']), 0, 200);
+                    if ($f['content'] === '' && !empty($oe['author_name'])) $f['content'] = mb_substr(texto_plano((string)$oe['author_name']) . ' · YouTube', 0, 2000);
+                    if (empty($f['image'])) {
+                        $bytes = http_get('https://i.ytimg.com/vi/' . $yid . '/maxresdefault.jpg', 5, 3000000) ?: http_get('https://i.ytimg.com/vi/' . $yid . '/hqdefault.jpg', 5, 3000000);
+                        if ($bytes) $f['image'] = imagen_desde_bytes($bytes);
+                    }
+                    if (empty($m['channel']) && !empty($oe['author_url']) && preg_match('~youtube\.com/(@[\w.-]+)~', (string)$oe['author_url'], $au)) $m['channel'] = $au[1];   // sin channelId: el handle del canal vale como clave del publicador
+                }
+            }
             // (17/10/2026) si la noticia esta en el catalogo (RSS de un medio), manda lo del item: titular, entradilla y foto (copiada: la del
             // item caduca). Es lo que publica el propio medio y vale aunque su web no de nada (solo JavaScript, como Killbait: la pagina
             // devuelve el titulo y la descripcion genericos del sitio, que antes se colaban como si fueran los del articulo).
