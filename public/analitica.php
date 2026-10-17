@@ -11,6 +11,7 @@ $ayer = date('Y-m-d', strtotime('yesterday'));
 $mes  = date('Y-m-01');
 $anio = date('Y-01-01');
 $first = $pdo->query("SELECT MIN(day) FROM ana_daily")->fetchColumn();
+if (($since = ana_since()) !== '' && (!$first || $first < $since)) $first = $since;   // lo anterior a la apertura (beta) no se enseña
 $dAyer = ana_sum($pdo, $ayer, $ayer);
 $dMes  = $ayer >= $mes  ? ana_sum($pdo, $mes, $ayer)  : ['visitors' => 0, 'sessions' => 0, 'pageviews' => 0];   // dia 1: el mes aun no tiene dias cerrados
 $dAnio = $ayer >= $anio ? ana_sum($pdo, $anio, $ayer) : ['visitors' => 0, 'sessions' => 0, 'pageviews' => 0];
