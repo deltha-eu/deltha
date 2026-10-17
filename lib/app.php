@@ -1032,11 +1032,12 @@ function lang_detect(string $text): string {
     return $best;
 }
 /** Idioma para un envio nuevo: el de la fuente del catalogo si el dominio esta (sources.lang), si no, detectado del texto. */
-/** <select name="lang"> para elegir el idioma de un envio (enviar, editar): «detectar» ('' → lang_for_story al guardar), los nueve
- *  idiomas y «otro» ('??'). $value: el actual o el detectado para proponerlo (08/10/2026). */
+/** <select name="lang"> para elegir el idioma de un envio (enviar, editar): «detectar» ('' → lang_for_story al guardar), los diez
+ *  idiomas y «otro» ('??'). Nombres traducidos a la interfaz, codigos estables. $value: el actual o el detectado para proponerlo. */
 function lang_select(string $value = '', string $name = 'lang'): string {
+    $names = ['es' => 'Español', 'ca' => 'Catalán', 'eu' => 'Euskera', 'gl' => 'Gallego', 'en' => 'Inglés', 'fr' => 'Francés', 'de' => 'Alemán', 'it' => 'Italiano', 'pt' => 'Portugués', 'tr' => 'Turco'];
     $h = "<select name=\"" . h($name) . "\"><option value=\"\"" . ($value === '' ? ' selected' : '') . ">" . t('detectar automáticamente') . "</option>";
-    foreach (DDD_LANGS as $c => $n) $h .= "<option value=\"$c\"" . ($value === $c ? ' selected' : '') . ">" . h($n) . "</option>";
+    foreach (array_keys(DDD_LANGS) as $c) $h .= "<option value=\"$c\"" . ($value === $c ? ' selected' : '') . ">" . h(t($names[$c])) . "</option>";
     return $h . "<option value=\"??\"" . ($value === '??' ? ' selected' : '') . ">" . t('otro idioma') . "</option></select>";
 }
 /** Idioma elegido en un formulario: un codigo de DDD_LANGS o '??'; cualquier otra cosa → '' (detectar). */
