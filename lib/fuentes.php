@@ -341,6 +341,7 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
         }
         if (!empty($items[0]['smf'])) { $k = fuente_smf_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']}: $k mensajes leidos del foro"; }
         if (str_contains($url, 'renegados.es')) { $k = fuente_renegados_completar($items, $timeout); if ($k) $log[] = "fuente {$src['slug']} $phase: votos y comentarios de la API para $k items"; }
+        if (str_contains($url, 'gatopardo.com')) { $k = fuente_gatopardo_completar($pdo, $src, $items, $timeout); if ($k) $log[] = "fuente {$src['slug']} $phase: titular, entradilla y foto leidos de $k articulos"; }
         [$new, $upd] = fuente_guardar($pdo, $src, $phase, $items);
         $log[] = "fuente {$src['slug']} $phase: " . count($items) . " items, $new nuevos, $upd actualizados";
     }
@@ -433,7 +434,7 @@ function fuente_renegados_completar(array &$items, int $timeout): int {
 /** Fuentes cuyo feed no trae votos (se muestra el numero de comentarios / del mensaje en vez de los votos): foros SMF (action=.xml)
  *  y XenForo (index.rss: Burbuja). Renegados tampoco los trae en el RSS, pero es un agregador con votos y Angel quiere ver la
  *  «burbuja» de votos en su pagina (skin Phantom), asi que se pinta el widget normal, a 0 hasta que su feed los incluya. */
-const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php', 'mediavida.com/foro', 'press.asimov.com/articles', 'pagint.onrender.com', 'www.publico.es/'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania) · Mediavida (sin feed: se lee la tabla de /foro/spy)
+const DDD_FEEDS_SIN_VOTOS = ['action=.xml', 'index.rss', 'external.php', 'mediavida.com/foro', 'press.asimov.com/articles', 'pagint.onrender.com', 'www.publico.es/', 'www.gatopardo.com/'];   // SMF · XenForo (Burbuja, ForoMTB, ForoBeta) · vBulletin (HTCMania) · Mediavida (sin feed: se lee la tabla de /foro/spy)
 /** Foros XenForo y vBulletin: el feed trae el primer mensaje con sus fotos (emoticonos, capturas, anuncios de venta); no se descargan:
  *  el listado de un foro no lleva miniaturas. */
 function fuente_sin_fotos(array $src): bool {
@@ -532,6 +533,7 @@ function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'class="ap-card"')) return fuentes_parse_asimov($xml);        // Asimov Press: sin feed, se lee /articles (migra-130)
     if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"slugSeccion"')) return fuentes_parse_pagint($xml);   // Página Internacional: su API JSON (migra-130)
     if (str_contains($xml, 'm-preview-') && str_contains($xml, 'publico.es')) return fuentes_parse_publico($xml);   // Público: sin RSS desde 2024, se lee la portada (migra-136)
+    if (str_contains($xml, 'gatopardo.com') && str_contains($xml, '/articulos/') && str_contains($xml, 'website-files.com')) return fuentes_parse_gatopardo($xml);   // Gatopardo (Webflow, sin RSS): se lee la portada (migra-161)
     if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"rendered"') && str_contains($xml, '"link"')) return fuentes_parse_wpjson($xml);   // WordPress sin RSS: su API REST /wp-json/wp/v2/posts (migra-150, Rebelión)
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
@@ -726,6 +728,93 @@ function fuentes_parse_publico(string $html): array {
                   'thumb' => $img, 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ahora - $pos * 60), 'smf' => null];
     }
     return $out;
+}
+
+/** Gatopardo (gatopardo.com, revista mexicana de cronica y reportaje; migra-161). Es un sitio Webflow sin RSS: se lee la portada
+ *  (feed_portada = https://www.gatopardo.com/) y se sacan, en el orden en que aparecen, los enlaces a /articulos/slug con su foto
+ *  (cdn.prod.website-files.com). La portada no trae un titular fiable (bloques con texto de relleno de Webflow), asi que aqui se pone
+ *  lo mejor que haya y fuente_gatopardo_completar() lee despues la pagina de cada articulo nuevo (og:title, og:description, og:image
+ *  y fecha de publicacion), unos pocos por pasada. Sin votos ni comentarios. */
+function fuentes_parse_gatopardo(string $html): array {
+    $base = 'https://www.gatopardo.com';
+    if (!preg_match_all('~<a\b[^>]*href="(?:https?://(?:www\.)?gatopardo\.com)?/articulos/([a-z0-9][a-z0-9_-]*)/?(?:[?#][^"]*)?"[^>]*>(.*?)</a>~su', $html, $m, PREG_SET_ORDER)) return [];
+    $dec = fn(string $v): string => trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($v), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+    $RELLENO = ['this is some text inside of a div block.', 'leer más', 'leer mas', 'ver más', 'ver mas', 'read more'];
+    $GENEROS = ['reportaje', 'crónica', 'cronica', 'nota', 'ensayo', 'entrevista', 'perfil', 'opinión', 'opinion', 'fotogalería', 'fotogaleria', 'columna', 'podcast', 'video', 'vídeo'];
+    $cards = []; $orden = [];
+    foreach ($m as $a) {
+        $slug = $a[1]; $blk = $a[2];
+        if (!isset($cards[$slug])) { $cards[$slug] = ['title' => '', 'img' => '', 'topic' => '', 'excerpt' => '']; $orden[] = $slug; }
+        $c = &$cards[$slug];
+        if ($c['img'] === '' && preg_match('~<img[^>]+src="(https://cdn\.prod\.website-files\.com/[^"\s]+)"~u', $blk, $i)) $c['img'] = html_entity_decode($i[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if ($c['title'] === '' && preg_match('~<h[1-6][^>]*>(.*?)</h[1-6]>~su', $blk, $h) && mb_strlen($t = $dec($h[1])) >= 8) $c['title'] = $t;
+        // sin cabecera: el trozo de texto mas largo del bloque que no sea relleno, genero, año o region
+        if ($c['title'] === '') {
+            $mejor = '';
+            foreach (preg_split('~<[^>]+>~', $blk) as $tx) {
+                $t = $dec($tx);
+                if (mb_strlen($t) < 8 || in_array(mb_strtolower($t), $RELLENO, true) || in_array(mb_strtolower($t), $GENEROS, true) || preg_match('/^\d{4}$/', $t)) continue;
+                if (mb_strlen($t) > mb_strlen($mejor)) $mejor = $t;
+            }
+            $c['title'] = $mejor;
+        }
+        if ($c['topic'] === '') foreach (preg_split('~<[^>]+>~', $blk) as $tx) { $t = mb_strtolower($dec($tx)); if (in_array($t, $GENEROS, true)) { $c['topic'] = $t; break; } }
+        unset($c);
+    }
+    $out = []; $pos = 0; $ahora = time();
+    foreach ($orden as $slug) {
+        $c = $cards[$slug]; $pos++;
+        $url = "$base/articulos/$slug";
+        $title = $c['title'] !== '' ? $c['title'] : ucfirst(str_replace('-', ' ', $slug));   // provisional: lo corrige fuente_gatopardo_completar()
+        $out[] = ['ext_id' => substr(sha1($url), 0, 32), 'title' => mb_substr($title, 0, 200), 'url' => mb_substr($url, 0, 600), 'thread_url' => '', 'source' => null,
+                  'topic' => $c['topic'] !== '' ? mb_substr(ucfirst($c['topic']), 0, 48) : null, 'author' => null, 'content' => '',
+                  'thumb' => $c['img'], 'votes' => 0, 'negatives' => 0, 'comments' => 0, 'pub_date' => date('Y-m-d H:i:s', $ahora - $pos * 60), 'smf' => null, 'gatopardo' => true];
+        if (count($out) >= 40) break;
+    }
+    return $out;
+}
+/** Lee la pagina de cada articulo de Gatopardo que aun no esta guardado (o se guardo sin entradilla) y completa titular (og:title),
+ *  entradilla (og:description), foto (og:image), autor y fecha de publicacion (article:published_time o datePublished del JSON-LD).
+ *  Como mucho sources_gatopardo_per_run (6) paginas por pasada: el resto se completa en las siguientes. Devuelve cuantos completo. */
+function fuente_gatopardo_completar(PDO $pdo, array $src, array &$items, int $timeout): int {
+    if (!empty($GLOBALS['DDD_RELAY'])) return 0;   // por el lector local no se piden paginas desde el servidor
+    $max = max(0, (int)cfg('sources_gatopardo_per_run', 6));
+    if ($max === 0) return 0;
+    $hechos = [];   // ext_id => titulo ya guardado de los articulos completados (content no vacio)
+    try {
+        $st = $pdo->prepare("SELECT ext_id, title FROM source_items WHERE source_id = ? AND content IS NOT NULL AND content <> ''");
+        $st->execute([(int)$src['source_id']]);
+        $hechos = $st->fetchAll(PDO::FETCH_KEY_PAIR);
+    } catch (Throwable $e) {}
+    $dec = fn(string $v): string => trim(preg_replace('/\s+/u', ' ', html_entity_decode($v, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+    $meta = function (string $html, array $names) use ($dec): string {
+        foreach ($names as $n) {
+            $q = preg_quote($n, '/');
+            if (preg_match('/<meta[^>]+(?:property|name)=["\']' . $q . '["\'][^>]+content=["\']([^"\']*)["\']/i', $html, $x)
+             || preg_match('/<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\']' . $q . '["\']/i', $html, $x)) { $v = $dec($x[1]); if ($v !== '') return $v; }
+        }
+        return '';
+    };
+    $n = 0;
+    foreach ($items as &$it) {
+        if (empty($it['gatopardo'])) continue;
+        if (isset($hechos[$it['ext_id']])) { $it['title'] = (string)$hechos[$it['ext_id']]; continue; }   // ya completado: que el UPDATE no pise el titular bueno con el provisional de la portada
+        if ($n >= $max) break;
+        $html = http_get((string)$it['url'], $timeout, 1500000);
+        if ($html === null || $html === '') continue;
+        $n++;
+        if (($t = $meta($html, ['og:title', 'twitter:title'])) !== '') $it['title'] = mb_substr(preg_replace('/\s+[\-|–—·]\s+Gatopardo$/u', '', $t), 0, 200);
+        elseif (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $x) && ($t = $dec(strip_tags($x[1]))) !== '') $it['title'] = mb_substr(preg_replace('/\s+[\-|–—·]\s+Gatopardo$/u', '', $t), 0, 200);
+        if (($d = $meta($html, ['og:description', 'twitter:description', 'description'])) !== '') $it['content'] = mb_substr($d, 0, 2000);
+        if (($i = $meta($html, ['og:image', 'twitter:image'])) !== '' && preg_match('#^https?://#i', $i)) $it['thumb'] = $i;
+        if (($au = $meta($html, ['author', 'article:author'])) !== '' && !preg_match('#^https?://#i', $au)) $it['author'] = mb_substr($au, 0, 64);
+        $fecha = $meta($html, ['article:published_time', 'datePublished']);
+        if ($fecha === '' && preg_match('/"datePublished"\s*:\s*"([^"]+)"/', $html, $x)) $fecha = $x[1];
+        if ($fecha !== '' && ($ts = strtotime($fecha)) !== false && $ts > 0 && $ts <= time() + 86400) $it['pub_date'] = date('Y-m-d H:i:s', $ts);
+        if ($it['content'] === '') $it['content'] = "\u{00A0}";   // marca de «ya leido» aunque la pagina no traiga descripcion (un espacio normal contaria como vacio en MySQL)
+    }
+    unset($it);
+    return $n;
 }
 
 /** WordPress que ha quitado el RSS pero deja abierta su API REST (migra-150, Rebelión: /feed/ da 410). Como «RSS» de la fuente se pone
