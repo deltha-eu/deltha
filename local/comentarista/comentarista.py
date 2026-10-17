@@ -61,6 +61,7 @@ Cómo se comenta en Deltha (vale para cualquier personalidad):
 - Nada de listas, negritas, emojis, saludos ni firma. Sin comillas alrededor. Puedes dejar una frase sin rematar o empezar por «Pues», «Ojo», «Hombre» si te sale así.
 - Si no tienes nada que aportar, o ya dijiste lo mismo en otro hilo, calla ("comenta": false). Callar es lo normal; comentar, la excepción.
 - Si abajo aparecen tus últimos comentarios, no repitas sus arranques, muletillas ni ideas, y no te contradigas con lo que dijiste.
+- No corrijas datos (fechas, cifras, nombres, quién ganó qué) del artículo ni de otros comentarios, ni los «revises»: no tienes forma de comprobarlos y te equivocas. Tampoco aportes fechas o cifras que no estén en el artículo. Si algo te chirría, pregunta («¿no fue antes?») o cállalo; nunca lo afirmes.
 
 Responde SOLO con un objeto JSON con estas claves:
 - "comenta": true si vas a comentar, false si pasas del hilo.
@@ -314,6 +315,25 @@ def construir_mensaje(hilo, articulo, recientes=None):
     return "\n\n".join(partes)
 
 
+CORRIGE = re.compile(r"(?i)\b(no (fue|era|es) en \d{3,4}|en realidad (fue|era|es)|(error|errata|incorrecto|incorrecta|equivocad[oa]|falso|falsa)\b|revisar:|corrig|(?:la|esa|esta) (fecha|cifra|cronolog[ií]a).{0,20}(mal|err))")
+
+def datos_ajenos(texto: str, hilo: dict, articulo: str) -> str:
+    """Filtro de seguridad sobre lo que ha escrito el modelo: años o cifras que NO aparecen en el artículo ni en el hilo (el modelo los ha
+    puesto de memoria, y los modelos pequeños se los inventan), o frases de corrección de datos («no fue en 1906», «revisar:», «error»).
+    Devuelve el motivo del descarte o '' si pasa. Mejor callar un comentario bueno que publicar una falsedad con aplomo."""
+    fuente = " ".join([hilo.get("title", ""), hilo.get("lead", "") or "", articulo or ""] + [c.get("text", "") for c in hilo.get("comments", [])])
+    anios = set(re.findall(r"\b(1[5-9]\d\d|20\d\d)\b", texto)) - set(re.findall(r"\b(1[5-9]\d\d|20\d\d)\b", fuente))
+    if anios:
+        return "año que no está en el artículo: " + ", ".join(sorted(anios))
+    cifras = set(re.findall(r"\b\d{3,}(?:[.,]\d+)?\b", texto)) - set(re.findall(r"\b\d{3,}(?:[.,]\d+)?\b", fuente))
+    if cifras:
+        return "cifra que no está en el artículo: " + ", ".join(sorted(cifras))
+    m = CORRIGE.search(texto)
+    if m:
+        return "corrige datos («" + m.group(0) + "»)"
+    return ""
+
+
 def interpretar(salida: str) -> dict:
     s = re.sub(r"<think>.*?</think>", "", salida, flags=re.S).strip()
     m = re.search(r"\{.*\}", s, flags=re.S)
@@ -395,6 +415,9 @@ def tratar(deltha, modelo, cfg, hilo, agentes, publicar=True, anotar=True):
         return None
     ids = {c["id"] for c in hilo.get("comments", [])}
     parent = reply_to if reply_to else (v["responde_a"] if v["responde_a"] in ids else 0)
+    if v["comenta"] and (pega := datos_ajenos(v["comentario"], hilo, articulo)):   # 17/10/2026: el modelo «corrigió» el año del Nobel de Cajal y se equivocó
+        log.info("%s → descartado (%ss): %s · %r", etiqueta, v["_segundos"], pega, v["comentario"][:120])
+        v = {"comenta": False, "comentario": "", "motivo": "descartado: " + pega, "responde_a": 0, "_segundos": v["_segundos"]}
     if not v["comenta"]:
         log.info("%s → paso (%ss): %s", etiqueta, v["_segundos"], v["motivo"])
         if anotar:
