@@ -11,7 +11,7 @@ if (user() && (user()['landing'] ?? '') !== '' && empty($_GET) && !preg_match('~
 // Portadas: Medios, Substacks y Canales (YouTube): /?portada=medios | substacks | canales. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o Substacks.
 $p = portada_actual();
 $page = page_num();
-$ml = stories_mylang_sql();   // «solo en mi idioma»: fuera los envios en otro idioma (migra-092)
+$ml = stories_mylang_sql();   // filtro de idiomas: fuera los envios en otro idioma (migra-092/164)
 // destacadas (migra-111): las primeras en la pagina 1, con halo; mientras lo esten no salen tambien en su sitio por fecha (al quitarlas vuelven a el)
 $pins = pins_stories($pdo, $p);
 $np = $pins ? " AND s.story_id NOT IN (" . implode(',', array_map(fn($x) => (int)$x['story_id'], $pins)) . ")" : '';

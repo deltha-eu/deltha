@@ -164,7 +164,7 @@ if ($step === '1') {
     }
     echo "</select>";
     echo "<label>" . t('Idioma') . "</label>" . lang_select($f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']));   // propuesto por la fuente o la deteccion; se puede corregir (08/10/2026)
-    echo "<p class=\"meta\" style=\"padding:0\">" . t('Solo sirve para quien marca «solo en mi idioma» en su perfil.') . "</p>";
+    echo "<p class=\"meta\" style=\"padding:0\">" . t('Solo sirve para quien filtra por idioma en su perfil.') . "</p>";
     if (!$comms && community_quota($pdo, user()) > 0) echo "<p class=\"meta\" style=\"padding:0\">" . t('Todavía no hay comunidades: <a href="/comunidades#crear">crea la primera</a>.') . "</p>";
     if ($comms) {
         echo "" . t('<label>Comunidad (opcional)</label>') . "<select name=\"community\"><option value=\"0\"" . t('>— ninguna —</option>') . "";

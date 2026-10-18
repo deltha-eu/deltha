@@ -3,8 +3,8 @@
  *   · «En Deltha»: todo lo enviado en el tema (enlaces y originales, en cualquier fase), de mas reciente a mas antiguo;
  *   · «En los medios»: las ultimas noticias de los medios y substacks del catalogo que tienen este tema asignado (sources.topic_id),
  *     sin enviar todavia, cada una con su boton «enviar al radar». Es el «feed por tema» sin añadir nada al menu;
- *   · «En medios en mi idioma» (&v=idioma): lo mismo, solo con las fuentes en el idioma de la interfaz (las de idioma desconocido
- *     cuentan). Solo sale si el tema tiene fuentes en otros idiomas y el lector no tiene ya marcado «solo en mi idioma».
+ *   · «En medios en mi idioma» (&v=idioma): lo mismo, solo con las fuentes en los idiomas elegidos en el perfil (o el de la
+ *     interfaz si la lista esta vacia; las de idioma desconocido cuentan). Solo sale si el tema tiene fuentes en otros idiomas.
  *  Sin ?v=, abre «En Deltha» salvo que el tema tenga menos de TEMA_POCO envios y si tenga fuentes: entonces «En los medios»
  *  (en la beta, que ningun tema se vea vacio). Si el tema no tiene fuentes, no hay subpestañas. */
 require __DIR__ . '/../lib/app.php';
@@ -27,7 +27,8 @@ $total = (int)$cnt->fetchColumn();
 
 // medios y substacks del catalogo con este tema (los de otro idioma, fuera si el lector lo ha pedido)
 $fuentes = fuentes_on() ? array_values(array_filter(fuentes_visibles($pdo), fn($f) => fuente_es_medio($f) && (int)($f['topic_id'] ?? 0) === $tid)) : [];
-$mias = array_values(array_filter($fuentes, fn($f) => in_array((string)($f['lang'] ?? ''), ['', lang()], true)));   // en mi idioma (o sin idioma conocido)
+$idi = fuentes_idiomas() ?: [lang()];
+$mias = array_values(array_filter($fuentes, fn($f) => in_array((string)($f['lang'] ?? ''), array_merge([''], $idi), true)));   // en mis idiomas (o sin idioma conocido)
 $hayIdioma = $mias && count($mias) < count($fuentes);   // la tercera pestaña solo si quita algo
 $v = (string)($_GET['v'] ?? '');
 if (!in_array($v, ['deltha', 'medios', 'idioma'], true)) $v = ($fuentes && $total < TEMA_POCO) ? 'medios' : 'deltha';
@@ -35,7 +36,7 @@ if (!$fuentes) $v = 'deltha';
 if ($v === 'idioma' && !$hayIdioma) $v = 'medios';
 $base = "/tema/$tid";
 
-header('Cache-Control: private, no-cache');   // depende de la sesion y de «solo en mi idioma»
+header('Cache-Control: private, no-cache');   // depende de la sesion y del filtro de idiomas
 page_header(ucfirst($topic['name']));
 if ($fuentes) {
     echo "<nav class=\"sub\"><a href=\"$base?v=deltha\"" . ($v === 'deltha' ? ' class="on"' : '') . ">" . t('En Deltha') . " <small>$total</small></a>"
