@@ -785,7 +785,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Il tempo per correggerlo è passato, ma finché resta nel radar e nessuno l\'ha commentato puoi ritirarlo.',
 'detectar automáticamente' => 'rileva automaticamente',
 'otro idioma' => 'altra lingua',
-'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Serve solo a chi spunta «solo nella mia lingua» nel profilo.',
+'Solo sirve para quien filtra por idioma en su perfil.' => 'Serve solo a chi filtra per lingua nel profilo.',
 'nombre real: solo lo ven moderadores y admin' => 'nome reale: lo vedono solo moderatori e admin',
 'Logo' => 'Logo',
 'cuadrado; sustituye al punto de color' => 'quadrato; sostituisce il punto colorato',
@@ -917,4 +917,9 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '<b>Abre un hilo en los foros</b>' => '<b>Apri una discussione nei forum</b>',
 'Solo en Foros' => 'Solo nei Forum',
 'cerrar este aviso' => 'chiudi questo avviso',
+'Idiomas' => 'Lingue',
+'Mostrar fuentes y envíos solo en estos idiomas' => 'Mostra fonti e invii solo in queste lingue',
+'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Seleziona una o più lingue. Se non ne selezioni nessuna, si usa la lingua dell\'interfaccia (%s). Le fonti e gli invii nelle altre lingue non vengono più mostrati; quelli con lingua sconosciuta restano sempre visibili.',
+'Todos los idiomas' => 'Tutte le lingue',
+'cambiar' => 'cambia',
 ];

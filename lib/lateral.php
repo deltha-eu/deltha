@@ -199,14 +199,15 @@ function side_ultimo(PDO $pdo, string $kind, string $title): void {
     require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on() || !fuente_kind_visible($kind)) return;   // canales y agregadores: solo desde fuentes_nivel_aura
     foreach ([$kind => $title] as $kind => $title) {
-        $mylang = fuentes_solo_mi_idioma();   // «solo fuentes en mi idioma»: fuera las de otro idioma (las de idioma desconocido se ven)
+        $idi = fuentes_idiomas();   // idiomas elegidos: fuera las fuentes de otro idioma (las de idioma desconocido se ven)
         // cinco noticias de cinco fuentes distintas: las cinco fuentes que han publicado mas recientemente y la ultima noticia de cada una.
         // (Antes se cogian las 80 noticias mas recientes y se quitaban repetidas: si dos fuentes acababan de entrar con 40 items cada
         // una, el modulo se quedaba en dos filas. 14/10/2026.)
         $st = $pdo->prepare("SELECT s.source_id, s.name, s.slug, MAX(i.pub_date) AS ult FROM source_items i JOIN sources s ON s.source_id = i.source_id
-                              WHERE s.kind = ? AND s.status = 'ok' AND s.listed = 1 AND i.phase = 'portada'" . ($mylang ? " AND s.lang IN ('', ?)" : "") . "
+                              WHERE s.kind = ? AND s.status = 'ok' AND s.listed = 1 AND i.phase = 'portada'"
+                              . ($idi ? " AND s.lang IN ('', " . implode(',', array_fill(0, count($idi), '?')) . ")" : "") . "
                               GROUP BY s.source_id, s.name, s.slug ORDER BY ult DESC LIMIT 5");
-        $st->execute($mylang ? [$kind, lang()] : [$kind]);
+        $st->execute($idi ? array_merge([$kind], $idi) : [$kind]);
         $rows = [];
         $it = $pdo->prepare("SELECT title, url FROM source_items WHERE source_id = ? AND phase = 'portada' ORDER BY pub_date DESC, item_id DESC LIMIT 1");
         foreach ($st->fetchAll() as $r) {

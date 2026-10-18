@@ -784,7 +784,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Zuzentzeko epea pasa da, baina radarrean dagoen bitartean eta inork komentatu ez badu kendu dezakezu.',
 'detectar automáticamente' => 'automatikoki antzeman',
 'otro idioma' => 'beste hizkuntza bat',
-'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Profilean «nire hizkuntzan bakarrik» markatzen dutenentzat baino ez du balio.',
+'Solo sirve para quien filtra por idioma en su perfil.' => 'Profilean hizkuntzaren arabera iragazten duenarentzat baino ez du balio.',
 'nombre real: solo lo ven moderadores y admin' => 'benetako izena: moderatzaileek eta adminak baino ez dute ikusten',
 'Logo' => 'Logoa',
 'cuadrado; sustituye al punto de color' => 'karratua; koloreko puntuaren ordez',
@@ -916,4 +916,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '<b>Abre un hilo en los foros</b>' => '<b>Ireki hari bat foroetan</b>',
 'Solo en Foros' => 'Foroetan bakarrik',
 'cerrar este aviso' => 'itxi ohar hau',
+'Idiomas' => 'Hizkuntzak',
+'Mostrar fuentes y envíos solo en estos idiomas' => 'Erakutsi iturriak eta bidalketak hizkuntza hauetan soilik',
+'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Markatu bat edo gehiago. Bat ere markatzen ez baduzu, interfazearen hizkuntza erabiliko da (%s). Beste hizkuntzetako iturriak eta bidalketak ez dira agertuko; hizkuntza ezezagunekoak beti ikusten dira.',
+'Todos los idiomas' => 'Hizkuntza guztiak',
+'cambiar' => 'aldatu',
 ];

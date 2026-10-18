@@ -8,7 +8,7 @@ require_once __DIR__ . '/../lib/cola.php';
 
 $f = (string)($_GET['portada'] ?? '');
 if (!isset(portadas()[$f])) $f = '';
-$w = "s.status='nuevas' AND s.content_type='link'" . ($f ? " AND s.portada = " . $pdo->quote($f) : '') . stories_mylang_sql();   // «solo en mi idioma» (migra-092)
+$w = "s.status='nuevas' AND s.content_type='link'" . ($f ? " AND s.portada = " . $pdo->quote($f) : '') . stories_mylang_sql();   // filtro de idiomas (migra-092/164)
 $page = page_num();
 $total = (int)$pdo->query("SELECT COUNT(*) FROM stories s WHERE $w")->fetchColumn();
 $st = $pdo->prepare(story_query_base() . " WHERE $w ORDER BY s.sent_date DESC LIMIT ? OFFSET ?");

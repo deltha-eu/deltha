@@ -784,7 +784,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'El termini per corregir-lo ha passat, però mentre segueixi al radar i ningú no l\'hagi comentat pots retirar-lo.',
 'detectar automáticamente' => 'detectar automàticament',
 'otro idioma' => 'un altre idioma',
-'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Només serveix per a qui marca «només en el meu idioma» al seu perfil.',
+'Solo sirve para quien filtra por idioma en su perfil.' => 'Només serveix per a qui filtra per idioma al seu perfil.',
 'nombre real: solo lo ven moderadores y admin' => 'nom real: només el veuen moderadors i admin',
 'Logo' => 'Logo',
 'cuadrado; sustituye al punto de color' => 'quadrat; substitueix el punt de color',
@@ -916,4 +916,9 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '<b>Abre un hilo en los foros</b>' => '<b>Obre un fil als fòrums</b>',
 'Solo en Foros' => 'Només als Fòrums',
 'cerrar este aviso' => 'tancar aquest avís',
+'Idiomas' => 'Idiomes',
+'Mostrar fuentes y envíos solo en estos idiomas' => 'Mostra fonts i enviaments només en aquests idiomes',
+'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Marca un o més. Si no en marques cap, s\'usa l\'idioma de la interfície (%s). Deixen de sortir les fonts i enviaments en els altres idiomes; els d\'idioma desconegut es veuen sempre.',
+'Todos los idiomas' => 'Tots els idiomes',
+'cambiar' => 'canviar',
 ];
