@@ -55,7 +55,7 @@ else $intro = t('Lo último de %s.', $nombres) . ' ' . t('<a href="/login">Entra
 echo "<p class=\"notice\">$intro</p>";
 // con pocas fuentes seguidas (cinco o menos, de todos los tipos), una ayuda breve en gris de como añadirlas
 if ($u) { $ns = 0; foreach (fuentes_tipos($pdo) as $kk => $v) $ns += count(mis_medios($pdo, $u, $kk)); if ($ns <= 5) echo "<p class=\"end ayuda-fuentes\">" . t('Para tener aquí lo que lees: entra en <a href="/fuentes">Todas las fuentes</a> y pulsa «Seguir» en los medios y substacks que te interesen; también puedes seguirlos desde cualquier noticia suya. Si falta alguno, abre «Seguir y dejar de seguir» aquí abajo y pega su dirección.') . "</p>"; }
-echo fuentes_casilla_idioma();   // la misma casilla que en el perfil y el catalogo
+echo fuentes_casilla_idioma();   // el mismo control de idiomas que en el perfil y el catalogo
 
 if ($u && fuentes_on()) {
     $txt = $k === 'newsletter' ? t('Añadir substack') : ($k === 'agregador' ? t('Añadir agregador') : ($k === 'youtube' ? t('Añadir canal') : t('Añadir medio')));
@@ -65,7 +65,7 @@ if ($u && fuentes_on()) {
         $lst = $mias; usort($lst, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
         foreach ($lst as $m) echo $fila($m);
     }
-    // los del catalogo que aun no sigue (respeta «solo en mi idioma»), el que ha publicado mas recientemente primero
+    // los del catalogo que aun no sigue (respeta el filtro de idiomas), el que ha publicado mas recientemente primero
     $ids = array_column($mias, 'source_id');
     $resto = array_values(array_filter(fuentes_visibles($pdo, $k), fn($m) => !in_array($m['source_id'], $ids)));
     usort($resto, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));

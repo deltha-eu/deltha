@@ -689,6 +689,7 @@ CREATE TABLE `users` (
   `landing` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `lang` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `src_mylang` tinyint(1) NOT NULL DEFAULT '0',
+  `src_langs` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'idiomas elegidos («es,en»); vacio = el de la interfaz',
   `show_follows` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 = los medios y substacks que sigue se ven en su ficha',
   `aura` decimal(6,3) NOT NULL DEFAULT '5.000',
   `aura_suelo` decimal(8,3) NOT NULL DEFAULT '0.000',

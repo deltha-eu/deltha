@@ -3090,12 +3090,17 @@ form.plain select.medsel { margin-bottom: 6px; }
   html[data-skin] nav.tabs-top a { flex: 1 0 auto; white-space: nowrap; padding-left: 7px; padding-right: 7px; }
 }
 
-/* Casilla «Solo fuentes en mi idioma» en /medios.php y /ultimo.php (la misma preferencia que el perfil) */
+/* Idiomas de fuentes y envios (migra-164) en /fuentes y /mis-fuentes (la misma preferencia que el perfil) */
 form.srclang { padding: 2px 16px 12px; font-size: 14px; color: var(--muted); }
 form.srclang label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 form.srclang small { opacity: .8; }
+form.srclang details summary { cursor: pointer; }
 form.srclang button { margin-left: 10px; font: inherit; font-size: 13px; padding: 2px 12px; border: 1px solid var(--line2); border-radius: 999px; background: transparent; color: var(--fg); cursor: pointer; vertical-align: middle; }
 form.srclang button:hover { border-color: currentColor; }
+/* casillas de idiomas del perfil y del control rapido: se reparten en varias lineas sin romper la columna */
+.langpick { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 6px 0 2px; }
+form.plain .langpick label, .langpick label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); cursor: pointer; }
+form.srclang details .langpick { padding: 8px 0 4px; }
 /* fuentes propuestas: enlace en /medios.php, lista propia en /proponer-fuente.php y revision en /moderacion.php#fuentes */
 /* llamada destacada a proponer una fuente (/medios.php y perfil): el enlace va como boton */
 p.fprop-cta { margin: 4px 16px 16px; padding: 12px 16px; border: 2px solid var(--accent); border-radius: 12px; font-size: 15px; color: var(--fg); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }

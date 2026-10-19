@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 213);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 214);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -88,7 +88,7 @@ session_name(DDD_SESSION);
 if (isset($_COOKIE[DDD_SESSION])) {
     session_arranca();
     if (!empty($_SESSION['uid'])) {
-        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang, src_mylang, skin_propio FROM users WHERE user_id = ? AND verified = 1");
+        $st = $pdo->prepare("SELECT user_id, login, level, aura, avatar, bio, theme, skin, landing, lang, src_mylang, src_langs, skin_propio FROM users WHERE user_id = ? AND verified = 1");
         $st->execute([$_SESSION['uid']]);
         $USER = $st->fetch() ?: null;
         if ($USER && PHP_SAPI !== 'cli') {   // ultima visita, como mucho una vez por minuto (para /estadisticas)
@@ -1059,12 +1059,13 @@ function lang_for_story(PDO $pdo, ?string $url, string $title, ?string $content)
     }
     return lang_detect($title . ' ' . (string)$content);
 }
-/** Trozo SQL para las listas de envios: con «solo en mi idioma» marcado, fuera los de otro idioma (los sin idioma se ven). */
+/** Trozo SQL para las listas de envios: con filtro de idioma, fuera los de otro idioma (los sin idioma se ven). */
 function stories_mylang_sql(string $alias = 's'): string {
-    if (!function_exists('fuentes_solo_mi_idioma')) require_once __DIR__ . '/fuentes.php';
-    if (!fuentes_solo_mi_idioma()) return '';
-    $l = preg_replace('/[^a-z]/', '', lang());
-    return " AND $alias.lang IN ('', '??', '$l')";
+    if (!function_exists('fuentes_idiomas')) require_once __DIR__ . '/fuentes.php';
+    $ls = fuentes_idiomas();
+    if (!$ls) return '';
+    $in = implode(',', array_map(fn($l) => "'" . preg_replace('/[^a-z]/', '', (string)$l) . "'", $ls));
+    return " AND $alias.lang IN ('', '??', $in)";
 }
 /** Cron: pone idioma a los envios que aun no lo tienen (los anteriores a migra-092), unos pocos por pasada. */
 function lang_tick(PDO $pdo): array {

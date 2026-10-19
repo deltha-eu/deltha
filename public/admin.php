@@ -713,7 +713,7 @@ if ($tab === 'usuarios') {
         $h .= "<tr><td>RSS</td><td><input type=\"url\" name=\"feed_portada\" value=\"" . h($f['feed_portada'] ?? '') . "\" placeholder=\"https://…/feed/ (canal de YouTube: vacío, se saca de la web)\"></td></tr>";
         $h .= "<tr><td>RSS de la cola</td><td><input type=\"url\" name=\"feed_nuevas\" value=\"" . h($f['feed_nuevas'] ?? '') . "\" placeholder=\"solo agregadores (vacío en un medio)\"></td></tr>";
         $h .= "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h($f['descr'] ?? '') . "\"></td></tr>";
-        // idioma de la fuente, para «mostrar fuentes solo en mi idioma» del perfil. Vacio = se toma del RSS al guardar (y en cada lectura mientras falte)
+        // idioma de la fuente, para el filtro de idiomas de fuentes y envios del perfil. Vacio = se toma del RSS al guardar (y en cada lectura mientras falte)
         $fl = (string)($f['lang'] ?? '');
         $h .= "<tr><td>idioma</td><td><select name=\"lang\" class=\"auto\"><option value=\"\">— detectar del RSS —</option>";
         foreach (DDD_LANGS + ($fl !== '' && !isset(DDD_LANGS[$fl]) ? [$fl => $fl] : []) as $lc => $ln) $h .= "<option value=\"$lc\"" . ($fl === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>";

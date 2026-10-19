@@ -72,9 +72,10 @@ function login_finish(PDO $pdo, int $uid): never {
     session_regenerate_id(true);
     unset($_SESSION['pending_uid'], $_SESSION['pending_at']);
     $_SESSION['uid'] = $uid;
-    if (($_COOKIE['ddd_srclang'] ?? '') === '1') {   // marco «Solo fuentes en mi idioma» antes de entrar: pasa a su cuenta
-        $pdo->prepare("UPDATE users SET src_mylang = 1 WHERE user_id = ?")->execute([$uid]);
-        pref_cookie('ddd_srclang', '');
+    if (($sc = (string)($_COOKIE['ddd_srclang'] ?? '')) !== '') {   // idiomas elegidos sin cuenta: pasan a su cuenta
+        require_once __DIR__ . '/fuentes.php';
+        if ($sc === '1') fuentes_guardar_idiomas($pdo, $uid, [], true);   // cookie antigua: el idioma de la interfaz de la cuenta
+        else fuentes_guardar_idiomas($pdo, $uid, fuentes_langs_parse($sc));
     }
     $lu = $pdo->prepare("SELECT landing FROM users WHERE user_id = ?"); $lu->execute([$uid]);
     redirect(landing_url($pdo, ['landing' => (string)$lu->fetchColumn()]));

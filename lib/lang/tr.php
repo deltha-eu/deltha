@@ -805,7 +805,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Düzeltme süresi geçti, ama Radar\'da kaldığı ve kimse yorum yapmadığı sürece geri çekebilirsin.',
 'detectar automáticamente' => 'otomatik algıla',
 'otro idioma' => 'başka dil',
-'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Yalnızca profilinde «yalnızca kendi dilimde» seçeneğini işaretleyenler için geçerlidir.',
+'Solo sirve para quien filtra por idioma en su perfil.' => 'Yalnızca profilinde dile göre filtreleyenler için geçerlidir.',
 'nombre real: solo lo ven moderadores y admin' => 'gerçek ad: yalnızca moderatörler ve yöneticiler görür',
 'Logo' => 'Logo',
 'cuadrado; sustituye al punto de color' => 'kare; renkli noktanın yerini alır',
@@ -937,4 +937,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '<b>Abre un hilo en los foros</b>' => '<b>Forumlarda bir konu aç</b>',
 'Solo en Foros' => 'Yalnızca Forumlarda',
 'cerrar este aviso' => 'bu duyuruyu kapat',
+'Idiomas' => 'Diller',
+'Mostrar fuentes y envíos solo en estos idiomas' => 'Kaynakları ve gönderileri yalnızca bu dillerde göster',
+'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Bir veya daha fazlasını işaretle. Hiçbirini işaretlemezsen arayüz dili kullanılır (%s). Diğer dillerdeki kaynaklar ve gönderiler görünmez; dili bilinmeyenler her zaman görünür.',
+'Todos los idiomas' => 'Tüm diller',
+'cambiar' => 'değiştir',
 ];
