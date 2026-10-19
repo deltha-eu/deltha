@@ -615,7 +615,7 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
 .sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
 .sw-betico { --s1: #ffffff; --s2: #0b9a4a; }
-.sw-heroica { --s1: #111111; --s2: #e0202a; }
+.sw-heroica { --s1: #070b14; --s2: #ff1e2d; }
 .sw-merengue { --s1: #ffffff; --s2: #c9a227; }
 .sw-cule { --s1: #004d98; --s2: #a50044; }
 .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
@@ -1404,35 +1404,67 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-skin="betico"] .post form.vote, [data-skin="betico"] .post span.vote { background: var(--bg); border: 2px solid var(--or); }
 [data-skin="betico"] .post .life { background: var(--or2); }
 [data-skin="betico"] .fab { border: 3px solid #fff; box-shadow: 0 0 0 2px var(--or); }
-/* ---- Heroica (19/10/2026): la Orange como cómic de superhéroes. Rojo #e0202a sobre blanco, texto negro; titulares en Arial Black
-   mayúsculas, pestaña activa como rótulo rojo inclinado, caja de votos negra con número rojo, trama de puntos (Ben-Day) en el margen y
-   en el hover. Oscuro: negro con rojo vivo. Sin personajes ni logotipos. ---- */
-[data-skin="heroica"] { --or: #e0202a; --or2: #fde3e4; --or3: #fff3f3; --or-h: #b3121b; --on-or: #fff; --bg: #ffffff; --fg: #111111; --line: #111111; --line2: #333333; --accent: var(--or); --life: var(--or); --hover: var(--or3); --ink: #111111;
-  --ben: radial-gradient(color-mix(in srgb, var(--or) 45%, transparent) 1.1px, transparent 1.4px) 0 0 / 7px 7px; }
-@media (prefers-color-scheme: dark) {
-  [data-skin="heroica"]:not([data-theme="light"]) { --or: #ff2b36; --or2: #3a0d10; --or3: #220a0c; --or-h: #ff6b73; --on-or: #fff; --bg: #0d0d0d; --fg: #f2f2f2; --line: #3a3a3a; --line2: #555; --accent: var(--or); --life: var(--or); --hover: var(--or3); --ink: #f2f2f2; }
+/* ---- Heroica (19/10/2026, rehecha a petición de Ángel: antes cómic de viñetas; ahora interfaz de película de superhéroes / ciencia ficción).
+   Oscura por defecto (variante clara, como Game HUD): azul noche #070b14, paneles #0c1424, rojo neón #ff1e2d para votos, pestaña activa y
+   botones, cian #35d6ff para líneas, categoría y barra de vida, todo con halo; tarjetas con esquinas recortadas (clip-path) y marca cian a la
+   izquierda; titulares en mayúsculas gruesas; pastilla roja de comentarios. Las variables --or/--or2/--or3 de Orange siguen mandando en lo
+   que no se redefine aquí. Sin logotipos ni personajes. ---- */
+[data-skin="heroica"], [data-skin="heroica"]:not([data-theme="light"]), [data-skin="heroica"][data-theme="dark"] {
+  --rd: #ff1e2d; --cy: #35d6ff; --panel: #0c1424; --or: var(--rd); --or2: #2a0b13; --or3: #0f1a2e; --or-h: #ff5a66; --on-or: #fff;
+  --bg: #070b14; --fg: #eaf1ff; --muted: #8a9bb8; --line: #16305a; --line2: #1f6fb0; --hover: var(--or3); --accent: var(--cy); --life: var(--cy); --halo: var(--cy); --neg: #6d7f9c;
+  --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
+@media (prefers-color-scheme: light) {
+  [data-skin="heroica"]:not([data-theme="dark"]) { --rd: #d6111f; --cy: #0a8fc2; --panel: #ffffff; --or: var(--rd); --or2: #fde4e6; --or3: #f3f7fc; --or-h: #a80c17; --on-or: #fff;
+    --bg: #e9eef6; --fg: #0b1324; --muted: #5c6b85; --line: #c5d3e8; --line2: #3a8fd6; --hover: var(--or3); --accent: var(--cy); --life: var(--cy); --halo: var(--cy); --neg: #7a8699;
+    --logo-l: block; --logo-d: none; --ink-invert: 0; color-scheme: light; }
 }
-[data-skin="heroica"][data-theme="dark"] { --or: #ff2b36; --or2: #3a0d10; --or3: #220a0c; --or-h: #ff6b73; --on-or: #fff; --bg: #0d0d0d; --fg: #f2f2f2; --line: #3a3a3a; --line2: #555; --accent: var(--or); --life: var(--or); --hover: var(--or3); --ink: #f2f2f2; }
-[data-skin="heroica"] body { background: var(--bg) var(--ben); }   /* Ben-Day en el margen */
-[data-skin="heroica"] main, [data-skin="heroica"] header.top, [data-skin="heroica"] .dock { background: var(--bg); }
-[data-skin="heroica"] header.top { border-bottom: 3px solid var(--ink); }
-[data-skin="heroica"] .ttl { font-family: "Archivo Black", "Arial Black", Impact, sans-serif; text-transform: uppercase; letter-spacing: .04em; }
-[data-skin="heroica"] nav.tabs-top { border-bottom: 3px solid var(--ink); }
-[data-skin="heroica"] nav.tabs-top a { font-family: "Archivo Black", "Arial Black", Impact, sans-serif; font-weight: 400; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
-[data-skin="heroica"] nav.tabs-top a.on { background: var(--or); color: var(--on-or); transform: skew(-8deg); box-shadow: 3px 3px 0 var(--ink); }   /* el rótulo de portada */
-[data-skin="heroica"] nav.tabs-top a.on::after { display: none; }
-[data-skin="heroica"] .post.full, [data-skin="heroica"] .post.compact { border: 3px solid var(--ink); border-radius: 0; box-shadow: 5px 5px 0 var(--or); }   /* la viñeta */
-[data-skin="heroica"] .post.full:hover, [data-skin="heroica"] .post.compact:hover { background: var(--bg) var(--ben); }
-[data-skin="heroica"] .post.full h2, [data-skin="heroica"] .post.compact h2 { font-family: "Archivo Black", "Arial Black", Impact, sans-serif; font-weight: 400; text-transform: uppercase; font-size: 17px; line-height: 1.12; letter-spacing: .01em; }
-[data-skin="heroica"] .post.compact h2 { font-size: 15px; }
-[data-skin="heroica"] .post form.vote, [data-skin="heroica"] .post span.vote { background: var(--ink); border-radius: 0; }
-[data-skin="heroica"] .post .vote button[value="1"] span, [data-skin="heroica"] .post span.vote > span:first-child span { color: var(--or); font-family: "Archivo Black", "Arial Black", Impact, sans-serif; font-weight: 400; }
-[data-skin="heroica"] .post .vote button[value="1"]::after, [data-skin="heroica"] .post span.vote > span:first-child::after { color: var(--bg); }
-[data-skin="heroica"] .post .vote button[value="-1"], [data-skin="heroica"] .post span.vote > span:last-child { color: var(--bg); opacity: .75; }
-[data-skin="heroica"] .post .media { border-radius: 0; border: 2px solid var(--ink); }
-[data-skin="heroica"] .post .peek, [data-skin="heroica"] .notice { border-radius: 0; border: 2px solid var(--ink); }
-[data-skin="heroica"] .fab { border-radius: 0; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
-[data-skin="heroica"] .composer button, [data-skin="heroica"] form.plain button, [data-skin="heroica"] .newmsg button { border-radius: 0; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); text-transform: uppercase; font-weight: 800; }
+[data-skin="heroica"][data-theme="light"] { --rd: #d6111f; --cy: #0a8fc2; --panel: #ffffff; --or: var(--rd); --or2: #fde4e6; --or3: #f3f7fc; --or-h: #a80c17; --on-or: #fff;
+  --bg: #e9eef6; --fg: #0b1324; --muted: #5c6b85; --line: #c5d3e8; --line2: #3a8fd6; --hover: var(--or3); --accent: var(--cy); --life: var(--cy); --halo: var(--cy); --neg: #7a8699;
+  --logo-l: block; --logo-d: none; --ink-invert: 0; color-scheme: light; }
+[data-skin="heroica"] body { background: radial-gradient(ellipse 80% 40% at 50% 0, color-mix(in srgb, var(--cy) 14%, var(--bg)), var(--bg) 70%) fixed; }
+[data-skin="heroica"] header.top { position: relative; background: var(--panel); border-bottom: 1px solid var(--line2); }
+[data-skin="heroica"] header.top::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 96px; height: 2px; background: var(--rd); box-shadow: 0 0 8px var(--rd); }   /* la línea encendida */
+[data-skin="heroica"] .ttl { font-weight: 800; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--cy); text-shadow: 0 0 10px color-mix(in srgb, var(--cy) 55%, transparent); }
+[data-skin="heroica"] nav.tabs-top { background: var(--panel); border-bottom: 1px solid var(--line); }
+[data-skin="heroica"] nav.tabs-top a { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+[data-skin="heroica"] nav.tabs-top a.on { color: var(--rd); background: var(--or2); text-shadow: 0 0 8px color-mix(in srgb, var(--rd) 60%, transparent); }
+[data-skin="heroica"] nav.tabs-top a.on::after { background: var(--rd); height: 2px; box-shadow: 0 0 8px var(--rd); }
+/* la tarjeta: panel con esquinas recortadas y marca cian a la izquierda */
+[data-skin="heroica"] .post.full, [data-skin="heroica"] .post.compact, [data-skin="heroica"] .hilo .post.main { background: var(--panel); border: 1px solid var(--line); border-radius: 0; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)); padding-left: 16px; }
+[data-skin="heroica"] .post.full:hover, [data-skin="heroica"] .post.compact:hover { background: var(--or3); border-color: var(--line2); }
+[data-skin="heroica"] .post.full::before, [data-skin="heroica"] .post.compact::before { content: ""; position: absolute; left: 0; top: 18px; width: 3px; height: 48px; background: var(--cy); box-shadow: 0 0 8px var(--cy); }
+[data-skin="heroica"] .post.full h2, [data-skin="heroica"] .post.compact h2, [data-skin="heroica"] .hilo .main h2 { font-family: var(--sans); font-weight: 800; text-transform: uppercase; font-size: 16px; line-height: 1.25; letter-spacing: .02em; }
+[data-skin="heroica"] .post.compact h2 { font-size: 14px; }
+[data-skin="heroica"] .post .l1 { font-size: 11.5px; letter-spacing: .02em; }
+[data-skin="heroica"] .post .l1 b { color: var(--rd); }
+[data-skin="heroica"] .post .l1 .meta .sep + a { color: var(--rd); font-weight: 600; }
+[data-skin="heroica"] .post .lead { color: color-mix(in srgb, var(--fg) 72%, var(--bg)); }
+/* caja de votos: bloque rojo con halo, número y «votos» en blanco */
+[data-skin="heroica"] .post form.vote, [data-skin="heroica"] .post span.vote { background: linear-gradient(180deg, #c8102e, #6b0a18); border: 1px solid #ff4b57; border-radius: 4px; box-shadow: 0 0 12px color-mix(in srgb, var(--rd) 45%, transparent), inset 0 0 0 1px rgba(255,255,255,.06); }
+[data-skin="heroica"] .post .vote button[value="1"], [data-skin="heroica"] .post span.vote > span:first-child { color: #fff; }
+[data-skin="heroica"] .post .vote button[value="1"] span, [data-skin="heroica"] .post span.vote > span:first-child span { color: #fff; font-weight: 900; }
+[data-skin="heroica"] .post .vote button[value="1"]::after, [data-skin="heroica"] .post span.vote > span:first-child::after { color: #ffd2d6; letter-spacing: .1em; }
+[data-skin="heroica"] .post .vote button[value="1"] .i, [data-skin="heroica"] .post span.vote > span:first-child .i { background: transparent; border-color: transparent; color: #fff; order: -1; }   /* la flecha arriba, sin botón */
+[data-skin="heroica"] .post .vote button[value="1"]:hover .i { background: rgba(255,255,255,.14); border-color: transparent; }
+[data-skin="heroica"] .post .vote button[value="-1"], [data-skin="heroica"] .post span.vote > span:last-child { color: #ffd2d6; }
+[data-skin="heroica"] .post .media { border-radius: 3px; border: 1px solid var(--line2); position: relative; }
+[data-skin="heroica"] .post .media::before, [data-skin="heroica"] .post .media::after { content: ""; position: absolute; width: 10px; height: 10px; border: 2px solid var(--cy); pointer-events: none; z-index: 1; }   /* marcas de visor */
+[data-skin="heroica"] .post .media::before { left: 4px; top: 4px; border-right: 0; border-bottom: 0; }
+[data-skin="heroica"] .post .media::after { right: 4px; bottom: 4px; border-left: 0; border-top: 0; }
+[data-skin="heroica"] .post .life { background: color-mix(in srgb, var(--cy) 14%, transparent); border-radius: 0; }
+[data-skin="heroica"] .post .life span { background: var(--cy); box-shadow: 0 0 6px var(--cy); border-radius: 0; }
+[data-skin="heroica"] .post .peek { background: var(--bg); border: 1px solid var(--line); border-left: 2px solid var(--cy); border-radius: 0; }
+[data-skin="heroica"] .post:hover .peek { background: var(--bg); }
+[data-skin="heroica"] .post .actions > a { font-weight: 600; letter-spacing: .02em; }
+[data-skin="heroica"] .post .actions > a:first-child { background: var(--rd); color: #fff; padding: 2px 9px; border-radius: 4px; box-shadow: 0 0 8px color-mix(in srgb, var(--rd) 45%, transparent); }   /* la pastilla de comentarios */
+[data-skin="heroica"] .post .actions > a:first-child .i { color: #fff; }
+[data-skin="heroica"] .fab { background: var(--rd); color: #fff; border-radius: 6px; box-shadow: 0 0 0 1px var(--bg), 0 0 16px color-mix(in srgb, var(--rd) 60%, transparent); }
+[data-skin="heroica"] .dock { background: var(--panel); border-top: 1px solid var(--line2); }
+[data-skin="heroica"] .notice { background: var(--panel); border: 1px solid var(--line2); border-radius: 0; color: var(--fg); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+[data-skin="heroica"] .notice a { color: var(--cy); }
+[data-skin="heroica"] main:not(:has(> .post)) { color: var(--fg); }
+[data-skin="heroica"] .composer button, [data-skin="heroica"] form.plain button, [data-skin="heroica"] .newmsg button { background: var(--rd); color: #fff; border-radius: 4px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; box-shadow: 0 0 10px color-mix(in srgb, var(--rd) 45%, transparent); }
+[data-skin="heroica"] form.plain input, [data-skin="heroica"] form.plain select, [data-skin="heroica"] form.plain textarea, [data-skin="heroica"] .newmsg input { background: var(--panel); border: 1px solid var(--line2); color: var(--fg); border-radius: 3px; }
 /* ---- Merengue (19/10/2026): la Orange en blanco, oro y morado. Fondo blanco puro, marcos finos en oro #c9a227, botones de voto dorados,
    una linea morada #5c2d91 bajo la cabecera y sobre el dock, autor en morado, titulares serif. Oscuro: negro azulado con oro claro. Sin escudos. ---- */
 [data-skin="merengue"] { --or: #c9a227; --or2: #f7f1dc; --or3: #fbf8ee; --or-h: #a8851a; --on-or: #fff; --mo: #5c2d91; --bg: #ffffff; --line: #e9e2cc; --line2: #d6c88f; --accent: var(--mo); --life: var(--or); --hover: var(--or3); }
@@ -3041,7 +3073,7 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail .sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
   .rail .sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
   .rail .sw-betico { --s1: #ffffff; --s2: #0b9a4a; }
-  .rail .sw-heroica { --s1: #111111; --s2: #e0202a; }
+  .rail .sw-heroica { --s1: #070b14; --s2: #ff1e2d; }
   .rail .sw-merengue { --s1: #ffffff; --s2: #c9a227; }
   .rail .sw-cule { --s1: #004d98; --s2: #a50044; }
   .rail .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
