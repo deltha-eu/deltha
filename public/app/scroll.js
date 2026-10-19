@@ -41,11 +41,14 @@
     try { sessionStorage.setItem(K, JSON.stringify({ u: url, y: window.scrollY, t: Date.now() })); } catch (_) {}
     e.preventDefault(); location.href = a.href.split('#')[0];
   });
-  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  // (19/10/2026) Antes se ponia scrollRestoration = 'manual' siempre y el navegador dejaba de volver al sitio al pulsar «atras»:
+  // cada vuelta a la portada empezaba arriba. Ahora solo se toma el mando cuando hay un punto guardado (justo tras votar, guardar,
+  // comentar o responder) y se devuelve al navegador en cuanto se ha colocado la pagina.
   var s = null;
   try { s = JSON.parse(sessionStorage.getItem(K) || 'null'); sessionStorage.removeItem(K); } catch (_) {}
-  if (!s || s.u !== url || Date.now() - s.t > 15000) return;
+  if (!s || s.u !== url || Date.now() - s.t > 15000) { if ('scrollRestoration' in history) history.scrollRestoration = 'auto'; return; }
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   var go = function () { window.scrollTo({ top: s.y, left: 0, behavior: 'instant' }); };
   go(); requestAnimationFrame(go);
-  window.addEventListener('load', function () { go(); setTimeout(go, 0); setTimeout(go, 100); }, { once: true });
+  window.addEventListener('load', function () { go(); setTimeout(go, 0); setTimeout(function () { go(); if ('scrollRestoration' in history) history.scrollRestoration = 'auto'; }, 100); }, { once: true });
 })();

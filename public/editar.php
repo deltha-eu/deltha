@@ -26,6 +26,7 @@ if (!is_mod() && !$own && !$retire) {
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
 $comms  = $pdo->query("SELECT community_id, name FROM communities ORDER BY name")->fetchAll();
 $isArt = $s['content_type'] === 'article';
+$forosSel = $isArt && !is_mod() ? [] : ($isArt ? foros(is_admin()) : []);   // mover el hilo a otro foro (19/10/2026): mods, entre los encendidos; admin, tambien a los apagados
 $maxLen = $isArt ? max(2000, (int)cfg('article_max_words', 1000) * 12) : 2000;   // articulos: tope de caracteres derivado del de palabras (config)
 $err = null;
 
@@ -82,6 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
         if ($isArt) {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, indexable=?, lang=?$mark WHERE story_id=?")
                 ->execute([$title, $content, $topic, $image, $idx, $lang, $id]);
+            if ($forosSel && ($fid = (int)post('forum')) && $fid !== (int)($s['forum_id'] ?? 0)) {   // cambio de foro: no marca «editado» (el texto no cambia)
+                $okF = false; foreach ($forosSel as $f) if ((int)$f['forum_id'] === $fid) $okF = $f;
+                if ($okF) $pdo->prepare("UPDATE stories SET forum_id = ? WHERE story_id = ?")->execute([$fid, $id]);   // el registro de arriba (editar-envio) ya guarda forum=N
+            }
         } else {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, url=?, source=?, lang=?$mark WHERE story_id=?")
                 ->execute([$title, $content ?: null, $topic, $image, $url ?: null, $url ? source_of($url) : null, $lang, $id]);
@@ -113,6 +118,12 @@ echo "<label>" . t('Tema') . "</label><select name=\"topic\">";
 foreach ($topics as $t) echo "<option value=\"{$t['topic_id']}\"" . ((int)$s['topic_id'] === (int)$t['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
 echo "</select>";
 echo "<label>" . t('Idioma') . "</label>" . lang_select((string)($s['lang'] ?? ''));   // el guardado; «detectar» vuelve a mirarlo al guardar (08/10/2026)
+if ($forosSel) {   // mover el hilo a otro foro (19/10/2026)
+    echo "<label>" . t('Foro') . " <small>" . t('cambiarlo mueve el hilo, con sus comentarios, a la lista de ese foro') . "</small></label><select name=\"forum\">";
+    if (!(int)($s['forum_id'] ?? 0)) echo "<option value=\"0\" selected>— " . t('sin foro (original antiguo)') . " —</option>";
+    foreach ($forosSel as $f) echo "<option value=\"{$f['forum_id']}\"" . ((int)($s['forum_id'] ?? 0) === (int)$f['forum_id'] ? ' selected' : '') . ">" . h($f['name']) . ($f['status'] !== 'on' ? ' (' . t('apagado') . ')' : '') . "</option>";
+    echo "</select>";
+}
 if (!$own) {
     echo "<label>Comunidad principal</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
     foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$s['community_id'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
