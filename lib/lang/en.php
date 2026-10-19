@@ -965,4 +965,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'cambiarlo mueve el hilo, con sus comentarios, a la lista de ese foro' => 'changing it moves the thread, with its comments, to that forum’s list',
 'sin foro (original antiguo)' => 'no forum (old original)',
 'Blanquiazul — rayas azules y blancas, para la afición deportivista' => 'Blanquiazul — blue and white stripes, for Deportivo fans',
+'El foro «%s» es solo para quien tiene más de %s de aura.' => 'The “%s” forum is only for people with more than %s aura.',
+'Volver a los foros' => 'Back to the forums',
 ];

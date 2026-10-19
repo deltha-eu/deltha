@@ -17,6 +17,7 @@ if (!$f) {
     if ($slug !== '' || !$visibles) { http_response_code(404); page_header(t('Foros'), 'foros'); echo "<p class=\"end\">" . t('Ese foro no existe.') . "</p>"; page_footer(); exit; }
     redirect(foro_url(reset($visibles)));
 }
+if (!foro_abierto($f)) { http_response_code(403); page_header(t('Foros'), 'foros'); echo "<p class=\"end\">" . h(foro_cerrado_txt($f)) . ' <a href="/foros">' . t('Volver a los foros') . "</a></p>"; page_footer(); exit; }   // aura minima (migra-165)
 $fid = (int)$f['forum_id'];
 $page = page_num();
 $ml = stories_mylang_sql();
