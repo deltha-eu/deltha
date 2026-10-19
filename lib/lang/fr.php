@@ -964,4 +964,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'cambiarlo mueve el hilo, con sus comentarios, a la lista de ese foro' => 'le changer déplace le fil, avec ses commentaires, dans la liste de ce forum',
 'sin foro (original antiguo)' => 'sans forum (ancien original)',
 'Blanquiazul — rayas azules y blancas, para la afición deportivista' => 'Blanquiazul — rayures bleues et blanches, pour les supporters du Deportivo',
+'El foro «%s» es solo para quien tiene más de %s de aura.' => 'Le forum « %s » est réservé à ceux qui ont plus de %s d’aura.',
+'Volver a los foros' => 'Retour aux forums',
 ];

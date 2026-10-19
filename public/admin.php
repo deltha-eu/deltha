@@ -79,11 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES ('side_order', ?, 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta') ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)")->execute([implode(',', array_keys($pos))]);
         $out[] = 'Lateral guardado: ' . (implode(', ', array_keys($pos)) ?: 'sin módulos');
     } elseif ($act === 'foros') {   // foros (migra-159): activar/desactivar, nombre, descripcion, orden de pestañas y orden de hilos
-        $st = $pdo->prepare("UPDATE forums SET status = ?, name = ?, descr = ?, position = ?, orden = ? WHERE forum_id = ?");
+        $st = $pdo->prepare("UPDATE forums SET status = ?, name = ?, descr = ?, position = ?, orden = ?, min_aura = ? WHERE forum_id = ?");
         foreach (($_POST['fname'] ?? []) as $id => $nm) {
             $nm = trim((string)$nm);
             if ($nm === '' || mb_strlen($nm) > 48) { $out[] = "Nombre de foro no válido (#$id): 1–48 caracteres."; continue; }
-            $st->execute([!empty($_POST['fon'][$id]) ? 'on' : 'off', $nm, mb_substr(trim((string)($_POST['fdescr'][$id] ?? '')), 0, 300), max(1, min(250, (int)($_POST['fpos'][$id] ?? 1))), ($_POST['forden'][$id] ?? '') === 'actividad' ? 'actividad' : 'fecha', (int)$id]);
+            $st->execute([!empty($_POST['fon'][$id]) ? 'on' : 'off', $nm, mb_substr(trim((string)($_POST['fdescr'][$id] ?? '')), 0, 300), max(1, min(250, (int)($_POST['fpos'][$id] ?? 1))), ($_POST['forden'][$id] ?? '') === 'actividad' ? 'actividad' : 'fecha', max(0, (float)str_replace(',', '.', (string)($_POST['faura'][$id] ?? '0'))), (int)$id]);   // aura minima (migra-165)
         }
         $out[] = 'Foros guardados.';
     } elseif ($act === 'foro_nuevo') {
@@ -673,7 +673,7 @@ if ($tab === 'usuarios') {
     echo "<h3>Foros</h3><p><small>La sección <a href=\"/foros\">Foros</a> enseña una pestaña por foro, por el orden indicado. <b>Activo</b> = lo ve todo el mundo; desmarcado = apagado: solo lo ves tú (en cursiva, con «apagado»), y sus hilos siguen abriéndose por URL. El slug es la URL (<code>/foros?f=slug</code>) y el grupo de destacados; no se cambia. La descripción es el aviso gris de cabecera del foro. <b>Orden de los hilos</b>: por fecha (el hilo más reciente arriba, como Originales) o por actividad (el último mensaje arriba, como un foro clásico). Las destacadas van siempre las primeras.</small></p>";
     try {
         $fl = $pdo->query("SELECT f.*, (SELECT COUNT(*) FROM stories s WHERE s.forum_id = f.forum_id AND s.content_type = 'article' AND s.status IN ('nuevas','destacadas','archived')) n FROM forums f ORDER BY f.position, f.forum_id")->fetchAll();
-        echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"foros\"><table><tr><th>activo</th><th>slug</th><th>nombre</th><th>descripción (aviso de cabecera)</th><th>hilos</th><th style=\"width:60px\">orden</th><th>hilos por</th></tr>";
+        echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"foros\"><table><tr><th>activo</th><th>slug</th><th>nombre</th><th>descripción (aviso de cabecera)</th><th>hilos</th><th style=\"width:60px\">orden</th><th>hilos por</th><th title=\"0 = abierto; N = solo quien tenga más de N de aura lo ve y escribe (admin y mods siempre)\">aura mín.</th></tr>";
         foreach ($fl as $x) {
             $id = (int)$x['forum_id'];
             echo "<tr><td style=\"text-align:center\"><input type=\"checkbox\" name=\"fon[$id]\" value=\"1\"" . ($x['status'] === 'on' ? ' checked' : '') . "></td>";
@@ -681,12 +681,13 @@ if ($tab === 'usuarios') {
             echo "<td><input type=\"text\" name=\"fname[$id]\" value=\"" . h($x['name']) . "\" maxlength=\"48\" style=\"width:11em\"></td>";
             echo "<td><input type=\"text\" name=\"fdescr[$id]\" value=\"" . h($x['descr']) . "\" maxlength=\"300\" style=\"width:100%;min-width:16em\"></td>";
             echo "<td class=\"num\">{$x['n']}</td><td><input type=\"text\" name=\"fpos[$id]\" value=\"{$x['position']}\" style=\"width:3em\"></td>";
-            echo "<td><select name=\"forden[$id]\"><option value=\"fecha\"" . ($x['orden'] === 'fecha' ? ' selected' : '') . ">fecha</option><option value=\"actividad\"" . ($x['orden'] === 'actividad' ? ' selected' : '') . ">actividad</option></select></td></tr>";
+            echo "<td><select name=\"forden[$id]\"><option value=\"fecha\"" . ($x['orden'] === 'fecha' ? ' selected' : '') . ">fecha</option><option value=\"actividad\"" . ($x['orden'] === 'actividad' ? ' selected' : '') . ">actividad</option></select></td>";
+            echo "<td><input type=\"text\" name=\"faura[$id]\" value=\"" . h(num_es((float)($x['min_aura'] ?? 0))) . "\" style=\"width:4em\"></td></tr>";
         }
         echo "</table><p><button class=\"btn\">Guardar foros</button></p></form>";
         echo "<h3>Nuevo foro</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"foro_nuevo\">";
         echo "<input type=\"text\" name=\"slug\" placeholder=\"slug (url, p. ej. microrrelatos)\" maxlength=\"16\" pattern=\"[a-z0-9-]{2,16}\" required style=\"width:13em\"> <input type=\"text\" name=\"name\" placeholder=\"nombre\" maxlength=\"48\" required style=\"width:11em\"> <input type=\"text\" name=\"descr\" placeholder=\"descripción\" maxlength=\"300\" style=\"flex:1;min-width:16em\"> hilos por <select name=\"orden\"><option value=\"fecha\">fecha</option><option value=\"actividad\" selected>actividad</option></select> <label><input type=\"checkbox\" name=\"on\" value=\"1\"> activo</label> <button class=\"btn\">Crear foro</button></form>";
-        echo "<p><small>No hay borrado: un foro que sobre se apaga. Lo que había en Originales está, hilo a hilo, en el foro «originales» (migra-159). Las normas de cada foro van en su descripción; la de Originales (nada ya publicado en otro sitio) la enseña además el formulario de nuevo hilo.</small></p>";
+        echo "<p><small>No hay borrado: un foro que sobre se apaga. <b>Aura mín.</b> (migra-165): 0 = abierto; N = el foro, sus hilos y sus búsquedas solo existen para quien tenga más de N de aura (admin y moderadores, siempre); Hardusers nace con 20. Lo que había en Originales está, hilo a hilo, en el foro «originales» (migra-159). Las normas de cada foro van en su descripción; la de Originales (nada ya publicado en otro sitio) la enseña además el formulario de nuevo hilo.</small></p>";
     } catch (Throwable $e) { echo "<p class=\"error\">Falta la tabla forums (migra-159): " . h($e->getMessage()) . "</p>"; }
 
 } elseif ($tab === 'fuentes') {
