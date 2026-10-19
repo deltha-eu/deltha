@@ -295,6 +295,7 @@ CREATE TABLE `forums` (
   `status` enum('on','off') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'on',
   `position` tinyint unsigned NOT NULL DEFAULT '1',
   `orden` enum('fecha','actividad') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'fecha',
+  `min_aura` decimal(6,1) NOT NULL DEFAULT 0.0 COMMENT 'aura minima (estricta) para ver y escribir; 0 = abierto (migra-165)',
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`forum_id`),
   UNIQUE KEY `uq_forum_slug` (`slug`)
@@ -805,10 +806,10 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('mod_lease_sec',       '300',  'Segundos que el worker tiene reservado un elemento antes de que vuelva a la cola'),
 ('mod_worker_seen',     '',     'Ultima conexion del worker de IA local (lo escribe /api/moderacion.php)');
 
-INSERT INTO forums (slug, name, descr, status, position, orden) VALUES
-('originales', 'Originales', 'Textos propios de la comunidad. No se permiten textos ya publicados en otros sitios ni extractos de ellos.', 'on', 1, 'fecha'),
-('deltha',     'Deltha',     'Dudas, propuestas de mejora y conversación sobre el propio sitio.', 'on', 2, 'actividad'),
-('areopago',   'Areópago',   'El foro Areópago, en Deltha.', 'off', 3, 'actividad');
+INSERT INTO forums (slug, name, descr, status, position, orden, min_aura) VALUES
+('originales', 'Originales', 'Textos propios de la comunidad. No se permiten textos ya publicados en otros sitios ni extractos de ellos.', 'on', 1, 'fecha', 0),
+('deltha',     'Deltha',     'Dudas, propuestas de mejora y conversación sobre el propio sitio.', 'on', 2, 'actividad', 0),
+('hardusers',  'Hardusers',  'Foro reservado a quienes tienen más de 20 de aura. Lo que se habla aquí no sale en búsquedas ni en portadas para el resto.', 'on', 3, 'actividad', 20);
 
 INSERT INTO topics (name, bonus, color) VALUES
 ('actualidad', 0.00, '#534AB7'),
