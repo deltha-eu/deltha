@@ -614,6 +614,8 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-greyssue { --s1: #F5F5F3; --s2: #3a3a3a; }
 .sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
 .sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
+.sw-betico { --s1: #ffffff; --s2: #0b9a4a; }
+.sw-heroica { --s1: #111111; --s2: #e0202a; }
 .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
 .sw-hyperpop { --s1: #F6F7FB; --s2: #FF4FD8; }
 .sw-neobrutal { --s1: #FFE600; --s2: #111111; }
@@ -1380,6 +1382,55 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   [data-skin="bluessue"]:not([data-theme="light"]) { --or: #4d8dff; --or2: #0f1c33; --or3: #0b1324; --or-h: #8ab4ff; --on-or: #06101f; --bg: #0b0f17; --line: #1a2438; --line2: #2b3a56; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
 }
 [data-skin="bluessue"][data-theme="dark"] { --or: #4d8dff; --or2: #0f1c33; --or3: #0b1324; --or-h: #8ab4ff; --on-or: #06101f; --bg: #0b0f17; --line: #1a2438; --line2: #2b3a56; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+/* ---- Bético (19/10/2026): la Greensue verdiblanca, para aficiones. Verde #0b9a4a sobre blanco; rayas verticales verdes y blancas
+   (--rayas) bajo la cabecera, sobre el dock, en la pestaña activa y en el marco de los votos; los negativos en verde oscuro. Sin escudos. ---- */
+[data-skin="betico"] { --or: #0b9a4a; --or2: #e4f4ea; --or3: #f2faf5; --or-h: #07783a; --on-or: #fff; --bg: #ffffff; --line: #d9e6de; --line2: #bfd6c8; --accent: var(--or); --life: var(--or); --hover: var(--or3);
+  --rayas: repeating-linear-gradient(90deg, var(--or) 0 10px, #fff 10px 20px); --rayas-v: repeating-linear-gradient(180deg, var(--or) 0 10px, #fff 10px 20px); }
+@media (prefers-color-scheme: dark) {
+  [data-skin="betico"]:not([data-theme="light"]) { --or: #2ecc71; --or2: #0f2a1b; --or3: #0c1f15; --or-h: #6fe3a0; --on-or: #06110a; --bg: #0a1510; --line: #1b3326; --line2: #2b4a38; --accent: var(--or); --life: var(--or); --hover: var(--or3);
+    --rayas: repeating-linear-gradient(90deg, var(--or) 0 10px, #e8f5ec 10px 20px); --rayas-v: repeating-linear-gradient(180deg, var(--or) 0 10px, #e8f5ec 10px 20px); }
+}
+[data-skin="betico"][data-theme="dark"] { --or: #2ecc71; --or2: #0f2a1b; --or3: #0c1f15; --or-h: #6fe3a0; --on-or: #06110a; --bg: #0a1510; --line: #1b3326; --line2: #2b4a38; --accent: var(--or); --life: var(--or); --hover: var(--or3);
+  --rayas: repeating-linear-gradient(90deg, var(--or) 0 10px, #e8f5ec 10px 20px); --rayas-v: repeating-linear-gradient(180deg, var(--or) 0 10px, #e8f5ec 10px 20px); }
+[data-skin="betico"] header.top { position: relative; border-bottom: 0; }
+[data-skin="betico"] header.top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--rayas); }   /* la franja verdiblanca */
+[data-skin="betico"] .dock { border-top: 0; background: var(--rayas) top / 100% 5px no-repeat, var(--bg); padding-top: 5px; }
+[data-skin="betico"] nav.tabs-top a.on { background: var(--or); color: var(--on-or); }
+[data-skin="betico"] nav.tabs-top a.on::after { background: var(--rayas); height: 4px; }
+[data-skin="betico"] .post.full, [data-skin="betico"] .post.compact { border-color: var(--or); padding-left: 18px; overflow: hidden; }
+[data-skin="betico"] .post.full::before, [data-skin="betico"] .post.compact::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--rayas-v); }   /* lomo a rayas a la izquierda (rayas horizontales: el lomo es mas estrecho que una raya vertical) */
+[data-skin="betico"] .post form.vote, [data-skin="betico"] .post span.vote { background: var(--bg); border: 2px solid var(--or); }
+[data-skin="betico"] .post .life { background: var(--or2); }
+[data-skin="betico"] .fab { border: 3px solid #fff; box-shadow: 0 0 0 2px var(--or); }
+/* ---- Heroica (19/10/2026): la Orange como cómic de superhéroes. Rojo #e0202a sobre blanco, texto negro; titulares en Arial Black
+   mayúsculas, pestaña activa como rótulo rojo inclinado, caja de votos negra con número rojo, trama de puntos (Ben-Day) en el margen y
+   en el hover. Oscuro: negro con rojo vivo. Sin personajes ni logotipos. ---- */
+[data-skin="heroica"] { --or: #e0202a; --or2: #fde3e4; --or3: #fff3f3; --or-h: #b3121b; --on-or: #fff; --bg: #ffffff; --fg: #111111; --line: #111111; --line2: #333333; --accent: var(--or); --life: var(--or); --hover: var(--or3); --ink: #111111;
+  --ben: radial-gradient(color-mix(in srgb, var(--or) 45%, transparent) 1.1px, transparent 1.4px) 0 0 / 7px 7px; }
+@media (prefers-color-scheme: dark) {
+  [data-skin="heroica"]:not([data-theme="light"]) { --or: #ff2b36; --or2: #3a0d10; --or3: #220a0c; --or-h: #ff6b73; --on-or: #fff; --bg: #0d0d0d; --fg: #f2f2f2; --line: #3a3a3a; --line2: #555; --accent: var(--or); --life: var(--or); --hover: var(--or3); --ink: #f2f2f2; }
+}
+[data-skin="heroica"][data-theme="dark"] { --or: #ff2b36; --or2: #3a0d10; --or3: #220a0c; --or-h: #ff6b73; --on-or: #fff; --bg: #0d0d0d; --fg: #f2f2f2; --line: #3a3a3a; --line2: #555; --accent: var(--or); --life: var(--or); --hover: var(--or3); --ink: #f2f2f2; }
+[data-skin="heroica"] body { background: var(--bg) var(--ben); }   /* Ben-Day en el margen */
+[data-skin="heroica"] main, [data-skin="heroica"] header.top, [data-skin="heroica"] .dock { background: var(--bg); }
+[data-skin="heroica"] header.top { border-bottom: 3px solid var(--ink); }
+[data-skin="heroica"] .ttl { font-family: "Archivo Black", "Arial Black", Impact, sans-serif; text-transform: uppercase; letter-spacing: .04em; }
+[data-skin="heroica"] nav.tabs-top { border-bottom: 3px solid var(--ink); }
+[data-skin="heroica"] nav.tabs-top a { font-family: "Archivo Black", "Arial Black", Impact, sans-serif; font-weight: 400; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
+[data-skin="heroica"] nav.tabs-top a.on { background: var(--or); color: var(--on-or); transform: skew(-8deg); box-shadow: 3px 3px 0 var(--ink); }   /* el rótulo de portada */
+[data-skin="heroica"] nav.tabs-top a.on::after { display: none; }
+[data-skin="heroica"] .post.full, [data-skin="heroica"] .post.compact { border: 3px solid var(--ink); border-radius: 0; box-shadow: 5px 5px 0 var(--or); }   /* la viñeta */
+[data-skin="heroica"] .post.full:hover, [data-skin="heroica"] .post.compact:hover { background: var(--bg) var(--ben); }
+[data-skin="heroica"] .post.full h2, [data-skin="heroica"] .post.compact h2 { font-family: "Archivo Black", "Arial Black", Impact, sans-serif; font-weight: 400; text-transform: uppercase; font-size: 17px; line-height: 1.12; letter-spacing: .01em; }
+[data-skin="heroica"] .post.compact h2 { font-size: 15px; }
+[data-skin="heroica"] .post form.vote, [data-skin="heroica"] .post span.vote { background: var(--ink); border-radius: 0; }
+[data-skin="heroica"] .post .vote button[value="1"] span, [data-skin="heroica"] .post span.vote > span:first-child span { color: var(--or); font-family: "Archivo Black", "Arial Black", Impact, sans-serif; font-weight: 400; }
+[data-skin="heroica"] .post .vote button[value="1"]::after, [data-skin="heroica"] .post span.vote > span:first-child::after { color: var(--bg); }
+[data-skin="heroica"] .post .vote button[value="-1"], [data-skin="heroica"] .post span.vote > span:last-child { color: var(--bg); opacity: .75; }
+[data-skin="heroica"] .post .media { border-radius: 0; border: 2px solid var(--ink); }
+[data-skin="heroica"] .post .peek, [data-skin="heroica"] .notice { border-radius: 0; border: 2px solid var(--ink); }
+[data-skin="heroica"] .fab { border-radius: 0; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+[data-skin="heroica"] .composer button, [data-skin="heroica"] form.plain button, [data-skin="heroica"] .newmsg button { border-radius: 0; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); text-transform: uppercase; font-weight: 800; }
 [data-fam="orange"] .composer button, [data-fam="orange"] form.plain button, [data-fam="orange"] .newmsg button { background: var(--or); color: var(--on-or); border: 0; border-radius: 6px; }
 [data-fam="orange"] form.plain input, [data-fam="orange"] form.plain select, [data-fam="orange"] form.plain textarea, [data-fam="orange"] .newmsg input, [data-fam="orange"] .modbar select { border-radius: 6px; }
 [data-fam="orange"] form.plain label { color: var(--fg); font-weight: 600; }
@@ -2943,6 +2994,8 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail .sw-greyssue { --s1: #F5F5F3; --s2: #3a3a3a; }
   .rail .sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
   .rail .sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
+  .rail .sw-betico { --s1: #ffffff; --s2: #0b9a4a; }
+  .rail .sw-heroica { --s1: #111111; --s2: #e0202a; }
   .rail .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
   /* --- side --- */
   .side { padding: 16px 0 24px; gap: 14px; }
