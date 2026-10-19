@@ -30,6 +30,21 @@ foreach ([['visitors', t('visitantes')], ['sessions', t('sesiones')], ['pageview
     echo $tile($dAnio[$k], t('este año'));
     echo "</div>";
 }
+// actividad (19/10/2026, pedido por Angel): envios, portadas, votos y comentarios de ayer, del mes y del año, de las tablas de verdad
+$cnt = function (string $sql, string $from, string $to) use ($pdo): int { $st = $pdo->prepare($sql); $st->execute([$from, $to]); return (int)$st->fetchColumn(); };
+$act = [
+    ['envíos',      "SELECT COUNT(*) FROM stories WHERE sent_date >= ? AND sent_date < ? + INTERVAL 1 DAY"],
+    ['portadas',    "SELECT COUNT(*) FROM stories WHERE status = 'destacadas' AND published_date >= ? AND published_date < ? + INTERVAL 1 DAY"],
+    ['votos',       "SELECT COUNT(*) FROM votes WHERE created >= ? AND created < ? + INTERVAL 1 DAY"],
+    ['comentarios', "SELECT COUNT(*) FROM comments WHERE deleted = 0 AND created >= ? AND created < ? + INTERVAL 1 DAY"],
+];
+foreach ($act as [$lbl, $sql]) {
+    echo "<h3 class=\"anah\">" . h(ucfirst(t($lbl))) . "</h3><div class=\"grid\">";
+    echo $tile($cnt($sql, $ayer, $ayer), t('ayer'));
+    echo $tile($ayer >= $mes  ? $cnt($sql, $mes, $ayer)  : 0, t('este mes'));
+    echo $tile($ayer >= $anio ? $cnt($sql, $anio, $ayer) : 0, t('este año'));
+    echo "</div>";
+}
 if ($full) {
     require __DIR__ . '/../lib/analitica-admin.php';
     echo "<div class=\"anafull\"><h2>" . t('Analítica completa') . "</h2>";
