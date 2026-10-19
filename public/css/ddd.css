@@ -618,6 +618,7 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-heroica { --s1: #070b14; --s2: #ff1e2d; }
 .sw-merengue { --s1: #ffffff; --s2: #c9a227; }
 .sw-cule { --s1: #004d98; --s2: #a50044; }
+.sw-blanquiazul { --s1: #ffffff; --s2: #1458b7; }
 .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
 .sw-hyperpop { --s1: #F6F7FB; --s2: #FF4FD8; }
 .sw-neobrutal { --s1: #FFE600; --s2: #111111; }
@@ -1566,6 +1567,27 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-skin="cule"] .post .life > span { background: var(--senyera); }
 [data-skin="cule"] .fab { background: var(--az); color: #fff; border: 3px solid var(--or); }
 [data-skin="cule"] .composer button, [data-skin="cule"] form.plain button, [data-skin="cule"] .newmsg button { background: var(--az); }
+/* ---- Blanquiazul (19/10/2026): la Orange en azul y blanco, como la Bético pero en los colores del Deportivo. Azul #1458b7 sobre blanco;
+   rayas verticales azules y blancas bajo la cabecera, sobre el dock, en la pestaña activa y como lomo de cada noticia; caja de votos blanca
+   con marco azul. Oscuro: azul noche. Sin escudos. ---- */
+[data-skin="blanquiazul"] { --or: #1458b7; --or2: #e4edf9; --or3: #f1f6fc; --or-h: #0e4190; --on-or: #fff; --bg: #ffffff; --line: #d6e1f0; --line2: #b7cbe6; --accent: var(--or); --life: var(--or); --hover: var(--or3);
+  --rayas: repeating-linear-gradient(90deg, var(--or) 0 10px, #fff 10px 20px); --rayas-v: repeating-linear-gradient(180deg, var(--or) 0 10px, #fff 10px 20px); }
+@media (prefers-color-scheme: dark) {
+  [data-skin="blanquiazul"]:not([data-theme="light"]) { --or: #4a8cf0; --or2: #10213d; --or3: #0c182c; --or-h: #86b3ff; --on-or: #06101f; --bg: #0a1220; --line: #1b2c48; --line2: #2d4670; --accent: var(--or); --life: var(--or); --hover: var(--or3);
+    --rayas: repeating-linear-gradient(90deg, var(--or) 0 10px, #e9f0fb 10px 20px); --rayas-v: repeating-linear-gradient(180deg, var(--or) 0 10px, #e9f0fb 10px 20px); }
+}
+[data-skin="blanquiazul"][data-theme="dark"] { --or: #4a8cf0; --or2: #10213d; --or3: #0c182c; --or-h: #86b3ff; --on-or: #06101f; --bg: #0a1220; --line: #1b2c48; --line2: #2d4670; --accent: var(--or); --life: var(--or); --hover: var(--or3);
+  --rayas: repeating-linear-gradient(90deg, var(--or) 0 10px, #e9f0fb 10px 20px); --rayas-v: repeating-linear-gradient(180deg, var(--or) 0 10px, #e9f0fb 10px 20px); }
+[data-skin="blanquiazul"] header.top { position: relative; border-bottom: 0; }
+[data-skin="blanquiazul"] header.top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--rayas); }
+[data-skin="blanquiazul"] .dock { border-top: 0; background: var(--rayas) top / 100% 5px no-repeat, var(--bg); padding-top: 5px; }
+[data-skin="blanquiazul"] nav.tabs-top a.on { background: var(--or); color: var(--on-or); }
+[data-skin="blanquiazul"] nav.tabs-top a.on::after { background: var(--rayas); height: 4px; }
+[data-skin="blanquiazul"] .post.full, [data-skin="blanquiazul"] .post.compact { border-color: var(--or); padding-left: 18px; overflow: hidden; }
+[data-skin="blanquiazul"] .post.full::before, [data-skin="blanquiazul"] .post.compact::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--rayas-v); }
+[data-skin="blanquiazul"] .post form.vote, [data-skin="blanquiazul"] .post span.vote { background: var(--bg); border: 2px solid var(--or); }
+[data-skin="blanquiazul"] .post .life { background: var(--or2); }
+[data-skin="blanquiazul"] .fab { border: 3px solid #fff; box-shadow: 0 0 0 2px var(--or); }
 [data-fam="orange"] .composer button, [data-fam="orange"] form.plain button, [data-fam="orange"] .newmsg button { background: var(--or); color: var(--on-or); border: 0; border-radius: 6px; }
 [data-fam="orange"] form.plain input, [data-fam="orange"] form.plain select, [data-fam="orange"] form.plain textarea, [data-fam="orange"] .newmsg input, [data-fam="orange"] .modbar select { border-radius: 6px; }
 [data-fam="orange"] form.plain label { color: var(--fg); font-weight: 600; }
@@ -3133,6 +3155,7 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail .sw-heroica { --s1: #070b14; --s2: #ff1e2d; }
   .rail .sw-merengue { --s1: #ffffff; --s2: #c9a227; }
   .rail .sw-cule { --s1: #004d98; --s2: #a50044; }
+  .rail .sw-blanquiazul { --s1: #ffffff; --s2: #1458b7; }
   .rail .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
   /* --- side --- */
   .side { padding: 16px 0 24px; gap: 14px; }

@@ -961,4 +961,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Tick one or more. If you tick none, the interface language is used (%s). Sources and posts in other languages stop appearing; those with an unknown language are always shown.',
 'Todos los idiomas' => 'All languages',
 'cambiar' => 'change',
+'Foro' => 'Forum',
+'cambiarlo mueve el hilo, con sus comentarios, a la lista de ese foro' => 'changing it moves the thread, with its comments, to that forum’s list',
+'sin foro (original antiguo)' => 'no forum (old original)',
+'Blanquiazul — rayas azules y blancas, para la afición deportivista' => 'Blanquiazul — blue and white stripes, for Deportivo fans',
 ];
