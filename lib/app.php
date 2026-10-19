@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 218);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 219);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -643,7 +643,7 @@ const DDD_SKINS = ['editorial' => 'Editorial', 'comunidad' => 'Comunidad', 'delt
  *  Las cuatro de foro (v156: Marino = Burbuja, Acero = HTCMania, Sendero = ForoMTB, Pildora = ForoBeta) heredan de Comunidad. */
 const DDD_SKIN_FAM = ['marino' => 'comunidad', 'acero' => 'comunidad', 'sendero' => 'comunidad', 'pildora' => 'comunidad', 'brasa' => 'comunidad',   // brasa = Mediavida (v158)
     'greyssue' => 'orange', 'greensue' => 'orange', 'bluessue' => 'orange',   // Orange en grises, en verdes de Game HUD y en azules (19/10/2026)
-    'betico' => 'orange', 'heroica' => 'orange',   // para aficiones (19/10/2026): Betico = Greensue verdiblanca con rayas; Heroica = comic de superheroes, rojo y negro con tramas
+    'betico' => 'orange', 'heroica' => 'orange',   // para aficiones (19/10/2026): Betico = Greensue verdiblanca con rayas; Heroica = interfaz de pelicula de superheroes: azul noche, rojo neon y cian (oscura por defecto)
     'merengue' => 'orange', 'cule' => 'orange'];   // Merengue = blanco, oro y morado; Cule = rayas azulgrana y senyera (19/10/2026): el CSS de Orange va contra [data-fam="orange"]
 function skin_fam(): string { return DDD_SKIN_FAM[skin()] ?? skin(); }
 /** Cookie de plantilla para quien no tiene cuenta: solo se crea si la persona elige una plantilla en el menu (/cambiar-skin) o en /plantilla. */
