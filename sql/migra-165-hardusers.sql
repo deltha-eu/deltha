@@ -6,8 +6,10 @@ SET @ya = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 
 SET @sql = IF(@ya = 0, "ALTER TABLE forums ADD COLUMN min_aura DECIMAL(6,1) NOT NULL DEFAULT 0 COMMENT 'aura minima (estricta) para ver y escribir; 0 = abierto' AFTER orden", "SELECT 'forums.min_aura ya presente'");
 PREPARE st FROM @sql; EXECUTE st; DEALLOCATE PREPARE st;
 
+-- (MySQL no deja consultar la misma tabla que se actualiza —error 1093—, por eso la comprobacion va en una variable)
+SET @hay = (SELECT COUNT(*) FROM forums WHERE slug = 'hardusers');
 UPDATE forums SET slug = 'hardusers', name = 'Hardusers', descr = 'Foro reservado a quienes tienen más de 20 de aura. Lo que se habla aquí no sale en búsquedas ni en portadas para el resto.',
     status = 'on', orden = 'actividad', min_aura = 20
-  WHERE slug = 'areopago' AND NOT EXISTS (SELECT 1 FROM forums f2 WHERE f2.slug = 'hardusers');
+  WHERE slug = 'areopago' AND @hay = 0;
 INSERT IGNORE INTO forums (slug, name, descr, status, position, orden, min_aura) VALUES
 ('hardusers', 'Hardusers', 'Foro reservado a quienes tienen más de 20 de aura. Lo que se habla aquí no sale en búsquedas ni en portadas para el resto.', 'on', 3, 'actividad', 20);
