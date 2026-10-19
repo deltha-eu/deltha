@@ -1466,10 +1466,10 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-skin="heroica"] form.plain input, [data-skin="heroica"] form.plain select, [data-skin="heroica"] form.plain textarea, [data-skin="heroica"] .newmsg input { background: var(--panel); border: 1px solid var(--line2); color: var(--fg); border-radius: 3px; }
 /* la escena (19/10/2026, segunda pasada): fondo dibujado en SVG (/img/heroica-bg.svg: cielo azul noche, rejilla hexagonal, paneles biselados,
    siluetas de ciudad, líneas de luz rojas y cianes y un globo) fijo detrás de todo; la cabecera lo deja ver a través de un panel translúcido.
-   En claro no hay escena. Iconos: cian en la navegación y las acciones, blancos sobre rojo. */
+   En claro, la misma escena en versión de día (heroica-bg-light.svg). Iconos: cian en la navegación y las acciones, blancos sobre rojo. */
 [data-skin="heroica"]:not([data-theme="light"]) body { background: url("/img/heroica-bg.svg") center / cover no-repeat fixed var(--bg); }
-@media (prefers-color-scheme: light) { [data-skin="heroica"]:not([data-theme="dark"]) body { background: radial-gradient(ellipse 80% 40% at 50% 0, color-mix(in srgb, var(--cy) 14%, var(--bg)), var(--bg) 70%) fixed; } }
-[data-skin="heroica"][data-theme="light"] body { background: radial-gradient(ellipse 80% 40% at 50% 0, color-mix(in srgb, var(--cy) 14%, var(--bg)), var(--bg) 70%) fixed; }
+@media (prefers-color-scheme: light) { [data-skin="heroica"]:not([data-theme="dark"]) body { background: url("/img/heroica-bg-light.svg") center / cover no-repeat fixed var(--bg); } }   /* de dia: la misma escena en acero y cielo claro (19/10/2026) */
+[data-skin="heroica"][data-theme="light"] body { background: url("/img/heroica-bg-light.svg") center / cover no-repeat fixed var(--bg); }
 [data-skin="heroica"] .shell { background: color-mix(in srgb, var(--bg) 88%, transparent); border-color: var(--line); }
 [data-skin="heroica"] main { background: transparent; }
 [data-skin="heroica"] header.top { background: linear-gradient(90deg, color-mix(in srgb, var(--panel) 92%, transparent), color-mix(in srgb, var(--panel) 70%, transparent)); backdrop-filter: blur(6px); }
@@ -1509,6 +1509,18 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   [data-skin="heroica"] .side .mod .row small { color: var(--muted); }
   [data-skin="heroica"] .side .mod.votadas .row b, [data-skin="heroica"] .side .mod.ciclo .row b { color: var(--cy); }
   [data-skin="heroica"] .side .mod .chips a { border: 1px solid var(--line2); border-radius: 3px; color: var(--cy); background: var(--bg); }
+  [data-skin="heroica"][data-theme="light"] .rail, [data-skin="heroica"][data-theme="light"] .side .mod, [data-skin="heroica"][data-theme="light"] .shell { background: color-mix(in srgb, var(--panel) 92%, transparent); }
+  [data-skin="heroica"][data-theme="light"] .side .mod h3 { background: linear-gradient(90deg, var(--rd), color-mix(in srgb, var(--rd) 70%, #fff)); }
+  [data-skin="heroica"][data-theme="light"] .side .mod:nth-of-type(even) h3 { background: linear-gradient(90deg, var(--cy), color-mix(in srgb, var(--cy) 70%, #fff)); }
+  [data-skin="heroica"][data-theme="light"] .rail nav a.on { background: linear-gradient(90deg, color-mix(in srgb, var(--rd) 18%, var(--panel)), var(--panel)); color: var(--rd); }
+  [data-skin="heroica"][data-theme="light"] .rail nav a.on .i { color: var(--rd); }
+  @media (prefers-color-scheme: light) {
+    [data-skin="heroica"]:not([data-theme="dark"]) .rail, [data-skin="heroica"]:not([data-theme="dark"]) .side .mod, [data-skin="heroica"]:not([data-theme="dark"]) .shell { background: color-mix(in srgb, var(--panel) 92%, transparent); }
+    [data-skin="heroica"]:not([data-theme="dark"]) .side .mod h3 { background: linear-gradient(90deg, var(--rd), color-mix(in srgb, var(--rd) 70%, #fff)); }
+    [data-skin="heroica"]:not([data-theme="dark"]) .side .mod:nth-of-type(even) h3 { background: linear-gradient(90deg, var(--cy), color-mix(in srgb, var(--cy) 70%, #fff)); }
+    [data-skin="heroica"]:not([data-theme="dark"]) .rail nav a.on { background: linear-gradient(90deg, color-mix(in srgb, var(--rd) 18%, var(--panel)), var(--panel)); color: var(--rd); }
+    [data-skin="heroica"]:not([data-theme="dark"]) .rail nav a.on .i { color: var(--rd); }
+  }
 }
 /* ---- Merengue (19/10/2026): la Orange en blanco, oro y morado. Fondo blanco puro, marcos finos en oro #c9a227, botones de voto dorados,
    una linea morada #5c2d91 bajo la cabecera y sobre el dock, autor en morado, titulares serif. Oscuro: negro azulado con oro claro. Sin escudos. ---- */
