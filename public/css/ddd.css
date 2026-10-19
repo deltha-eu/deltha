@@ -1259,7 +1259,15 @@ details.editbox form.plain { padding-top: 0; }
   grid-template-areas: "vote h2 h2 media" "vote av l1 media" "vote lead lead media" "vote peek peek peek" "vote delta delta delta" "vote life life life" "vote actions actions actions";
   border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 10px 12px 8px; background: var(--bg); }
 [data-skin="orange"] .post.full:hover, [data-skin="orange"] .post.compact:hover { background: var(--or3); }
-[data-skin="orange"] .post.full .pc, [data-skin="orange"] .post.compact .pc, [data-skin="orange"] .post.full .actions, [data-skin="orange"] .post.compact .actions { display: contents; }
+[data-skin="orange"] .post.full .pc, [data-skin="orange"] .post.compact .pc { display: contents; }
+/* (17/10/2026) la barra de acciones es una fila flexible en su celda. Antes era display: contents y cada elemento necesitaba su grid-area: los que
+   no la tenian (lecturas y clics de migra-120, guardar, destacar) caian en huecos sueltos de la rejilla (el ojo, aplastado en la columna de 24 px
+   del avatar) y «editar» se montaba sobre la pastilla de comentarios. La caja de votos va dentro de .actions: sale de la fila con position:
+   absolute a la columna de la izquierda, que la rejilla sigue reservando; el min-height evita que una tarjeta muy corta la recorte. */
+[data-skin="orange"] .post.full, [data-skin="orange"] .post.compact { position: relative; }
+[data-skin="orange"] :is(.post.full, .post.compact):not(.ext) { min-height: 117px; }   /* las de fuentes (.ext) no llevan votos */
+[data-skin="orange"] .post.full .actions, [data-skin="orange"] .post.compact .actions { display: flex; grid-area: actions; align-items: center; gap: 6px 16px; margin-top: 4px; }
+[data-skin="orange"] :is(.post.full, .post.compact):not(.ext) .actions > .vote { position: absolute; grid-area: auto; top: 10px; left: 12px; }   /* grid-area: auto: sin ella, Chrome toma la celda «vote» como referencia y la desplaza el relleno otra vez */
 [data-skin="orange"] .post.full > .av, [data-skin="orange"] .post.compact > .av, [data-skin="orange"] .post.full > .avl, [data-skin="orange"] .post.compact > .avl { grid-area: av; float: none; margin: 0; align-self: center; }
 [data-skin="orange"] .post.full > .av, [data-skin="orange"] .post.compact > .av, [data-skin="orange"] .post.full > .avl .av, [data-skin="orange"] .post.compact > .avl .av { width: 24px; height: 24px; font-size: 11px; border-width: 1px; box-shadow: none; }
 [data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { grid-area: h2; font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.2; margin: 0 0 6px; }
@@ -1276,7 +1284,7 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="orange"] .post .dval { display: none; }
 [data-skin="orange"] .post .life { grid-area: life; height: 3px; margin: 4px 0 6px; border-radius: 2px; background: var(--or2); }
 /* caja de votos (columna izquierda): numero grande, «votar» naranja, negativos debajo */
-[data-skin="orange"] .post form.vote, [data-skin="orange"] .post span.vote { grid-area: vote; display: flex; flex-direction: column; align-items: stretch; gap: 0; width: 62px; background: var(--or2); border-radius: 6px; padding: 6px 0 4px; text-align: center; }
+[data-skin="orange"] .post form.vote, [data-skin="orange"] .post span.vote { display: flex; flex-direction: column; align-items: stretch; gap: 0; width: 62px; background: var(--or2); border-radius: 6px; padding: 6px 0 4px; text-align: center; }
 [data-skin="orange"] .post .vote button[value="1"], [data-skin="orange"] .post span.vote > span:first-child { display: flex; flex-direction: column; align-items: center; gap: 1px; color: var(--or); padding: 0; }
 [data-skin="orange"] .post .vote button[value="1"] span, [data-skin="orange"] .post span.vote > span:first-child span { order: 1; font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
 [data-skin="orange"] .post .vote button[value="1"]::after, [data-skin="orange"] .post span.vote > span:first-child::after { content: "votos"; order: 2; font-size: 10px; font-weight: 600; letter-spacing: .02em; color: var(--or); margin-bottom: 5px; }
@@ -1295,10 +1303,17 @@ details.editbox form.plain { padding-top: 0; }
 [data-skin="orange"] .post .actions > a .i { width: 17px; height: 17px; }
 [data-skin="orange"] .post .actions > a.share { justify-self: end; background: transparent; color: var(--muted); font-weight: 600; padding-right: 0; }
 [data-skin="orange"] .post .actions > a.share:hover { background: transparent; color: var(--or); }
+[data-skin="orange"] :is(.post.full, .post.compact) .actions > a { margin-top: 0; }   /* ya lo pone la fila */
+[data-skin="orange"] :is(.post.full, .post.compact) .actions > a.share { margin-left: auto; }
+[data-skin="orange"] :is(.post.full, .post.compact) .actions .cnt .i { width: 17px; height: 17px; }   /* lecturas y clics, del tamaño de la pastilla */
+[data-skin="orange"] :is(.post.full, .post.compact) .actions > a.modlink { background: transparent; color: var(--muted); font-weight: 600; padding-left: 0; padding-right: 0; }   /* «editar», discreto como «compartir»: la pastilla es solo para los comentarios */
+[data-skin="orange"] :is(.post.full, .post.compact) .actions > a.modlink:hover { background: transparent; color: var(--or); }
 [data-skin="orange"] .post .actions > a:hover { background: var(--or); color: #fff; }
 @media (max-width: 420px) {
   [data-skin="orange"] .post.full, [data-skin="orange"] .post.compact { grid-template-columns: 54px 22px minmax(0, 1fr) 80px; column-gap: 8px; padding: 8px 8px 6px; margin: 8px 8px 0; }
+  [data-skin="orange"] :is(.post.full, .post.compact):not(.ext) { min-height: 113px; }
   [data-skin="orange"] .post form.vote, [data-skin="orange"] .post span.vote { width: 54px; }
+  [data-skin="orange"] :is(.post.full, .post.compact):not(.ext) .actions > .vote { top: 8px; left: 8px; }
   [data-skin="orange"] .post .vote button[value="1"] .i, [data-skin="orange"] .post span.vote > span:first-child .i { border-width: 2px 13px; }
   [data-skin="orange"] .post .media, [data-skin="orange"] .post .media.sm { width: 80px; }
   [data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { font-size: 17px; }
