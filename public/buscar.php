@@ -90,7 +90,7 @@ function buscar_url(string $q, string $en = ''): string { return '/buscar?q=' . 
 function buscar_hilos(PDO $pdo, array $T, int $limit, int $offset): array {
     [$w, $p] = buscar_where($T, 's.title, s.content', ['s.title', 's.content']);
     [$o, $po] = buscar_orden($T, 's.title, s.content', 's.sent_date');
-    $base = " WHERE s.status IN ('nuevas','destacadas','archived') AND $w";
+    $base = " WHERE s.status IN ('nuevas','destacadas','archived')" . foros_cerrados_sql() . " AND $w";   // sin los foros de aura minima que no se pueden ver (migra-165)
     $st = $pdo->prepare("SELECT COUNT(*) FROM stories s$base"); $st->execute($p); $total = (int)$st->fetchColumn();
     $st = $pdo->prepare(story_query_base() . "$base ORDER BY $o LIMIT $limit OFFSET $offset"); $st->execute(array_merge($p, $po));
     return [$total, $st->fetchAll()];
@@ -98,7 +98,7 @@ function buscar_hilos(PDO $pdo, array $T, int $limit, int $offset): array {
 function buscar_comentarios(PDO $pdo, array $T, int $limit, int $offset): array {
     [$w, $p] = buscar_where($T, 'c.content', ['c.content']);
     [$o, $po] = buscar_orden($T, 'c.content', 'c.created');
-    $base = " FROM comments c JOIN stories s ON s.story_id = c.story_id AND s.status IN ('nuevas','destacadas','archived')
+    $base = " FROM comments c JOIN stories s ON s.story_id = c.story_id AND s.status IN ('nuevas','destacadas','archived')" . foros_cerrados_sql() . "
               LEFT JOIN users u ON u.user_id = c.user_id
               WHERE c.status = 'ok' AND c.deleted = 0 AND $w";
     $st = $pdo->prepare("SELECT COUNT(*)$base"); $st->execute($p); $total = (int)$st->fetchColumn();
