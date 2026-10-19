@@ -1421,7 +1421,6 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-skin="heroica"][data-theme="light"] { --rd: #d6111f; --cy: #0a8fc2; --panel: #ffffff; --or: var(--rd); --or2: #fde4e6; --or3: #f3f7fc; --or-h: #a80c17; --on-or: #fff;
   --bg: #e9eef6; --fg: #0b1324; --muted: #5c6b85; --line: #c5d3e8; --line2: #3a8fd6; --hover: var(--or3); --accent: var(--cy); --life: var(--cy); --halo: var(--cy); --neg: #7a8699;
   --logo-l: block; --logo-d: none; --ink-invert: 0; color-scheme: light; }
-[data-skin="heroica"] body { background: radial-gradient(ellipse 80% 40% at 50% 0, color-mix(in srgb, var(--cy) 14%, var(--bg)), var(--bg) 70%) fixed; }
 [data-skin="heroica"] header.top { position: relative; background: var(--panel); border-bottom: 1px solid var(--line2); }
 [data-skin="heroica"] header.top::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 96px; height: 2px; background: var(--rd); box-shadow: 0 0 8px var(--rd); }   /* la línea encendida */
 [data-skin="heroica"] .ttl { font-weight: 800; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--cy); text-shadow: 0 0 10px color-mix(in srgb, var(--cy) 55%, transparent); }
@@ -1465,6 +1464,52 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-skin="heroica"] main:not(:has(> .post)) { color: var(--fg); }
 [data-skin="heroica"] .composer button, [data-skin="heroica"] form.plain button, [data-skin="heroica"] .newmsg button { background: var(--rd); color: #fff; border-radius: 4px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; box-shadow: 0 0 10px color-mix(in srgb, var(--rd) 45%, transparent); }
 [data-skin="heroica"] form.plain input, [data-skin="heroica"] form.plain select, [data-skin="heroica"] form.plain textarea, [data-skin="heroica"] .newmsg input { background: var(--panel); border: 1px solid var(--line2); color: var(--fg); border-radius: 3px; }
+/* la escena (19/10/2026, segunda pasada): fondo dibujado en SVG (/img/heroica-bg.svg: cielo azul noche, rejilla hexagonal, paneles biselados,
+   siluetas de ciudad, líneas de luz rojas y cianes y un globo) fijo detrás de todo; la cabecera lo deja ver a través de un panel translúcido.
+   En claro no hay escena. Iconos: cian en la navegación y las acciones, blancos sobre rojo. */
+[data-skin="heroica"]:not([data-theme="light"]) body { background: url("/img/heroica-bg.svg") center / cover no-repeat fixed var(--bg); }
+@media (prefers-color-scheme: light) { [data-skin="heroica"]:not([data-theme="dark"]) body { background: radial-gradient(ellipse 80% 40% at 50% 0, color-mix(in srgb, var(--cy) 14%, var(--bg)), var(--bg) 70%) fixed; } }
+[data-skin="heroica"][data-theme="light"] body { background: radial-gradient(ellipse 80% 40% at 50% 0, color-mix(in srgb, var(--cy) 14%, var(--bg)), var(--bg) 70%) fixed; }
+[data-skin="heroica"] .shell { background: color-mix(in srgb, var(--bg) 88%, transparent); border-color: var(--line); }
+[data-skin="heroica"] main { background: transparent; }
+[data-skin="heroica"] header.top { background: linear-gradient(90deg, color-mix(in srgb, var(--panel) 92%, transparent), color-mix(in srgb, var(--panel) 70%, transparent)); backdrop-filter: blur(6px); }
+[data-skin="heroica"] header.top::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 60%, color-mix(in srgb, var(--cy) 10%, transparent)); pointer-events: none; }
+[data-skin="heroica"] header.top .me, [data-skin="heroica"] header.top .lupa { color: var(--cy); }
+[data-skin="heroica"] header.top .me .i, [data-skin="heroica"] header.top .lupa .i, [data-skin="heroica"] header.top .bell .i { color: var(--cy); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--cy) 60%, transparent)); }
+[data-skin="heroica"] .post .actions > a .i, [data-skin="heroica"] .post .actions > span .i { color: var(--cy); }
+[data-skin="heroica"] nav.tabs-top a .i, [data-skin="heroica"] .dock nav a .i { color: var(--cy); }
+[data-skin="heroica"] nav.tabs-top a.on .i, [data-skin="heroica"] .dock nav a.on .i { color: var(--rd); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rd) 70%, transparent)); }
+@media (min-width: 1300px) {
+  [data-skin="heroica"] .cols { column-gap: 24px; }
+  [data-skin="heroica"] header.top .ttl { font-size: 16px; }
+  /* rail: filas biseladas, iconos cian; la activa, bloque rojo encendido */
+  [data-skin="heroica"] .rail { background: color-mix(in srgb, var(--panel) 85%, transparent); border: 1px solid var(--line); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px)); padding: 16px 10px 24px 10px; margin-top: 10px; }
+  [data-skin="heroica"] .rail form.rail-search { background: var(--bg); border: 1px solid var(--line2); border-radius: 4px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cy) 20%, transparent); }
+  [data-skin="heroica"] .rail form.rail-search .i { color: var(--cy); }
+  [data-skin="heroica"] .rail nav a, [data-skin="heroica"] .rail nav .soon, [data-skin="heroica"] .rail details.rail-dd summary { border-radius: 3px; font-size: 15px; font-weight: 600; letter-spacing: .02em; padding: 9px 14px; }
+  [data-skin="heroica"] .rail nav a .i, [data-skin="heroica"] .rail details.rail-dd summary .i { color: var(--cy); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--cy) 55%, transparent)); }
+  [data-skin="heroica"] .rail nav a:hover { background: var(--or3); }
+  [data-skin="heroica"] .rail nav a.on { background: linear-gradient(90deg, color-mix(in srgb, var(--rd) 32%, var(--panel)), var(--panel)); border: 1px solid var(--rd); box-shadow: 0 0 12px color-mix(in srgb, var(--rd) 35%, transparent), inset 3px 0 0 var(--rd); color: #fff; }
+  [data-skin="heroica"] .rail nav a.on .i { color: #fff; filter: none; }
+  [data-skin="heroica"] .rail nav.rail-bottom, [data-skin="heroica"] .rail details.rail-dd.skins, [data-skin="heroica"] .rail details.rail-dd.medios { border-top-color: var(--line2) !important; }
+  [data-skin="heroica"] .rail details.rail-dd summary small { color: var(--cy); text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
+  [data-skin="heroica"] .rail details.rail-dd .list a.on { background: var(--or2); color: #fff; }
+  /* columna derecha: paneles biselados con rótulo, rojo y azul alternos */
+  [data-skin="heroica"] .side .mod { background: color-mix(in srgb, var(--panel) 90%, transparent); border: 1px solid var(--line2); border-radius: 0; padding: 0 12px 8px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)); position: relative; }
+  [data-skin="heroica"] .side .mod h3 { font-family: var(--sans); font-weight: 800; text-transform: uppercase; letter-spacing: .1em; font-size: 12px; color: #fff; margin: 0 -12px 6px; padding: 10px 14px; background: linear-gradient(90deg, color-mix(in srgb, var(--rd) 55%, var(--panel)), color-mix(in srgb, var(--rd) 15%, var(--panel))); border-bottom: 1px solid var(--rd); box-shadow: 0 0 10px color-mix(in srgb, var(--rd) 30%, transparent); }
+  [data-skin="heroica"] .side .mod h3 span { color: #fff; font-size: 11px; letter-spacing: .1em; }
+  [data-skin="heroica"] .side .mod h3 span a { color: #fff; }
+  [data-skin="heroica"] .side .mod:nth-of-type(even) { border-color: var(--line2); }
+  [data-skin="heroica"] .side .mod:nth-of-type(even) h3 { background: linear-gradient(90deg, color-mix(in srgb, var(--cy) 40%, var(--panel)), color-mix(in srgb, var(--cy) 10%, var(--panel))); border-bottom-color: var(--cy); box-shadow: 0 0 10px color-mix(in srgb, var(--cy) 30%, transparent); }
+  [data-skin="heroica"] .side .mod:nth-of-type(odd) { border-color: color-mix(in srgb, var(--rd) 55%, var(--line2)); }
+  [data-skin="heroica"] .side .mod .row { border-top-color: var(--line); padding: 7px 0 7px 14px; position: relative; }
+  [data-skin="heroica"] .side .mod .row::before { content: ""; position: absolute; left: 0; top: 13px; width: 6px; height: 6px; border-radius: 50%; background: var(--rd); box-shadow: 0 0 6px var(--rd); }
+  [data-skin="heroica"] .side .mod:nth-of-type(even) .row::before { background: var(--cy); box-shadow: 0 0 6px var(--cy); }
+  [data-skin="heroica"] .side .mod.fuente.medio .row .t b { color: var(--fg); }
+  [data-skin="heroica"] .side .mod .row small { color: var(--muted); }
+  [data-skin="heroica"] .side .mod.votadas .row b, [data-skin="heroica"] .side .mod.ciclo .row b { color: var(--cy); }
+  [data-skin="heroica"] .side .mod .chips a { border: 1px solid var(--line2); border-radius: 3px; color: var(--cy); background: var(--bg); }
+}
 /* ---- Merengue (19/10/2026): la Orange en blanco, oro y morado. Fondo blanco puro, marcos finos en oro #c9a227, botones de voto dorados,
    una linea morada #5c2d91 bajo la cabecera y sobre el dock, autor en morado, titulares serif. Oscuro: negro azulado con oro claro. Sin escudos. ---- */
 [data-skin="merengue"] { --or: #c9a227; --or2: #f7f1dc; --or3: #fbf8ee; --or-h: #a8851a; --on-or: #fff; --mo: #5c2d91; --bg: #ffffff; --line: #e9e2cc; --line2: #d6c88f; --accent: var(--mo); --life: var(--or); --hover: var(--or3); }
