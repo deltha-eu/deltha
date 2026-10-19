@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+<defs>
+<pattern id="grain" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#000" fill-opacity=".10"/><circle cx="4" cy="4" r=".6" fill="#fff" fill-opacity=".12"/></pattern>
+<filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3"/></filter>
+<g id="bolt"><path d="M0 0l18-6-6 18 20-4-30 34 8-22-18 4z" fill="#ffe600" stroke="#111" stroke-width="3" stroke-linejoin="round"/></g>
+<g id="star"><path d="M0-14l4 10 11 1-8 7 2 11-9-6-9 6 2-11-8-7 11-1z" fill="none" stroke="#111" stroke-width="3" stroke-linejoin="round"/></g>
+<g id="crown"><path d="M-18 10l-4-22 12 10 10-16 10 16 12-10-4 22z" fill="#ffe600" stroke="#111" stroke-width="3" stroke-linejoin="round"/></g>
+<g id="splash"><path d="M0 0c20-30 50-20 60 0s30 30 10 45-40 25-60 10-30-35-10-55z" fill="#ffe600" stroke="#111" stroke-width="3"/></g>
+<g id="scrib"><path d="M0 0q10-12 20 0t20 0 20 0 20 0" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/></g>
+<g id="rscrib"><path d="M0 0l12-8-8 12 12-8-8 12 12-8-8 12 12-8" fill="none" stroke="#e8262b" stroke-width="3" stroke-linecap="round"/></g>
+</defs>
+<rect width="1600" height="1000" fill="#2962d9"/>
+<rect width="1600" height="1000" fill="url(#grain)"/>
+<g filter="url(#rough)">
+<rect x="1240" y="0" width="360" height="1000" fill="#1a3f9a" opacity=".6"/>
+<path d="M0 0h260v1000H0z" fill="#2353c2" opacity=".7"/>
+<use href="#splash" x="60" y="120"/><use href="#splash" x="1300" y="620" transform="scale(1.2)"/><use href="#splash" x="40" y="820"/>
+<use href="#bolt" x="90" y="40"/><use href="#bolt" x="1450" y="200" transform="scale(1.4)"/><use href="#bolt" x="130" y="560"/><use href="#bolt" x="1370" y="880"/><use href="#bolt" x="1480" y="40"/>
+<use href="#star" x="40" y="330"/><use href="#star" x="200" y="700"/><use href="#star" x="1420" y="430"/><use href="#star" x="1560" y="760"/><use href="#star" x="1300" y="60"/>
+<use href="#crown" x="170" y="260"/><use href="#crown" x="1520" y="560"/>
+<use href="#scrib" x="20" y="470"/><use href="#scrib" x="1400" y="330"/><use href="#scrib" x="60" y="940"/><use href="#scrib" x="1330" y="990"/>
+<use href="#rscrib" x="60" y="640"/><use href="#rscrib" x="1500" y="140"/><use href="#rscrib" x="1560" y="900"/><use href="#rscrib" x="180" y="860"/>
+<circle cx="1480" cy="700" r="26" fill="#e8262b" stroke="#111" stroke-width="3"/><circle cx="110" cy="400" r="18" fill="#e8262b" stroke="#111" stroke-width="3"/>
+<path d="M1280 480l60 0-10 40z" fill="#fff" stroke="#111" stroke-width="3"/>
+<path d="M30 60l40 30M10 90l50 10" stroke="#111" stroke-width="3" stroke-linecap="round"/><path d="M1540 420l40-30M1520 390l50 10" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+</g>
+</svg>
