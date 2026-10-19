@@ -616,6 +616,8 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
 .sw-betico { --s1: #ffffff; --s2: #0b9a4a; }
 .sw-heroica { --s1: #111111; --s2: #e0202a; }
+.sw-merengue { --s1: #ffffff; --s2: #c9a227; }
+.sw-cule { --s1: #004d98; --s2: #a50044; }
 .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
 .sw-hyperpop { --s1: #F6F7FB; --s2: #FF4FD8; }
 .sw-neobrutal { --s1: #FFE600; --s2: #111111; }
@@ -1431,6 +1433,50 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-skin="heroica"] .post .peek, [data-skin="heroica"] .notice { border-radius: 0; border: 2px solid var(--ink); }
 [data-skin="heroica"] .fab { border-radius: 0; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
 [data-skin="heroica"] .composer button, [data-skin="heroica"] form.plain button, [data-skin="heroica"] .newmsg button { border-radius: 0; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); text-transform: uppercase; font-weight: 800; }
+/* ---- Merengue (19/10/2026): la Orange en blanco, oro y morado. Fondo blanco puro, marcos finos en oro #c9a227, botones de voto dorados,
+   una linea morada #5c2d91 bajo la cabecera y sobre el dock, autor en morado, titulares serif. Oscuro: negro azulado con oro claro. Sin escudos. ---- */
+[data-skin="merengue"] { --or: #c9a227; --or2: #f7f1dc; --or3: #fbf8ee; --or-h: #a8851a; --on-or: #fff; --mo: #5c2d91; --bg: #ffffff; --line: #e9e2cc; --line2: #d6c88f; --accent: var(--mo); --life: var(--or); --hover: var(--or3); }
+@media (prefers-color-scheme: dark) {
+  [data-skin="merengue"]:not([data-theme="light"]) { --or: #e3c35a; --or2: #2a2416; --or3: #1d1a10; --or-h: #f2d77e; --on-or: #1a1400; --mo: #a98ad8; --bg: #101014; --line: #2b2a24; --line2: #4a4330; --accent: var(--mo); --life: var(--or); --hover: var(--or3); }
+}
+[data-skin="merengue"][data-theme="dark"] { --or: #e3c35a; --or2: #2a2416; --or3: #1d1a10; --or-h: #f2d77e; --on-or: #1a1400; --mo: #a98ad8; --bg: #101014; --line: #2b2a24; --line2: #4a4330; --accent: var(--mo); --life: var(--or); --hover: var(--or3); }
+[data-skin="merengue"] header.top { border-bottom: 3px solid var(--mo); }
+[data-skin="merengue"] .dock { border-top: 3px solid var(--mo); }
+[data-skin="merengue"] nav.tabs-top { border-bottom-color: var(--or); }
+[data-skin="merengue"] nav.tabs-top a.on { color: var(--mo); background: var(--or2); }
+[data-skin="merengue"] nav.tabs-top a.on::after { background: var(--mo); }
+[data-skin="merengue"] .post.full, [data-skin="merengue"] .post.compact { border-width: 1px; border-color: var(--or); box-shadow: 0 1px 0 var(--or); }
+[data-skin="merengue"] .post .l1 b { color: var(--mo); }
+[data-skin="merengue"] .post form.vote, [data-skin="merengue"] .post span.vote { background: var(--bg); border: 1px solid var(--or); }
+[data-skin="merengue"] .post .vote button[value="1"] span, [data-skin="merengue"] .post span.vote > span:first-child span { color: var(--mo); }
+[data-skin="merengue"] .fab { background: var(--mo); color: #fff; border: 2px solid var(--or); }
+[data-skin="merengue"] .composer button, [data-skin="merengue"] form.plain button, [data-skin="merengue"] .newmsg button { background: var(--mo); color: #fff; }
+[data-skin="merengue"] .notice { border-color: var(--or); }
+/* ---- Culé (19/10/2026): la Orange en azulgrana. Rayas verticales azul #004d98 y grana #a50044 (--rayas) bajo la cabecera, sobre el dock, en la
+   pestaña activa y como lomo de cada noticia; acento grana, paneles azul palido, pestaña activa azul; la barra de vida y el FAB llevan la senyera
+   (amarillo #ffed02 / rojo #db0030). Oscuro: azul noche. Sin escudos. ---- */
+[data-skin="cule"] { --or: #a50044; --or2: #e8eef7; --or3: #f3f6fb; --or-h: #7d0034; --on-or: #fff; --az: #004d98; --bg: #ffffff; --line: #d9e0ec; --line2: #b9c6dc; --accent: var(--az); --life: var(--or); --hover: var(--or3);
+  --rayas: repeating-linear-gradient(90deg, var(--az) 0 10px, var(--or) 10px 20px); --rayas-v: repeating-linear-gradient(180deg, var(--az) 0 10px, var(--or) 10px 20px);
+  --senyera: repeating-linear-gradient(90deg, #ffed02 0 8px, #db0030 8px 16px); }
+@media (prefers-color-scheme: dark) {
+  [data-skin="cule"]:not([data-theme="light"]) { --or: #ff3d7f; --or2: #16213a; --or3: #10182b; --or-h: #ff7aa6; --on-or: #fff; --az: #3c8be0; --bg: #0b1222; --line: #1f2a44; --line2: #33436a; --accent: var(--az); --life: var(--or); --hover: var(--or3);
+    --rayas: repeating-linear-gradient(90deg, #004d98 0 10px, #a50044 10px 20px); --rayas-v: repeating-linear-gradient(180deg, #004d98 0 10px, #a50044 10px 20px); }
+}
+[data-skin="cule"][data-theme="dark"] { --or: #ff3d7f; --or2: #16213a; --or3: #10182b; --or-h: #ff7aa6; --on-or: #fff; --az: #3c8be0; --bg: #0b1222; --line: #1f2a44; --line2: #33436a; --accent: var(--az); --life: var(--or); --hover: var(--or3);
+  --rayas: repeating-linear-gradient(90deg, #004d98 0 10px, #a50044 10px 20px); --rayas-v: repeating-linear-gradient(180deg, #004d98 0 10px, #a50044 10px 20px); }
+[data-skin="cule"] header.top { position: relative; border-bottom: 0; }
+[data-skin="cule"] header.top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--rayas); }
+[data-skin="cule"] .dock { border-top: 0; background: var(--rayas) top / 100% 5px no-repeat, var(--bg); padding-top: 5px; }
+[data-skin="cule"] nav.tabs-top a.on { background: var(--az); color: #fff; }
+[data-skin="cule"] nav.tabs-top a.on::after { background: var(--rayas); height: 4px; }
+[data-skin="cule"] .post.full, [data-skin="cule"] .post.compact { border-color: var(--az); padding-left: 18px; overflow: hidden; }
+[data-skin="cule"] .post.full::before, [data-skin="cule"] .post.compact::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--rayas-v); }
+[data-skin="cule"] .post form.vote, [data-skin="cule"] .post span.vote { background: var(--or2); border: 2px solid var(--az); }
+[data-skin="cule"] .post .l1 b { color: var(--az); }
+[data-skin="cule"] .post .life { background: var(--or2); }
+[data-skin="cule"] .post .life > span { background: var(--senyera); }
+[data-skin="cule"] .fab { background: var(--az); color: #fff; border: 3px solid var(--or); }
+[data-skin="cule"] .composer button, [data-skin="cule"] form.plain button, [data-skin="cule"] .newmsg button { background: var(--az); }
 [data-fam="orange"] .composer button, [data-fam="orange"] form.plain button, [data-fam="orange"] .newmsg button { background: var(--or); color: var(--on-or); border: 0; border-radius: 6px; }
 [data-fam="orange"] form.plain input, [data-fam="orange"] form.plain select, [data-fam="orange"] form.plain textarea, [data-fam="orange"] .newmsg input, [data-fam="orange"] .modbar select { border-radius: 6px; }
 [data-fam="orange"] form.plain label { color: var(--fg); font-weight: 600; }
@@ -2996,6 +3042,8 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail .sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
   .rail .sw-betico { --s1: #ffffff; --s2: #0b9a4a; }
   .rail .sw-heroica { --s1: #111111; --s2: #e0202a; }
+  .rail .sw-merengue { --s1: #ffffff; --s2: #c9a227; }
+  .rail .sw-cule { --s1: #004d98; --s2: #a50044; }
   .rail .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
   /* --- side --- */
   .side { padding: 16px 0 24px; gap: 14px; }
