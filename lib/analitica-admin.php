@@ -38,6 +38,11 @@ function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
     $h = ana_day_from_hits($pdo, $hoy);
     echo "<h3>Hoy (hasta ahora)</h3><div class=\"statspage\" style=\"padding:0\"><div class=\"grid\">";
     foreach ([[$h['visitors'], 'visitantes'], [$h['sessions'], 'sesiones'], [$h['pageviews'], 'páginas vistas'], [$h['logged'], 'páginas con cuenta']] as [$v, $l]) echo "<div class=\"tile\"><b>" . $n($v) . "</b><span>$l</span></div>";
+    // y la actividad de hoy (19/10/2026): envios, portadas, votos y comentarios desde las 0:00
+    $hoyN = fn(string $sql) => (int)$pdo->query($sql)->fetchColumn();
+    foreach ([[$hoyN("SELECT COUNT(*) FROM stories WHERE sent_date >= CURDATE()"), 'envíos'], [$hoyN("SELECT COUNT(*) FROM stories WHERE status = 'destacadas' AND published_date >= CURDATE()"), 'portadas'],
+              [$hoyN("SELECT COUNT(*) FROM votes WHERE created >= CURDATE()"), 'votos'], [$hoyN("SELECT COUNT(*) FROM comments WHERE deleted = 0 AND created >= CURDATE()"), 'comentarios']] as [$v, $l])
+        echo "<div class=\"tile\"><b>" . $n($v) . "</b><span>$l</span></div>";
     echo "</div></div>";
 
     // ---- rango ----
