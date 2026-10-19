@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9d8ec"/><stop offset=".45" stop-color="#e3e9f2"/><stop offset="1" stop-color="#d7dfea"/></linearGradient>
+<radialGradient id="glowc" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#0a8fc2" stop-opacity=".28"/><stop offset="1" stop-color="#35d6ff" stop-opacity="0"/></radialGradient>
+<radialGradient id="glowr" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d6111f" stop-opacity=".22"/><stop offset="1" stop-color="#ff1e2d" stop-opacity="0"/></radialGradient>
+<pattern id="hex" width="28" height="48.5" patternUnits="userSpaceOnUse" patternTransform="scale(1.4)"><path d="M14 0l14 8.1v16.2L14 32.4 0 24.3V8.1zM14 32.4v16.1M0 24.3L-14 32.4M28 24.3l14 8.1" fill="none" stroke="#0a5c8a" stroke-opacity=".10" stroke-width=".8"/></pattern>
+<filter id="blur"><feGaussianBlur stdDeviation="6"/></filter>
+<filter id="blur2"><feGaussianBlur stdDeviation="1.4"/></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#sky)"/>
+<rect width="1600" height="900" fill="url(#hex)"/>
+<!-- halos -->
+<ellipse cx="1300" cy="140" rx="420" ry="240" fill="url(#glowc)"/>
+<ellipse cx="180" cy="520" rx="320" ry="300" fill="url(#glowr)"/>
+<ellipse cx="1500" cy="760" rx="300" ry="220" fill="url(#glowr)"/>
+<!-- estructuras: paneles oscuros con biseles -->
+<g fill="#eef3f9" stroke="#9fb8d6" stroke-width="1.5">
+<path d="M0 60h210l40 40v180l-40 40H0z"/><path d="M0 360h190l30 30v300l-30 30H0z"/><path d="M0 760h240l30 30v110H0z"/>
+<path d="M1600 40h-260l-40 40v160l40 40h260z"/><path d="M1600 320h-220l-30 30v320l30 30h220z"/><path d="M1600 740h-280l-30 30v130h310z"/>
+<path d="M300 0h1000l-40 50H340z"/>
+</g>
+<!-- ciudad al fondo, siluetas -->
+<g fill="#c2cfe0">
+<path d="M260 300h40v-90h30v40h30v-120h40v170h30v-60h40v110h30v-150h40v200h-280z"/>
+<path d="M1120 320h40v-120h30v60h40v-160h40v120h30v-70h40v160h30v-110h40v230h-290z"/>
+</g>
+<!-- líneas de luz -->
+<g stroke-linecap="round" filter="url(#blur2)">
+<path d="M0 110h210l40 40" stroke="#d6111f" stroke-width="2.5" fill="none"/><path d="M0 760h240l30 30" stroke="#d6111f" stroke-width="2.5" fill="none"/>
+<path d="M1600 90h-260l-40 40" stroke="#0a8fc2" stroke-width="2.5" fill="none"/><path d="M1600 740h-280l-30 30" stroke="#0a8fc2" stroke-width="2.5" fill="none"/>
+<path d="M0 390h190l30 30" stroke="#0a8fc2" stroke-width="2" fill="none"/><path d="M1600 350h-220l-30 30" stroke="#d6111f" stroke-width="2" fill="none"/>
+<path d="M340 50h920" stroke="#d6111f" stroke-width="2" fill="none"/>
+</g>
+<g stroke="#d6111f" stroke-width="6" filter="url(#blur)" opacity=".35"><path d="M0 110h210"/><path d="M0 760h240"/><path d="M1600 350h-220"/></g>
+<g stroke="#0a8fc2" stroke-width="6" filter="url(#blur)" opacity=".3"><path d="M1600 90h-260"/><path d="M1600 740h-280"/><path d="M0 390h190"/></g>
+<!-- el globo -->
+<g transform="translate(1390 170)" fill="none" stroke="#0a7fb0">
+<circle r="86" stroke-opacity=".5" stroke-width="1.2"/><circle r="70" stroke-opacity=".25"/><ellipse rx="86" ry="30" stroke-opacity=".35"/><ellipse rx="30" ry="86" stroke-opacity=".35"/><ellipse rx="60" ry="86" stroke-opacity=".2"/>
+<circle r="104" stroke-opacity=".35" stroke-dasharray="6 10" stroke-width="1.5"/><circle r="118" stroke-opacity=".2" stroke-dasharray="40 24"/>
+<circle r="86" fill="#0a8fc2" fill-opacity=".06" stroke="none"/>
+</g>
+<!-- puntos de datos -->
+<g fill="#d6111f"><circle cx="90" cy="470" r="3"/><circle cx="130" cy="520" r="2"/><circle cx="1480" cy="420" r="3"/><circle cx="1530" cy="480" r="2"/></g>
+<g fill="#0a8fc2"><circle cx="70" cy="600" r="2"/><circle cx="1450" cy="600" r="2"/><circle cx="1510" cy="640" r="3"/></g>
+</svg>
