@@ -1589,9 +1589,9 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-skin="blanquiazul"] .post form.vote, [data-skin="blanquiazul"] .post span.vote { background: var(--bg); border: 2px solid var(--or); }
 [data-skin="blanquiazul"] .post .life { background: var(--or2); }
 [data-skin="blanquiazul"] .fab { border: 3px solid #fff; box-shadow: 0 0 0 2px var(--or); }
-/* ---- Art Brut (19/10/2026, rehecha con el pliego de Ángel): art brut + neobrutalismo + pop art. Fondo azul eléctrico #006BFF con
-   semitono y, en los márgenes, rayos, estrellas, coronas, manchas, flechas, un megáfono y una tele (/img/artbrut-bg.svg, dibujado, sin fotos;
-   todo lo del margen se recorta por los bordes). Papel blanco roto #FAF9F4, contornos negros #111 de 3-4 px, sombras duras 4/4 sin desenfoque,
+/* ---- Art Brut (19/10/2026, rehecha con el pliego de Ángel): art brut + neobrutalismo + pop art. Fondo: la ilustración de Ángel
+   (/img/artbrut-bg.jpg, 1672×941, ~300 KB: papel azul con semitono y, en los márgenes, rayos, estrellas, coronas y manchas; el centro queda
+   despejado para las columnas). Papel blanco roto #FAF9F4, contornos negros #111 de 3-4 px, sombras duras 4/4 sin desenfoque,
    amarillo #FFE500 para títulos y rótulos, rojo #F52235 para lo activo, votos y avisos, rosa #FFE5E9 para avisos, cian #19C5FF en detalles.
    Letras (propias, en /fonts, OFL/Apache): Permanent Marker (logo/rótulo de cabecera), Bangers (titulares y rótulos de módulos), Patrick Hand
    (menú lateral, anotaciones), Inter/sistema para el texto funcional. Tarjetas con cinta amarilla en la esquina y raya roja de boli al pie.
@@ -1609,9 +1609,9 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   [data-skin="artbrut"]:not([data-theme="light"]) { --paper: #171a26; --bg: var(--paper); --fg: #f1efe6; --muted: #aaa8a0; --ink: #ecebe3; --or2: #4a1a1f; --or3: #3a3410; --hover: var(--or3); --neg: #999; --pk: #4a1a1f; }
 }
 [data-skin="artbrut"][data-theme="dark"] { --paper: #171a26; --bg: var(--paper); --fg: #f1efe6; --muted: #aaa8a0; --ink: #ecebe3; --or2: #4a1a1f; --or3: #3a3410; --hover: var(--or3); --neg: #999; --pk: #4a1a1f; }
-[data-skin="artbrut"] body { background: url("/img/artbrut-bg.svg") center top / cover no-repeat fixed var(--bl); }
-@media (prefers-color-scheme: dark) { [data-skin="artbrut"]:not([data-theme="light"]) body { background: linear-gradient(rgba(4, 10, 40, .6), rgba(4, 10, 40, .6)), url("/img/artbrut-bg.svg") center top / cover no-repeat fixed #0a2a7a; } }
-[data-skin="artbrut"][data-theme="dark"] body { background: linear-gradient(rgba(4, 10, 40, .6), rgba(4, 10, 40, .6)), url("/img/artbrut-bg.svg") center top / cover no-repeat fixed #0a2a7a; }
+[data-skin="artbrut"] body { background: url("/img/artbrut-bg.jpg") center top / cover no-repeat fixed var(--bl); }
+@media (prefers-color-scheme: dark) { [data-skin="artbrut"]:not([data-theme="light"]) body { background: linear-gradient(rgba(4, 10, 40, .6), rgba(4, 10, 40, .6)), url("/img/artbrut-bg.jpg") center top / cover no-repeat fixed #0a2a7a; } }
+[data-skin="artbrut"][data-theme="dark"] body { background: linear-gradient(rgba(4, 10, 40, .6), rgba(4, 10, 40, .6)), url("/img/artbrut-bg.jpg") center top / cover no-repeat fixed #0a2a7a; }
 [data-skin="artbrut"] .shell { background: transparent; border: 0; }
 [data-skin="artbrut"] main { background: transparent; padding: 0 8px; }
 /* cabecera: logo sobre mancha amarilla, rótulo en Permanent Marker, iconos de trazo grueso */
