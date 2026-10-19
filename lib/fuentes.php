@@ -61,22 +61,64 @@ function fuentes_activas(PDO $pdo, string $kind = ''): array {
 /* ---- idioma de las fuentes ------------------------------------------
  * sources.lang: codigo de dos letras (es, en, pt…); '' = sin saber. Se elige en admin -> Fuentes o, si se deja en «detectar», se toma del
  * propio RSS (<language>, dc:language o xml:lang del Atom) al darla de alta y en cada lectura mientras siga vacio.
- * users.src_mylang = 1: el usuario quiere ver solo fuentes en su idioma (el de la interfaz, lang()). Las de idioma desconocido se ven.
+ * users.src_mylang = 1: el usuario quiere filtrar por idioma; users.src_langs guarda la lista elegida («es,en»). Lista vacia = el
+ * idioma de la interfaz (lang()), como la casilla antigua. Las fuentes de idioma desconocido se ven siempre.
  * Filtra menus, listas y catalogo; la pagina de una fuente (/fuente) se sigue abriendo con su enlace. */
-/** ¿Solo fuentes en mi idioma? Con cuenta, users.src_mylang (perfil o casilla de /medios y /ultimo, es la misma);
- *  sin cuenta, cookie ddd_srclang que solo existe si la persona marca la casilla. */
-function fuentes_solo_mi_idioma(): bool { $u = user(); return $u ? !empty($u['src_mylang']) : ($_COOKIE['ddd_srclang'] ?? '') === '1'; }
-/** Casilla «Solo fuentes en mi idioma» para las listas de fuentes: cambia la misma preferencia que el perfil (via /cambiar-skin?m=)
- *  y vuelve a la pagina. Se guarda con el boton «Guardar» de al lado (no se envia sola al marcarla). */
+/** Lista «es,en» -> codigos de DDD_LANGS, sin repetir, en el orden de la interfaz. */
+function fuentes_langs_parse(string $s): array {
+    $out = [];
+    foreach (explode(',', $s) as $x) { $x = strtolower(trim((string)$x)); if (isset(DDD_LANGS[$x])) $out[$x] = true; }
+    return array_values(array_intersect(array_keys(DDD_LANGS), array_keys($out)));
+}
+/** Idiomas de un campo multiple del formulario (src_langs[] en el perfil, ml[] en el control rapido). */
+function fuentes_langs_field(string $name, array $src): array {
+    $v = $src[$name] ?? [];
+    if (!is_array($v)) $v = [$v];
+    return fuentes_langs_parse(implode(',', array_map('strval', $v)));
+}
+function fuentes_langs_post(string $name = 'src_langs'): array { return fuentes_langs_field($name, $_POST); }
+/** Idiomas activos: [] = sin filtro. Con cuenta, src_mylang + src_langs (vacio = el de la interfaz); sin cuenta, la cookie
+ *  ddd_srclang (el «1» antiguo tambien es el idioma de la interfaz; la lista nueva va como «es,en»). */
+function fuentes_idiomas(): array {
+    static $ls = null;
+    if ($ls !== null) return $ls;
+    $u = user();
+    if ($u) return $ls = empty($u['src_mylang']) ? [] : (fuentes_langs_parse((string)($u['src_langs'] ?? '')) ?: [lang()]);
+    $c = (string)($_COOKIE['ddd_srclang'] ?? '');
+    return $ls = $c === '1' ? [lang()] : fuentes_langs_parse($c);
+}
+/** ¿Hay filtro de idioma? Nombre nuevo de fuentes_solo_mi_idioma(). */
+function fuentes_filtra_idioma(): bool { return fuentes_idiomas() !== []; }
+/** Compatibilidad con el nombre antiguo (lo usan app.php y lateral.php). */
+function fuentes_solo_mi_idioma(): bool { return fuentes_filtra_idioma(); }
+/** Guarda la preferencia (perfil, control rapido y login con cookie). $on null = derivado de la lista; con $on y lista vacia
+ *  se guarda el idioma de la interfaz, como la casilla antigua. Con cuenta se escribe en users y se borra la cookie. */
+function fuentes_guardar_idiomas(PDO $pdo, ?int $uid, array $langs, ?bool $on = null): void {
+    $langs = fuentes_langs_parse(implode(',', $langs));
+    $on ??= $langs !== [];
+    if ($uid) {
+        $pdo->prepare("UPDATE users SET src_mylang = ?, src_langs = ? WHERE user_id = ?")->execute([$on ? 1 : 0, implode(',', $langs), $uid]);
+        pref_cookie('ddd_srclang', '');
+    } else {
+        pref_cookie('ddd_srclang', $on ? (implode(',', $langs) ?: '1') : '');
+    }
+}
+/** Control rapido de idiomas para las listas de fuentes: misma preferencia que el perfil (via /cambiar-skin?lset=1&ml[]=…);
+ *  se guarda con «Guardar» (no se envia solo al marcar). Sin cuenta, cookie ddd_srclang. */
 function fuentes_casilla_idioma(): string {
-    return "<form class=\"srclang\" method=\"get\" action=\"/cambiar-skin\" autocomplete=\"off\"><input type=\"hidden\" name=\"m\" value=\"0\"><label><input type=\"checkbox\" name=\"m\" value=\"1\""
-         . (fuentes_solo_mi_idioma() ? ' checked' : '') . "> " . t('Solo fuentes y envíos en mi idioma') . " <small>(" . h(DDD_LANGS[lang()] ?? lang()) . ")</small></label>"
-         . " <button type=\"submit\">" . t('Guardar') . "</button></form>";
+    $ls = fuentes_idiomas();
+    $nombres = array_map(fn($l) => h(DDD_LANGS[$l] ?? strtoupper($l)), $ls);
+    $h = "<form class=\"srclang\" method=\"get\" action=\"/cambiar-skin\" autocomplete=\"off\"><input type=\"hidden\" name=\"lset\" value=\"1\"><details><summary>"
+       . t('Idiomas') . ": <b>" . ($nombres ? implode(', ', $nombres) : t('Todos los idiomas')) . "</b> <small>(" . t('cambiar') . ")</small></summary><div class=\"langpick\">";
+    foreach (DDD_LANGS as $k => $name)
+        $h .= "<label><input type=\"checkbox\" name=\"ml[]\" value=\"$k\"" . (in_array($k, $ls, true) ? ' checked' : '') . "> " . h($name) . "</label>";
+    return $h . "</div><button type=\"submit\">" . t('Guardar') . "</button></details></form>";
 }
 function fuente_en_mi_idioma(array $src): bool {
-    if (!fuentes_solo_mi_idioma()) return true;
+    $ls = fuentes_idiomas();
+    if (!$ls) return true;
     $l = (string)($src['lang'] ?? '');
-    return $l === '' || $l === lang();
+    return $l === '' || in_array($l, $ls, true);
 }
 /** ¿Esta en el catalogo publico? Las que se añade un usuario pegando su direccion (migra-108) entran con listed = 0: se leen y las ve
  *  quien las sigue, pero no salen en menus, catalogo, lateral ni buscador hasta que un moderador las aprueba. */
@@ -121,7 +163,7 @@ function ultimo_fuentes(PDO $pdo, ?array $u, string $kind): array {
     return fuentes_destacadas($pdo, $kind) ?: medios_menu($pdo, $u, 0, $kind);
 }
 /** Fuentes de un tipo destacadas en admin (sources.featured), la que ha publicado mas recientemente primero. Son las que ve en
- *  «Mis medios» / «Mis substacks» / «Mis canales» quien no ha elegido ninguna (o no tiene cuenta); con «solo en mi idioma», las
+ *  «Mis medios» / «Mis substacks» / «Mis canales» quien no ha elegido ninguna (o no tiene cuenta); con filtro de idiomas, las
  *  de otro idioma se quitan. */
 function fuentes_destacadas(PDO $pdo, string $kind): array {
     $list = array_values(array_filter(fuentes_visibles($pdo, $kind), fn($m) => !empty($m['featured']) && fuente_en_mi_idioma($m)));
@@ -254,7 +296,7 @@ function fuentes_ultima_noticia(PDO $pdo): array {
 }
 function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
     $max = $max ?: medios_max($kind);
-    $list = mis_medios_recientes($pdo, $u, $kind);   // «solo en mi idioma» tambien quita las favoritas en otro
+    $list = mis_medios_recientes($pdo, $u, $kind);   // el filtro de idiomas tambien quita las favoritas en otro
     if (!$list) $list = fuentes_destacadas($pdo, $kind);
     if (!$list && $kind !== 'agregador') {
         $ult = fuentes_ultima_noticia($pdo);

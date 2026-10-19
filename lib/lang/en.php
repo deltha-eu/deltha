@@ -824,7 +824,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'The time to correct it has passed, but while it stays in the radar and nobody has commented you can withdraw it.',
 'detectar automáticamente' => 'detect automatically',
 'otro idioma' => 'other language',
-'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Only used by people who tick "only in my language" in their profile.',
+'Solo sirve para quien filtra por idioma en su perfil.' => 'Only used by people who filter by language in their profile.',
 'nombre real: solo lo ven moderadores y admin' => 'real name: only moderators and admins see this',
 'Logo' => 'Logo',
 'cuadrado; sustituye al punto de color' => 'square; replaces the colour dot',
@@ -956,4 +956,9 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '<b>Abre un hilo en los foros</b>' => '<b>Start a thread in the forums</b>',
 'Solo en Foros' => 'Only in Forums',
 'cerrar este aviso' => 'close this notice',
+'Idiomas' => 'Languages',
+'Mostrar fuentes y envíos solo en estos idiomas' => 'Show sources and posts only in these languages',
+'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Tick one or more. If you tick none, the interface language is used (%s). Sources and posts in other languages stop appearing; those with an unknown language are always shown.',
+'Todos los idiomas' => 'All languages',
+'cambiar' => 'change',
 ];

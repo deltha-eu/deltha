@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $skin  = (string)($u['skin'] ?? '');   // la plantilla se elige en /plantilla
     $landing = preg_match('/^((t|c):\d{1,9}|u:(medio|sub|yt|agg))$/', post('landing')) ? post('landing') : '';
     $ulang = isset(DDD_LANGS[post('ulang')]) ? post('ulang') : '';
-    $mylang = post('src_mylang') === '1' ? 1 : 0;   // solo fuentes (medios, substacks, agregadores) en mi idioma
+    $mylang = post('src_mylang') === '1';   // filtrar fuentes y envios por los idiomas elegidos (vacio = el de la interfaz)
+    $mlangs = fuentes_langs_post('src_langs');
     $avatar = $u['avatar'];
     if (!empty($_FILES['photo']['name'])) {
         $new = avatar_desde_subida($_FILES['photo']);
@@ -30,7 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (post('quitar') === '1' && $avatar) { @unlink(DDD_MEDIA_DIR . '/avatars/' . $avatar); $avatar = null; }
     if (!$err) {
-        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ?, src_mylang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $mylang, $u['user_id']]);
+        $pdo->prepare("UPDATE users SET login = ?, bio = ?, avatar = ?, theme = ?, skin = ?, landing = ?, lang = ? WHERE user_id = ?")->execute([$login, $bio ?: null, $avatar, $theme, $skin, $landing, $ulang, $u['user_id']]);
+        fuentes_guardar_idiomas($pdo, (int)$u['user_id'], $mlangs, $mylang);
         try { $pdo->prepare("UPDATE users SET twofa = ? WHERE user_id = ?")->execute([post('twofa') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-095 sin aplicar */ }
         try { $pdo->prepare("UPDATE users SET show_follows = ? WHERE user_id = ?")->execute([post('show_follows') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-116 sin aplicar */ }
         try { $pdo->prepare("UPDATE users SET skin_propio = ? WHERE user_id = ?")->execute([post('skin_propio') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-143 sin aplicar */ }
@@ -68,7 +70,13 @@ if ($u['avatar']) echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"
 echo "<label>" . t('Idioma') . "</label><select name=\"ulang\"><option value=\"\">" . t('El del navegador') . "</option>";
 foreach (DDD_LANGS as $k => $v) echo "<option value=\"$k\"" . (($u['lang'] ?? '') === $k ? ' selected' : '') . ">$v</option>";
 echo "</select>";
-if (fuentes_on()) echo "<label id=\"fuentes-idioma\"><input type=\"checkbox\" name=\"src_mylang\" value=\"1\"" . (!empty($u['src_mylang']) ? ' checked' : '') . "> " . t('Mostrar fuentes y envíos solo en mi idioma') . "</label><small class=\"hint\">" . t('Medios, substacks y agregadores en otros idiomas dejan de salir en el menú, en las listas y en tu elección de medios, y los envíos en otro idioma dejan de salir en las portadas, el radar, los temas y las comunidades (los que no se sabe en qué idioma están, sí se ven). Tu idioma es el de la interfaz.') . "</small>";
+if (fuentes_on()) {
+    $sel = fuentes_langs_parse((string)($u['src_langs'] ?? ''));
+    if (!$sel && !empty($u['src_mylang'])) $sel = [lang()];   // cuenta antigua: la casilla sola era el idioma de la interfaz
+    echo "<label id=\"fuentes-idioma\"><input type=\"checkbox\" name=\"src_mylang\" value=\"1\"" . (!empty($u['src_mylang']) ? ' checked' : '') . "> " . t('Mostrar fuentes y envíos solo en estos idiomas') . "</label><div class=\"langpick\">";
+    foreach (DDD_LANGS as $k => $v) echo "<label><input type=\"checkbox\" name=\"src_langs[]\" value=\"$k\"" . (in_array($k, $sel, true) ? ' checked' : '') . "> " . h($v) . "</label>";
+    echo "</div><small class=\"hint\">" . t('Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.', h(DDD_LANGS[lang()] ?? lang())) . "</small>";
+}
 // medios y substacks que sigo, visibles en mi ficha publica (migra-116): por defecto si
 if (fuentes_on()) echo "<label id=\"ficha-fuentes\"><input type=\"checkbox\" name=\"show_follows\" value=\"1\"" . (show_follows($pdo, (int)$u['user_id']) ? ' checked' : '') . "> " . t('Mostrar en mi ficha los medios y substacks que sigo') . "</label><small class=\"hint\">" . t('Cualquiera que abra tu perfil público verá la lista, como quien mira a quién sigues, y podrá seguirlos también. Si la desmarcas, solo la ves tú.') . "</small>";
 // verificacion en dos pasos por correo (lib/twofa.php): casilla; a los administradores se les puede exigir desde admin -> Config (twofa_admin)

@@ -28,7 +28,7 @@ echo fuentes_subnav($pdo, '/fuentes', $k, false, "<a class=\"todas" . ($k === ''
 echo "<p class=\"notice\">" . t('Medios, substacks y canales con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis fuentes».') . ($u ? '' : ' ' . t('<a href="/login">Entra</a> para elegir tus medios.'))
    . ($k !== 'agregador' ? ' ' . (fprop_puede($u) ? t('Con aura %s o más puedes proponer medios y substacks nuevos; la tuya es %s.', num_pg(lang(), cfg('source_propose_aura', 6)), num_pg(lang(), round((float)$u['aura'], 1)))
                                                   : t('Con aura %s o más puedes proponer medios y substacks nuevos.', num_pg(lang(), cfg('source_propose_aura', 6)))) : '') . "</p>";
-echo fuentes_casilla_idioma();   // la misma casilla que en el perfil: marcarla aqui la marca alli
+echo fuentes_casilla_idioma();   // el mismo control de idiomas que en el perfil: cambiarlo aqui lo cambia alli
 // buscador (09/10/2026): nombre, descripcion o dominio; busca en todos los tipos. Conserva el idioma elegido
 $il0 = (string)($_GET['il'] ?? '');
 echo "<form class=\"buscar-u\" method=\"get\" action=\"/fuentes\">" . ($il0 !== '' ? "<input type=\"hidden\" name=\"il\" value=\"" . h($il0) . "\">" : '')

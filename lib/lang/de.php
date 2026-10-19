@@ -785,7 +785,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'El plazo para corregirlo ha pasado, pero mientras siga en el radar y nadie lo haya comentado puedes retirarlo.' => 'Die Frist zum Korrigieren ist vorbei, aber solange er im Radar bleibt und niemand kommentiert hat, kannst du ihn zurückziehen.',
 'detectar automáticamente' => 'automatisch erkennen',
 'otro idioma' => 'andere Sprache',
-'Solo sirve para quien marca «solo en mi idioma» en su perfil.' => 'Wirkt nur bei Leuten, die im Profil „nur in meiner Sprache“ angekreuzt haben.',
+'Solo sirve para quien filtra por idioma en su perfil.' => 'Wirkt nur bei Leuten, die im Profil nach Sprache filtern.',
 'nombre real: solo lo ven moderadores y admin' => 'echter Name: nur Moderatoren und Admin sehen ihn',
 'Logo' => 'Logo',
 'cuadrado; sustituye al punto de color' => 'quadratisch; ersetzt den Farbpunkt',
@@ -917,4 +917,9 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '<b>Abre un hilo en los foros</b>' => '<b>Eröffne ein Thema in den Foren</b>',
 'Solo en Foros' => 'Nur in den Foren',
 'cerrar este aviso' => 'diesen Hinweis schließen',
+'Idiomas' => 'Sprachen',
+'Mostrar fuentes y envíos solo en estos idiomas' => 'Quellen und Einsendungen nur in diesen Sprachen anzeigen',
+'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Eine oder mehrere markieren. Wenn keine markiert ist, wird die Sprache der Oberfläche verwendet (%s). Quellen und Einsendungen in anderen Sprachen werden ausgeblendet; bei unbekannter Sprache bleiben sie sichtbar.',
+'Todos los idiomas' => 'Alle Sprachen',
+'cambiar' => 'ändern',
 ];

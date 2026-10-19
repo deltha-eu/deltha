@@ -5,7 +5,7 @@
  *  paginada del grupo. Las palabras de menos de 3 letras (el minimo del indice: innodb_ft_min_token_size) se buscan con
  *  LIKE; una frase entre comillas se busca tal cual. La relevancia la da MATCH ... AGAINST; a igualdad, lo mas reciente.
  *  Solo lo visible: hilos en el radar, portadas o archivo (no pendientes ni rechazados), comentarios ok y no borrados,
- *  fuentes activas (y, si la persona marco «solo en mi idioma», solo esas). Usuarios: solo para quien tiene cuenta, como /usuarios. */
+ *  fuentes activas (y, si la persona filtra por idioma, solo esas). Usuarios: solo para quien tiene cuenta, como /usuarios. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/fuentes.php';
@@ -107,7 +107,7 @@ function buscar_comentarios(PDO $pdo, array $T, int $limit, int $offset): array 
     return [$total, $st->fetchAll()];
 }
 function buscar_fuentes(PDO $pdo, array $T, int $limit, int $offset): array {
-    $src = fuentes_visibles($pdo);   // activas y, si se marco «solo en mi idioma», solo esas (agregadores solo si estan encendidos)
+    $src = fuentes_visibles($pdo);   // activas y, si se filtra por idioma, solo esas (agregadores solo si estan encendidos)
     if (!$src) return [0, []];
     $ids = array_column($src, 'source_id');
     $in = implode(',', array_fill(0, count($ids), '?'));
