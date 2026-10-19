@@ -243,7 +243,7 @@ function skin_descs(): array {
         'grotesque' => t('Grotesque — agregador oscuro y denso, carbón y grotesca, la caja de votos al lado del titular'), 'phantom' => t('Phantom — tarjetas blancas sobre gris, azul eléctrico, miniatura al lado'), 'bw' => t('B/W — Editorial sin un solo color: fotos, avatares y laterales en blanco y negro'), 'surrealismo' => t('Surrealismo — cielo con nubes, cartas que flotan, marcos que se derriten y manzanas verdes'),
         'marino' => t('Marino — foro en azul marino: barra oscura, cabeceras celestes y titulares en azul tinta'), 'acero' => t('Acero — foro clásico de tablas: gris acero, barras azul pizarra y letra pequeña'), 'sendero' => t('Sendero — foro de la vieja escuela: azul, pestañas redondeadas y franjas color arena'), 'pildora' => t('Píldora — foro actual: cajas lavanda redondeadas, tinta oscura y botones naranja en píldora'),
         'brasa' => t('Brasa — foro carbón y naranja: barra oscura, tarjetas claras, titulares en negrita y botones en brasa'),
-        'greyssue' => t('Greyssue — la Orange en gama de grises: carbón, plata y ceniza, sin un solo color'), 'greensue' => t('Greensue — la Orange en los verdes de Game HUD: botones verde terminal, paneles menta')];
+        'greyssue' => t('Greyssue — la Orange en gama de grises: carbón, plata y ceniza, sin un solo color'), 'greensue' => t('Greensue — la Orange en los verdes de Game HUD: botones verde terminal, paneles menta'), 'bluessue' => t('Bluessue — la Orange en azules: botones azul cobalto, paneles celeste')];
 }
 /** Enlaces «ver antes de elegir»: cada plantilla con ?skin= (solo esa pagina, no se guarda). */
 function skin_preview_links(): string {
