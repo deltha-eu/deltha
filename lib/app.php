@@ -824,9 +824,24 @@ function portadas(): array { $p = DDD_PORTADAS; if (!portada_canales_on()) unset
 function foros(bool $todos = false): array {
     static $all = null; global $pdo;
     if ($all === null) { try { $all = array_column($pdo->query("SELECT * FROM forums ORDER BY position, forum_id")->fetchAll(), null, 'slug'); } catch (Throwable $e) { $all = []; } }   // sin migra-159: sin foros
-    return $todos ? $all : array_filter($all, fn($f) => $f['status'] === 'on');
+    return $todos ? $all : array_filter($all, fn($f) => $f['status'] === 'on' && foro_abierto($f));
 }
-/** El foro de un slug (incluidos los apagados: sus hilos y su URL siguen abriendose; en la lista solo lo ve el admin). */
+/** Foros con aura minima (migra-165, 19/10/2026: Hardusers, aura > 20): lo ven y escriben quienes la superan; admin y mods, siempre. */
+function foro_abierto(array $f): bool {
+    $min = (float)($f['min_aura'] ?? 0);
+    if ($min <= 0 || is_mod()) return true;
+    $u = user();
+    return $u && (float)($u['aura'] ?? 0) > $min;
+}
+/** Aviso para quien no llega a la aura del foro. */
+function foro_cerrado_txt(array $f): string { return t('El foro «%s» es solo para quien tiene más de %s de aura.', (string)$f['name'], num_es((float)$f['min_aura'])); }
+/** Condicion SQL que deja fuera los hilos de los foros que esta persona no puede ver ('' si puede verlos todos). $col = columna forum_id. */
+function foros_cerrados_sql(string $col = 's.forum_id'): string {
+    $ids = [];
+    foreach (foros(true) as $f) if (!foro_abierto($f)) $ids[] = (int)$f['forum_id'];
+    return $ids ? " AND ($col IS NULL OR $col NOT IN (" . implode(',', $ids) . "))" : '';
+}
+/** El foro de un slug (incluidos los apagados y los de aura minima: quien los abre comprueba foro_abierto). */
 function foro(string $slug): ?array { return foros(true)[$slug] ?? null; }
 /** El foro de un envio (por stories.forum_id); null para los enlaces y los originales anteriores a la migracion. */
 function foro_de(array $s): ?array { $id = (int)($s['forum_id'] ?? 0); if (!$id) return null; foreach (foros(true) as $f) if ((int)$f['forum_id'] === $id) return $f; return null; }
