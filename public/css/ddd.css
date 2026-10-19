@@ -613,6 +613,7 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-orange { --s1: #F5F5F3; --s2: #FF6400; }
 .sw-greyssue { --s1: #F5F5F3; --s2: #3a3a3a; }
 .sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
+.sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
 .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
 .sw-hyperpop { --s1: #F6F7FB; --s2: #FF4FD8; }
 .sw-neobrutal { --s1: #FFE600; --s2: #111111; }
@@ -1361,7 +1362,7 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
 [data-fam="orange"] .notice a { color: var(--or); }
 [data-fam="orange"] .error { border-radius: 6px; }
 [data-fam="orange"] .end, [data-fam="orange"] nav.pages { padding-top: 18px; }
-/* ---- Greyssue y Greensue (19/10/2026): la misma Orange (data-fam="orange") con otros colores. Greyssue, gama de grises: acento gris carbon,
+/* ---- Greyssue, Greensue y Bluessue (19/10/2026): la misma Orange (data-fam="orange") con otros colores. Greyssue, gama de grises: acento gris carbon,
    paneles gris claro. Greensue, verdes de Game HUD: acento verde (claro: #0f8a3f; oscuro: #34FF79, el del HUD), paneles verde palido. ---- */
 [data-skin="greyssue"] { --or: #3a3a3a; --or2: #e9e9e7; --or3: #f1f1ef; --or-h: #1f1f1f; --on-or: #fff; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
 @media (prefers-color-scheme: dark) {
@@ -1373,6 +1374,12 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   [data-skin="greensue"]:not([data-theme="light"]) { --or: #34FF79; --or2: #0d2a18; --or3: #0b1c12; --or-h: #7dffa9; --on-or: #06110a; --bg: #0b0f0d; --line: #1d2a22; --line2: #2f4036; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
 }
 [data-skin="greensue"][data-theme="dark"] { --or: #34FF79; --or2: #0d2a18; --or3: #0b1c12; --or-h: #7dffa9; --on-or: #06110a; --bg: #0b0f0d; --line: #1d2a22; --line2: #2f4036; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+/* Bluessue (19/10/2026): la Orange en azules. Claro: acento azul cobalto, paneles celeste; oscuro: azul claro sobre azul noche. */
+[data-skin="bluessue"] { --or: #1f5fd1; --or2: #e3ecfb; --or3: #f0f5fd; --or-h: #164aa8; --on-or: #fff; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+@media (prefers-color-scheme: dark) {
+  [data-skin="bluessue"]:not([data-theme="light"]) { --or: #4d8dff; --or2: #0f1c33; --or3: #0b1324; --or-h: #8ab4ff; --on-or: #06101f; --bg: #0b0f17; --line: #1a2438; --line2: #2b3a56; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+}
+[data-skin="bluessue"][data-theme="dark"] { --or: #4d8dff; --or2: #0f1c33; --or3: #0b1324; --or-h: #8ab4ff; --on-or: #06101f; --bg: #0b0f17; --line: #1a2438; --line2: #2b3a56; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
 [data-fam="orange"] .composer button, [data-fam="orange"] form.plain button, [data-fam="orange"] .newmsg button { background: var(--or); color: var(--on-or); border: 0; border-radius: 6px; }
 [data-fam="orange"] form.plain input, [data-fam="orange"] form.plain select, [data-fam="orange"] form.plain textarea, [data-fam="orange"] .newmsg input, [data-fam="orange"] .modbar select { border-radius: 6px; }
 [data-fam="orange"] form.plain label { color: var(--fg); font-weight: 600; }
@@ -2935,6 +2942,7 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail .sw-orange { --s1: #F5F5F3; --s2: #FF6400; }
   .rail .sw-greyssue { --s1: #F5F5F3; --s2: #3a3a3a; }
   .rail .sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
+  .rail .sw-bluessue { --s1: #F5F5F3; --s2: #1f5fd1; }
   .rail .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
   /* --- side --- */
   .side { padding: 16px 0 24px; gap: 14px; }
