@@ -65,48 +65,37 @@ function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
     ksort($days);
     $tot = ['visitors' => 0, 'sessions' => 0, 'pageviews' => 0, 'logged' => 0];
     foreach ($days as $d) foreach ($tot as $k => $_) $tot[$k] += (int)$d[$k];
+    // actividad del rango (19/10/2026, pedido por Angel): envios, portadas, votos y comentarios por dia, de las tablas de verdad (no de hits):
+    // envios = stories por sent_date (todo lo enviado, tambien lo descartado despues); portadas = las que llegaron a portada ese dia
+    // (status destacadas, por published_date); votos = votes.created; comentarios = comments.created sin borrados. Cubre todo el rango.
+    $vacio = ['envios' => 0, 'portadas' => 0, 'votos' => 0, 'comentarios' => 0];
+    $act = [];
+    foreach (["SELECT DATE(sent_date) d, 'envios' k, COUNT(*) c FROM stories WHERE sent_date >= ? AND sent_date < ? + INTERVAL 1 DAY GROUP BY d",
+              "SELECT DATE(published_date) d, 'portadas' k, COUNT(*) c FROM stories WHERE status = 'destacadas' AND published_date >= ? AND published_date < ? + INTERVAL 1 DAY GROUP BY d",
+              "SELECT DATE(created) d, 'votos' k, COUNT(*) c FROM votes WHERE created >= ? AND created < ? + INTERVAL 1 DAY GROUP BY d",
+              "SELECT DATE(created) d, 'comentarios' k, COUNT(*) c FROM comments WHERE deleted = 0 AND created >= ? AND created < ? + INTERVAL 1 DAY GROUP BY d"] as $sql) {
+        $st = $pdo->prepare($sql); $st->execute([$from, $to]);
+        foreach ($st as $r) { $act[$r['d']] = $act[$r['d']] ?? $vacio; $act[$r['d']][$r['k']] = (int)$r['c']; }
+    }
+    foreach ($act as $day => $_) if (!isset($days[$day])) $days[$day] = ['day' => $day, 'visitors' => 0, 'sessions' => 0, 'pageviews' => 0, 'logged' => 0];   // dias con actividad pero sin analitica cerrada
+    ksort($days);
+    $ta = $vacio; foreach ($act as $d) foreach ($ta as $k => $_) $ta[$k] += $d[$k];
     echo "<div class=\"statspage\" style=\"padding:0\"><div class=\"grid\">";
-    foreach ([[$tot['visitors'], 'visitantes'], [$tot['sessions'], 'sesiones'], [$tot['pageviews'], 'páginas vistas'], [$tot['sessions'] ? round($tot['pageviews'] / $tot['sessions'], 1) : 0, 'páginas por sesión'], [count($days), 'días con datos']] as [$v, $l])
+    foreach ([[$tot['visitors'], 'visitantes'], [$tot['sessions'], 'sesiones'], [$tot['pageviews'], 'páginas vistas'], [$tot['sessions'] ? round($tot['pageviews'] / $tot['sessions'], 1) : 0, 'páginas por sesión'], [count($days), 'días con datos'],
+              [$ta['envios'], 'envíos'], [$ta['portadas'], 'portadas'], [$ta['votos'], 'votos'], [$ta['comentarios'], 'comentarios']] as [$v, $l])
         echo "<div class=\"tile\"><b>" . (is_float($v) ? str_replace('.', ',', (string)$v) : $n($v)) . "</b><span>$l</span></div>";
     echo "</div></div>";
     if ($days) {
         $maxV = max(1, max(array_map(fn($d) => (int)$d['pageviews'], $days)));
-        echo "<table class=\"anadays\"><tr><th>día</th><th class=\"num\">visitantes</th><th class=\"num\">sesiones</th><th class=\"num\">páginas</th><th class=\"num\">con cuenta</th><th style=\"width:30%\"></th></tr>";
+        echo "<table class=\"anadays\"><tr><th>día</th><th class=\"num\">visitantes</th><th class=\"num\">sesiones</th><th class=\"num\">páginas</th><th class=\"num\">con cuenta</th><th style=\"width:22%\"></th><th class=\"num\">envíos</th><th class=\"num\">portadas</th><th class=\"num\">votos</th><th class=\"num\">coment.</th></tr>";
         foreach (array_reverse($days) as $d) {
             $lbl = ['lun','mar','mié','jue','vie','sáb','dom'][(int)date('N', strtotime($d['day'])) - 1] . date(' d/m', strtotime($d['day'])) . ($d['day'] === $hoy ? ' <small>(hoy, parcial)</small>' : '');
-            echo "<tr><td>$lbl</td><td class=\"num\">" . $n($d['visitors']) . "</td><td class=\"num\">" . $n($d['sessions']) . "</td><td class=\"num\">" . $n($d['pageviews']) . "</td><td class=\"num\">" . $n($d['logged']) . "</td><td>" . $bar((int)$d['pageviews'], $maxV) . "</td></tr>";
+            $x = $act[$d['day']] ?? $vacio;
+            echo "<tr><td>$lbl</td><td class=\"num\">" . $n($d['visitors']) . "</td><td class=\"num\">" . $n($d['sessions']) . "</td><td class=\"num\">" . $n($d['pageviews']) . "</td><td class=\"num\">" . $n($d['logged']) . "</td><td>" . $bar((int)$d['pageviews'], $maxV) . "</td>"
+               . "<td class=\"num\">" . $n($x['envios']) . "</td><td class=\"num\">" . $n($x['portadas']) . "</td><td class=\"num\">" . $n($x['votos']) . "</td><td class=\"num\">" . $n($x['comentarios']) . "</td></tr>";
         }
-        echo "</table>";
+        echo "</table><p><small>Envíos por fecha de envío (todo lo enviado, también lo descartado después); portadas por el día en que llegaron a portada; votos a noticias y comentarios no borrados por su fecha.</small></p>";
     } else echo "<p>Sin datos en ese rango.</p>";
-
-    // ---- actividad por dias (19/10/2026, pedido por Angel): envios, portadas, votos y comentarios del mismo rango, desde las tablas de verdad
-    //      (no de hits): envios = stories por sent_date (todo lo enviado, incluido lo que luego se descarto); portadas = las que llegaron a
-    //      portada ese dia (status destacadas, por published_date); votos = votes.created; comentarios = comments.created (sin los borrados).
-    $act = [];
-    $q = function (string $sql) use ($pdo, &$act, $from, $to) {
-        $st = $pdo->prepare($sql); $st->execute([$from, $to]);
-        foreach ($st as $r) { $act[$r['d']] = ($act[$r['d']] ?? ['envios' => 0, 'portadas' => 0, 'votos' => 0, 'comentarios' => 0]); $act[$r['d']][$r['k']] = (int)$r['c']; }
-    };
-    $q("SELECT DATE(sent_date) d, 'envios' k, COUNT(*) c FROM stories WHERE sent_date >= ? AND sent_date < ? + INTERVAL 1 DAY GROUP BY d");
-    $q("SELECT DATE(published_date) d, 'portadas' k, COUNT(*) c FROM stories WHERE status = 'destacadas' AND published_date >= ? AND published_date < ? + INTERVAL 1 DAY GROUP BY d");
-    $q("SELECT DATE(created) d, 'votos' k, COUNT(*) c FROM votes WHERE created >= ? AND created < ? + INTERVAL 1 DAY GROUP BY d");
-    $q("SELECT DATE(created) d, 'comentarios' k, COUNT(*) c FROM comments WHERE deleted = 0 AND created >= ? AND created < ? + INTERVAL 1 DAY GROUP BY d");
-    krsort($act);
-    echo "<h3>Actividad por días</h3>";
-    if ($act) {
-        $ta = ['envios' => 0, 'portadas' => 0, 'votos' => 0, 'comentarios' => 0];
-        foreach ($act as $d) foreach ($ta as $k => $_) $ta[$k] += $d[$k];
-        echo "<div class=\"statspage\" style=\"padding:0\"><div class=\"grid\">";
-        foreach ([[$ta['envios'], 'envíos'], [$ta['portadas'], 'portadas'], [$ta['votos'], 'votos'], [$ta['comentarios'], 'comentarios']] as [$v, $l]) echo "<div class=\"tile\"><b>" . $n($v) . "</b><span>$l</span></div>";
-        echo "</div></div>";
-        $maxA = max(1, max(array_map(fn($d) => $d['votos'], $act)));
-        echo "<table class=\"anadays\"><tr><th>día</th><th class=\"num\">envíos</th><th class=\"num\">portadas</th><th class=\"num\">votos</th><th class=\"num\">comentarios</th><th style=\"width:30%\">votos</th></tr>";
-        foreach ($act as $day => $d) {
-            $lbl = ['lun','mar','mié','jue','vie','sáb','dom'][(int)date('N', strtotime($day)) - 1] . date(' d/m', strtotime($day)) . ($day === $hoy ? ' <small>(hoy, parcial)</small>' : '');
-            echo "<tr><td>$lbl</td><td class=\"num\">" . $n($d['envios']) . "</td><td class=\"num\">" . $n($d['portadas']) . "</td><td class=\"num\">" . $n($d['votos']) . "</td><td class=\"num\">" . $n($d['comentarios']) . "</td><td>" . $bar($d['votos'], $maxA) . "</td></tr>";
-        }
-        echo "</table><p><small>Envíos por fecha de envío (todo lo enviado, también lo descartado después); portadas por el día en que llegaron a portada; votos a noticias y comentarios no borrados por su fecha. No depende de la analítica de páginas, así que cubre todo el rango.</small></p>";
-    } else echo "<p>Sin actividad en ese rango.</p>";
 
     // ---- detalle (solo dentro de la ventana de hits) ----
     $dFrom = max($from, $detFrom);   // $from ya viene acotado por analytics_since
