@@ -611,6 +611,8 @@ form.plain .hint a { text-decoration: underline; text-underline-offset: 2px; }
 .sw-popart { --s1: #FFD91A; --s2: #F23838; }
 .sw-zen { --s1: #eef3f2; --s2: #d98ba0; }
 .sw-orange { --s1: #F5F5F3; --s2: #FF6400; }
+.sw-greyssue { --s1: #F5F5F3; --s2: #3a3a3a; }
+.sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
 .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
 .sw-hyperpop { --s1: #F6F7FB; --s2: #FF4FD8; }
 .sw-neobrutal { --s1: #FFE600; --s2: #111111; }
@@ -1237,140 +1239,152 @@ details.editbox form.plain { padding-top: 0; }
         boton naranja, negativos debajo), titular y autor, entradilla, miniatura
         a la derecha y barra de acciones abajo con los comentarios en una
         pastilla palida. Sans salvo el titular. ---- */
-[data-skin="orange"] { --or: #FF6400; --or2: #FDEEE3; --or3: #FFF7F1;   /* naranja fuerte, naranja palido (paneles) y crema (hover) */
+[data-fam="orange"] { --or: #FF6400; --or2: #FDEEE3; --or3: #FFF7F1; --or-h: #e05600; --on-or: #fff;   /* naranja fuerte, naranja palido (paneles), crema (hover), naranja oscuro (boton pulsado) y texto sobre el naranja */
   --bg: #F5F5F3; --fg: #1a1a1a; --muted: #6b6b6b; --line: #e2e2df; --line2: #cfcfca; --hover: var(--or3); --accent: var(--or); --life: var(--or); --halo: #555555; --neg: #8a8a8a;
   --logo-l: block; --logo-d: none; --ink-invert: 0; color-scheme: light; }
 @media (prefers-color-scheme: dark) {
-  [data-skin="orange"]:not([data-theme="light"]) { --or: #FF7A1F; --or2: #2b1a0e; --or3: #1d150f; --bg: #121212; --fg: #e8e8e8; --muted: #9a9a9a; --line: #262626; --line2: #3a3a3a; --halo: #bdbdbd; --neg: #8a8a8a;
+  [data-fam="orange"]:not([data-theme="light"]) { --or: #FF7A1F; --or2: #2b1a0e; --or3: #1d150f; --or-h: #ff9447; --on-or: #fff; --bg: #121212; --fg: #e8e8e8; --muted: #9a9a9a; --line: #262626; --line2: #3a3a3a; --halo: #bdbdbd; --neg: #8a8a8a;
     --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
 }
-[data-skin="orange"][data-theme="dark"] { --or: #FF7A1F; --or2: #2b1a0e; --or3: #1d150f; --bg: #121212; --fg: #e8e8e8; --muted: #9a9a9a; --line: #262626; --line2: #3a3a3a; --halo: #bdbdbd; --neg: #8a8a8a;
+[data-fam="orange"][data-theme="dark"] { --or: #FF7A1F; --or2: #2b1a0e; --or3: #1d150f; --or-h: #ff9447; --on-or: #fff; --bg: #121212; --fg: #e8e8e8; --muted: #9a9a9a; --line: #262626; --line2: #3a3a3a; --halo: #bdbdbd; --neg: #8a8a8a;
   --logo-l: none; --logo-d: block; --ink-invert: 1; color-scheme: dark; }
-[data-skin="orange"] body { font-size: 14px; line-height: 1.38; }
-[data-skin="orange"] header.top { backdrop-filter: none; background: var(--bg); border-bottom: 1px solid var(--line); }
-[data-skin="orange"] .ttl { font-family: var(--sans); font-weight: 700; font-size: 16px; }
-[data-skin="orange"] nav.tabs-top { border-bottom: 2px solid var(--line); }
-[data-skin="orange"] nav.tabs-top a { font-size: 14px; font-weight: 600; padding: 11px 0 9px; }
-[data-skin="orange"] nav.tabs-top a.on { color: var(--or); background: var(--or2); }
-[data-skin="orange"] nav.tabs-top a.on::after { background: var(--or); height: 3px; width: 100%; border-radius: 0; bottom: -2px; }
+[data-fam="orange"] body { font-size: 14px; line-height: 1.38; }
+[data-fam="orange"] header.top { backdrop-filter: none; background: var(--bg); border-bottom: 1px solid var(--line); }
+[data-fam="orange"] .ttl { font-family: var(--sans); font-weight: 700; font-size: 16px; }
+[data-fam="orange"] nav.tabs-top { border-bottom: 2px solid var(--line); }
+[data-fam="orange"] nav.tabs-top a { font-size: 14px; font-weight: 600; padding: 11px 0 9px; }
+[data-fam="orange"] nav.tabs-top a.on { color: var(--or); background: var(--or2); }
+[data-fam="orange"] nav.tabs-top a.on::after { background: var(--or); height: 3px; width: 100%; border-radius: 0; bottom: -2px; }
 /* la noticia: marco naranja y rejilla tipo Meneame */
-[data-skin="orange"] .post.full, [data-skin="orange"] .post.compact {
+[data-fam="orange"] .post.full, [data-fam="orange"] .post.compact {
   display: grid; grid-template-columns: 62px 24px minmax(0, 1fr) 96px; column-gap: 10px; row-gap: 0; align-items: start;
   grid-template-areas: "vote h2 h2 media" "vote av l1 media" "vote lead lead media" "vote peek peek peek" "vote delta delta delta" "vote life life life" "vote actions actions actions";
   border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 10px 12px 8px; background: var(--bg); }
-[data-skin="orange"] .post.full:hover, [data-skin="orange"] .post.compact:hover { background: var(--or3); }
-[data-skin="orange"] .post.full .pc, [data-skin="orange"] .post.compact .pc { display: contents; }
+[data-fam="orange"] .post.full:hover, [data-fam="orange"] .post.compact:hover { background: var(--or3); }
+[data-fam="orange"] .post.full .pc, [data-fam="orange"] .post.compact .pc { display: contents; }
 /* (17/10/2026) la barra de acciones es una fila flexible en su celda. Antes era display: contents y cada elemento necesitaba su grid-area: los que
    no la tenian (lecturas y clics de migra-120, guardar, destacar) caian en huecos sueltos de la rejilla (el ojo, aplastado en la columna de 24 px
    del avatar) y «editar» se montaba sobre la pastilla de comentarios. La caja de votos va dentro de .actions: sale de la fila con position:
    absolute a la columna de la izquierda, que la rejilla sigue reservando; el min-height evita que una tarjeta muy corta la recorte. */
-[data-skin="orange"] .post.full, [data-skin="orange"] .post.compact { position: relative; }
-[data-skin="orange"] :is(.post.full, .post.compact):not(.ext) { min-height: 117px; }   /* las de fuentes (.ext) no llevan votos */
-[data-skin="orange"] .post.full .actions, [data-skin="orange"] .post.compact .actions { display: flex; grid-area: actions; align-items: center; gap: 6px 16px; margin-top: 4px; }
-[data-skin="orange"] :is(.post.full, .post.compact):not(.ext) .actions > .vote { position: absolute; grid-area: auto; top: 10px; left: 12px; }   /* grid-area: auto: sin ella, Chrome toma la celda «vote» como referencia y la desplaza el relleno otra vez */
-[data-skin="orange"] .post.full > .av, [data-skin="orange"] .post.compact > .av, [data-skin="orange"] .post.full > .avl, [data-skin="orange"] .post.compact > .avl { grid-area: av; float: none; margin: 0; align-self: center; }
-[data-skin="orange"] .post.full > .av, [data-skin="orange"] .post.compact > .av, [data-skin="orange"] .post.full > .avl .av, [data-skin="orange"] .post.compact > .avl .av { width: 24px; height: 24px; font-size: 11px; border-width: 1px; box-shadow: none; }
-[data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { grid-area: h2; font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.2; margin: 0 0 6px; }
-[data-skin="orange"] .post.compact h2 { font-size: 17px; }
-[data-skin="orange"] .post.full .l1, [data-skin="orange"] .post.compact .l1 { grid-area: l1; line-height: 24px; min-height: 24px; font-size: 12px; color: var(--muted); }
-[data-skin="orange"] .post .l1 b { font-weight: 600; color: var(--or); }   /* el autor, en naranja, como en Meneame */
-[data-skin="orange"] .post .l1 .meta .sep + a { color: var(--fg); font-weight: 600; }
-[data-skin="orange"] .post .lead { grid-area: lead; font-size: 13.5px; line-height: 1.42; color: color-mix(in srgb, var(--fg) 82%, var(--bg)); margin: 6px 0 6px; }
-[data-skin="orange"] .post .media, [data-skin="orange"] .post .media.sm { grid-area: media; width: 96px; aspect-ratio: 4 / 3; margin: 0; border: 0; border-radius: 5px; align-self: start; }
-[data-skin="orange"] .post .media .tag { display: none; }   /* la categoria ya va en la linea del autor */
-[data-skin="orange"] .post .peek { grid-area: peek; border-left: 0; background: var(--or3); border-radius: 6px; padding: 6px 10px; font-size: 13px; margin: 6px 0 4px; }
-[data-skin="orange"] .post:hover .peek { background: var(--or2); }
-[data-skin="orange"] .post .delta { grid-area: delta; }
-[data-skin="orange"] .post .dval { display: none; }
-[data-skin="orange"] .post .life { grid-area: life; height: 3px; margin: 4px 0 6px; border-radius: 2px; background: var(--or2); }
+[data-fam="orange"] .post.full, [data-fam="orange"] .post.compact { position: relative; }
+[data-fam="orange"] :is(.post.full, .post.compact):not(.ext) { min-height: 117px; }   /* las de fuentes (.ext) no llevan votos */
+[data-fam="orange"] .post.full .actions, [data-fam="orange"] .post.compact .actions { display: flex; grid-area: actions; align-items: center; gap: 6px 16px; margin-top: 4px; }
+[data-fam="orange"] :is(.post.full, .post.compact):not(.ext) .actions > .vote { position: absolute; grid-area: auto; top: 10px; left: 12px; }   /* grid-area: auto: sin ella, Chrome toma la celda «vote» como referencia y la desplaza el relleno otra vez */
+[data-fam="orange"] .post.full > .av, [data-fam="orange"] .post.compact > .av, [data-fam="orange"] .post.full > .avl, [data-fam="orange"] .post.compact > .avl { grid-area: av; float: none; margin: 0; align-self: center; }
+[data-fam="orange"] .post.full > .av, [data-fam="orange"] .post.compact > .av, [data-fam="orange"] .post.full > .avl .av, [data-fam="orange"] .post.compact > .avl .av { width: 24px; height: 24px; font-size: 11px; border-width: 1px; box-shadow: none; }
+[data-fam="orange"] .post.full h2, [data-fam="orange"] .post.compact h2 { grid-area: h2; font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.2; margin: 0 0 6px; }
+[data-fam="orange"] .post.compact h2 { font-size: 17px; }
+[data-fam="orange"] .post.full .l1, [data-fam="orange"] .post.compact .l1 { grid-area: l1; line-height: 24px; min-height: 24px; font-size: 12px; color: var(--muted); }
+[data-fam="orange"] .post .l1 b { font-weight: 600; color: var(--or); }   /* el autor, en naranja, como en Meneame */
+[data-fam="orange"] .post .l1 .meta .sep + a { color: var(--fg); font-weight: 600; }
+[data-fam="orange"] .post .lead { grid-area: lead; font-size: 13.5px; line-height: 1.42; color: color-mix(in srgb, var(--fg) 82%, var(--bg)); margin: 6px 0 6px; }
+[data-fam="orange"] .post .media, [data-fam="orange"] .post .media.sm { grid-area: media; width: 96px; aspect-ratio: 4 / 3; margin: 0; border: 0; border-radius: 5px; align-self: start; }
+[data-fam="orange"] .post .media .tag { display: none; }   /* la categoria ya va en la linea del autor */
+[data-fam="orange"] .post .peek { grid-area: peek; border-left: 0; background: var(--or3); border-radius: 6px; padding: 6px 10px; font-size: 13px; margin: 6px 0 4px; }
+[data-fam="orange"] .post:hover .peek { background: var(--or2); }
+[data-fam="orange"] .post .delta { grid-area: delta; }
+[data-fam="orange"] .post .dval { display: none; }
+[data-fam="orange"] .post .life { grid-area: life; height: 3px; margin: 4px 0 6px; border-radius: 2px; background: var(--or2); }
 /* caja de votos (columna izquierda): numero grande, «votar» naranja, negativos debajo */
-[data-skin="orange"] .post form.vote, [data-skin="orange"] .post span.vote { display: flex; flex-direction: column; align-items: stretch; gap: 0; width: 62px; background: var(--or2); border-radius: 6px; padding: 6px 0 4px; text-align: center; }
-[data-skin="orange"] .post .vote button[value="1"], [data-skin="orange"] .post span.vote > span:first-child { display: flex; flex-direction: column; align-items: center; gap: 1px; color: var(--or); padding: 0; }
-[data-skin="orange"] .post .vote button[value="1"] span, [data-skin="orange"] .post span.vote > span:first-child span { order: 1; font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
-[data-skin="orange"] .post .vote button[value="1"]::after, [data-skin="orange"] .post span.vote > span:first-child::after { content: "votos"; order: 2; font-size: 10px; font-weight: 600; letter-spacing: .02em; color: var(--or); margin-bottom: 5px; }
-[data-skin="orange"]:lang(en) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(en) .post span.vote > span:first-child::after, [data-skin="orange"]:lang(fr) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(fr) .post span.vote > span:first-child::after { content: "votes"; }
-[data-skin="orange"]:lang(ca) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(ca) .post span.vote > span:first-child::after { content: "vots"; }
-[data-skin="orange"]:lang(eu) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(eu) .post span.vote > span:first-child::after { content: "boto"; }
-[data-skin="orange"]:lang(de) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(de) .post span.vote > span:first-child::after { content: "Stimmen"; }
-[data-skin="orange"]:lang(it) .post .vote button[value="1"]::after, [data-skin="orange"]:lang(it) .post span.vote > span:first-child::after { content: "voti"; }
-[data-skin="orange"] .post .vote button[value="1"] .i, [data-skin="orange"] .post span.vote > span:first-child .i { order: 3; box-sizing: content-box; width: 18px; height: 18px; border: solid var(--or); border-width: 2px 16px; background: var(--or); color: #fff; border-radius: 4px; stroke-width: 2.6; }   /* el «botón»: el icono con un borde ancho del mismo naranja (box-sizing content-box: el global es border-box y se comia el icono) */
-[data-skin="orange"] .post .vote button[value="1"]:hover .i { background: #e05600; border-color: #e05600; }
-[data-skin="orange"] .post span.vote > span:first-child .i { opacity: .55; }   /* sin poder votar: el boton se apaga */
-[data-skin="orange"] .post .vote button[value="-1"], [data-skin="orange"] .post span.vote > span:last-child { justify-content: center; gap: 3px; font-size: 11px; color: var(--muted); padding: 5px 0 0; }
-[data-skin="orange"] .post .vote button[value="-1"] .i, [data-skin="orange"] .post span.vote > span:last-child .i { width: 13px; height: 13px; }
+[data-fam="orange"] .post form.vote, [data-fam="orange"] .post span.vote { display: flex; flex-direction: column; align-items: stretch; gap: 0; width: 62px; background: var(--or2); border-radius: 6px; padding: 6px 0 4px; text-align: center; }
+[data-fam="orange"] .post .vote button[value="1"], [data-fam="orange"] .post span.vote > span:first-child { display: flex; flex-direction: column; align-items: center; gap: 1px; color: var(--or); padding: 0; }
+[data-fam="orange"] .post .vote button[value="1"] span, [data-fam="orange"] .post span.vote > span:first-child span { order: 1; font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+[data-fam="orange"] .post .vote button[value="1"]::after, [data-fam="orange"] .post span.vote > span:first-child::after { content: "votos"; order: 2; font-size: 10px; font-weight: 600; letter-spacing: .02em; color: var(--or); margin-bottom: 5px; }
+[data-fam="orange"]:lang(en) .post .vote button[value="1"]::after, [data-fam="orange"]:lang(en) .post span.vote > span:first-child::after, [data-fam="orange"]:lang(fr) .post .vote button[value="1"]::after, [data-fam="orange"]:lang(fr) .post span.vote > span:first-child::after { content: "votes"; }
+[data-fam="orange"]:lang(ca) .post .vote button[value="1"]::after, [data-fam="orange"]:lang(ca) .post span.vote > span:first-child::after { content: "vots"; }
+[data-fam="orange"]:lang(eu) .post .vote button[value="1"]::after, [data-fam="orange"]:lang(eu) .post span.vote > span:first-child::after { content: "boto"; }
+[data-fam="orange"]:lang(de) .post .vote button[value="1"]::after, [data-fam="orange"]:lang(de) .post span.vote > span:first-child::after { content: "Stimmen"; }
+[data-fam="orange"]:lang(it) .post .vote button[value="1"]::after, [data-fam="orange"]:lang(it) .post span.vote > span:first-child::after { content: "voti"; }
+[data-fam="orange"] .post .vote button[value="1"] .i, [data-fam="orange"] .post span.vote > span:first-child .i { order: 3; box-sizing: content-box; width: 18px; height: 18px; border: solid var(--or); border-width: 2px 16px; background: var(--or); color: var(--on-or); border-radius: 4px; stroke-width: 2.6; }   /* el «botón»: el icono con un borde ancho del mismo naranja (box-sizing content-box: el global es border-box y se comia el icono) */
+[data-fam="orange"] .post .vote button[value="1"]:hover .i { background: var(--or-h); border-color: var(--or-h); }
+[data-fam="orange"] .post span.vote > span:first-child .i { opacity: .55; }   /* sin poder votar: el boton se apaga */
+[data-fam="orange"] .post .vote button[value="-1"], [data-fam="orange"] .post span.vote > span:last-child { justify-content: center; gap: 3px; font-size: 11px; color: var(--muted); padding: 5px 0 0; }
+[data-fam="orange"] .post .vote button[value="-1"] .i, [data-fam="orange"] .post span.vote > span:last-child .i { width: 13px; height: 13px; }
 /* barra de acciones abajo: los comentarios, en pastilla palida */
-[data-skin="orange"] .post .actions > a { grid-area: actions; justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 5px 12px; background: var(--or2); color: var(--or); font-weight: 500; font-size: 13px; border-radius: 6px; }   /* 01/10: de 700 a 500, el naranja en negrita pesaba demasiado en los comentarios */
-[data-skin="orange"] .post .actions > a .i { width: 17px; height: 17px; }
-[data-skin="orange"] .post .actions > a.share { justify-self: end; background: transparent; color: var(--muted); font-weight: 600; padding-right: 0; }
-[data-skin="orange"] .post .actions > a.share:hover { background: transparent; color: var(--or); }
-[data-skin="orange"] :is(.post.full, .post.compact) .actions > a { margin-top: 0; }   /* ya lo pone la fila */
-[data-skin="orange"] :is(.post.full, .post.compact) .actions > a.share { margin-left: auto; }
-[data-skin="orange"] :is(.post.full, .post.compact) .actions .cnt .i { width: 17px; height: 17px; }   /* lecturas y clics, del tamaño de la pastilla */
-[data-skin="orange"] :is(.post.full, .post.compact) .actions > a.modlink { background: transparent; color: var(--muted); font-weight: 600; padding-left: 0; padding-right: 0; }   /* «editar», discreto como «compartir»: la pastilla es solo para los comentarios */
-[data-skin="orange"] :is(.post.full, .post.compact) .actions > a.modlink:hover { background: transparent; color: var(--or); }
-[data-skin="orange"] .post .actions > a:hover { background: var(--or); color: #fff; }
+[data-fam="orange"] .post .actions > a { grid-area: actions; justify-self: start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 5px 12px; background: var(--or2); color: var(--or); font-weight: 500; font-size: 13px; border-radius: 6px; }   /* 01/10: de 700 a 500, el naranja en negrita pesaba demasiado en los comentarios */
+[data-fam="orange"] .post .actions > a .i { width: 17px; height: 17px; }
+[data-fam="orange"] .post .actions > a.share { justify-self: end; background: transparent; color: var(--muted); font-weight: 600; padding-right: 0; }
+[data-fam="orange"] .post .actions > a.share:hover { background: transparent; color: var(--or); }
+[data-fam="orange"] :is(.post.full, .post.compact) .actions > a { margin-top: 0; }   /* ya lo pone la fila */
+[data-fam="orange"] :is(.post.full, .post.compact) .actions > a.share { margin-left: auto; }
+[data-fam="orange"] :is(.post.full, .post.compact) .actions .cnt .i { width: 17px; height: 17px; }   /* lecturas y clics, del tamaño de la pastilla */
+[data-fam="orange"] :is(.post.full, .post.compact) .actions > a.modlink { background: transparent; color: var(--muted); font-weight: 600; padding-left: 0; padding-right: 0; }   /* «editar», discreto como «compartir»: la pastilla es solo para los comentarios */
+[data-fam="orange"] :is(.post.full, .post.compact) .actions > a.modlink:hover { background: transparent; color: var(--or); }
+[data-fam="orange"] .post .actions > a:hover { background: var(--or); color: var(--on-or); }
 @media (max-width: 420px) {
-  [data-skin="orange"] .post.full, [data-skin="orange"] .post.compact { grid-template-columns: 54px 22px minmax(0, 1fr) 80px; column-gap: 8px; padding: 8px 8px 6px; margin: 8px 8px 0; }
-  [data-skin="orange"] :is(.post.full, .post.compact):not(.ext) { min-height: 113px; }
-  [data-skin="orange"] .post form.vote, [data-skin="orange"] .post span.vote { width: 54px; }
-  [data-skin="orange"] :is(.post.full, .post.compact):not(.ext) .actions > .vote { top: 8px; left: 8px; }
-  [data-skin="orange"] .post .vote button[value="1"] .i, [data-skin="orange"] .post span.vote > span:first-child .i { border-width: 2px 13px; }
-  [data-skin="orange"] .post .media, [data-skin="orange"] .post .media.sm { width: 80px; }
-  [data-skin="orange"] .post.full h2, [data-skin="orange"] .post.compact h2 { font-size: 17px; }
+  [data-fam="orange"] .post.full, [data-fam="orange"] .post.compact { grid-template-columns: 54px 22px minmax(0, 1fr) 80px; column-gap: 8px; padding: 8px 8px 6px; margin: 8px 8px 0; }
+  [data-fam="orange"] :is(.post.full, .post.compact):not(.ext) { min-height: 113px; }
+  [data-fam="orange"] .post form.vote, [data-fam="orange"] .post span.vote { width: 54px; }
+  [data-fam="orange"] :is(.post.full, .post.compact):not(.ext) .actions > .vote { top: 8px; left: 8px; }
+  [data-fam="orange"] .post .vote button[value="1"] .i, [data-fam="orange"] .post span.vote > span:first-child .i { border-width: 2px 13px; }
+  [data-fam="orange"] .post .media, [data-fam="orange"] .post .media.sm { width: 80px; }
+  [data-fam="orange"] .post.full h2, [data-fam="orange"] .post.compact h2 { font-size: 17px; }
 }
 /* (15/10/2026) noticias de fuentes (/fuente, Mis medios): no hay caja de votos y la barra lleva tres cosas (enviar al radar, leer en…, Seguir).
    Con display: contents las tres caian en la misma celda «actions» y el form.seguir, sin area, se colocaba solo en la columna de votos, encima
    del titular. Aqui la rejilla no tiene columna de votos y la barra es una fila flexible que salta de linea si no cabe. */
-[data-skin="orange"] .post.ext.full, [data-skin="orange"] .post.ext.compact { grid-template-columns: 24px minmax(0, 1fr) 96px; grid-template-areas: "h2 h2 media" "av l1 media" "lead lead media" "actions actions actions"; }
-[data-skin="orange"] .post.ext .thumb { grid-area: media; width: 96px; aspect-ratio: 4 / 3; margin: 0; border-radius: 5px; }
-[data-skin="orange"] .post.ext.full .actions, [data-skin="orange"] .post.ext.compact .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; grid-area: actions; margin-top: 6px; }
-[data-skin="orange"] .post.ext .actions > a { grid-area: auto; margin-top: 0; }
-[data-skin="orange"] .post.ext .actions > a.share { margin-left: auto; padding-right: 8px; }
-[data-skin="orange"] .post.ext .actions > a.share span { white-space: normal; }
-[data-skin="orange"] .post.ext .actions form.seguir { order: -1; }   /* «+ Seguir» el primero, como en las demas skins */
-[data-skin="orange"] .post.ext .actions form.seguir button { border-color: var(--or); color: var(--or); }
-[data-skin="orange"] .post.ext .actions form.seguir button:hover { background: var(--or); color: #fff; }
+[data-fam="orange"] .post.ext.full, [data-fam="orange"] .post.ext.compact { grid-template-columns: 24px minmax(0, 1fr) 96px; grid-template-areas: "h2 h2 media" "av l1 media" "lead lead media" "actions actions actions"; }
+[data-fam="orange"] .post.ext .thumb { grid-area: media; width: 96px; aspect-ratio: 4 / 3; margin: 0; border-radius: 5px; }
+[data-fam="orange"] .post.ext.full .actions, [data-fam="orange"] .post.ext.compact .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; grid-area: actions; margin-top: 6px; }
+[data-fam="orange"] .post.ext .actions > a { grid-area: auto; margin-top: 0; }
+[data-fam="orange"] .post.ext .actions > a.share { margin-left: auto; padding-right: 8px; }
+[data-fam="orange"] .post.ext .actions > a.share span { white-space: normal; }
+[data-fam="orange"] .post.ext .actions form.seguir { order: -1; }   /* «+ Seguir» el primero, como en las demas skins */
+[data-fam="orange"] .post.ext .actions form.seguir button { border-color: var(--or); color: var(--or); }
+[data-fam="orange"] .post.ext .actions form.seguir button:hover { background: var(--or); color: var(--on-or); }
 @media (max-width: 420px) {
-  [data-skin="orange"] .post.ext.full, [data-skin="orange"] .post.ext.compact { grid-template-columns: 22px minmax(0, 1fr) 80px; }
-  [data-skin="orange"] .post.ext .thumb { width: 80px; }
+  [data-fam="orange"] .post.ext.full, [data-fam="orange"] .post.ext.compact { grid-template-columns: 22px minmax(0, 1fr) 80px; }
+  [data-fam="orange"] .post.ext .thumb { width: 80px; }
 }
 /* el hilo: misma caja, sin rejilla */
-[data-skin="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 12px 14px 12px; background: var(--bg); }   /* 12 abajo (antes 8): el enlace al medio quedaba pegado al borde */
-[data-skin="orange"] .hilo .main h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; }
-[data-skin="orange"] .hilo .main .media { border: 0; border-radius: 5px; }
+[data-fam="orange"] .hilo .post.main { border: 2px solid var(--or); border-radius: 6px; margin: 10px 12px 0; padding: 12px 14px 12px; background: var(--bg); }   /* 12 abajo (antes 8): el enlace al medio quedaba pegado al borde */
+[data-fam="orange"] .hilo .main h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; }
+[data-fam="orange"] .hilo .main .media { border: 0; border-radius: 5px; }
 /* (07/10/2026) la foto del hilo heredaba los 96 px de la tarjeta y, sin la rejilla de esta, caia debajo del texto. Aqui el .pc es una rejilla
    de dos columnas: todo en la primera, la foto en la segunda (140 px, 4:3) a la altura del autor, titular y entradilla. En modo sin distracciones flota como siempre. */
-html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { display: grid; grid-template-columns: minmax(0, 1fr) 140px; column-gap: 14px; row-gap: 6px; align-items: start; }
-html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > * { grid-area: auto; grid-column: 1; min-width: 0; margin-top: 0; margin-bottom: 0; }   /* grid-area: auto anula el «lead» de la tarjeta, que colaba la entradilla antes del titular; el aire lo pone row-gap */
-html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { grid-column: 2; grid-row: 1 / span 3; width: 140px; margin: 0; }
-html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .life, .delta) { grid-column: 1 / -1; }
-@media (max-width: 600px) { html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc { grid-template-columns: minmax(0, 1fr) 96px; } html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > .media { width: 96px; } }
-[data-skin="orange"] .hilo .stats { margin: 0 12px; border: 0; font-size: 13px; }
-[data-skin="orange"] .hilo .stats form.vote, [data-skin="orange"] .hilo .stats span.vote { gap: 4px; background: var(--or2); border-radius: 6px; padding: 3px 4px 3px 8px; }
-[data-skin="orange"] .hilo .stats .vote button[value="1"], [data-skin="orange"] .hilo .stats .vote > span:first-child { color: var(--or); font-weight: 800; padding-right: 8px; }
-[data-skin="orange"] .hilo .stats .vote button[value="1"] span, [data-skin="orange"] .hilo .stats .vote > span:first-child span { font-size: 18px; line-height: 1; }
-[data-skin="orange"] .hilo .actions a:hover, [data-skin="orange"] .l1 .meta a:hover, [data-skin="orange"] .hilo .source { color: var(--or); }
-[data-skin="orange"] .tag, [data-skin="orange"] .media .tag { background: var(--or); color: #fff; border-radius: 4px; font-size: 11px; font-weight: 700; padding: 3px 8px; backdrop-filter: none; }
-[data-skin="orange"] .fab { background: var(--or); color: #fff; box-shadow: none; }
-[data-skin="orange"] .dock { background: var(--bg); backdrop-filter: none; border-top: 1px solid var(--line); }
-[data-skin="orange"] nav.tabs-bottom a.on { color: var(--or); }
-[data-skin="orange"] nav.tabs-bottom a.on .i { background: var(--or2); border-radius: 6px; padding: 2px; box-sizing: content-box; }
-[data-skin="orange"] .notice { background: var(--or2); border: 1px solid var(--or); border-radius: 6px; margin: 10px 12px 0; }
-[data-skin="orange"] .notice a { color: var(--or); }
-[data-skin="orange"] .error { border-radius: 6px; }
-[data-skin="orange"] .end, [data-skin="orange"] nav.pages { padding-top: 18px; }
-[data-skin="orange"] .composer button, [data-skin="orange"] form.plain button, [data-skin="orange"] .newmsg button { background: var(--or); color: #fff; border: 0; border-radius: 6px; }
-[data-skin="orange"] form.plain input, [data-skin="orange"] form.plain select, [data-skin="orange"] form.plain textarea, [data-skin="orange"] .newmsg input, [data-skin="orange"] .modbar select { border-radius: 6px; }
-[data-skin="orange"] form.plain label { color: var(--fg); font-weight: 600; }
-[data-skin="orange"] .msg .bubble { border-radius: 8px; }
-[data-skin="orange"] .msg.me .bubble { background: var(--or); border-color: var(--or); color: #fff; }
-[data-skin="orange"] .msg.them .bubble { background: var(--or2); border-color: transparent; }
-[data-skin="orange"] .fz { padding-top: 7px; padding-bottom: 7px; font-size: 13px; }
-[data-skin="orange"] .fz .pos { color: var(--or); }
-[data-skin="orange"] .commhead, [data-skin="orange"] .profile { background: var(--or3); border-bottom: 2px solid var(--or); }
-[data-skin="orange"] .commhead .meta a, [data-skin="orange"] .profile .meta a, [data-skin="orange"] .legal a { color: var(--or); }
-[data-skin="orange"] .thread .post.reply { padding-top: 8px; padding-bottom: 6px; }
-[data-skin="orange"] .statspage .tile b { color: var(--or); }
+html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc { display: grid; grid-template-columns: minmax(0, 1fr) 140px; column-gap: 14px; row-gap: 6px; align-items: start; }
+html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > * { grid-area: auto; grid-column: 1; min-width: 0; margin-top: 0; margin-bottom: 0; }   /* grid-area: auto anula el «lead» de la tarjeta, que colaba la entradilla antes del titular; el aire lo pone row-gap */
+html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > .media { grid-column: 2; grid-row: 1 / span 3; width: 140px; margin: 0; }
+html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .life, .delta) { grid-column: 1 / -1; }
+@media (max-width: 600px) { html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc { grid-template-columns: minmax(0, 1fr) 96px; } html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > .media { width: 96px; } }
+[data-fam="orange"] .hilo .stats { margin: 0 12px; border: 0; font-size: 13px; }
+[data-fam="orange"] .hilo .stats form.vote, [data-fam="orange"] .hilo .stats span.vote { gap: 4px; background: var(--or2); border-radius: 6px; padding: 3px 4px 3px 8px; }
+[data-fam="orange"] .hilo .stats .vote button[value="1"], [data-fam="orange"] .hilo .stats .vote > span:first-child { color: var(--or); font-weight: 800; padding-right: 8px; }
+[data-fam="orange"] .hilo .stats .vote button[value="1"] span, [data-fam="orange"] .hilo .stats .vote > span:first-child span { font-size: 18px; line-height: 1; }
+[data-fam="orange"] .hilo .actions a:hover, [data-fam="orange"] .l1 .meta a:hover, [data-fam="orange"] .hilo .source { color: var(--or); }
+[data-fam="orange"] .tag, [data-fam="orange"] .media .tag { background: var(--or); color: var(--on-or); border-radius: 4px; font-size: 11px; font-weight: 700; padding: 3px 8px; backdrop-filter: none; }
+[data-fam="orange"] .fab { background: var(--or); color: var(--on-or); box-shadow: none; }
+[data-fam="orange"] .dock { background: var(--bg); backdrop-filter: none; border-top: 1px solid var(--line); }
+[data-fam="orange"] nav.tabs-bottom a.on { color: var(--or); }
+[data-fam="orange"] nav.tabs-bottom a.on .i { background: var(--or2); border-radius: 6px; padding: 2px; box-sizing: content-box; }
+[data-fam="orange"] .notice { background: var(--or2); border: 1px solid var(--or); border-radius: 6px; margin: 10px 12px 0; }
+[data-fam="orange"] .notice a { color: var(--or); }
+[data-fam="orange"] .error { border-radius: 6px; }
+[data-fam="orange"] .end, [data-fam="orange"] nav.pages { padding-top: 18px; }
+/* ---- Greyssue y Greensue (19/10/2026): la misma Orange (data-fam="orange") con otros colores. Greyssue, gama de grises: acento gris carbon,
+   paneles gris claro. Greensue, verdes de Game HUD: acento verde (claro: #0f8a3f; oscuro: #34FF79, el del HUD), paneles verde palido. ---- */
+[data-skin="greyssue"] { --or: #3a3a3a; --or2: #e9e9e7; --or3: #f1f1ef; --or-h: #1f1f1f; --on-or: #fff; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+@media (prefers-color-scheme: dark) {
+  [data-skin="greyssue"]:not([data-theme="light"]) { --or: #d6d6d6; --or2: #262626; --or3: #1b1b1b; --or-h: #ffffff; --on-or: #111; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+}
+[data-skin="greyssue"][data-theme="dark"] { --or: #d6d6d6; --or2: #262626; --or3: #1b1b1b; --or-h: #ffffff; --on-or: #111; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+[data-skin="greensue"] { --or: #0f8a3f; --or2: #e2f5e9; --or3: #f0faf3; --or-h: #0b6b31; --on-or: #fff; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+@media (prefers-color-scheme: dark) {
+  [data-skin="greensue"]:not([data-theme="light"]) { --or: #34FF79; --or2: #0d2a18; --or3: #0b1c12; --or-h: #7dffa9; --on-or: #06110a; --bg: #0b0f0d; --line: #1d2a22; --line2: #2f4036; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+}
+[data-skin="greensue"][data-theme="dark"] { --or: #34FF79; --or2: #0d2a18; --or3: #0b1c12; --or-h: #7dffa9; --on-or: #06110a; --bg: #0b0f0d; --line: #1d2a22; --line2: #2f4036; --accent: var(--or); --life: var(--or); --hover: var(--or3); }
+[data-fam="orange"] .composer button, [data-fam="orange"] form.plain button, [data-fam="orange"] .newmsg button { background: var(--or); color: var(--on-or); border: 0; border-radius: 6px; }
+[data-fam="orange"] form.plain input, [data-fam="orange"] form.plain select, [data-fam="orange"] form.plain textarea, [data-fam="orange"] .newmsg input, [data-fam="orange"] .modbar select { border-radius: 6px; }
+[data-fam="orange"] form.plain label { color: var(--fg); font-weight: 600; }
+[data-fam="orange"] .msg .bubble { border-radius: 8px; }
+[data-fam="orange"] .msg.me .bubble { background: var(--or); border-color: var(--or); color: var(--on-or); }
+[data-fam="orange"] .msg.them .bubble { background: var(--or2); border-color: transparent; }
+[data-fam="orange"] .fz { padding-top: 7px; padding-bottom: 7px; font-size: 13px; }
+[data-fam="orange"] .fz .pos { color: var(--or); }
+[data-fam="orange"] .commhead, [data-fam="orange"] .profile { background: var(--or3); border-bottom: 2px solid var(--or); }
+[data-fam="orange"] .commhead .meta a, [data-fam="orange"] .profile .meta a, [data-fam="orange"] .legal a { color: var(--or); }
+[data-fam="orange"] .thread .post.reply { padding-top: 8px; padding-bottom: 6px; }
+[data-fam="orange"] .statspage .tile b { color: var(--or); }
 /* ---- FORO: tarjetas blancas sobre gris azulado, esquinas de 16 px, y la barra
         de acciones en pastillas: votos (↑ n ↓) que se tiñen de naranja rojizo o
         lavanda, comentarios y compartir. La comunidad o el tema van primero en
@@ -2845,8 +2859,8 @@ html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .l
   [data-skin="popart"] .rail details.rail-dd summary, [data-skin="popart"] .rail details.rail-dd .list a { border-radius: 3px; }
   [data-skin="popart"] .rail details.rail-dd { border-top: 3px solid var(--line); }
   [data-skin="popart"] .rail details.rail-dd .list a.on { background: var(--y); color: #111; border: 2px solid var(--ink); }
-  [data-skin="orange"] .rail details.rail-dd summary, [data-skin="orange"] .rail details.rail-dd .list a { border-radius: 6px; }
-  [data-skin="orange"] .rail details.rail-dd .list a.on { color: var(--or); background: var(--or2); }
+  [data-fam="orange"] .rail details.rail-dd summary, [data-fam="orange"] .rail details.rail-dd .list a { border-radius: 6px; }
+  [data-fam="orange"] .rail details.rail-dd .list a.on { color: var(--or); background: var(--or2); }
   [data-skin="foro"] .rail details.rail-dd .list a.on { background: var(--card); color: var(--blue); }
   [data-fam="comunidad"] .rail details.rail-dd .list a.on { background: var(--card); color: var(--blue2); }
   [data-skin="hyperpop"] .rail details.rail-dd summary { font-family: var(--grot); }
@@ -2919,6 +2933,8 @@ html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .l
   .rail .sw-popart { --s1: #FFD91A; --s2: #F23838; }
   .rail .sw-zen { --s1: #eef3f2; --s2: #d98ba0; }
   .rail .sw-orange { --s1: #F5F5F3; --s2: #FF6400; }
+  .rail .sw-greyssue { --s1: #F5F5F3; --s2: #3a3a3a; }
+  .rail .sw-greensue { --s1: #F5F5F3; --s2: #0f8a3f; }
   .rail .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
   /* --- side --- */
   .side { padding: 16px 0 24px; gap: 14px; }
@@ -2941,14 +2957,14 @@ html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .l
   .side .mod.temas .chip:hover { background: var(--hover); border-color: var(--cc, var(--line2)); }
   [data-skin="retro"] .side .mod.temas .chip, [data-skin="manga"] .side .mod.temas .chip, [data-skin="punk"] .side .mod.temas .chip, [data-skin="popart"] .side .mod.temas .chip { border-radius: 0; }
   [data-skin="manga"] .side .mod.temas .chip, [data-skin="popart"] .side .mod.temas .chip { border: 2px solid var(--line); }
-  [data-skin="orange"] .side .mod.temas .chip { border-radius: 4px; border-color: var(--or2); background: var(--or2); }
-  [data-skin="orange"] .side .mod.temas .chip::before { display: none; }
-  [data-skin="orange"] .side .mod.temas .chip b { color: var(--or); }
+  [data-fam="orange"] .side .mod.temas .chip { border-radius: 4px; border-color: var(--or2); background: var(--or2); }
+  [data-fam="orange"] .side .mod.temas .chip::before { display: none; }
+  [data-fam="orange"] .side .mod.temas .chip b { color: var(--or); }
   [data-skin="zen"] .side .mod.temas .chip { border: 0; padding-left: 0; font-variant: all-small-caps; letter-spacing: .06em; }
   .side .mod.votadas .row b { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; padding-top: 1px; }
   .side .mod.votadas .row b i { font-style: normal; color: var(--muted); font-weight: 600; width: 14px; text-align: right; margin-right: 2px; }
   .side .mod.votadas .row b .i { width: 14px; height: 14px; stroke-width: 2.4; }
-  [data-skin="orange"] .side .mod.votadas .row b { color: var(--or); }
+  [data-fam="orange"] .side .mod.votadas .row b { color: var(--or); }
   [data-skin="foro"] .side .mod.votadas .row b { color: var(--up); }
   [data-skin="delta"] .side .mod.votadas .row b, [data-skin="zen"] .side .mod.votadas .row b { color: var(--life); }
   .side .mod .more { margin: 6px 0 0; font-size: 12px; }
@@ -2984,14 +3000,14 @@ html:not([data-foco])[data-skin="orange"] .hilo .post.main .pc > :is(.source, .l
   [data-skin="popart"] .side .mod:nth-child(2) { box-shadow: 5px 5px 0 var(--r); }
   [data-skin="popart"] .side .mod h3 { font-family: var(--black); }
   [data-skin="popart"] .rail nav a.on, [data-skin="popart"] .rail .pub { background: var(--y); color: #111; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--r); }
-  [data-skin="orange"] .side .mod { border-color: var(--or); border-radius: 6px; padding-top: 0; overflow: hidden; }
-  [data-skin="orange"] .side .mod h3 { background: var(--or); color: #fff; font-family: var(--sans); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; justify-content: center; margin: 0 -14px 8px; padding: 9px 14px; }
-  [data-skin="orange"] .side .mod h3 span { color: #fff; margin-left: 8px; }
-  [data-skin="orange"] .side .mod.comm .row .n { border-color: var(--or); color: var(--or); }
-  [data-skin="orange"] .side .mod.comm .row .t b { color: var(--or); text-decoration: underline; text-underline-offset: 2px; }
-  [data-skin="orange"] .rail nav a { border-radius: 6px; }
-  [data-skin="orange"] .rail nav a.on { color: var(--or); background: var(--or2); }
-  [data-skin="orange"] .rail .pub { background: var(--or); color: #fff; border-radius: 6px; }
+  [data-fam="orange"] .side .mod { border-color: var(--or); border-radius: 6px; padding-top: 0; overflow: hidden; }
+  [data-fam="orange"] .side .mod h3 { background: var(--or); color: var(--on-or); font-family: var(--sans); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; justify-content: center; margin: 0 -14px 8px; padding: 9px 14px; }
+  [data-fam="orange"] .side .mod h3 span { color: var(--on-or); margin-left: 8px; }
+  [data-fam="orange"] .side .mod.comm .row .n { border-color: var(--or); color: var(--or); }
+  [data-fam="orange"] .side .mod.comm .row .t b { color: var(--or); text-decoration: underline; text-underline-offset: 2px; }
+  [data-fam="orange"] .rail nav a { border-radius: 6px; }
+  [data-fam="orange"] .rail nav a.on { color: var(--or); background: var(--or2); }
+  [data-fam="orange"] .rail .pub { background: var(--or); color: var(--on-or); border-radius: 6px; }
   [data-skin="foro"] .side .mod, [data-skin="foro"] .rail .pub { background: var(--card); }
   [data-skin="foro"] .side .mod { border: 0; border-radius: 16px; }
   [data-skin="foro"] .rail .pub { background: var(--blue); color: #fff; }
@@ -3042,7 +3058,7 @@ form.plain select.medsel { margin-bottom: 6px; }
 .side .mod, .side footer { flex: none; }
 .rail > * { flex: none; }
 /* Orange y Foro colocan el post en rejilla (.pc es display: contents): la miniatura de fuente ocupa la celda de la foto, no flota */
-[data-skin="orange"] .post.ext .thumb { float: none; grid-area: media; width: 100%; height: auto; aspect-ratio: 4 / 3; margin: 0; border-radius: 5px; align-self: start; }   /* llena su columna (96 px, 80 px en movil) */
+[data-fam="orange"] .post.ext .thumb { float: none; grid-area: media; width: 100%; height: auto; aspect-ratio: 4 / 3; margin: 0; border-radius: 5px; align-self: start; }   /* llena su columna (96 px, 80 px en movil) */
 
 /* =====================================================================
    Una fuente por skin (21/09/2026). Cada skin declara --font (texto corriente: cuerpo, paginas legales/«que es», avisos,
@@ -3058,7 +3074,7 @@ form.plain select.medsel { margin-bottom: 6px; }
 [data-skin="manga"]         { --font: var(--cond);  --head: var(--cond); }
 [data-skin="punk"]          { --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; --head: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
 [data-skin="popart"]        { --font: var(--sans);  --head: var(--black); }
-[data-skin="orange"]        { --font: var(--sans);  --head: var(--serif); }
+[data-fam="orange"]        { --font: var(--sans);  --head: var(--serif); }
 [data-skin="foro"]          { --font: var(--sans);  --head: var(--sans); }
 [data-skin="hyperpop"]      { --font: var(--grot);  --head: var(--black); }
 [data-skin="neobrutal"]     { --font: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; --head: var(--black); }
@@ -3159,7 +3175,7 @@ form.seguir.on button:hover { background: var(--hover); color: var(--fg); }
 .fz > a.fzl { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; color: inherit; text-decoration: none; }
 .srcfav { margin: 12px 16px 16px; }   /* 01/10: el boton «Seguir» iba pegado al aviso gris */
 /* 01/10: el boton arranca en la misma vertical que el aviso gris, cuyo margen cambia segun la skin */
-[data-skin="editorial"] .srcfav { margin-left: 24px; } [data-fam="comunidad"] .srcfav { margin-left: 8px; } [data-skin="retro"] .srcfav { margin-left: 12px; } [data-skin="manga"] .srcfav { margin-left: 10px; } [data-skin="popart"] .srcfav { margin-left: 12px; } [data-skin="zen"] .srcfav { margin-left: 28px; } [data-skin="orange"] .srcfav { margin-left: 12px; } [data-skin="foro"] .srcfav { margin-left: 8px; } [data-skin="hyperpop"] .srcfav { margin-left: 14px; } [data-skin="neobrutal"] .srcfav { margin-left: 14px; } [data-skin="stickerbomb"] .srcfav { margin-left: 18px; } [data-skin="riso"] .srcfav { margin-left: 18px; } [data-skin="aero"] .srcfav { margin-left: 12px; } [data-skin="hud"] .srcfav { margin-left: 12px; } [data-skin="acid"] .srcfav { margin-left: 12px; } [data-skin="pixel"] .srcfav { margin-left: 14px; } [data-skin="dopamine"] .srcfav { margin-left: 12px; } [data-skin="solarpunk"] .srcfav { margin-left: 20px; } [data-skin="galactica"] .srcfav { margin-left: 14px; } [data-skin="impresionismo"] .srcfav { margin-left: 20px; } [data-skin="phantom"] .srcfav { margin-left: 6px; } [data-skin="surrealismo"] .srcfav { margin-left: 8px; }
+[data-skin="editorial"] .srcfav { margin-left: 24px; } [data-fam="comunidad"] .srcfav { margin-left: 8px; } [data-skin="retro"] .srcfav { margin-left: 12px; } [data-skin="manga"] .srcfav { margin-left: 10px; } [data-skin="popart"] .srcfav { margin-left: 12px; } [data-skin="zen"] .srcfav { margin-left: 28px; } [data-fam="orange"] .srcfav { margin-left: 12px; } [data-skin="foro"] .srcfav { margin-left: 8px; } [data-skin="hyperpop"] .srcfav { margin-left: 14px; } [data-skin="neobrutal"] .srcfav { margin-left: 14px; } [data-skin="stickerbomb"] .srcfav { margin-left: 18px; } [data-skin="riso"] .srcfav { margin-left: 18px; } [data-skin="aero"] .srcfav { margin-left: 12px; } [data-skin="hud"] .srcfav { margin-left: 12px; } [data-skin="acid"] .srcfav { margin-left: 12px; } [data-skin="pixel"] .srcfav { margin-left: 14px; } [data-skin="dopamine"] .srcfav { margin-left: 12px; } [data-skin="solarpunk"] .srcfav { margin-left: 20px; } [data-skin="galactica"] .srcfav { margin-left: 14px; } [data-skin="impresionismo"] .srcfav { margin-left: 20px; } [data-skin="phantom"] .srcfav { margin-left: 6px; } [data-skin="surrealismo"] .srcfav { margin-left: 8px; }
 .srcfav form.seguir button { font-size: 14px; padding: 6px 16px; max-width: none; }
 .srcquien { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: -6px 16px 14px; font-size: 13px; color: var(--muted); }   /* quien sigue la fuente (12/10/2026) */
 .srcquien .n { margin-right: 6px; }
@@ -3206,15 +3222,15 @@ nav.sub.cvista { margin-bottom: 4px; }
   html[data-foco] .post .life span { height: 1px !important; margin: 0 !important; }
   /* Orange y Flujo ya llevan la foto a la derecha con su propia rejilla (columna de 96 / 120 px): aqui la foto no flota, se ensancha esa
      columna a 224 px; la fila de la entradilla pasa a 1fr para que el alto de la foto no abra huecos entre titular, autor y entradilla. */
-  html[data-foco][data-skin="orange"] .post.full, html[data-foco][data-skin="orange"] .post.compact { grid-template-columns: 62px 24px minmax(0, 1fr) 224px; grid-template-rows: auto auto 1fr; column-gap: 12px; }
+  html[data-foco][data-fam="orange"] .post.full, html[data-foco][data-fam="orange"] .post.compact { grid-template-columns: 62px 24px minmax(0, 1fr) 224px; grid-template-rows: auto auto 1fr; column-gap: 12px; }
   html[data-foco][data-skin="flujo"] .post.full, html[data-foco][data-skin="flujo"] .post.compact { grid-template-columns: 22px minmax(0, 1fr) 224px; grid-template-rows: auto auto auto 1fr; }
-  html[data-foco][data-skin="orange"] .post .media, html[data-foco][data-skin="orange"] .post .media.sm,
+  html[data-foco][data-fam="orange"] .post .media, html[data-foco][data-fam="orange"] .post .media.sm,
   html[data-foco][data-skin="flujo"] .post .media, html[data-foco][data-skin="flujo"] .post .media.sm { float: none; width: 224px; margin: 0 0 8px; }
   /* (16/10/2026) tarjetas de fuentes (/fuente, Mis medios, Mis substacks: .post.ext, sin caja de votos): la regla de arriba les metia cuatro
      columnas con un grid-template-areas de tres, y el titular caia en las dos primeras (62 + 24 px) con la foto en la tercera. Misma rejilla
      de tres columnas que fuera de foco, con la foto a 224 px y la entradilla a 1fr. */
-  html[data-foco][data-skin="orange"] .post.ext.full, html[data-foco][data-skin="orange"] .post.ext.compact { grid-template-columns: 24px minmax(0, 1fr) 224px; grid-template-rows: auto auto 1fr auto; }
-  html[data-foco][data-skin="orange"] .post.ext .thumb { width: 224px; aspect-ratio: 16 / 9; }
+  html[data-foco][data-fam="orange"] .post.ext.full, html[data-foco][data-fam="orange"] .post.ext.compact { grid-template-columns: 24px minmax(0, 1fr) 224px; grid-template-rows: auto auto 1fr auto; }
+  html[data-foco][data-fam="orange"] .post.ext .thumb { width: 224px; aspect-ratio: 16 / 9; }
   html[data-foco] .hilo .post.main h2 { font-size: 22px; line-height: 1.2; margin-bottom: 8px; }   /* 01/10: de 30 a 22; manda sobre el tamaño propio de cada skin (zen lo tenia a 28) */
   html[data-foco] .hilo .post.main .para { font-size: 18px; line-height: 1.65; }
 }
