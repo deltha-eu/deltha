@@ -967,4 +967,10 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Blanquiazul — rayas azules y blancas, para la afición deportivista' => 'Blanquiazul — blue and white stripes, for Deportivo fans',
 'El foro «%s» es solo para quien tiene más de %s de aura.' => 'The “%s” forum is only for people with more than %s aura.',
 'Volver a los foros' => 'Back to the forums',
+'Imagen' => 'Image',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida' => 'Attach an image (JPG, PNG, WebP); it is stored reduced',
+'quitar la imagen' => 'remove the image',
+'La imagen no es válida: vale JPG, PNG, WebP o AVIF.' => 'The image is not valid: JPG, PNG, WebP or AVIF.',
+'La imagen es demasiado pequeña (%d×%d): hace falta al menos 120×120.' => 'The image is too small (%d×%d): at least 120×120 needed.',
+'La imagen no se ha podido guardar. Prueba con otra.' => 'The image could not be saved. Try another one.',
 ];

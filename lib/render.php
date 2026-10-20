@@ -184,7 +184,10 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     }
     if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has silenciado') . " · <a href=\"/perfil#ghost\">" . t('deshacer') . "</a></summary>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
-    else      echo "<p>" . saltos(enlaces(function_exists('nicks_format') ? nicks_format(h($c['content'])) : h($c['content']))) . "</p>";   // @nick → perfil, URLs → enlaces (07/10/2026)
+    else {
+        echo "<p>" . saltos(enlaces(function_exists('nicks_format') ? nicks_format(md_inline(h($c['content']))) : md_inline(h($c['content'])))) . "</p>";   // **negrita**, *cursiva*, [texto](url) (20/10/2026); @nick → perfil, URLs → enlaces (07/10/2026)
+        if (!empty($c['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($c['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($c['image']) . "\" alt=\"\" loading=\"lazy\"></a>";   // imagen adjunta (migra-166): miniatura dentro de la sangria, a tamaño completo en otra pestaña
+    }
     if ($fold) echo "</details>";
     $acts = [];
     if ($can_reply && !$del) $acts[] = "<a href=\"/hilo/{$c['story_id']}?" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "v=$hv&amp;" : '') . "r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
@@ -205,7 +208,8 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
 function composer(int $story_id, ?array $parent = null, bool $has_next = false): void {
     $u = user();
     $cls = 'composer' . ($parent ? ' inreply' : '') . ($has_next ? ' has-next' : '');
-    echo "<form class=\"$cls\" id=\"responder\" method=\"post\" action=\"/comentar\"><input type=\"hidden\" name=\"id\" value=\"$story_id\">";
+    $conImg = function_exists('comment_image_can') && comment_image_can();   // imagen adjunta (migra-166): con cuenta y aura
+    echo "<form class=\"$cls\" id=\"responder\" method=\"post\" action=\"/comentar\"" . ($conImg ? ' enctype="multipart/form-data"' : '') . "><input type=\"hidden\" name=\"id\" value=\"$story_id\">";
     $vt = (string)($GLOBALS['DDD_HILO_V'] ?? '');   // vista por tiempo o por votos ('tiempo' | 'votos' | ''): se conserva al publicar y al cancelar
     if ($vt !== '') echo "<input type=\"hidden\" name=\"v\" value=\"$vt\">";
     if ($parent) echo "<input type=\"hidden\" name=\"parent\" value=\"{$parent['comment_id']}\">";
@@ -217,7 +221,10 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     }
     $ph = $u ? t('Escribe como %s', (string)$u['login']) : t('Escribe como anónimo');   // sin velo en comentarios (20/10/2026): se firma con el nombre desde el principio
     echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h($ph) . "\" required" . ($parent ? " autofocus" : "") . "></textarea>";
-    echo "<button>" . ($parent ? t('Responder') : t('Comentar')) . "</button></div></form>";
+    if (!empty($_SESSION['flash_err'])) { echo "<p class=\"error\">" . h((string)$_SESSION['flash_err']) . "</p>"; unset($_SESSION['flash_err']); }
+    echo "<div class=\"crow\">";
+    if ($conImg) echo "<label class=\"cimgpick\" title=\"" . h(t('Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida')) . "\">" . icon('image') . "<span>" . t('Imagen') . "</span><input type=\"file\" name=\"photo\" accept=\"image/*\"></label>";
+    echo "<button>" . ($parent ? t('Responder') : t('Comentar')) . "</button></div></div></form>";
 }
 
 function paginate(string $base, int $page, int $total, ?int $per = null): void {
