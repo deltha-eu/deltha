@@ -8,6 +8,7 @@
 PHP 8.1+ (gd, mbstring, pdo_mysql, curl) · MySQL/MariaDB · Apache 2.4 (o nginx). Las fotos (envíos, avatares, feeds de medios) se aceptan en JPEG, PNG, GIF, WebP y **AVIF**: para AVIF hace falta un `php-gd` compilado con libavif (el de Ubuntu 24.04/Debian 12 lo trae; `php -r 'var_dump(gd_info()["AVIF Support"]);'`) o, si no, `libavif-bin` (`avifdec`) o ImageMagick (`imagen_decodificar()` en `lib/imagen.php` prueba en ese orden; rutas configurables en `config.avifdec` y `config.imagemagick`). Admin → Fuentes → «probar foto» dice qué hay instalado y con qué se decodificó. Sin framework, sin composer, sin JS obligatorio, sin recursos de terceros. Cero cookies para quien no inicia sesión.
 
 ## Instalar
+`sql/schema.sql` trae la estructura completa tal como estaba en producción al regenerarlo; las migraciones posteriores a esa fecha se aplican encima (`install.sh` las pasa todas con `--force`). Para ponerlo al día desde el servidor: `ssh root@DROPLET 'bash /var/www/deltha/scripts/regenerar-esquema.sh' > sql/schema.sql` y commit.
 ```bash
 cd /var/www && unzip deltha-v0.zip -d deltha
 cd deltha && sudo ./install.sh   # crea BD, usuario deltha, /etc/deltha/config.ini, admin y media/
