@@ -129,7 +129,7 @@ function aviso_who(array $n): string {
     if (!empty($n['login']) && ghost_veiled($n['from_id'] ?? 0)) {   // velado por ghosteo (avisos anteriores al ghosteo): nunca el nick
         return in_array($n['kind'], ['mention_comment', 'reply_comment'], true) && $n['from_name'] !== '' ? $n['from_name'] : ghost_alias((int)$n['from_id']);
     }
-    if (in_array($n['kind'], ['mention_comment', 'reply_comment'], true)) return (!empty($n['login']) && ghost_over($n['created'])) ? $n['login'] : ($n['from_name'] ?: t('anónimo'));
+    if (in_array($n['kind'], ['mention_comment', 'reply_comment'], true)) return (!empty($n['login']) && ghost_over_comment($n['created'])) ? $n['login'] : ($n['from_name'] ?: t('anónimo'));
     return $n['login'] ?: ($n['from_name'] ?: t('anónimo'));
 }
 /** Texto corto de la linea («Fulano te ha mencionado en un comentario»). $who ya escapado. */
