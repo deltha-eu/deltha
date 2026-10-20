@@ -20,3 +20,7 @@ local/comentarista/__pycache__/
 local/lector/lector.ini
 local/lector/*.log
 local/lector/__pycache__/
+
+# cuaderno de los perfiles de la beta y capturas de trabajo: no se publican
+agentes/
+Claude outputs/
