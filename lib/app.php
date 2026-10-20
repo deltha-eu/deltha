@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 227);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 228);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -713,7 +713,12 @@ function save_theme_pref(string $t): void {
 $DDD_FOCO_DEF = false;
 function foco_por_defecto(bool $on = true): void { global $DDD_FOCO_DEF; $DDD_FOCO_DEF = $on; }
 function foco_pref(): string { $c = (string)($_COOKIE['ddd_foco'] ?? ''); return in_array($c, ['0', '1'], true) ? $c : ''; }
-function foco(): bool { global $DDD_FOCO_DEF; $p = foco_pref(); return $p === '1' || ($p === '' && $DDD_FOCO_DEF); }
+function foco(): bool { global $DDD_FOCO_DEF; if (hacker()) return true; $p = foco_pref(); return $p === '1' || ($p === '' && $DDD_FOCO_DEF); }
+/** Modo hacker (20/10/2026, pedido por Angel): para pantallas de 2600 px o mas. Es «sin distracciones» (columna central ancha, fotos a la derecha)
+ *  mas la columna derecha desdoblada en dos, con todos los modulos a la vista sin bajar: cinco columnas en total (rail · central doble ·
+ *  dos laterales). Cookie ddd_hacker del navegador (depende de la pantalla, no de la cuenta); <html data-hacker="1">. En pantallas menores
+ *  el CSS lo ignora y queda como «sin distracciones». El interruptor del rail solo se ve a partir de 2600 px. */
+function hacker(): bool { return (string)($_COOKIE['ddd_hacker'] ?? '') === '1'; }
 function theme(): ?string {
     $u = user();
     $t = $u ? (string)($u['theme'] ?? 'auto') : (string)($_COOKIE['ddd_theme'] ?? 'auto');
@@ -1173,6 +1178,7 @@ function icon(string $n): string {
         'edit'   => '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m13.5 8.5 3 3"/>',
         'fav'    => '<path d="M6 4h12v17l-6-4.5L6 21z"/>',
         'focus'  => '<path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4"/><path d="M9 10h6M9 14h4"/>',   // modo sin distracciones: marco con dos lineas de texto
+        'hacker' => '<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="m7 9 3 3-3 3M12.5 15h4.5"/>',   // modo hacker: terminal con >_
         'agg'    => '<circle cx="5" cy="6" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 6H20"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 12H20"/><circle cx="5" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M9.5 18H20"/>',   // agregadores: lista de fuentes
         'tag'    => '<path d="M3 11V4h7l10 10-7 7z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>',   // temas
         'comm'   => '<circle cx="12" cy="8" r="3.2"/><circle cx="5" cy="11" r="2.2"/><circle cx="19" cy="11" r="2.2"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0"/><path d="M2 17.5a3.5 3.5 0 0 1 3-2.3M22 17.5a3.5 3.5 0 0 0-3-2.3"/>',   // comunidades
@@ -1289,7 +1295,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     ana_hit();                 // analitica propia: una fila por pagina vista (GET, sin bots, sin admin)
     $u = user();
     $theme = theme();   // null = sigue al sistema
-    echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\" data-fam=\"" . skin_fam() . "\"" . (foco() ? ' data-foco="1"' : '') . "><head><meta charset=\"utf-8\">";
+    echo "<!doctype html><html lang=\"" . lang() . "\"" . ($theme ? " data-theme=\"$theme\"" : "") . " data-skin=\"" . skin() . "\" data-fam=\"" . skin_fam() . "\"" . (hacker() ? ' data-hacker="1"' : '') . (foco() ? ' data-foco="1"' : '') . "><head><meta charset=\"utf-8\">";
     echo "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">";
     echo "<meta name=\"color-scheme\" content=\"" . ($theme ?: 'light dark') . "\">";
     echo "<link rel=\"icon\" href=\"" . icon_src(64) . "\"><link rel=\"apple-touch-icon\" href=\"" . icon_src(180) . "\">";
