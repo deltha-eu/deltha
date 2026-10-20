@@ -2,6 +2,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/aura.php';
 require __DIR__ . '/../lib/moderacion.php';
+require __DIR__ . '/../lib/imagen.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/');
 $id = (int)post('id');
 $content = mb_substr(post('content'), 0, 4000);
@@ -24,10 +25,16 @@ if ($parent > 0) {
     if ($pr = $q->fetch()) $root = $pr['root_id'] ?: (int)$pr['comment_id'];
     else { $parent = 0; $pr = null; }
 }
+// imagen adjunta (migra-166): solo con cuenta y aura; si falla, el comentario se publica igual sin ella (el motivo se muestra en el hilo)
+$image = null;
+if ($u && comment_image_can() && !empty($_FILES['photo'])) {
+    $image = imagen_comentario_desde_subida($_FILES['photo'], $ierr);
+    if ($ierr) $_SESSION['flash_err'] = $ierr;
+}
 $cstatus = 'ok';   // posmoderacion: se publica ya y la IA local lo revisa despues (lib/moderacion.php)
 $pdo->beginTransaction();
-$pdo->prepare("INSERT INTO comments (story_id, parent_id, root_id, user_id, alias, anon_key, aura, content, status) VALUES (?,?,?,?,?,?,?,?,?)")
-    ->execute([$id, $parent ?: null, $root, $uid, $alias, $key, $aura, $content, $cstatus]);
+$pdo->prepare("INSERT INTO comments (story_id, parent_id, root_id, user_id, alias, anon_key, aura, content, image, status) VALUES (?,?,?,?,?,?,?,?,?,?)")
+    ->execute([$id, $parent ?: null, $root, $uid, $alias, $key, $aura, $content, $image, $cstatus]);
 $cid = (int)$pdo->lastInsertId();
 $pdo->prepare("UPDATE stories SET comments = comments + 1 WHERE story_id = ?")->execute([$id]);
 mod_enqueue($pdo, 'comment', $cid);

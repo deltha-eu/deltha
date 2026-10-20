@@ -76,6 +76,53 @@ function imagen_desde_bytes(string $bytes): ?string {
     return $ok ? $name : null;
 }
 
+/** Imagen de un comentario (migra-166, 20/10/2026): sin recorte, reducida a comment_image_px de lado largo, JPG sin EXIF, en
+ *  /media/c/AAAA/MM/<nombre>.jpg (carpeta por mes). Devuelve la ruta relativa a /media o null. $err recibe el motivo si se intento y fallo. */
+function imagen_comentario_desde_subida(array $file, ?string &$err = null): ?string {
+    $err = null;
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return null;
+    if (($ie = imagen_subida_error_basico($file)) !== null) { $err = $ie; return null; }
+    $bytes = file_get_contents($file['tmp_name']);
+    $src = $bytes === false ? null : imagen_decodificar($bytes);
+    if (!$src) { $err = t('La imagen no es válida: vale JPG, PNG, WebP o AVIF.'); return null; }
+    $sw = imagesx($src); $sh = imagesy($src);
+    if ($sw < 120 || $sh < 120) { imagedestroy($src); $err = t('La imagen es demasiado pequeña (%d×%d): hace falta al menos 120×120.', $sw, $sh); return null; }
+    $max = max(400, (int)cfg('comment_image_px', 1000));
+    $k = min(1, $max / max($sw, $sh));
+    $w = max(1, (int)round($sw * $k)); $hh = max(1, (int)round($sh * $k));
+    $dst = imagecreatetruecolor($w, $hh);
+    $white = imagecolorallocate($dst, 255, 255, 255); imagefill($dst, 0, 0, $white);   // PNG con transparencia: fondo blanco, no negro
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $w, $hh, $sw, $sh);
+    imagedestroy($src);
+    $rel = 'c/' . date('Y/m');
+    $dir = DDD_MEDIA_DIR . '/' . $rel;
+    if (!is_dir($dir)) mkdir($dir, 0775, true);
+    $name = bin2hex(random_bytes(10)) . '.jpg';
+    $ok = imagejpeg($dst, "$dir/$name", 80);
+    imagedestroy($dst);
+    if (!$ok) { $err = t('La imagen no se ha podido guardar. Prueba con otra.'); return null; }
+    return "$rel/$name";
+}
+/** Errores de subida comunes (tamaño, fallo de PHP) o null. */
+function imagen_subida_error_basico(array $file): ?string {
+    $e = $file['error'] ?? UPLOAD_ERR_NO_FILE;
+    $mb = (int)round((int)cfg('img_max_bytes', 6000000) / 1000000);
+    if ($e === UPLOAD_ERR_INI_SIZE || $e === UPLOAD_ERR_FORM_SIZE) return t('La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.', $mb);
+    if ($e !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return t('La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.', (int)$e);
+    if (filesize($file['tmp_name']) > (int)cfg('img_max_bytes', 6000000)) return t('La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.', $mb);
+    return null;
+}
+/** Borra el fichero de la imagen de un comentario (ruta relativa a /media, solo dentro de c/). */
+function imagen_comentario_borrar(?string $rel): void {
+    if ($rel && preg_match('~^c/\d{4}/\d{2}/[a-f0-9]{20}\.jpg$~', $rel)) @unlink(DDD_MEDIA_DIR . '/' . $rel);
+}
+/** ¿Puede esta persona adjuntar una imagen a un comentario? Con cuenta y aura mayor que comment_image_min_aura (mods y admin, siempre). */
+function comment_image_can(): bool {
+    $u = user();
+    if (!$u || cfg('comment_images', '1') !== '1') return false;
+    return is_mod() || (float)$u['aura'] > (float)cfg('comment_image_min_aura', 6);
+}
+
 /** Avatar: cuadrado 256x256 en /media/avatars */
 function avatar_desde_subida(array $file): ?string {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return null;
