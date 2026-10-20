@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS pages (
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad', 'Privacidad y contacto', '<h1>Privacidad y contacto</h1>
 
 <h2>Quién está detrás</h2>
-<p><b>{site}</b> es un servicio de <b>Jot Down Group Media Company</b>, NIF B88863592, con domicilio en Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), España. Es la responsable del tratamiento de los datos que se describen aquí.</p>
+<p><b>{site}</b> es un servicio de <b>Jot Down Media Company S.L.</b>, NIF B88863592, con domicilio en Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), España. Es la responsable del tratamiento de los datos que se describen aquí.</p>
 <p>Para cualquier asunto relacionado con tus datos, y también para quejas, felicitaciones y propuestas, escribe a <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>Lo que no hacemos</h2>

@@ -107,7 +107,7 @@ INSERT IGNORE INTO pages (slug, title, body) VALUES ('normas.ca', 'Normes d''ús
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad.ca', 'Privacitat i contacte', '<h1>Privacitat i contacte</h1>
 
 <h2>Qui hi ha al darrere</h2>
-<p><b>{site}</b> és un servei de <b>Jot Down Group Media Company</b>, NIF B88863592, amb domicili a Calle Palillos, núm. 6, porta 36, 41500 Alcalá de Guadaíra (Sevilla), Espanya. És la responsable del tractament de les dades que es descriuen aquí.</p>
+<p><b>{site}</b> és un servei de <b>Jot Down Media Company S.L.</b>, NIF B88863592, amb domicili a Calle Palillos, núm. 6, porta 36, 41500 Alcalá de Guadaíra (Sevilla), Espanya. És la responsable del tractament de les dades que es descriuen aquí.</p>
 <p>Per a qualsevol assumpte relacionat amb les teves dades, i també per a queixes, felicitacions i propostes, escriu a <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>El que no fem</h2>
@@ -236,7 +236,7 @@ INSERT IGNORE INTO pages (slug, title, body) VALUES ('normas.eu', 'Erabilera-ara
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad.eu', 'Pribatutasuna eta harremana', '<h1>Pribatutasuna eta harremana</h1>
 
 <h2>Nor dago atzean</h2>
-<p><b>{site}</b> <b>Jot Down Group Media Company</b> enpresaren zerbitzu bat da (NIF B88863592), helbidea: Calle Palillos, 6. zk., 36. atea, 41500 Alcalá de Guadaíra (Sevilla), Espainia. Hemen deskribatzen diren datuen tratamenduaren arduraduna da.</p>
+<p><b>{site}</b> <b>Jot Down Media Company S.L.</b> enpresaren zerbitzu bat da (NIF B88863592), helbidea: Calle Palillos, 6. zk., 36. atea, 41500 Alcalá de Guadaíra (Sevilla), Espainia. Hemen deskribatzen diren datuen tratamenduaren arduraduna da.</p>
 <p>Zure datuekin lotutako edozein gairako, baita kexa, zorion eta proposamenetarako ere, idatzi <a href="mailto:info@deltha.eu">info@deltha.eu</a> helbidera.</p>
 
 <h2>Egiten ez duguna</h2>
@@ -365,7 +365,7 @@ INSERT IGNORE INTO pages (slug, title, body) VALUES ('normas.gl', 'Normas de uso
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad.gl', 'Privacidade e contacto', '<h1>Privacidade e contacto</h1>
 
 <h2>Quen está detrás</h2>
-<p><b>{site}</b> é un servizo de <b>Jot Down Group Media Company</b>, NIF B88863592, con domicilio na Calle Palillos, núm. 6, porta 36, 41500 Alcalá de Guadaíra (Sevilla), España. É a responsable do tratamento dos datos que se describen aquí.</p>
+<p><b>{site}</b> é un servizo de <b>Jot Down Media Company S.L.</b>, NIF B88863592, con domicilio na Calle Palillos, núm. 6, porta 36, 41500 Alcalá de Guadaíra (Sevilla), España. É a responsable do tratamento dos datos que se describen aquí.</p>
 <p>Para calquera asunto relacionado cos teus datos, e tamén para queixas, parabéns e propostas, escribe a <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>O que non facemos</h2>
@@ -494,7 +494,7 @@ INSERT IGNORE INTO pages (slug, title, body) VALUES ('normas.en', 'Rules of use'
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad.en', 'Privacy and contact', '<h1>Privacy and contact</h1>
 
 <h2>Who''s behind it</h2>
-<p><b>{site}</b> is a service of <b>Jot Down Group Media Company</b>, NIF (tax ID) B88863592, with registered address at Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), Spain. It is the controller of the data processing described here.</p>
+<p><b>{site}</b> is a service of <b>Jot Down Media Company S.L.</b>, NIF (tax ID) B88863592, with registered address at Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), Spain. It is the controller of the data processing described here.</p>
 <p>For anything related to your data, and also for complaints, compliments and suggestions, write to <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>What we don''t do</h2>
@@ -623,7 +623,7 @@ INSERT IGNORE INTO pages (slug, title, body) VALUES ('normas.fr', 'Règles d''us
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad.fr', 'Confidentialité et contact', '<h1>Confidentialité et contact</h1>
 
 <h2>Qui est derrière</h2>
-<p><b>{site}</b> est un service de <b>Jot Down Group Media Company</b>, NIF B88863592, dont le siège est situé Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), Espagne. Elle est responsable du traitement des données décrites ici.</p>
+<p><b>{site}</b> est un service de <b>Jot Down Media Company S.L.</b>, NIF B88863592, dont le siège est situé Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), Espagne. Elle est responsable du traitement des données décrites ici.</p>
 <p>Pour toute question concernant tes données, et aussi pour les plaintes, félicitations et propositions, écris à <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>Ce que nous ne faisons pas</h2>
@@ -752,7 +752,7 @@ INSERT IGNORE INTO pages (slug, title, body) VALUES ('normas.de', 'Nutzungsregel
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad.de', 'Datenschutz und Kontakt', '<h1>Datenschutz und Kontakt</h1>
 
 <h2>Wer dahintersteht</h2>
-<p><b>{site}</b> ist ein Dienst der <b>Jot Down Group Media Company</b>, NIF B88863592, mit Sitz in Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), Spanien. Sie ist die Verantwortliche für die Verarbeitung der hier beschriebenen Daten.</p>
+<p><b>{site}</b> ist ein Dienst der <b>Jot Down Media Company S.L.</b>, NIF B88863592, mit Sitz in Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), Spanien. Sie ist die Verantwortliche für die Verarbeitung der hier beschriebenen Daten.</p>
 <p>Für alle Fragen zu deinen Daten, und auch für Beschwerden, Lob und Vorschläge, schreib an <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>Was wir nicht tun</h2>
@@ -881,7 +881,7 @@ INSERT IGNORE INTO pages (slug, title, body) VALUES ('normas.it', 'Regole d''uso
 INSERT IGNORE INTO pages (slug, title, body) VALUES ('privacidad.it', 'Privacy e contatti', '<h1>Privacy e contatti</h1>
 
 <h2>Chi c''è dietro</h2>
-<p><b>{site}</b> è un servizio di <b>Jot Down Group Media Company</b>, NIF B88863592, con sede in Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Siviglia), Spagna. È la titolare del trattamento dei dati descritti qui.</p>
+<p><b>{site}</b> è un servizio di <b>Jot Down Media Company S.L.</b>, NIF B88863592, con sede in Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Siviglia), Spagna. È la titolare del trattamento dei dati descritti qui.</p>
 <p>Per qualsiasi questione relativa ai tuoi dati, e anche per lamentele, complimenti e proposte, scrivi a <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>Cosa non facciamo</h2>
