@@ -507,6 +507,27 @@ function comment_delete(PDO $pdo, int $id): bool {
     try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([user()['user_id'] ?? null, $id]); } catch (Throwable $e) {}
     return $st->rowCount() > 0;
 }
+/** Borrado total de un comentario (solo admin, 20/10/2026: pruebas y limpieza): desaparece la fila, sus votos, sus reportes, su imagen,
+ *  sus avisos y su entrada en la cola de moderacion, y baja el contador del hilo. Solo si no tiene respuestas (si las tiene, el borrado
+ *  de moderacion normal, que deja el aviso). Devuelve false si tenia respuestas o no existia. */
+function comment_purge(PDO $pdo, int $id): bool {
+    $q = $pdo->prepare("SELECT story_id, image FROM comments WHERE comment_id = ?"); $q->execute([$id]);
+    if (!($c = $q->fetch())) return false;
+    $r = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE parent_id = ?"); $r->execute([$id]);
+    if ((int)$r->fetchColumn() > 0) return false;
+    $pdo->beginTransaction();
+    try {
+        foreach (["DELETE FROM comment_reports WHERE comment_id = ?", "DELETE FROM comment_votes WHERE comment_id = ?",
+                  "DELETE FROM notifications WHERE kind IN ('mention_comment','reply_comment') AND ref_id = ?",
+                  "DELETE FROM mod_queue WHERE item_type = 'comment' AND ref_id = ?", "DELETE FROM comments WHERE comment_id = ?"] as $sql) {
+            try { $pdo->prepare($sql)->execute([$id]); } catch (Throwable $e) { if (str_contains($sql, 'FROM comments ')) throw $e; }   // tablas opcionales: si no estan, se sigue
+        }
+        $pdo->prepare("UPDATE stories SET comments = GREATEST(comments - 1, 0) WHERE story_id = ?")->execute([(int)$c['story_id']]);
+        $pdo->commit();
+    } catch (Throwable $e) { $pdo->rollBack(); throw $e; }
+    if (!empty($c['image']) && function_exists('imagen_comentario_borrar')) imagen_comentario_borrar((string)$c['image']);
+    return true;
+}
 /** El usuario actual puede editar este comentario suyo? Aura > comment_edit_min_aura y menos de comment_edit_minutes desde que lo publico. */
 function can_edit_own_comment(array $c): bool {
     $u = user();
