@@ -25,7 +25,7 @@ jobs:
           path-to-signatures: '.github/cla-firmas.json'
           path-to-document: 'https://github.com/deltha-eu/deltha/blob/main/CLA.md'
           branch: 'cla-firmas'
-          allowlist: 'imparsifal,dependabot[bot],github-actions[bot]'
+          allowlist: 'imparsifal,claude,dependabot[bot],github-actions[bot]'   # claude = los commits que Angel hace con Claude Code (autor «Claude <noreply@anthropic.com>»)
           custom-pr-sign-comment: 'He leído el CLA y lo firmo'
           custom-notsigned-prcomment: 'Gracias por la contribución. Para poder fusionarla hace falta firmar el [acuerdo de licencia de contribución (CLA)](https://github.com/deltha-eu/deltha/blob/main/CLA.md): léelo y, si estás de acuerdo, escribe en un comentario exactamente esta frase:'
           custom-allsigned-prcomment: 'Todas las personas que contribuyen a esta pull request han firmado el CLA. Gracias.'
