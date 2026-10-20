@@ -880,7 +880,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'ver con mi plantilla' => 'mit meinem Skin ansehen',
 'ver con su plantilla' => 'mit ihrem Skin ansehen',
 'Salidas a los medios' => 'Ausgänge zu den Medien',
-'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Klicks auf die Überschrift eines Beitrags, die zum Originalartikel führen: der Traffic, den %s an die Medien schickt.',
+'Clics en el titular de un envío o de una noticia de las fichas de medios que llevan al artículo original: el tráfico que %s manda a los medios.' => 'Klicks auf die Überschrift eines Beitrags oder einer Meldung in den Medienprofilen, die zum Originalartikel führen: der Traffic, den %s an die Medien schickt.',
 'hoy' => 'heute',
 'este mes' => 'diesen Monat',
 'este año' => 'dieses Jahr',

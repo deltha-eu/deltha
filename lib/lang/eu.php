@@ -879,7 +879,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'ver con mi plantilla' => 'nire txantiloiarekin ikusi',
 'ver con su plantilla' => 'bere txantiloiarekin ikusi',
 'Salidas a los medios' => 'Hedabideetarako irteerak',
-'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Bidalketa baten izenburuan egindako klikak, jatorrizko albistera daramatenak: %s-k hedabideei bidaltzen dien trafikoa.',
+'Clics en el titular de un envío o de una noticia de las fichas de medios que llevan al artículo original: el tráfico que %s manda a los medios.' => 'Bidalketa baten edo hedabideen fitxetako albiste baten izenburuan egindako klikak, jatorrizko artikulura daramatenak: %s-k hedabideei bidaltzen dien trafikoa.',
 'hoy' => 'gaur',
 'este mes' => 'hilabete honetan',
 'este año' => 'aurten',

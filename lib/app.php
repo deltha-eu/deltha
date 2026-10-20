@@ -257,9 +257,26 @@ const DDD_URL_TRACK = ['fbclid', 'gclid', 'gclsrc', 'dclid', 'gbraid', 'wbraid',
     'mc_cid', 'mc_eid', '_hsenc', '_hsmi', '__hssc', '__hstc', '__hsfp', 'hsctatracking', 'mkt_tok', 'vero_id', 'vero_conv', 'oly_enc_id', 'oly_anon_id', 's_cid', '_ga', '_gl',
     'ref_src', 'ref_url', 'srsltid', 'xtor', 'smid', 'smtyp', 'cmpid', 'ocid', 'triedredirect', 'at_medium', 'at_campaign', 'at_custom1', 'at_custom2', 'at_custom3', 'at_custom4', 'pk_campaign', 'pk_kwd', 'pk_source', 'pk_medium',
     'mtm_campaign', 'mtm_source', 'mtm_medium', 'mtm_kwd', 'mtm_content', 'mtm_cid', 'mtm_group', 'mtm_placement'];
+/** ¿La peticion a /ir o /ir-fuente es un clic humano desde Deltha? (20/10/2026). Un scraper recorrio las fichas de medios y metio
+ *  cientos de «salidas» en un dia (402 de 449, todas sin Referer y con un Chrome/104 de 2022). Se descarta: user-agent vacio o de bot
+ *  (misma lista que story_cuenta), navegadores de hace años (Chrome/Firefox < 120: firma tipica de scrapers), prefetch/prerender, y
+ *  toda peticion cuyo Referer no sea una pagina de Deltha — los enlaces /ir solo existen en nuestras paginas y el navegador manda
+ *  el Referer completo en la misma origen con cualquier politica por defecto; quien llega sin el no ha pulsado nada. */
+function salida_humana(): bool {
+    if (PHP_SAPI === 'cli' || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') return false;
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if ($ua === '' || preg_match('~bot|crawl|spider|slurp|fetch|monitor|curl|wget|python|headless|lighthouse|preview|indexer~i', $ua)) return false;
+    if (preg_match('~(?:Chrome|Firefox)/(\d+)~', $ua, $m) && (int)$m[1] < 120) return false;
+    if (($_SERVER['HTTP_SEC_PURPOSE'] ?? $_SERVER['HTTP_PURPOSE'] ?? '') !== '') return false;
+    $ref = strtolower((string)parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_HOST));
+    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    return $ref !== '' && preg_replace('~^www\.~', '', $ref) === preg_replace('~^www\.~', '', $host);
+}
 /** Apunta una salida a un medio (13/10/2026): total por dia (clicks_daily, migra-144) y por dia y dominio (clicks_source, migra-147),
- *  para «Salidas a los medios» de /estadisticas y su top de medios. La llaman /ir (envios) e /ir-fuente (fichas). Nunca rompe. */
+ *  para «Salidas a los medios» de /estadisticas y su top de medios. La llaman /ir (envios) e /ir-fuente (fichas). Nunca rompe.
+ *  Solo cuenta clics humanos desde Deltha (salida_humana, 20/10/2026); la redireccion se hace igual. */
 function salida_cuenta(PDO $pdo, ?string $dominio): void {
+    if (!salida_humana()) return;
     try { $pdo->exec("INSERT INTO clicks_daily (day, n) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE n = n + 1"); } catch (Throwable $e) {}
     $dominio = strtolower(trim((string)$dominio));
     if ($dominio === '') return;

@@ -916,7 +916,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'ver con mi plantilla' => 'ver com a minha skin',
 'ver con su plantilla' => 'ver com a skin dela',
 'Salidas a los medios' => 'Saídas para os meios',
-'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Cliques no título de um envio que levam à notícia original: o tráfego que o %s envia aos meios.',
+'Clics en el titular de un envío o de una noticia de las fichas de medios que llevan al artículo original: el tráfico que %s manda a los medios.' => 'Cliques no título de um envio ou de uma notícia das fichas dos meios que levam ao artigo original: o tráfego que o %s envia aos meios.',
 'hoy' => 'hoje',
 'este mes' => 'este mês',
 'este año' => 'este ano',
