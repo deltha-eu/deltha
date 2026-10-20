@@ -1,6 +1,6 @@
 -- Deltha — esquema completo (MySQL 8, InnoDB, utf8mb4)
--- Regenerado el 12/10/2026 a partir de la base real (mysqldump --no-data deltha): las 45 tablas tal como estan
--- en produccion con las migraciones 001-137 aplicadas. Antes este fichero solo traia las 25 del esquema v0.
+-- Regenerado el 20/10/2026 a partir de la base real (scripts/regenerar-esquema.sh, mysqldump --no-data deltha): las tablas tal como estan
+-- en produccion con las migraciones 001-167 aplicadas.
 --
 -- Uso (instalacion nueva; lo hacen install.sh y scripts/install-droplet.sh):
 --   mysql -e "CREATE DATABASE IF NOT EXISTS deltha CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
@@ -16,6 +16,8 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `agent_item_seen` (
   `user_id` int unsigned NOT NULL,
   `item_id` int unsigned NOT NULL,
@@ -31,6 +33,23 @@ CREATE TABLE `agent_item_seen` (
   CONSTRAINT `fk_ais_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `agent_reply_seen` (
+  `user_id` int unsigned NOT NULL,
+  `comment_id` int unsigned NOT NULL,
+  `result` enum('comment','skip','fail') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'skip',
+  `answer_id` int unsigned DEFAULT NULL,
+  `note` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `model` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`comment_id`),
+  KEY `idx_ars_user` (`user_id`,`created`),
+  KEY `fk_ars_comment` (`comment_id`),
+  CONSTRAINT `fk_ars_comment` FOREIGN KEY (`comment_id`) REFERENCES `comments` (`comment_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ars_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `agent_seen` (
   `user_id` int unsigned NOT NULL,
   `story_id` int unsigned NOT NULL,
@@ -47,6 +66,7 @@ CREATE TABLE `agent_seen` (
   CONSTRAINT `fk_as_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `agent_sent` (
   `item_id` int unsigned NOT NULL,
   `user_id` int unsigned NOT NULL,
@@ -59,6 +79,7 @@ CREATE TABLE `agent_sent` (
   CONSTRAINT `fk_ase_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `agents` (
   `user_id` int unsigned NOT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT '0',
@@ -70,6 +91,11 @@ CREATE TABLE `agents` (
   `replies` tinyint(1) NOT NULL DEFAULT '0',
   `skip_users` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `topics` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `hour_from` tinyint unsigned NOT NULL DEFAULT '8' COMMENT 'comenta desde esta hora (hora del servidor)',
+  `hour_to` tinyint unsigned NOT NULL DEFAULT '24' COMMENT 'y hasta esta (exclusiva, 0-24); si es menor que hour_from, cruza la medianoche',
+  `gap_min` smallint unsigned NOT NULL DEFAULT '25' COMMENT 'minutos entre dos comentarios suyos (por azar x0,6-1,8)',
+  `memory_n` tinyint unsigned NOT NULL DEFAULT '8' COMMENT 'cuantos de sus ultimos comentarios ve el modelo (0 = ninguno)',
+  `next_comment` datetime DEFAULT NULL COMMENT 'no se le ofrece nada antes de esta hora (se fija al comentar)',
   `submits_per_day` tinyint unsigned NOT NULL DEFAULT '0',
   `submit_kinds` enum('medio','newsletter','ambos') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ambos',
   `submit_topics` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
@@ -83,6 +109,7 @@ CREATE TABLE `agents` (
   CONSTRAINT `fk_ag_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `allowed_domains` (
   `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
   `reason` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -91,6 +118,7 @@ CREATE TABLE `allowed_domains` (
   PRIMARY KEY (`domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ana_daily` (
   `day` date NOT NULL,
   `visitors` int unsigned NOT NULL DEFAULT '0',
@@ -100,6 +128,7 @@ CREATE TABLE `ana_daily` (
   PRIMARY KEY (`day`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `aura_log` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
@@ -111,6 +140,7 @@ CREATE TABLE `aura_log` (
   KEY `idx_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `bajas` (
   `baja_id` int unsigned NOT NULL AUTO_INCREMENT,
   `login` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -126,6 +156,7 @@ CREATE TABLE `bajas` (
   KEY `idx_created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `banned_domains` (
   `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
   `reason` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -134,6 +165,7 @@ CREATE TABLE `banned_domains` (
   PRIMARY KEY (`domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `banned_sources` (
   `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
   `reason` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -142,6 +174,7 @@ CREATE TABLE `banned_sources` (
   PRIMARY KEY (`domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `chat` (
   `msg_id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned DEFAULT NULL,
@@ -167,6 +200,7 @@ CREATE TABLE `chat` (
   CONSTRAINT `fk_chat_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `chat_reports` (
   `report_id` int unsigned NOT NULL AUTO_INCREMENT,
   `msg_id` int unsigned NOT NULL,
@@ -184,6 +218,7 @@ CREATE TABLE `chat_reports` (
   CONSTRAINT `fk_chr_msg` FOREIGN KEY (`msg_id`) REFERENCES `chat` (`msg_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `chat_votes` (
   `msg_id` int unsigned NOT NULL,
   `user_id` int unsigned NOT NULL,
@@ -195,6 +230,22 @@ CREATE TABLE `chat_votes` (
   CONSTRAINT `fk_chv_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `clicks_daily` (
+  `day` date NOT NULL,
+  `n` int unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`day`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `clicks_source` (
+  `day` date NOT NULL,
+  `source` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `n` int unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`day`,`source`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comment_reports` (
   `report_id` int unsigned NOT NULL AUTO_INCREMENT,
   `comment_id` int unsigned NOT NULL,
@@ -212,6 +263,7 @@ CREATE TABLE `comment_reports` (
   CONSTRAINT `fk_cr_comment` FOREIGN KEY (`comment_id`) REFERENCES `comments` (`comment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comment_votes` (
   `comment_id` int unsigned NOT NULL,
   `user_id` int unsigned NOT NULL,
@@ -223,6 +275,7 @@ CREATE TABLE `comment_votes` (
   CONSTRAINT `fk_cv_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comments` (
   `comment_id` int unsigned NOT NULL AUTO_INCREMENT,
   `story_id` int unsigned NOT NULL,
@@ -251,6 +304,7 @@ CREATE TABLE `comments` (
   CONSTRAINT `fk_c_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `communities` (
   `community_id` int unsigned NOT NULL AUTO_INCREMENT,
   `slug` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -270,6 +324,7 @@ CREATE TABLE `communities` (
   CONSTRAINT `fk_co_owner` FOREIGN KEY (`owner_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `config` (
   `ckey` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `cvalue` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -277,6 +332,7 @@ CREATE TABLE `config` (
   PRIMARY KEY (`ckey`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `favorites` (
   `user_id` int unsigned NOT NULL,
   `story_id` int unsigned NOT NULL,
@@ -288,6 +344,7 @@ CREATE TABLE `favorites` (
   CONSTRAINT `fk_fav_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `forums` (
   `forum_id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `slug` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -296,12 +353,13 @@ CREATE TABLE `forums` (
   `status` enum('on','off') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'on',
   `position` tinyint unsigned NOT NULL DEFAULT '1',
   `orden` enum('fecha','actividad') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'fecha',
-  `min_aura` decimal(6,1) NOT NULL DEFAULT 0.0 COMMENT 'aura minima (estricta) para ver y escribir; 0 = abierto (migra-165)',
+  `min_aura` decimal(6,1) NOT NULL DEFAULT '0.0' COMMENT 'aura minima (estricta) para ver y escribir; 0 = abierto',
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`forum_id`),
   UNIQUE KEY `uq_forum_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `hits` (
   `hit_id` int unsigned NOT NULL AUTO_INCREMENT,
   `ts` datetime NOT NULL,
@@ -318,6 +376,7 @@ CREATE TABLE `hits` (
   KEY `ix_fp_ts` (`fp`,`ts`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `image_generic` (
   `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
   `hash` char(40) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -325,6 +384,7 @@ CREATE TABLE `image_generic` (
   PRIMARY KEY (`domain`,`hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `image_seen` (
   `seen_id` int unsigned NOT NULL AUTO_INCREMENT,
   `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -338,6 +398,7 @@ CREATE TABLE `image_seen` (
   KEY `idx_imgseen_seen` (`seen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `login_codes` (
   `user_id` int unsigned NOT NULL,
   `code_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -349,6 +410,7 @@ CREATE TABLE `login_codes` (
   CONSTRAINT `fk_lc_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `messages` (
   `msg_id` int unsigned NOT NULL AUTO_INCREMENT,
   `from_id` int unsigned NOT NULL,
@@ -364,6 +426,7 @@ CREATE TABLE `messages` (
   CONSTRAINT `fk_m_to` FOREIGN KEY (`to_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `mod_log` (
   `log_id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
@@ -377,6 +440,7 @@ CREATE TABLE `mod_log` (
   KEY `created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `mod_queue` (
   `item_id` int unsigned NOT NULL AUTO_INCREMENT,
   `item_type` enum('story','comment','chat') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'story',
@@ -400,6 +464,7 @@ CREATE TABLE `mod_queue` (
   KEY `idx_lease` (`status`,`priority`,`item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `notifications` (
   `notif_id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
@@ -420,6 +485,7 @@ CREATE TABLE `notifications` (
   CONSTRAINT `fk_n_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pages` (
   `slug` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -428,6 +494,7 @@ CREATE TABLE `pages` (
   PRIMARY KEY (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pins` (
   `pin_id` int unsigned NOT NULL AUTO_INCREMENT,
   `what` enum('story','item') COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -435,6 +502,7 @@ CREATE TABLE `pins` (
   `grupo` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_id` int unsigned NOT NULL,
   `by_admin` tinyint(1) NOT NULL DEFAULT '0',
+  `cost` decimal(5,2) DEFAULT NULL,
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `starts` datetime DEFAULT NULL COMMENT 'cuando empieza a verse; NULL o pasado = en marcha; futuro = en cola',
   `expires` datetime DEFAULT NULL,
@@ -445,6 +513,7 @@ CREATE TABLE `pins` (
   CONSTRAINT `fk_pin_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `presence` (
   `fp` char(16) COLLATE utf8mb4_unicode_ci NOT NULL,
   `seen` datetime NOT NULL,
@@ -452,6 +521,7 @@ CREATE TABLE `presence` (
   KEY `ix_seen` (`seen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `promo_log` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `story_id` int unsigned NOT NULL,
@@ -464,6 +534,7 @@ CREATE TABLE `promo_log` (
   KEY `idx_story` (`story_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `reg_attempts` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `fp` char(16) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -472,6 +543,7 @@ CREATE TABLE `reg_attempts` (
   KEY `ix_fp` (`fp`,`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `reg_log` (
   `reg_id` int unsigned NOT NULL AUTO_INCREMENT,
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -486,6 +558,7 @@ CREATE TABLE `reg_log` (
   KEY `idx_reglog_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `source_errors` (
   `err_id` int unsigned NOT NULL AUTO_INCREMENT,
   `source_id` int unsigned NOT NULL,
@@ -499,6 +572,7 @@ CREATE TABLE `source_errors` (
   KEY `last_seen` (`last_seen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `source_items` (
   `item_id` int unsigned NOT NULL AUTO_INCREMENT,
   `source_id` smallint unsigned NOT NULL,
@@ -527,6 +601,7 @@ CREATE TABLE `source_items` (
   CONSTRAINT `fk_si_source` FOREIGN KEY (`source_id`) REFERENCES `sources` (`source_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `source_proposals` (
   `prop_id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
@@ -551,6 +626,7 @@ CREATE TABLE `source_proposals` (
   CONSTRAINT `fk_fp_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sources` (
   `source_id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `slug` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -575,10 +651,12 @@ CREATE TABLE `sources` (
   UNIQUE KEY `uq_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `stories` (
   `story_id` int unsigned NOT NULL AUTO_INCREMENT,
   `content_type` enum('link','article') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'link',
   `user_id` int unsigned DEFAULT NULL,
+  `anon_key` char(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `author_alias` varchar(48) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `revealed` tinyint(1) NOT NULL DEFAULT '0',
   `topic_id` smallint unsigned NOT NULL,
@@ -586,6 +664,7 @@ CREATE TABLE `stories` (
   `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `url` varchar(600) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `source` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pub_key` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `lang` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `image` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -615,12 +694,15 @@ CREATE TABLE `stories` (
   KEY `idx_comm` (`community_id`,`sent_date`),
   KEY `idx_portada` (`portada`,`status`,`published_date`),
   KEY `idx_lang` (`lang`),
+  KEY `idx_anon_sent` (`anon_key`,`sent_date`),
+  KEY `idx_pub_sent` (`pub_key`,`sent_date`),
   KEY `idx_forum` (`forum_id`,`status`,`sent_date`),
   FULLTEXT KEY `ft_stories` (`title`,`content`),
   CONSTRAINT `fk_st_topic` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topic_id`),
   CONSTRAINT `fk_st_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `story_communities` (
   `story_id` int unsigned NOT NULL,
   `community_id` int unsigned NOT NULL,
@@ -634,6 +716,7 @@ CREATE TABLE `story_communities` (
   CONSTRAINT `fk_sc_user` FOREIGN KEY (`added_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `thread_aliases` (
   `story_id` int unsigned NOT NULL,
   `user_id` int unsigned NOT NULL,
@@ -644,6 +727,7 @@ CREATE TABLE `thread_aliases` (
   CONSTRAINT `fk_ta_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `topics` (
   `topic_id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -653,6 +737,18 @@ CREATE TABLE `topics` (
   UNIQUE KEY `uq_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_communities` (
+  `user_id` int unsigned NOT NULL,
+  `community_id` int unsigned NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`community_id`),
+  KEY `community_id` (`community_id`),
+  CONSTRAINT `fk_uc_comm` FOREIGN KEY (`community_id`) REFERENCES `communities` (`community_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_uc_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_ghosts` (
   `user_id` int unsigned NOT NULL,
   `target_id` int unsigned NOT NULL,
@@ -663,6 +759,7 @@ CREATE TABLE `user_ghosts` (
   CONSTRAINT `fk_ug_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_media` (
   `user_id` int unsigned NOT NULL,
   `source_id` smallint unsigned NOT NULL,
@@ -673,6 +770,7 @@ CREATE TABLE `user_media` (
   CONSTRAINT `fk_um_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `user_id` int unsigned NOT NULL AUTO_INCREMENT,
   `login` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -688,6 +786,7 @@ CREATE TABLE `users` (
   `bio` varchar(160) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `theme` enum('auto','light','dark') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'auto',
   `skin` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `skin_propio` tinyint(1) NOT NULL DEFAULT '0',
   `landing` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `lang` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `src_mylang` tinyint(1) NOT NULL DEFAULT '0',
@@ -706,6 +805,7 @@ CREATE TABLE `users` (
   KEY `ix_last_seen` (`last_seen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `votes` (
   `story_id` int unsigned NOT NULL,
   `user_id` int unsigned NOT NULL,
@@ -721,7 +821,6 @@ CREATE TABLE `votes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
-
 -- ---------------------------------------------------------------------------------------------
 -- Datos de partida del esquema v0 (config, temas y primeras fuentes). El resto lo ponen las migraciones.
 -- ---------------------------------------------------------------------------------------------
