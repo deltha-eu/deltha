@@ -1,5 +1,10 @@
 # Deltha
 
+**Deltha** ([deltha.eu](https://deltha.eu)) es un agregador de noticias y foro de debate en español, pequeño y sin algoritmo opaco: la gente envía enlaces, los vota y los comenta, y las portadas salen de un ciclo público (el δ) que cualquiera puede leer en [/algoritmo](https://deltha.eu/algoritmo). Sin cookies de terceros, sin rastreo, con medición propia; moderación asistida por un modelo local; veintitantas plantillas visuales. Nace del ensayo [*Contralgoritmia*](https://contralgoritmia.com/) y lo mantiene Ángel L. Fernández Recuero (Jot Down).
+
+**Licencia**: [PolyForm Noncommercial 1.0.0](LICENSE.md). Puedes usarlo, estudiarlo, modificarlo y desplegarlo para fines no comerciales (personales, educativos, de investigación, de entidades sin ánimo de lucro o públicas); **no** para explotarlo comercialmente. Para otros usos, escribe a info@deltha.eu. Las letras de `public/fonts` llevan sus propias licencias (OFL / Apache 2.0).
+
+## Requisitos
 PHP 8.1+ (gd, mbstring, pdo_mysql, curl) · MySQL/MariaDB · Apache 2.4 (o nginx). Las fotos (envíos, avatares, feeds de medios) se aceptan en JPEG, PNG, GIF, WebP y **AVIF**: para AVIF hace falta un `php-gd` compilado con libavif (el de Ubuntu 24.04/Debian 12 lo trae; `php -r 'var_dump(gd_info()["AVIF Support"]);'`) o, si no, `libavif-bin` (`avifdec`) o ImageMagick (`imagen_decodificar()` en `lib/imagen.php` prueba en ese orden; rutas configurables en `config.avifdec` y `config.imagemagick`). Admin → Fuentes → «probar foto» dice qué hay instalado y con qué se decodificó. Sin framework, sin composer, sin JS obligatorio, sin recursos de terceros. Cero cookies para quien no inicia sesión.
 
 ## Instalar
