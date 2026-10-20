@@ -105,7 +105,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
                              WHERE c.story_id = ? AND c.status = 'ok' AND c.deleted = 0$notIn ORDER BY c.likes DESC, c.created ASC LIMIT 1");
         $st->execute([$s['story_id']]);
         if ($c = $st->fetch()) {
-            $rc = ghost_over($c['created']);
+            $rc = ghost_over_comment($c['created']);
             $n = display_name($c, $rc);
             $suns = (int)$c['likes'] > 0 ? " <a class=\"suns\" href=\"$href#c{$c['comment_id']}\" title=\"" . h(t('me gusta') . " · " . (int)$c['likes']) . "\">" . icon('sun') . "<span>" . (int)$c['likes'] . "</span></a>" : '';
             echo "<div class=\"peek\"><div class=\"pk\">" . who_avatar($c, $rc, (float)$c['aura'], $n) . "<div><b>" . h($n) . "</b> " . h(mb_strimwidth($c['content'], 0, 150, '…')) . $suns . "</div></div></div>";
@@ -170,7 +170,7 @@ function comment_vote_widget(array $c, bool $can_vote, string $action = '/votar-
  *  al comentario raiz (vistas por tiempo y por votos, donde la respuesta no queda debajo de lo que contesta). La vista viaja en
  *  $GLOBALS['DDD_HILO_V'] ('tiempo' | 'votos' | '') para que «Responder» y «cancelar» la conserven. */
 function comment_block(array $c, bool $has_next = false, ?array $parent = null, bool $can_reply = false, bool $can_vote = false, int $nivel = 0, bool $reto = false): void {
-    $revealed = ghost_over($c['created']);
+    $revealed = ghost_over_comment($c['created']);
     $n = display_name($c, $revealed);
     $del = !empty($c['deleted']);
     $fold = !$del && ghost_folded($c['user_id'] ?? 0);   // comentario de alguien a quien he ghosteado: plegado (details), por si quiero leerlo
@@ -179,7 +179,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     $nameHtml = shown($c, $revealed) ? "<a href=\"/u/" . rawurlencode($c['login']) . "\">" . h($n) . "</a>" : h($n);
     echo "<div class=\"l1\"><b>$nameHtml</b>" . mod_real($c, $revealed) . "<span class=\"meta\"> · " . h(hace($c['created'])) . (!empty($c['edited_at']) && !$del ? " · " . t('editado') : "") . "</span></div>";
     if ($parent && !empty($c['root_id']) && ($reto || (int)$c['parent_id'] !== (int)$c['root_id'])) {
-        $pn = display_name($parent, ghost_over($parent['created']));
+        $pn = display_name($parent, ghost_over_comment($parent['created']));
         echo "<div class=\"meta reto\">" . t('en respuesta a %s', h($pn)) . "</div>";
     }
     if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has silenciado') . " · <a href=\"/perfil#ghost\">" . t('deshacer') . "</a></summary>";
@@ -212,7 +212,7 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     echo avatar($u ? (float)$u['aura'] : (float)cfg('aura_anon', 5), $u ? $u['login'] : '');
     echo "<div class=\"cbox\">";
     if ($parent) {
-        $pn = display_name($parent, ghost_over($parent['created']));
+        $pn = display_name($parent, ghost_over_comment($parent['created']));
         echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo/$story_id" . ($vt !== '' ? "?v=$vt" : '') . "\">" . t('cancelar') . "</a></div>";
     }
     $ph = $u ? t('Escribe con alias; tu nombre aparecerá en %d min', (int)cfg('ghost_minutes', 30)) : t('Escribe como anónimo');

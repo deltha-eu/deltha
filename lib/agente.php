@@ -198,7 +198,7 @@ function agent_thread_comments(PDO $pdo, int $story_id, int $uid, int $limit = 1
     $cs->execute([$story_id]);
     $out = [];
     foreach ($cs->fetchAll() as $c) $out[] = ['id' => (int)$c['comment_id'], 'parent' => (int)$c['parent_id'] ?: null, 'mine' => (int)$c['user_id'] === $uid,
-        'who' => display_name($c, ghost_over($c['created'])), 'text' => mb_substr((string)$c['content'], 0, 1200)];
+        'who' => display_name($c, ghost_over_comment($c['created'])), 'text' => mb_substr((string)$c['content'], 0, 1200)];
     return $out;
 }
 /** Respuestas de otros a comentarios del agente que aun no ha contestado ni descartado (migra-157): con agent_reply_min_min

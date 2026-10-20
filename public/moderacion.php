@@ -282,7 +282,7 @@ $notes = mod_notes($pdo, 'comment', array_column($reps, 'comment_id'));
 echo "<h3 id=\"reportes\">Comentarios reportados (" . count($reps) . ")</h3>";
 if (!$reps) echo "<p>No hay reportes pendientes.</p>";
 foreach ($reps as $r) {
-    $who = ($r['login'] && ghost_over($r['created'])) ? $r['login'] : $r['alias'];
+    $who = ($r['login'] && ghost_over_comment($r['created'])) ? $r['login'] : $r['alias'];
     $motivos = implode(', ', array_map(fn($k) => $RZ[$k] ?? $k, explode(',', $r['reasons'])));
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($who) . "</b> en <a href=\"/hilo/{$r['story_id']}#c{$r['comment_id']}\">" . h(mb_strimwidth($r['title'], 0, 70, '…')) . "</a>";
     echo "<span class=\"meta\"> · " . h(hace($r['created'])) . " · <b>{$r['n']}</b> " . ($r['n'] == 1 ? 'reporte' : 'reportes') . " · " . h($motivos) . "</span></div>";
