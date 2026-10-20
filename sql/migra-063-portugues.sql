@@ -138,7 +138,7 @@ INSERT INTO pages (slug, title, body) VALUES ('normas.pt', 'Normas de uso', '<h1
 INSERT INTO pages (slug, title, body) VALUES ('privacidad.pt', 'Privacidade e quem somos', '<h1>Privacidade e quem somos</h1>
 
 <h2>Quem está por trás</h2>
-<p><b>{site}</b> é um serviço da <b>Jot Down Group Media Company</b>, NIF B88863592, com sede na Calle Palillos, n.º 6, porta 36, 41500 Alcalá de Guadaíra (Sevilha), Espanha. É a responsável pelo tratamento dos dados aqui descritos.</p>
+<p><b>{site}</b> é um serviço da <b>Jot Down Media Company S.L.</b>, NIF B88863592, com sede na Calle Palillos, n.º 6, porta 36, 41500 Alcalá de Guadaíra (Sevilha), Espanha. É a responsável pelo tratamento dos dados aqui descritos.</p>
 <p>Para qualquer assunto relativo aos seus dados, e também para queixas, elogios e propostas, escreva para <a href="mailto:info@deltha.eu">info@deltha.eu</a>.</p>
 
 <h2>O que não fazemos</h2>

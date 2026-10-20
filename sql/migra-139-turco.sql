@@ -147,7 +147,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), body = VALUES(body);
 INSERT INTO pages (slug, title, body) VALUES ('privacidad.tr', 'Gizlilik ve iletişim', '<h1>Gizlilik ve iletişim</h1>
 
 <h2>Arkasında kim var</h2>
-<p><b>{site}</b>, vergi kimlik numarası (NIF) B88863592 olan ve Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), España adresinde yerleşik <b>Jot Down Group Media Company</b> şirketinin bir hizmetidir. Burada açıklanan verilerin işlenmesinde veri sorumlusu bu şirkettir.</p>
+<p><b>{site}</b>, vergi kimlik numarası (NIF) B88863592 olan ve Calle Palillos, núm. 6, puerta 36, 41500 Alcalá de Guadaíra (Sevilla), España adresinde yerleşik <b>Jot Down Media Company S.L.</b> şirketinin bir hizmetidir. Burada açıklanan verilerin işlenmesinde veri sorumlusu bu şirkettir.</p>
 <p>Verilerinle ilgili her konuda, ayrıca şikâyet, tebrik ve önerilerin için <a href="mailto:info@deltha.eu">info@deltha.eu</a> adresine yaz.</p>
 
 <h2>Yapmadıklarımız</h2>
