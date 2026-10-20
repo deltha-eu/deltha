@@ -74,7 +74,7 @@ function source_link(array $s): string {
 
 /** Post de timeline. $mode: full (portadas, originales) | compact (radar) */
 function story_post(PDO $pdo, array $s, string $mode = "full"): void {
-    $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
+    $rev = (int)$s['revealed'] === 1 || $s['content_type'] === 'article' || ghost_over($s['sent_date']);   // los hilos de foro, sin velo (20/10/2026)
     $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
     $aura = $s['user_id'] ? (float)($s['author_aura'] ?? cfg('aura_start', 5)) : (float)cfg('aura_anon', 5);
     $href = "/hilo/{$s['story_id']}";

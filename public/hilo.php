@@ -14,6 +14,7 @@ if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true)
     exit;
 }
 if ($s['content_type'] === 'article' && ($fo = foro_de($s)) && !foro_abierto($fo)) { http_response_code(403); page_header(t('Foros'), 'foros'); echo "<p class=\"end\">" . h(foro_cerrado_txt($fo)) . ' <a href="/foros">' . t('Volver a los foros') . "</a></p>"; page_footer(); exit; }   // foro con aura minima (migra-165)
+if ($s['content_type'] === 'article') $GLOBALS['DDD_SIN_GHOST'] = true;   // en los foros no hay velo Ghost: nombres desde el primer minuto (20/10/2026)
 if ($s['content_type'] === 'article') { foco_por_defecto(); $fo = foro_de($s); page_crumb($fo ? foro_url($fo) : '/foros', $fo ? (string)$fo['name'] : t('Foros')); }   // cabecera «Originales › Hilo» (el foro del hilo, migra-159): se vuelve a la lista con un clic; un texto propio se abre en modo sin distracciones salvo que el lector lo haya quitado
 if (!empty($s['comm_skin'])) community_skin($s['comm_skin']);   // el hilo se ve con la plantilla de su comunidad
 $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
