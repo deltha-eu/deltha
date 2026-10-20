@@ -23,7 +23,7 @@ if ($chat > 0) {
     $c = $st->fetch();
     if (!$c) { http_response_code(404); page_header(t('Reportar')); echo "<p class=\"end\">" . t('Ese comentario no existe.') . "</p>"; page_footer(); exit; }
     $back = "/hilo/{$c['story_id']}#c$id";
-    $table = 'comment_reports'; $col = 'comment_id'; $backTxt = t('Volver al hilo'); $n = display_name($c, ghost_over($c['created']));
+    $table = 'comment_reports'; $col = 'comment_id'; $backTxt = t('Volver al hilo'); $n = display_name($c, ghost_over_comment($c['created']));
 }
 if ((int)$c['deleted']) redirect($back);
 

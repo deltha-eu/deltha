@@ -314,6 +314,10 @@ function ghost_over(string $dt): bool {
     if (!empty($GLOBALS['DDD_SIN_GHOST'])) return true;
     return time() - strtotime($dt) >= (int)cfg('ghost_minutes', 30) * 60;
 }
+/** El velo Ghost de un COMENTARIO: desde el 20/10/2026 no hay (decision de Angel: los comentarios no influyen en los votos a la noticia,
+ *  y el velo estorba la conversacion —todos «Ghost» durante la media hora mas viva del hilo—). Ghost queda solo para los envios.
+ *  Se conserva la firma con la fecha para poder volver atras con una linea (return ghost_over($dt)). */
+function ghost_over_comment(string $dt): bool { return true; }
 
 /* ---- comunidades ----------------------------------------------------
  * Segunda clasificacion de los envios, ortogonal a los temas: cada envio tiene un

@@ -131,7 +131,7 @@ function buscar_usuarios(PDO $pdo, array $T, int $limit, int $offset): array {
 
 /* ---- pintado ----------------------------------------------------------------------------------------------- */
 function buscar_pinta_comentario(array $c, array $T): void {
-    $rev = ghost_over($c['created']);
+    $rev = ghost_over_comment($c['created']);
     $n = display_name($c, $rev);
     $href = "/hilo/{$c['story_id']}#c{$c['comment_id']}";
     echo "<article class=\"post reply root found\">" . who_avatar($c, $rev, (float)$c['aura'], $n) . "<div class=\"pc\">";

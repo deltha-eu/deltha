@@ -298,7 +298,7 @@ foreach ($ev as $e) {
             if (isset($TOPE[$sid])) $txt .= " <span class=\"tope\" title=\"" . h(t('este publicador ha llegado al máximo diario de envíos')) . "\">" . h(t('%d hoy de %s', $TOPE[$sid][1], str_starts_with($TOPE[$sid][0], 'yt:') ? t('ese canal de YouTube') : $TOPE[$sid][0])) . "</span>";
             $ic = 'new'; break;
         case 'comentario':
-            $rev = ghost_over($e['ts']);
+            $rev = ghost_over_comment($e['ts']);
             $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
             $lead = who_avatar($row, $rev, $aura, $name);
             // el comentario (recortado) y, debajo, el hilo (11/10/2026; antes solo «comenta en <hilo>»)
