@@ -40,6 +40,22 @@ for d in /etc/php/8.3/fpm/conf.d /etc/php/8.3/apache2/conf.d; do
   fi
 done
 
+echo "== media y subidas"
+# Carpetas de subidas (fotos, avatares, comunidades, imagenes de comentarios por año/mes) propiedad del usuario de PHP-FPM.
+# El 20/10/2026 PHP no podia crear public/media/c (mkdir: Permission denied) ni escribir fotos: se asegura en cada despliegue.
+PHPU=$(ps -o user= -C php-fpm8.3 2>/dev/null | grep -v '^root$' | sort -u | head -n1); PHPU=${PHPU:-www-data}
+install -d -o "$PHPU" -g "$PHPU" "$DIR/public/media" "$DIR/public/media/avatars" "$DIR/public/media/comunidades" "$DIR/public/media/c" "$DIR/public/media/c/$(date +%Y)" "$DIR/public/media/c/$(date +%Y/%m)"
+chown -R "$PHPU:$PHPU" "$DIR/public/media"
+# Limites de subida de PHP: el valor por defecto (upload_max_filesize = 2M) rechazaba fotos normales de movil aunque img_max_bytes admite 6 MB.
+for d in /etc/php/8.3/fpm/conf.d /etc/php/8.3/apache2/conf.d; do
+  [ -d "$d" ] || continue
+  INI="$d/99-deltha-subidas.ini"
+  if [ ! -f "$INI" ]; then
+    printf '; Deltha: fotos de hasta 6 MB (config img_max_bytes) con margen para el resto del formulario\nupload_max_filesize = 8M\npost_max_size = 10M\n' > "$INI"
+    echo "limites de subida en $INI"
+  fi
+done
+
 echo "== comprobacion"
 for f in $(find "$DIR/lib" "$DIR/public" "$DIR/scripts" -name '*.php'); do php -l "$f" >/dev/null || echo "ERROR de sintaxis en $f"; done
 systemctl reload php8.3-fpm 2>/dev/null || true
