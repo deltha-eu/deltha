@@ -900,7 +900,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'ver con mi plantilla' => 'kendi şablonumla gör',
 'ver con su plantilla' => 'onun şablonuyla gör',
 'Salidas a los medios' => 'Yayınlara çıkışlar',
-'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Bir gönderinin başlığına tıklayıp özgün habere giden tıklamalar: %s\'nın yayınlara gönderdiği trafik.',
+'Clics en el titular de un envío o de una noticia de las fichas de medios que llevan al artículo original: el tráfico que %s manda a los medios.' => 'Bir gönderinin ya da yayın sayfalarındaki bir haberin başlığına tıklayıp özgün makaleye giden tıklamalar: %s\'nın yayınlara gönderdiği trafik.',
 'hoy' => 'bugün',
 'este mes' => 'bu ay',
 'este año' => 'bu yıl',

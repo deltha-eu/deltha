@@ -919,7 +919,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'ver con mi plantilla' => 'view with my skin',
 'ver con su plantilla' => 'view with its skin',
 'Salidas a los medios' => 'Outbound to the media',
-'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Clicks on a submission headline that lead to the original story: the traffic %s sends to the media.',
+'Clics en el titular de un envío o de una noticia de las fichas de medios que llevan al artículo original: el tráfico que %s manda a los medios.' => 'Clicks on a submission headline or on a story in a media profile that lead to the original article: the traffic %s sends to the media.',
 'hoy' => 'today',
 'este mes' => 'this month',
 'este año' => 'this year',

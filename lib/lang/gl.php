@@ -879,7 +879,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'ver con mi plantilla' => 'ver coa miña plantilla',
 'ver con su plantilla' => 'ver coa súa plantilla',
 'Salidas a los medios' => 'Saídas aos medios',
-'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Clics no titular dun envío que levan á noticia orixinal: o tráfico que %s manda aos medios.',
+'Clics en el titular de un envío o de una noticia de las fichas de medios que llevan al artículo original: el tráfico que %s manda a los medios.' => 'Clics no titular dun envío ou dunha noticia das fichas de medios que levan ao artigo orixinal: o tráfico que %s manda aos medios.',
 'hoy' => 'hoxe',
 'este mes' => 'este mes',
 'este año' => 'este ano',

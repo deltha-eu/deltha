@@ -880,7 +880,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'ver con mi plantilla' => 'vedere con la mia skin',
 'ver con su plantilla' => 'vedere con la sua skin',
 'Salidas a los medios' => 'Uscite verso le testate',
-'Clics en el titular de un envío que llevan a la noticia original: el tráfico que %s manda a los medios.' => 'Clic sul titolo di un invio che portano alla notizia originale: il traffico che %s manda alle testate.',
+'Clics en el titular de un envío o de una noticia de las fichas de medios que llevan al artículo original: el tráfico que %s manda a los medios.' => 'Clic sul titolo di un invio o di una notizia delle schede delle testate che portano all\'articolo originale: il traffico che %s manda alle testate.',
 'hoy' => 'oggi',
 'este mes' => 'questo mese',
 'este año' => 'quest\'anno',
