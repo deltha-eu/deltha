@@ -215,7 +215,7 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
         $pn = display_name($parent, ghost_over_comment($parent['created']));
         echo "<div class=\"meta\">" . t('Respondiendo a') . " <b>" . h($pn) . "</b> · <a href=\"/hilo/$story_id" . ($vt !== '' ? "?v=$vt" : '') . "\">" . t('cancelar') . "</a></div>";
     }
-    $ph = $u ? t('Escribe con alias; tu nombre aparecerá en %d min', (int)cfg('ghost_minutes', 30)) : t('Escribe como anónimo');
+    $ph = $u ? t('Escribe como %s', (string)$u['login']) : t('Escribe como anónimo');   // sin velo en comentarios (20/10/2026): se firma con el nombre desde el principio
     echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h($ph) . "\" required" . ($parent ? " autofocus" : "") . "></textarea>";
     echo "<button>" . ($parent ? t('Responder') : t('Comentar')) . "</button></div></form>";
 }
