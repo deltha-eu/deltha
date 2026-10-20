@@ -22,7 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && is_mod() && (int)$c['user_id'] !== 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('act') === 'eliminar' && is_mod()) {
         if (post('seguro') !== '1') $err = 'Marca la casilla de confirmación para eliminar.';
-        else {
+        elseif (post('modo') === 'todo' && is_admin()) {   // admin: borrado total, sin dejar rastro (pruebas y limpieza, 20/10/2026)
+            require_once __DIR__ . '/../lib/imagen.php';
+            if (comment_purge($pdo, $id)) redirect($back);
+            $err = 'Tiene respuestas: solo cabe el borrado normal (deja el aviso y las respuestas).';
+        } else {
             comment_delete($pdo, $id);   // el comentario se queda, con el texto sustituido por el aviso
             redirect($back);
         }
@@ -54,6 +58,11 @@ if (is_mod()) {
 echo "<h3 style=\"padding:16px 16px 0\">Eliminar</h3>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"eliminar\">";
 echo "<label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> sí, eliminar este comentario: su texto se sustituye por «" . h(DDD_DELETED_TXT) . "» (las respuestas se mantienen)</label>";
+if (is_admin()) {   // borrado total (20/10/2026): sin aviso, sin fila, sin votos ni imagen; solo si no tiene respuestas
+    $nr = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE parent_id = ?"); $nr->execute([$id]); $nr = (int)$nr->fetchColumn();
+    echo "<label><input type=\"radio\" name=\"modo\" value=\"aviso\" checked> dejar el aviso de comentario eliminado (moderación)</label>";
+    echo "<label><input type=\"radio\" name=\"modo\" value=\"todo\"" . ($nr ? ' disabled' : '') . "> borrar del todo, sin rastro: fila, votos, reportes, avisos e imagen; el contador del hilo baja" . ($nr ? " <small>(no: tiene $nr respuesta" . ($nr > 1 ? 's' : '') . ")</small>" : " <small>(admin; para pruebas y limpieza)</small>") . "</label>";
+}
 echo "<button class=\"danger\">Eliminar</button></form>";
 }
 page_footer();
