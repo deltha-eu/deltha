@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 226);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 227);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -501,6 +501,7 @@ function report_reasons(): array {
 /** Borrado de moderacion: el comentario sigue en el hilo (y en el contador) pero con el texto sustituido;
  *  el original queda en content_orig por si hace falta ante un requerimiento. Cierra sus reportes. */
 function comment_delete(PDO $pdo, int $id): bool {
+    try { $qi = $pdo->prepare("SELECT image FROM comments WHERE comment_id = ?"); $qi->execute([$id]); if (($img = $qi->fetchColumn()) && function_exists('imagen_comentario_borrar')) { imagen_comentario_borrar((string)$img); $pdo->prepare("UPDATE comments SET image = NULL WHERE comment_id = ?")->execute([$id]); } } catch (Throwable $e) {}   // la imagen adjunta se borra con el comentario (migra-166)
     $st = $pdo->prepare("UPDATE comments SET content_orig = IF(deleted = 1, content_orig, content), deleted = 1, content = ? WHERE comment_id = ? AND status = 'ok'");
     $st->execute([DDD_DELETED_TXT, $id]);
     try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([user()['user_id'] ?? null, $id]); } catch (Throwable $e) {}
@@ -1125,6 +1126,7 @@ function halo_style(float $aura): string {
 function icon(string $n): string {
     $p = [
         'home'   => '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/>',
+        'image'  => '<rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m5 18 5-5 3 3 2-2 5 4"/>',
         'cand'   => '<path d="M12 20V6"/><path d="m6 12 6-6 6 6"/>',
         'new'    => '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5l3 2"/>',
         'radar'  => '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/><circle cx="15.5" cy="9.2" r="1" fill="currentColor"/>',
