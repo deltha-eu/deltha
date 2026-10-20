@@ -3138,7 +3138,7 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail nav a.on .i { stroke-width: 2.4; }
   .rail nav .soon { color: var(--muted); opacity: .5; cursor: default; }
   .rail nav .badge { position: static; margin-left: auto; }
-  .rail .pub { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 6px 0 0; padding: 13px 18px; border-radius: 999px; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 16px; }
+  .rail .pub { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 6px 4px 0; padding: 13px 18px; border-radius: 999px; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 16px; }
   .rail .pub .i { width: 20px; height: 20px; stroke-width: 2.4; }
   header.top .bell { display: none; }
   header.top .lupa { display: none; }
