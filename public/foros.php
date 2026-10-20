@@ -8,6 +8,7 @@
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 foco_por_defecto();   // los foros se leen en modo sin distracciones salvo que el lector lo haya quitado (lib/app.php)
+$GLOBALS['DDD_SIN_GHOST'] = true;   // en los foros no hay velo Ghost: el autor del hilo sale con su nombre desde el primer minuto (20/10/2026)
 
 $visibles = foros(is_admin());
 $slug = (string)($_GET['f'] ?? '');
