@@ -17,6 +17,7 @@ if (isset($_GET['m'])) {   // compatibilidad: la casilla antigua (1 = solo el id
     require_once __DIR__ . '/../lib/fuentes.php';
     fuentes_guardar_idiomas($pdo, $u ? (int)$u['user_id'] : null, [], (string)$_GET['m'] === '1');
 }
+if (isset($_GET['k'])) pref_cookie('ddd_hacker', (string)$_GET['k'] === '1' ? '1' : '');   // modo hacker (20/10/2026): 1 = activo; otra cosa = fuera
 if (isset($_GET['z'])) pref_cookie('ddd_foco', in_array((string)$_GET['z'], ['0', '1'], true) ? (string)$_GET['z'] : '');   // modo «sin distracciones» del escritorio (1 = siempre, 0 = nunca, vacio = solo en Originales): del navegador, con o sin cuenta (foco() en lib/app.php)
 if (isset($_GET['l'])) {
     $l = (string)$_GET['l']; if (!isset(DDD_LANGS[$l])) $l = '';

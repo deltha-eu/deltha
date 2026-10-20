@@ -4051,3 +4051,15 @@ form.buscar-u a { font-size: 13px; color: var(--muted); text-decoration: underli
 .pin.off { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 4px 11px 4px 8px; border: 1px dashed var(--line2); border-radius: 999px; color: var(--muted); opacity: .7; cursor: help; }
 .pin.off .i { width: 15px; height: 15px; }
 .pin.off small { font-weight: 600; }
+
+/* ---- Modo hacker (20/10/2026): <html data-hacker="1"> (cookie ddd_hacker, menu lateral «Modo hacker», que solo aparece a partir de 2600 px).
+   Implica «sin distracciones» (foco() devuelve true: central de 980 px con las fotos a la derecha) y, a partir de 2600 px, la columna
+   derecha se desdobla en dos (720 px, multicolumna) con todos los modulos a la vista sin bajar: rail · central doble · dos laterales. ---- */
+.rail details.rail-dd.hacker { display: none; }
+@media (min-width: 2600px) {
+  .rail details.rail-dd.hacker { display: block; }
+  html[data-hacker] .cols { grid-template-columns: 260px 980px 720px; column-gap: 40px; }
+  html[data-hacker] .side { display: block; columns: 2; column-gap: 24px; column-fill: balance; padding-top: 16px; }
+  html[data-hacker] .side .mod, html[data-hacker] .side footer { break-inside: avoid; margin-bottom: 14px; display: block; }
+  html[data-hacker] .side .mod:last-child { margin-bottom: 0; }
+}

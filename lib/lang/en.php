@@ -973,4 +973,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'La imagen no es válida: vale JPG, PNG, WebP o AVIF.' => 'The image is not valid: JPG, PNG, WebP or AVIF.',
 'La imagen es demasiado pequeña (%d×%d): hace falta al menos 120×120.' => 'The image is too small (%d×%d): at least 120×120 needed.',
 'La imagen no se ha podido guardar. Prueba con otra.' => 'The image could not be saved. Try another one.',
+'Modo hacker' => 'Hacker mode',
+'Activo' => 'On',
+'Apagado' => 'Off',
 ];
