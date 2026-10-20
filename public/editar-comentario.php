@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mb_strlen($txt) < 1) $err = t('El comentario no puede quedar vacío.');
         else {
             $st = $pdo->prepare("UPDATE comments SET content = ?, edited_at = NOW() WHERE comment_id = ? AND content <> ?"); $st->execute([$txt, $id, $txt]);
+            if (post('quitar_img') === '1' && !empty($c['image'])) { require_once __DIR__ . '/../lib/imagen.php'; imagen_comentario_borrar((string)$c['image']); $pdo->prepare("UPDATE comments SET image = NULL WHERE comment_id = ?")->execute([$id]); }   // migra-166
             if ($own && $st->rowCount()) {
                 mod_requeue($pdo, 'comment', $id);   // lo edita su autor: la IA lo vuelve a mirar
                 avisos_comment($pdo, array_merge($c, ['content' => $txt]), null, avisos_nicks((string)$c['content']));   // solo los @nick nuevos
@@ -47,6 +48,7 @@ else echo "<p class=\"notice\">Edición de moderación. <a href=\"$back\">Volver
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
 echo "" . t('<label>Texto</label>') . "<textarea name=\"content\" rows=\"8\" maxlength=\"4000\" required>" . h((string)$c['content']) . "</textarea>";
+if (!empty($c['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($c['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($c['image']) . "\" alt=\"\"></a><label><input type=\"checkbox\" name=\"quitar_img\" value=\"1\"> " . t('quitar la imagen') . "</label>";   // migra-166
 echo "" . t('<button>Guardar</button>') . "</form>";
 if (is_mod()) {
 echo "<h3 style=\"padding:16px 16px 0\">Eliminar</h3>";
