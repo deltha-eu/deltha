@@ -21,6 +21,7 @@ El cron llama cada minuto, pero el ciclo solo se ejecuta una vez por ventana de 
 La zona horaria la fija `lib/app.php` (`[app] timezone` en config.ini, por defecto Europe/Madrid) para que web y cron compartan el mismo `NOW()`. Si el cron no promociona nada, ejecutarlo a mano y comparar: `php scripts/promocionar.php` y `php -r 'echo date("P");'`.
 
 ## Colaborar (ramas, PR y migraciones)
+- **CLA**: toda contribución requiere firmar el [acuerdo de licencia de contribución](CLA.md) (una vez; el sistema automático lo pide en la primera PR). El Titular puede relicenciar el proyecto; tú conservas tu autoría.
 - `main` es lo que está desplegado. Todo lo de un colaborador va en una rama propia y entra por **pull request**; nunca push directo a `main`. Ángel revisa, fusiona y despliega (`desplegar.ps1`, que hace push a GitHub y al droplet; el hook del droplet aplica las migraciones pendientes y pasa `php -l`).
 - **Si el PR lleva migración, dilo en el título** (p. ej. «feat: … (migra-163)») y en la descripción. El hook la aplica sola al desplegar, pero quien fusiona tiene que verlo venir.
 - Las migraciones van en `sql/migra-NNN-nombre.sql`, numeradas seguidas: antes de crear una, mira el último número que haya en `sql/` **en `main`** (no en tu rama), porque otros también van metiendo. Deben poder ejecutarse más de una vez sin efectos (`INSERT IGNORE`, `ADD COLUMN IF NOT EXISTS`…) y añadir lo nuevo también a `sql/schema.sql` si crean tablas o claves de config.
