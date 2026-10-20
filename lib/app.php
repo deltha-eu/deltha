@@ -306,8 +306,12 @@ function source_of(?string $url): ?string {
     return strtolower(preg_replace('/^www\./', '', $host));
 }
 
-/** El velo Ghost de una aportacion ha caducado? (fecha de la aportacion + ghost_minutes) */
+/** El velo Ghost de una aportacion ha caducado? (fecha de la aportacion + ghost_minutes). En los foros no hay velo (ghost_off): el hilo
+ *  y sus comentarios salen con el nombre desde el primer minuto, como en el chat (decision de Angel, 20/10/2026: el velo solo tiene sentido
+ *  donde hay votos en juego). La pagina lo activa con $GLOBALS['DDD_SIN_GHOST'] = true antes de pintar. El velo de «Silenciar» (ghost.php)
+ *  es otro y sigue aplicandose. */
 function ghost_over(string $dt): bool {
+    if (!empty($GLOBALS['DDD_SIN_GHOST'])) return true;
     return time() - strtotime($dt) >= (int)cfg('ghost_minutes', 30) * 60;
 }
 
