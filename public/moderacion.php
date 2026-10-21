@@ -169,15 +169,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apag
 }
 
 /* ---- fuentes propuestas por los usuarios (lib/propuestas.php) ---- */
+$fprop_test = [];   // valores recién probados: el formulario los conserva aunque no todos sean columnas de source_proposals
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_probar', 'fprop_ok', 'fprop_no'], true)) {
     $q = $pdo->prepare("SELECT * FROM source_proposals WHERE prop_id = ? AND status = 'pending'"); $q->execute([(int)post('pid')]);
     if (!($p = $q->fetch())) $out[] = 'Esa propuesta ya no está pendiente.';
     elseif (post('act') === 'fprop_probar') {
-        $feed = trim(post('feed')) ?: $p['feed'];
-        $r = fprop_probar($feed, $p['home']);
-        $pdo->prepare("UPDATE source_proposals SET feed = ?, lang = ?, test_items = ?, test_info = ? WHERE prop_id = ?")
-            ->execute([$r['feed'] !== '' ? $r['feed'] : $feed, $r['lang'], $r['items'], fprop_info($r), $p['prop_id']]);
-        $out[] = "«{$p['name']}»: " . ($r['items'] ? "{$r['items']} noticias en el RSS, idioma " . ($r['lang'] ?: '?') . ", la última de {$r['last']}." : "el RSS no se lee — {$r['error']}");
+        // Se prueba con lo escrito en el formulario (no con la fila antigua): «probar» no debe deshacer los cambios.
+        $home = array_key_exists('home', $_POST) ? mb_substr(trim(post('home')), 0, 200) : $p['home'];
+        $feed = array_key_exists('feed', $_POST) ? mb_substr(trim(post('feed')), 0, 300) : $p['feed'];
+        $name = mb_substr(trim(post('name')), 0, 48) ?: $p['name'];
+        $kind = in_array(post('kind'), ['medio', 'newsletter', 'youtube', 'agregador'], true) ? post('kind') : $p['kind'];
+        $descr = array_key_exists('descr', $_POST) ? (mb_substr(trim(post('descr')), 0, 200) ?: null) : $p['descr'];
+        $slang = preg_match('/^[a-z]{2}$/', post('lang')) ? post('lang') : '';
+        $r = fprop_probar($feed, $home);
+        $effFeed = $r['feed'] !== '' ? $r['feed'] : $feed;   // si la web anuncia otro RSS, se guarda el que funciona
+        $effLang = $slang !== '' ? $slang : $r['lang'];
+        $pdo->prepare("UPDATE source_proposals SET name = ?, kind = ?, home = ?, feed = ?, descr = ?, lang = ?, test_items = ?, test_info = ? WHERE prop_id = ?")
+            ->execute([$name, $kind, $home, $effFeed, $descr, $effLang, $r['items'], fprop_info($r), $p['prop_id']]);
+        $fprop_test[(int)$p['prop_id']] = [
+            'name' => $name, 'kind' => $kind, 'home' => $home, 'feed' => $effFeed, 'descr' => $descr, 'lang' => $effLang,
+            'topic_id' => (int)post('topic_id'),
+            'interval_min' => max(1, min(1440, (int)post('interval_min'))),
+        ];
+        if (array_key_exists('slug', $_POST)) $fprop_test[(int)$p['prop_id']]['slug'] = mb_substr(strtolower(trim(post('slug'))), 0, 24);
+        $out[] = "«{$name}»: " . ($r['items'] ? "{$r['items']} noticias en el RSS, idioma detectado " . ($r['lang'] ?: '?') . ", la última de {$r['last']}." : "el RSS no se lee — {$r['error']}");
     } elseif (post('act') === 'fprop_no') {
         $motivo = mb_substr(trim(post('reply')), 0, 300);
         $pdo->prepare("UPDATE source_proposals SET status = 'rejected', reply = ?, reviewed_by = ?, reviewed = NOW() WHERE prop_id = ?")->execute([$motivo ?: null, user()['user_id'], $p['prop_id']]);
@@ -359,6 +374,7 @@ if (!$props) echo "<p>No hay propuestas pendientes.</p>";
 else $ptopics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
 foreach ($props as $p) {
     $pid = (int)$p['prop_id']; $ok = (int)$p['test_items'] > 0;
+    if (isset($fprop_test[$pid])) $p = array_merge($p, $fprop_test[$pid]);   // lo recién probado manda sobre la fila de la BD
     $pslug = '';
     if ($p['source_id']) { $qs = $pdo->prepare("SELECT slug FROM sources WHERE source_id = ?"); $qs->execute([(int)$p['source_id']]); $pslug = (string)$qs->fetchColumn(); }
     echo "<div class=\"repitem fprop\"><div class=\"rephead\"><b>" . h($p['name']) . "</b> · " . ($p['kind'] === 'newsletter' ? 'substack/newsletter' : ($p['kind'] === 'youtube' ? 'canal de YouTube' : 'medio')) . ($pslug !== '' ? " · <a href=\"/fuente/" . h($pslug) . "\">ya activa, fuera del catálogo</a>" : '');
@@ -369,16 +385,20 @@ foreach ($props as $p) {
     // aprobar: datos editables, como en admin > Fuentes
     echo "<form method=\"post\" class=\"fprop-ok\"><input type=\"hidden\" name=\"act\" value=\"fprop_ok\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><table>";
     echo "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" maxlength=\"48\" required value=\"" . h($p['name']) . "\"></td></tr>";
-    echo "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($pslug !== '' ? $pslug : fprop_slug($pdo, $p['name'])) . "\"></td></tr>";
+    $slugv = array_key_exists('slug', $p) ? (string)$p['slug'] : ($pslug !== '' ? $pslug : fprop_slug($pdo, $p['name']));
+    echo "<tr><td>slug</td><td><input type=\"text\" name=\"slug\" maxlength=\"24\" required pattern=\"[a-z0-9\\-]{2,24}\" value=\"" . h($slugv) . "\"></td></tr>";
     echo "<tr><td>tipo</td><td><select name=\"kind\"><option value=\"medio\"" . ($p['kind'] === 'medio' ? ' selected' : '') . ">medio</option><option value=\"newsletter\"" . ($p['kind'] === 'newsletter' ? ' selected' : '') . ">substack/newsletter</option><option value=\"youtube\"" . ($p['kind'] === 'youtube' ? ' selected' : '') . ">canal de YouTube</option><option value=\"agregador\"" . ($p['kind'] === 'agregador' ? ' selected' : '') . ">agregador/foro</option></select></td></tr>";
     echo "<tr><td>web</td><td><input type=\"url\" name=\"home\" required value=\"" . h($p['home']) . "\"></td></tr>";
-    echo "<tr><td>RSS</td><td><input type=\"url\" name=\"feed\" required value=\"" . h($p['feed']) . "\"> <button class=\"btn sm\" name=\"act\" value=\"fprop_probar\" formnovalidate title=\"volver a leer este RSS\">probar</button></td></tr>";
+    echo "<tr><td>RSS</td><td><input type=\"url\" name=\"feed\" required value=\"" . h($p['feed']) . "\"> <button class=\"btn sm\" name=\"act\" value=\"fprop_probar\" formnovalidate title=\"probar con esta web y este RSS; se guardan los cambios\">probar</button></td></tr>";
     echo "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h((string)$p['descr']) . "\"></td></tr>";
     echo "<tr><td>idioma</td><td><select name=\"lang\"><option value=\"\">— detectar del RSS —</option>";
     foreach (DDD_LANGS as $lc => $ln) echo "<option value=\"$lc\"" . ($p['lang'] === $lc ? ' selected' : '') . ">" . h($ln) . " ($lc)</option>";
-    echo "</select></td></tr><tr><td>tema al enviar</td><td><select name=\"topic_id\"><option value=\"0\">— el que elija quien envía —</option>";
-    foreach ($ptopics as $tp) echo "<option value=\"{$tp['topic_id']}\">" . h($tp['name']) . "</option>";
-    echo "</select></td></tr><tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"" . ($p['kind'] === 'newsletter' ? 1440 : ($p['kind'] === 'youtube' ? 180 : 60)) . "\"> minutos</td></tr>";
+    $topicv = (int)($p['topic_id'] ?? 0);
+    echo "</select></td></tr><tr><td>tema al enviar</td><td><select name=\"topic_id\"><option value=\"0\"" . ($topicv === 0 ? ' selected' : '') . ">— el que elija quien envía —</option>";
+    foreach ($ptopics as $tp) echo "<option value=\"{$tp['topic_id']}\"" . ($topicv === (int)$tp['topic_id'] ? ' selected' : '') . ">" . h($tp['name']) . "</option>";
+    $ivv = (int)($p['interval_min'] ?? 0);
+    if ($ivv < 1) $ivv = $p['kind'] === 'newsletter' ? 1440 : ($p['kind'] === 'youtube' ? 180 : 60);
+    echo "</select></td></tr><tr><td>leer cada</td><td><input type=\"number\" name=\"interval_min\" min=\"1\" max=\"1440\" value=\"$ivv\"> minutos</td></tr>";
     echo "<tr><td></td><td><button class=\"btn\">Aprobar y añadir al catálogo</button></td></tr></table></form>";
     echo "<form method=\"post\" class=\"repacts\"><input type=\"hidden\" name=\"act\" value=\"fprop_no\"><input type=\"hidden\" name=\"pid\" value=\"$pid\"><input type=\"text\" name=\"reply\" maxlength=\"300\" placeholder=\"motivo (se le envía)\" style=\"flex:1;min-width:180px\"> " . ($pslug !== '' ? "<label><input type=\"checkbox\" name=\"retirar\" value=\"1\"> retirarla también de sus medios</label> " : '') . "<button class=\"btn danger\">" . ($pslug !== '' ? 'No al catálogo' : 'Rechazar') . "</button></form></div>";
 }
