@@ -78,13 +78,13 @@ if ($u !== '') {
         $day = date('Y-m-d', strtotime($m['created']));
         if ($day !== $lastDay) { echo "<div class=\"msgday\">" . h(msg_day($day)) . "</div>"; $lastDay = $day; }
         $mine = (int)$m['from_id'] === $myId;
-        echo "<div class=\"msg " . ($mine ? 'me' : 'them') . "\" id=\"m{$m['msg_id']}\"><div class=\"bubble\">" . h($m['content']) . "</div><span class=\"meta\">" . date('H:i', strtotime($m['created'])) . "</span></div>";
+        echo "<div class=\"msg " . ($mine ? 'me' : 'them') . "\" id=\"m{$m['msg_id']}\"><div class=\"bubble\">" . md_comentario($m['content']) . "</div><span class=\"meta\">" . date('H:i', strtotime($m['created'])) . "</span></div>";
     }
     echo "<span id=\"fin\"></span>";
     if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
     echo "<form class=\"composer\" method=\"post\" action=\"/mensajes\"><input type=\"hidden\" name=\"to\" value=\"" . h($other['login']) . "\">";
     echo avatar((float)$me['aura'], $me['login'], $me['avatar']);
-    echo "<div class=\"cbox\"><textarea name=\"content\" maxlength=\"$MAX\" placeholder=\"" . t('Mensaje para %s', h($other['login'])) . "\" required autofocus>" . ($err ? h($content ?? '') : '') . "</textarea>" . t('<button>Enviar</button>') . "</div></form>";
+    echo "<div class=\"cbox\"><textarea name=\"content\" maxlength=\"$MAX\" placeholder=\"" . t('Mensaje para %s', h($other['login'])) . "\" required autofocus>" . ($err ? h($content ?? '') : '') . "</textarea>" . md_ayuda() . t('<button>Enviar</button>') . "</div></form>";
     page_footer();
     exit;
 }

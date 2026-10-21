@@ -921,4 +921,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Marca un o més. Si no en marques cap, s\'usa l\'idioma de la interfície (%s). Deixen de sortir les fonts i enviaments en els altres idiomes; els d\'idioma desconegut es veuen sempre.',
 'Todos los idiomas' => 'Tots els idiomes',
 'cambiar' => 'canviar',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marques: <code>**negreta**</code> · <code>*cursiva*</code> · una línia que comenci per <code>&gt;</code> és una cita · <code>[text](https://enllaç)</code>. Els paràgrafs se separen amb una línia en blanc.',
 ];

@@ -185,7 +185,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has silenciado') . " · <a href=\"/perfil#ghost\">" . t('deshacer') . "</a></summary>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
     else {
-        echo "<p>" . saltos(enlaces(function_exists('nicks_format') ? nicks_format(md_inline(h($c['content']))) : md_inline(h($c['content'])))) . "</p>";   // **negrita**, *cursiva*, [texto](url) (20/10/2026); @nick → perfil, URLs → enlaces (07/10/2026)
+        echo md_comentario($c['content']);   // **negrita**, *cursiva*, > cita, [texto](url) y parrafos (21/10/2026); @nick → perfil, URLs → enlaces (07/10/2026)
         if (!empty($c['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($c['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($c['image']) . "\" alt=\"\" loading=\"lazy\"></a>";   // imagen adjunta (migra-166): miniatura dentro de la sangria, a tamaño completo en otra pestaña
     }
     if ($fold) echo "</details>";
@@ -221,6 +221,7 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     }
     $ph = $u ? t('Escribe como %s', (string)$u['login']) : t('Escribe como anónimo');   // sin velo en comentarios (20/10/2026): se firma con el nombre desde el principio
     echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h($ph) . "\" required" . ($parent ? " autofocus" : "") . "></textarea>";
+    echo md_ayuda();
     if (!empty($_SESSION['flash_err'])) { echo "<p class=\"error\">" . h((string)$_SESSION['flash_err']) . "</p>"; unset($_SESSION['flash_err']); }
     echo "<div class=\"crow\">";
     if ($conImg) echo "<label class=\"cimgpick\" title=\"" . h(t('Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida')) . "\">" . icon('image') . "<span>" . t('Imagen') . "</span><input type=\"file\" name=\"photo\" accept=\"image/*\"></label>";
@@ -314,6 +315,23 @@ function md_inline(string $t): string {   // $t ya escapado
     $t = preg_replace('~\*\*(?=\S)(.+?)(?<=\S)\*\*~su', '<b>$1</b>', $t);
     $t = preg_replace('~(?<![\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])~u', '<i>$1</i>', $t);
     return $t;
+}
+/** Bloques con las mismas marcas que los articulos: parrafos por linea en blanco y citas (>). $inline recibe cada bloque. */
+function md_bloques(string $content, callable $inline): string {
+    $out = '';
+    foreach (preg_split('/\R{2,}/', trim($content)) as $para) {
+        $para = trim($para);
+        if ($para === '') continue;
+        if (preg_match('/^>\s?/u', $para)) {
+            $para = preg_replace('/^>\s?/mu', '', $para);
+            $out .= '<blockquote class="cita">' . $inline(trim($para)) . '</blockquote>';
+        } else $out .= '<p>' . $inline($para) . '</p>';
+    }
+    return $out;
+}
+/** Texto de un comentario (hilo, foro, comunidad o mensaje privado): parrafos y citas, con **negrita**, *cursiva*, [texto](url), @nick y URLs. */
+function md_comentario(string $content): string {
+    return md_bloques($content, fn(string $t): string => saltos(enlaces(function_exists('nicks_format') ? nicks_format(md_inline(h($t))) : md_inline(h($t)))));
 }
 function md_articulo(string $content): string {   // parrafos separados por linea en blanco; cada uno .lead.para (o cita)
     $out = '';

@@ -113,7 +113,7 @@ echo "<label>" . t('Titular') . "</label><input type=\"text\" name=\"title\" max
 if (!$isArt && !$own) echo "<label>Enlace (vacío = sin enlace)</label><input type=\"url\" name=\"url\" value=\"" . h((string)$s['url']) . "\" placeholder=\"https://…\">";
 if (!$isArt && $own && $s['url']) echo "<label>" . t('Enlace') . "</label><p class=\"meta\" style=\"padding:0\"><a href=\"" . h($s['url']) . "\" rel=\"noopener nofollow\">" . h((string)$s['source']) . "</a> · " . t('el enlace no se puede cambiar') . "</p>";
 echo "<label>" . ($isArt ? t('Texto del artículo') : t('Entradilla')) . "</label><textarea name=\"content\" rows=\"" . ($isArt ? 16 : 5) . "\" maxlength=\"$maxLen\">" . h((string)$s['content']) . "</textarea>";
-if ($isArt) echo "<p class=\"meta mdhelp\">" . t('Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.') . "</p>";
+if ($isArt) echo md_ayuda();
 echo "<label>" . t('Tema') . "</label><select name=\"topic\">";
 foreach ($topics as $t) echo "<option value=\"{$t['topic_id']}\"" . ((int)$s['topic_id'] === (int)$t['topic_id'] ? ' selected' : '') . ">" . h($t['name']) . "</option>";
 echo "</select>";

@@ -69,7 +69,7 @@ if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">";
 echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
 echo "<label>" . t('Texto (máximo %d palabras)', $maxWords) . "</label><textarea name=\"content\" rows=\"14\" required>" . h($f['content']) . "</textarea>";
-echo "<p class=\"meta mdhelp\">" . t('Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.') . "</p>";
+echo md_ayuda();
 if ($foros) {   // foro de destino: con uno solo, campo oculto
     if (count($foros) === 1) echo "<input type=\"hidden\" name=\"f\" value=\"" . h($fsel) . "\">";
     else {

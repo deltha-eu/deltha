@@ -51,7 +51,7 @@ if ($own) { $q = (int)cfg('comment_edit_minutes', 10) * 60 - (time() - strtotime
 else echo "<p class=\"notice\">Edición de moderación. <a href=\"$back\">Volver al hilo</a>.</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-echo "" . t('<label>Texto</label>') . "<textarea name=\"content\" rows=\"8\" maxlength=\"4000\" required>" . h((string)$c['content']) . "</textarea>";
+echo "" . t('<label>Texto</label>') . "<textarea name=\"content\" rows=\"8\" maxlength=\"4000\" required>" . h((string)$c['content']) . "</textarea>" . md_ayuda();
 if (!empty($c['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($c['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($c['image']) . "\" alt=\"\"></a><label><input type=\"checkbox\" name=\"quitar_img\" value=\"1\"> " . t('quitar la imagen') . "</label>";   // migra-166
 echo "" . t('<button>Guardar</button>') . "</form>";
 if (is_mod()) {

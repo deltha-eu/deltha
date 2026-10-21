@@ -921,4 +921,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Markatu bat edo gehiago. Bat ere markatzen ez baduzu, interfazearen hizkuntza erabiliko da (%s). Beste hizkuntzetako iturriak eta bidalketak ez dira agertuko; hizkuntza ezezagunekoak beti ikusten dira.',
 'Todos los idiomas' => 'Hizkuntza guztiak',
 'cambiar' => 'aldatu',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Markak: <code>**lodia**</code> · <code>*etzana*</code> · <code>&gt;</code>-rekin hasten den lerroa aipamen bat da · <code>[testua](https://esteka)</code>. Paragrafoak lerro zuri batekin bereizten dira.',
 ];

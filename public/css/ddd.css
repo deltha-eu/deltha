@@ -181,6 +181,17 @@ form.fav.on .i { fill: currentColor; }
 .hilo .main .lead a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 form.plain .mdhelp { margin: -6px 0 12px; font-size: 13px; color: var(--muted); }
 form.plain .mdhelp code { font-size: 12px; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); padding: 1px 5px; border-radius: 4px; }
+/* mismas marcas en comentarios, chat y mensajes privados (21/10/2026) */
+.composer .mdhelp, .chatbox .mdhelp { margin: 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
+.composer .mdhelp code, .chatbox .mdhelp code { font-size: 11px; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); padding: 1px 4px; border-radius: 4px; }
+.post blockquote.cita, .chat .cm blockquote.cita, .msg .bubble blockquote.cita { margin: 4px 0 2px; padding: 2px 0 2px 12px; border-left: 3px solid var(--line2); color: var(--muted); font-style: italic; }
+.msg .bubble blockquote.cita { margin: .35em 0; padding: 2px 0 2px 10px; border-left: 3px solid currentColor; color: inherit; opacity: .85; }
+.post.reply p a, .post.reply blockquote.cita a, .chat .cm blockquote.cita a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.msg .bubble a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.post .pc > p + p, .post .pc > p + blockquote, .post .pc > blockquote + p, .post .pc > blockquote + blockquote { margin-top: 8px; }
+.chat .cm > p + p, .chat .cm > p + blockquote, .chat .cm > blockquote + p, .chat .cm > blockquote + blockquote { margin-top: 8px; }
+.msg .bubble p { margin: 0 0 .45em; }
+.msg .bubble p:last-child { margin-bottom: 0; }
 .hilo .source { display: inline-flex; gap: 6px; align-items: center; color: var(--accent); font-size: 14px; margin: 14px 0 6px; }   /* 01/10: aire sobre el enlace a la fuente, iba pegado al texto */
 /* barra del hilo: todo en una linea (~44px), icono + cifra en horizontal; cifras tabulares para que 0, 12 y 1234 no muevan el resto */
 .hilo .stats { display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }

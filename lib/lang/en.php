@@ -976,4 +976,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Modo hacker' => 'Hacker mode',
 'Activo' => 'On',
 'Apagado' => 'Off',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marks: <code>**bold**</code> · <code>*italic*</code> · a line starting with <code>&gt;</code> is a quote · <code>[text](https://link)</code>. Paragraphs are separated by a blank line.',
 ];
