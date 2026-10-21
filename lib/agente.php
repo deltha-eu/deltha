@@ -384,11 +384,15 @@ function agent_submit_cands(PDO $pdo, array $a, int $limit, bool $review = false
                            FROM source_items i JOIN sources s ON s.source_id = i.source_id LEFT JOIN topics t ON t.topic_id = s.topic_id
                           WHERE " . implode(' AND ', $w) . " ORDER BY i.pub_date DESC LIMIT " . max(1, min(120, $limit * ($review ? 3 : 1))));
     $st->execute($p);
+    $dup = $pdo->prepare("SELECT 1 FROM stories WHERE url_key = ? AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY LIMIT 1");
     $out = [];
     foreach ($st->fetchAll() as $i) {
         if (mb_strlen((string)$i['title']) < 8) continue;
         if (function_exists('source_blocked') && source_blocked($pdo, (string)$i['url'])) continue;   // medios bloqueados (lib/bloqueos.php)
         if (agent_item_vetado($i)) continue;   // ni Infobae ni teletipos de agencia (06/10/2026)
+        // ya enviada con otra forma del mismo enlace (?utm, ?m=1, /amp, www.): misma clave canonica (migra-168, 21/10/2026)
+        $dup->execute([url_key((string)$i['url'])]);
+        if ($dup->fetchColumn()) continue;
         if ($review && $langs) {
             $l = lang_detect((string)$i['title'] . ' ' . mb_substr((string)$i['content'], 0, 600));
             if ($l !== '' && $l !== '??' && !in_array($l, $langs, true)) continue;
@@ -450,8 +454,8 @@ function agent_submit_item(PDO $pdo, array $a, array $i): int {
     $lead = mb_substr(trim((string)$i['content']), 0, 2000) ?: null;
     $pdo->beginTransaction();
     $lang = (string)($i['src_lang'] ?? '') ?: lang_detect($title . ' ' . (string)$lead);
-    $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, ?, 'nuevas')")
-        ->execute([$uid, $topic, $title, $i['url'], source_of((string)$i['url']), $lang, $lead, $image]);
+    $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, url_key, source, lang, content, image, status) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'nuevas')")
+        ->execute([$uid, $topic, $title, $i['url'], url_key((string)$i['url']), source_of((string)$i['url']), $lang, $lead, $image]);
     $sid = (int)$pdo->lastInsertId();
     $pdo->prepare("UPDATE stories SET portada = ?, author_alias = ? WHERE story_id = ?")
         ->execute([portada_de($pdo, ['url' => $i['url'], 'source' => source_of((string)$i['url'])]), alias_user($pdo, $sid, $uid), $sid]);
