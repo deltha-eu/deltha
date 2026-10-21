@@ -34,9 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }
     if (!$err && $f['url'] !== '' && ($bloq = source_blocked($pdo, $f['url']))) { $err = t('Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.', h($bloq)); $step = '1'; }
 
-    if (!$err && $f['url'] !== '') {
-        $d = $pdo->prepare("SELECT story_id FROM stories WHERE url = ? AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");
-        $d->execute([$f['url']]);
+    if (!$err && $f['url'] !== '' && $step === '1') $f['url'] = url_resolver($f['url']);   // acortadores y redirecciones (migra-168): se envia el enlace final
+    if (!$err && $f['url'] !== '') {   // duplicado: por clave canonica (migra-168), no por el texto exacto del enlace
+        $d = $pdo->prepare("SELECT story_id FROM stories WHERE (url_key = ? OR url = ?) AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");
+        $d->execute([url_key($f['url']), $f['url']]);
         if ($dup = $d->fetchColumn()) { $err = t('Ese enlace ya está enviado: <a href="/hilo/%d">verlo</a>.', $dup); $step = '1'; }
     }
     // tope por persona (anonimo por huella, cuenta por user_id): se avisa ya en el paso 1, antes de rellenar nada
@@ -53,6 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($copia = imagen_copiar($img)) $pre['image'] = $copia;
             }
             $m = extraer_meta($f['url'], empty($pre['image']));   // con foto del RSS no hace falta bajar la og:image
+            if (!empty($m['canonical']) && ($uc = url_resolver($f['url'], $m['canonical'])) !== $f['url']) {   // la pagina declara su URL canonica (sin ?m=1, sin /amp): se envia esa (migra-168)
+                $f['url'] = $uc;
+                $d = $pdo->prepare("SELECT story_id FROM stories WHERE (url_key = ? OR url = ?) AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");
+                $d->execute([url_key($f['url']), $f['url']]);
+                if ($dup = $d->fetchColumn()) { $err = t('Ese enlace ya está enviado: <a href="/hilo/%d">verlo</a>.', $dup); $step = '1'; }
+            }
             $f['title'] = texto_plano($m['title']); $f['content'] = texto_plano($m['description']);
             $f['image'] = !empty($pre['image']) ? $pre['image'] : $m['image'];
             // (17/10/2026) video de YouTube: la pagina del video desde el servidor sale a veces vacia o con la de consentimiento, y entonces
@@ -122,9 +129,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $u = user();
             $status = 'nuevas';   // posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
             $pdo->beginTransaction();
-            $pdo->prepare("INSERT INTO stories (content_type, user_id, anon_key, topic_id, community_id, title, url, source, pub_key, lang, content, image, status)
-                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                ->execute([$u['user_id'] ?? null, $u ? null : $anonKey, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, source_of($f['url']), $f['pub'], $f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
+            $pdo->prepare("INSERT INTO stories (content_type, user_id, anon_key, topic_id, community_id, title, url, url_key, source, pub_key, lang, content, image, status)
+                           VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                ->execute([$u['user_id'] ?? null, $u ? null : $anonKey, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, $f['url'] !== '' ? url_key($f['url']) : null, source_of($f['url']), $f['pub'], $f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
             $sid = (int)$pdo->lastInsertId();
             $pdo->prepare("UPDATE stories SET portada = ? WHERE story_id = ?")->execute([portada_de($pdo, ['url' => $f['url'], 'source' => source_of($f['url'])]), $sid]);   // Medios o Substacks (el ciclo lo recalcula)
             if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);

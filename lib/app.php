@@ -320,6 +320,74 @@ function url_limpia(?string $url): string {
     if ($frag !== '' && !preg_match('~^(utm_|xtor=|at_medium=|Echobox=)~i', $frag)) $url .= '#' . $frag;
     return $url;
 }
+/* ---- Duplicados (migra-168, 21/10/2026): la misma noticia llega con ?m=1 (Blogger movil), /amp, www. o sin, http o https, barra final o no,
+ *  mayusculas en el dominio, o a traves de un acortador. url_key() reduce cada enlace a una clave canonica para compararlos; url_resolver()
+ *  sigue las redirecciones (acortadores) y toma la URL canonica que declara la propia pagina (<link rel="canonical"> / og:url) si es del
+ *  mismo dominio. Lo que se guarda en stories.url es el enlace resuelto y limpio; stories.url_key, la clave. ---- */
+const DDD_SHORTENERS = ['bit.ly', 't.co', 'tinyurl.com', 'goo.gl', 'ow.ly', 'buff.ly', 'dlvr.it', 'ift.tt', 'lnkd.in', 'is.gd', 'cutt.ly', 'rb.gy', 'shorturl.at', 'trib.al', 'n.pr', 'wp.me',
+    'acortar.link', 'tinyurl.es', 'rebrand.ly', 'bl.ink', 'short.io', 'tiny.cc', 'v.gd', 'qr.ae', 'fb.me', 'amzn.to', 'amzn.eu', 'youtu.be', 'redd.it', 'flip.it', 'mol.im', 'bbc.in', 'nyti.ms', 'wapo.st',
+    'reut.rs', 'econ.st', 'elpais.com/s', 'eldiario.es/s', 'ara.cat/s', 'vozpopuli.com/s', 'smarturl.it', 'lnk.to', 'urlz.fr', 'cort.as', 'hoy.es/s', 'ow.ly'];
+function url_key(?string $url): string {
+    $url = url_limpia($url);
+    if ($url === '' || !preg_match('~^https?://~i', $url)) return mb_substr($url, 0, 255);
+    $p = parse_url($url); if (!$p || empty($p['host'])) return mb_substr($url, 0, 255);
+    $host = strtolower($p['host']);
+    $host = preg_replace('~^(www\d*|m|amp|mobile)\.~', '', $host);
+    $path = (string)($p['path'] ?? '/');
+    $path = preg_replace('~/(amp|index\.html?|index\.php)$~i', '', $path);     // /amp, index.html
+    $path = preg_replace('~\.amp(\.html?)?$~i', '', $path);                   // noticia.amp.html
+    $path = preg_replace('~/+$~', '', $path);                                  // barra final
+    $pares = [];
+    if (!empty($p['query'])) foreach (explode('&', $p['query']) as $par) {
+        if ($par === '') continue;
+        $k = strtolower(rawurldecode(explode('=', $par, 2)[0])); $v = explode('=', $par, 2)[1] ?? '';
+        if (in_array($k, ['m', 'amp', 'output', 'outputtype', 'amp_js_v', 'usqp', 'ref', 'source', 'src', 'share', 'via', 'feature', 'app', 'platform', 'ncid', 'cmpid', 'ss', 'ssm', 'mc_cid', 'mc_eid', '_ga', 'rss', 'feed', 'format'], true)) continue;
+        if ($k === 'v' && str_contains($host, 'youtube.com')) { $pares = ["v=$v"]; break; }   // un video de YouTube: solo su id
+        $pares[] = "$k=$v";
+    }
+    sort($pares);
+    if ($host === 'youtu.be') { $host = 'youtube.com'; $pares = ['v=' . trim($path, '/')]; $path = '/watch'; }   // youtu.be/ID = youtube.com/watch?v=ID
+    return mb_substr($host . $path . ($pares ? '?' . implode('&', $pares) : ''), 0, 255);
+}
+/** Sigue redirecciones (acortadores) y, si la pagina declara canonical/og:url del mismo dominio registrable, devuelve ese enlace limpio.
+ *  Si no, el enlace final de las redirecciones; si tampoco, el original. No sustituye por paginas de login/consentimiento. */
+function url_resolver(string $url, ?string $html = null): string {
+    $url = url_limpia($url);
+    if ($url === '' || !preg_match('~^https?://~i', $url) || cfg('url_resolve', '1') !== '1') return $url;
+    $host = strtolower((string)parse_url($url, PHP_URL_HOST));
+    $final = $url;
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_NOBODY => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 6, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Deltha/1.0; +https://deltha.eu)', CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS]);
+        @curl_exec($ch);
+        $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); $eff = (string)curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        curl_close($ch);
+        if ($eff !== '' && $eff !== $url && ($code === 200 || $code === 405 || $code === 403 || $code === 0 && $eff !== $url)   // HEAD: algunos sitios responden 405/403 pero ya han redirigido
+            && !preg_match('~/(login|signin|sign-in|acceso|consent|cookies?|captcha|challenge)~i', (string)parse_url($eff, PHP_URL_PATH))) $final = url_limpia($eff);
+    }
+    // canonical de la propia pagina (misma raiz de dominio): quita ?m=1, /amp, versiones movil…
+    if ($html !== null && $html !== '' && (preg_match('~<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\']~i', $html, $m) || preg_match('~<link[^>]+href=["\']([^"\']+)["\'][^>]+rel=["\']canonical["\']~i', $html, $m)
+        || preg_match('~<meta[^>]+property=["\']og:url["\'][^>]+content=["\']([^"\']+)["\']~i', $html, $m))) {
+        $can = html_entity_decode(trim($m[1]), ENT_QUOTES);
+        if (preg_match('~^https?://~i', $can)) {
+            $raiz = fn(string $h) => implode('.', array_slice(explode('.', preg_replace('~^(www\d*|m|amp|mobile)\.~', '', strtolower($h))), -2));
+            $hc = (string)parse_url($can, PHP_URL_HOST); $hf = (string)parse_url($final, PHP_URL_HOST);
+            if ($hc !== '' && $raiz($hc) === $raiz($hf) && !preg_match('~/(login|signin|consent)~i', (string)parse_url($can, PHP_URL_PATH)) && strlen($can) < 600) $final = url_limpia($can);
+        }
+    }
+    return $final;
+}
+/** Cron: rellena stories.url_key en los envios anteriores a migra-168, unos cientos por pasada. */
+function url_key_tick(PDO $pdo): array {
+    try {
+        $st = $pdo->query("SELECT story_id, url FROM stories WHERE url_key IS NULL AND url IS NOT NULL AND url <> '' ORDER BY story_id DESC LIMIT 400");
+        $rows = $st->fetchAll(); if (!$rows) return [];
+        $up = $pdo->prepare("UPDATE stories SET url_key = ? WHERE story_id = ?");
+        foreach ($rows as $r) $up->execute([url_key((string)$r['url']), (int)$r['story_id']]);
+        return ['url_key: ' . count($rows) . ' envios con clave'];
+    } catch (Throwable $e) { return []; }
+}
 function source_of(?string $url): ?string {
     if (!$url) return null;
     $host = parse_url($url, PHP_URL_HOST);
