@@ -53,7 +53,7 @@ function rail_skins(): void {
     $items = [];
     foreach ($fo as $k => $v) $items[] = ["/cambiar-skin?z=$k", $v, $k === $fz, null];
     rail_dd('focus', t('Sin distracciones'), $fo[$fz], $items, 'foco');
-    // modo hacker (20/10/2026): solo se ve en pantallas de 2600 px o mas (CSS); cinco columnas, todo a la vista
+    // modo hacker (20/10/2026): solo se ve en pantallas de 2400 px o mas (CSS); cinco columnas, todo a la vista
     $hk = hacker();
     rail_dd('hacker', t('Modo hacker'), $hk ? t('Activo') : t('Apagado'), [["/cambiar-skin?k=1", t('Activo'), $hk, null], ["/cambiar-skin?k=0", t('Apagado'), !$hk, null]], 'hacker');
     // idioma
