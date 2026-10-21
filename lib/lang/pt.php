@@ -958,4 +958,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Marca um ou vários. Se não marcares nenhum, usa-se o idioma da interface (%s). As fontes e envios nos outros idiomas deixam de aparecer; os de idioma desconhecido veem-se sempre.',
 'Todos los idiomas' => 'Todos os idiomas',
 'cambiar' => 'alterar',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marcas: <code>**negrito**</code> · <code>*itálico*</code> · uma linha que comece por <code>&gt;</code> é uma citação · <code>[texto](https://link)</code>. Os parágrafos separam-se com uma linha em branco.',
 ];

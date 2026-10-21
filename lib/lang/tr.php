@@ -942,4 +942,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Bir veya daha fazlasını işaretle. Hiçbirini işaretlemezsen arayüz dili kullanılır (%s). Diğer dillerdeki kaynaklar ve gönderiler görünmez; dili bilinmeyenler her zaman görünür.',
 'Todos los idiomas' => 'Tüm diller',
 'cambiar' => 'değiştir',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'İşaretler: <code>**kalın**</code> · <code>*italik*</code> · <code>&gt;</code> ile başlayan satır alıntıdır · <code>[metin](https://link)</code>. Paragraflar boş satırla ayrılır.',
 ];

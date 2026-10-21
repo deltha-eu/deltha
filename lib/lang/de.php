@@ -922,4 +922,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.' => 'Eine oder mehrere markieren. Wenn keine markiert ist, wird die Sprache der Oberfläche verwendet (%s). Quellen und Einsendungen in anderen Sprachen werden ausgeblendet; bei unbekannter Sprache bleiben sie sichtbar.',
 'Todos los idiomas' => 'Alle Sprachen',
 'cambiar' => 'ändern',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Markierungen: <code>**fett**</code> · <code>*kursiv*</code> · eine Zeile, die mit <code>&gt;</code> beginnt, ist ein Zitat · <code>[Text](https://link)</code>. Absätze werden durch eine Leerzeile getrennt.',
 ];

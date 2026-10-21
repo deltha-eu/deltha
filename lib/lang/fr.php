@@ -975,4 +975,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Modo hacker' => 'Mode hacker',
 'Activo' => 'Actif',
 'Apagado' => 'Désactivé',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marques : <code>**gras**</code> · <code>*italique*</code> · une ligne qui commence par <code>&gt;</code> est une citation · <code>[texte](https://lien)</code>. Les paragraphes sont séparés par une ligne vide.',
 ];

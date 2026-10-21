@@ -36,7 +36,7 @@ page_header("$titulo #$id");
 echo "<p class=\"notice\">Edición de administración: el mensaje de <b>" . h(chat_who($m + ['login' => null])) . "</b> quedará marcado como editado. <a href=\"$back\">Volver al Chat</a>.</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
-echo "<label>Texto</label><textarea name=\"content\" rows=\"5\" maxlength=\"$maxLen\" required>" . h((string)$m['content']) . "</textarea>";
+echo "<label>Texto</label><textarea name=\"content\" rows=\"5\" maxlength=\"$maxLen\" required>" . h((string)$m['content']) . "</textarea>" . md_ayuda();
 echo "<label class=\"check\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\"" . ((int)$m['anuncio'] === 1 ? ' checked' : '') . "> Mensaje a la comunidad (sale resaltado y arriba del Chat)</label>";
 echo "<button>Guardar</button></form>";
 page_footer();

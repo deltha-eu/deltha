@@ -73,19 +73,22 @@ function chat_mentions(string $text): array {
  *  o ['alias' => …] si esta velado por ghosteo),
  *  URLs → enlace (nofollow). $ids = ids de mensajes que estan en la pagina actual (enlace con ancla local); el resto va por ?m=N. */
 function chat_format(string $text, array $logins, array $ids): string {
-    $h = h($text);
-    $h = preg_replace_callback('~(?<![\w\/])#(\d{1,9})\b~', function ($m) use ($ids) {
-        $n = (int)$m[1];
-        $href = isset($ids[$n]) ? "#m$n" : "/chat?m=$n#m$n";
-        return "<a class=\"ref\" href=\"$href\">#$n</a>";
-    }, $h);
-    $h = preg_replace_callback('~(?<![\w@])@([A-Za-z0-9_\-]{3,32})\b~', function ($m) use ($logins) {
-        $k = strtolower($m[1]);
-        if (!isset($logins[$k])) return $m[0];
-        if (is_array($logins[$k])) return "<span class=\"at\">@" . h($logins[$k]['alias']) . "</span>";   // velado por ghosteo: alias y sin enlace
-        return "<a class=\"at\" href=\"/u/" . rawurlencode($logins[$k]) . "\">@" . h($logins[$k]) . "</a>";
-    }, $h);
-    return saltos(enlaces($h));   // URLs → enlaces (enlaces(), lib/app.php: lo mismo que en los comentarios)
+    if (!function_exists('md_bloques')) require_once __DIR__ . '/render.php';   // mismas marcas que en los comentarios
+    return md_bloques($text, function (string $t) use ($logins, $ids): string {
+        $h = h($t);
+        $h = preg_replace_callback('~(?<![\w\/])#(\d{1,9})\b~', function ($m) use ($ids) {
+            $n = (int)$m[1];
+            $href = isset($ids[$n]) ? "#m$n" : "/chat?m=$n#m$n";
+            return "<a class=\"ref\" href=\"$href\">#$n</a>";
+        }, $h);
+        $h = preg_replace_callback('~(?<![\w@])@([A-Za-z0-9_\-]{3,32})\b~', function ($m) use ($logins) {
+            $k = strtolower($m[1]);
+            if (!isset($logins[$k])) return $m[0];
+            if (is_array($logins[$k])) return "<span class=\"at\">@" . h($logins[$k]['alias']) . "</span>";   // velado por ghosteo: alias y sin enlace
+            return "<a class=\"at\" href=\"/u/" . rawurlencode($logins[$k]) . "\">@" . h($logins[$k]) . "</a>";
+        }, $h);
+        return saltos(enlaces(md_inline($h)));   // **negrita**, *cursiva*, [texto](url) y URLs sueltas
+    });
 }
 /** Pagina (1..n) en la que esta el mensaje N, con los mensajes ordenados del mas nuevo al mas viejo. */
 function chat_page_of(PDO $pdo, int $id): int {

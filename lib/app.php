@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 229);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 230);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -201,6 +201,10 @@ function enlaces(string $html): string {
         $tail = substr($m[0], strlen($url));
         return "<a href=\"$url\" rel=\"noopener nofollow\">" . h(mb_strimwidth(html_entity_decode($url, ENT_QUOTES), 0, 60, '…')) . "</a>$tail";
     }, $html);
+}
+/** Indicacion de las marcas de texto: la misma en articulos, comentarios, chat y mensajes privados (21/10/2026). */
+function md_ayuda(): string {
+    return '<p class="meta mdhelp">' . t('Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.') . '</p>';
 }
 function redirect(string $to): never { header("Location: $to"); exit; }
 /** Registro de acciones de moderadores y admin (migra-134, 09/10/2026): tabla mod_log, se ve en admin -> Registro.
