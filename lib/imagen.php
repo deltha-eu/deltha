@@ -418,9 +418,10 @@ function imagen_candidatas_cuerpo(string $html, string $pageUrl): array {
 /** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null).
  *  $conImagen = false: no descarga la og:image (el llamante ya tiene foto, p. ej. la del RSS de un medio). */
 function extraer_meta(string $url, bool $conImagen = true): array {
-    $out = ['title' => '', 'description' => '', 'image' => null, 'channel' => null];   // channel: id del canal (UC…) si es un video de YouTube (topes de envio, 15/10/2026)
+    $out = ['title' => '', 'description' => '', 'image' => null, 'channel' => null, 'canonical' => null];   // channel: id del canal (UC…) si es un video de YouTube (topes de envio, 15/10/2026); canonical: el <head> para url_resolver (migra-168)
     $html = http_get($url, (int)cfg('og_timeout_sec', 3), og_max_bytes());
     if (!$html) return $out;
+    $out['canonical'] = substr($html, 0, 60000);   // solo la cabecera: canonical y og:url van ahi
     if (preg_match('/itemprop=["\']channelId["\'][^>]*content=["\'](UC[\w-]{20,40})["\']/i', $html, $m)
      || preg_match('/content=["\'](UC[\w-]{20,40})["\'][^>]*itemprop=["\']channelId["\']/i', $html, $m)
      || preg_match('/"channelId"\s*:\s*"(UC[\w-]{20,40})"/', $html, $m)) $out['channel'] = $m[1];
