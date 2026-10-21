@@ -12,14 +12,14 @@ function rail(string $tab): void {
     $u = user();
     echo "<aside class=\"rail\">";
     echo "<a class=\"logo\" href=\"/\" aria-label=\"" . h(cfg('site_name')) . "\"><img src=\"" . logo_src('light') . "\" alt=\"\" class=\"l\"><img src=\"" . logo_src('dark') . "\" alt=\"\" class=\"d\"></a>";
+    // (21/10/2026, pedido por Angel) perfil y avisos arriba, bajo el logo: una fila con la cuenta (avatar, nombre, aura) y la campana; antes iban al final
+    echo "<div class=\"who\">" . ($u ? "<a class=\"me\" href=\"/perfil\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>" . avisos_bell('rail-bell') : "<a class=\"me\" href=\"/login\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>") . "</div>";
     if (buscar_on()) echo "<form class=\"rail-search\" action=\"/buscar\" method=\"get\" role=\"search\"><input type=\"search\" name=\"q\" placeholder=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\" maxlength=\"80\"><button type=\"submit\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</button></form>";   // buscador (migra-085): solo escritorio; en movil, la lupa de la cabecera
     nav_tabs($tab, 'rail-top');
     echo "<a class=\"pub\" href=\"/enviar\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>";   // (20/10/2026) bajo las pestañas de contenido, a la vista sin bajar; antes iba al final, tras Mis fuentes
     nav_tabs($tab, 'rail-bottom');
     rail_skins();
     rail_medios();
-    if ($u) echo "<a class=\"me\" href=\"/perfil\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>" . avisos_bell('rail-bell');   // la campanita, debajo del perfil
-    else    echo "<a class=\"me\" href=\"/login\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>";
     // pie (¿Que es Deltha?, manifiesto, privacidad, normas...) al final del rail: asi las dos columnas laterales terminan igual
     echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
