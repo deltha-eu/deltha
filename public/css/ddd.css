@@ -4076,12 +4076,12 @@ form.buscar-u a { font-size: 13px; color: var(--muted); text-decoration: underli
 .pin.off .i { width: 15px; height: 15px; }
 .pin.off small { font-weight: 600; }
 
-/* ---- Modo hacker (20/10/2026): <html data-hacker="1"> (cookie ddd_hacker, menu lateral «Modo hacker», que solo aparece a partir de 2600 px).
-   Implica «sin distracciones» (foco() devuelve true: central de 980 px con las fotos a la derecha) y, a partir de 2600 px, la columna
+/* ---- Modo hacker (20/10/2026): <html data-hacker="1"> (cookie ddd_hacker, menu lateral «Modo hacker», que solo aparece a partir de 2400 px).
+   Implica «sin distracciones» (foco() devuelve true: central de 980 px con las fotos a la derecha) y, a partir de 2400 px, la columna
    derecha se desdobla en dos (720 px, multicolumna) con todos los modulos a la vista sin bajar: rail · central doble · dos laterales. ---- */
 .rail details.rail-dd.hacker { display: none; }
 html[data-hacker] .rail details.rail-dd.hacker { display: block; }   /* con el modo activo, el interruptor se ve siempre: si la ventana baja de 2600 px, que se pueda apagar (21/10/2026) */
-@media (min-width: 2600px) {
+@media (min-width: 2400px) {   /* 2400 y no 2600: un 4K al 150 % (lo recomendado por Windows) mide 2560 logicos (21/10/2026) */
   .rail details.rail-dd.hacker { display: block; }
   html[data-hacker] .cols { grid-template-columns: 260px 980px 720px; column-gap: 40px; }
   html[data-hacker] .side { display: block; columns: 2; column-gap: 24px; column-fill: balance; padding-top: 16px; }

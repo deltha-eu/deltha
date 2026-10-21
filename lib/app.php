@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 231);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 232);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -735,10 +735,10 @@ $DDD_FOCO_DEF = false;
 function foco_por_defecto(bool $on = true): void { global $DDD_FOCO_DEF; $DDD_FOCO_DEF = $on; }
 function foco_pref(): string { $c = (string)($_COOKIE['ddd_foco'] ?? ''); return in_array($c, ['0', '1'], true) ? $c : ''; }
 function foco(): bool { global $DDD_FOCO_DEF; if (hacker()) return true; $p = foco_pref(); return $p === '1' || ($p === '' && $DDD_FOCO_DEF); }
-/** Modo hacker (20/10/2026, pedido por Angel): para pantallas de 2600 px o mas. Es «sin distracciones» (columna central ancha, fotos a la derecha)
+/** Modo hacker (20/10/2026, pedido por Angel): para pantallas de 2400 px logicos o mas (un 4K al 150 % mide 2560). Es «sin distracciones» (columna central ancha, fotos a la derecha)
  *  mas la columna derecha desdoblada en dos, con todos los modulos a la vista sin bajar: cinco columnas en total (rail · central doble ·
  *  dos laterales). Cookie ddd_hacker del navegador (depende de la pantalla, no de la cuenta); <html data-hacker="1">. En pantallas menores
- *  el CSS lo ignora y queda como «sin distracciones». El interruptor del rail solo se ve a partir de 2600 px. */
+ *  el CSS lo ignora y queda como «sin distracciones». El interruptor del rail solo se ve a partir de 2400 px. */
 function hacker(): bool { return (string)($_COOKIE['ddd_hacker'] ?? '') === '1'; }
 function theme(): ?string {
     $u = user();
