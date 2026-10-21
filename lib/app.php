@@ -334,9 +334,10 @@ function url_key(?string $url): string {
     $host = strtolower($p['host']);
     $host = preg_replace('~^(www\d*|m|amp|mobile)\.~', '', $host);
     $path = (string)($p['path'] ?? '/');
+    $path = preg_replace('~/+$~', '', $path);                                  // barra final (antes que /amp: «/noticia/amp/»)
     $path = preg_replace('~/(amp|index\.html?|index\.php)$~i', '', $path);     // /amp, index.html
     $path = preg_replace('~\.amp(\.html?)?$~i', '', $path);                   // noticia.amp.html
-    $path = preg_replace('~/+$~', '', $path);                                  // barra final
+    $path = preg_replace('~/+$~', '', $path);
     $pares = [];
     if (!empty($p['query'])) foreach (explode('&', $p['query']) as $par) {
         if ($par === '') continue;
