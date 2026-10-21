@@ -3177,7 +3177,13 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail .bell > span { display: inline; }
   .rail .bell .badge { position: static; order: 3; margin-left: auto; font-size: 10px; }   /* icono · rótulo · burbuja a la derecha */
   .rail .bell > span { order: 2; }
-  .rail .me { margin: auto 0 0; padding: 10px 12px; border-radius: 999px; display: flex; align-items: center; gap: 10px; color: var(--fg); font-size: 15px; }
+  .rail .who { display: flex; align-items: center; gap: 4px; margin: 0 6px 10px 0; }   /* perfil + campana, bajo el logo (21/10/2026) */
+  .rail .me { flex: 1; min-width: 0; margin: 0; padding: 8px 12px; border-radius: 999px; display: flex; align-items: center; gap: 10px; color: var(--fg); font-size: 15px; }
+  .rail .me > span { min-width: 0; overflow: hidden; }
+  .rail .me b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rail .who .bell { flex: none; padding: 10px; gap: 0; }
+  .rail .who .bell > span { display: none; }
+  .rail .who .bell .badge { position: absolute; top: 4px; right: 2px; margin: 0; }
   .rail .me:hover { background: var(--hover); }
   .rail .me .av { width: 38px; height: 38px; font-size: 16px; }
   .rail .me > .i { width: 28px; height: 28px; }
@@ -3432,7 +3438,7 @@ form.plain select.medsel { margin-bottom: 6px; }
 }
 .admin details.editbox summary .btn.sm { margin-left: 6px; }
 /* pie del sitio en el rail (antes en la columna derecha): al final, con un poco de aire y raya arriba */
-.rail footer.sidefoot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.rail footer.sidefoot { margin-top: auto; padding-top: 26px; border-top: 1px solid var(--line); }
 /* columna derecha: «Ultimo en medios / substacks»: el medio en versalitas delante de cada titular, como en comunidades */
 .side .mod.fuente.medio .row .t b { font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; color: var(--muted); margin-right: 4px; }
 .side .mod.fuente.medio h3 span a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
