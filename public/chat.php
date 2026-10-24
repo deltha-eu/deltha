@@ -127,6 +127,9 @@ if ($mentions) {
     $q->execute(array_keys($mentions));
     foreach ($q->fetchAll() as $r) $logins[strtolower($r['login'])] = ghost_veiled($r['user_id']) ? ['alias' => ghost_alias((int)$r['user_id'])] : $r['login'];   // velados por ghosteo: alias, sin enlace
 }
+// vista previa del mensaje citado (#N): al pasar el ratón por el enlace sale el texto del mensaje, sin click (CSS, sin JS)
+$previews = [];
+foreach ($rows as $m) $previews[(int)$m['msg_id']] = chat_preview($m, $logins, $ids);
 $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || $err;
 
@@ -175,7 +178,7 @@ foreach ($rows as $m) {
     echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u/" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
     echo "<span class=\"meta\"> · " . h(hace($m['created'])) . (!empty($m['edited_at']) && !$del ? " · " . t('editado') : "") . "</span>" . ($anun ? " <span class=\"anun\">" . icon('mega') . t('Mensaje a la comunidad') . "</span>" : "") . "</div>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
-    else      echo chat_format($m['content'], $logins, $ids);
+    else      echo chat_format($m['content'], $logins, $ids, $previews);
     $acts = [];
     if (!$del && $canWrite) $acts[] = "<a class=\"replylink\" href=\"" . h($base . $amp) . "r=$id#m$id\">" . icon('reply') . "<span>" . t('responder') . "</span></a>";
     if (!$hilos && !empty($replies[$id])) $acts[] = "<span class=\"reps\">" . t('respuestas:') . " " . implode(' ', array_map(fn($r) => "<a class=\"ref\" href=\"" . (isset($ids[$r]) ? "#m$r" : "/chat?m=$r#m$r") . "\">#$r</a>", $replies[$id])) . "</span>";

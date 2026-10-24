@@ -19,6 +19,21 @@
     try { t.setSelectionRange(t.value.length, t.value.length); } catch (e) {}
   }
 
+  /* 3) Vista previa del #N citado (23/10/2026). La caja la enseña el CSS al pasar el ratón por el enlace o al
+     enfocarlo con el teclado; aquí solo se elige la dirección: si no cabe debajo (se saldría por el borde de
+     abajo de la ventana), se abre hacia arriba (clase «arriba»). Sin JS sale siempre debajo, que es lo normal.
+     La caja es la hermana siguiente del enlace (span.refwrap > a.ref + span.refpop). */
+  function colocar(e) {
+    var a = e.target && e.target.closest ? e.target.closest('a.ref') : null;
+    if (!a) return;
+    var pop = a.nextElementSibling;
+    if (!pop || !pop.classList.contains('refpop')) return;
+    var rp = pop.getBoundingClientRect(), ra = a.getBoundingClientRect();
+    a.classList.toggle('arriba', rp.bottom > window.innerHeight - 8 && ra.top > rp.height + 8);
+  }
+  document.addEventListener('mouseover', colocar);
+  document.addEventListener('focusin', colocar);
+
   var zona = document.querySelector('[data-refresh]');
   if (!zona) return;
   var seg = parseInt(zona.dataset.refresh, 10);
