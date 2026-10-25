@@ -51,6 +51,22 @@ function imagen_decodificar(string $bytes, ?string &$como = null): ?GdImage {
     }
 }
 
+/** Tope real de una foto subida: img_max_bytes o, si PHP admite menos (upload_max_filesize / post_max_size), eso; asi el aviso
+ *  no promete un maximo que el servidor descarta antes de llegar aqui (25/10/2026). */
+function imagen_max_bytes(): int {
+    $max = (int)cfg('img_max_bytes', 6000000);
+    foreach (['upload_max_filesize', 'post_max_size'] as $k) {
+        $v = trim((string)ini_get($k));
+        if ($v === '' || $v === '0' || $v === '-1') continue;
+        $n = (int)$v; $u = strtolower(substr($v, -1));
+        if ($u === 'g') $n *= 1 << 30; elseif ($u === 'm') $n *= 1 << 20; elseif ($u === 'k') $n *= 1 << 10;
+        if ($n > 0 && $n < $max) $max = $n;
+    }
+    return $max;
+}
+/** El tope en MB redondeado, para los avisos. */
+function imagen_max_mb(): int { return max(1, (int)round(imagen_max_bytes() / 1000000)); }
+
 /** Devuelve nombre de fichero guardado en /media o null. */
 function imagen_desde_bytes(string $bytes): ?string {
     if (strlen($bytes) < 100 || strlen($bytes) > (int)cfg('img_max_bytes', 6000000)) return null;
@@ -106,7 +122,7 @@ function imagen_comentario_desde_subida(array $file, ?string &$err = null): ?str
 /** Errores de subida comunes (tamaño, fallo de PHP) o null. */
 function imagen_subida_error_basico(array $file): ?string {
     $e = $file['error'] ?? UPLOAD_ERR_NO_FILE;
-    $mb = (int)round((int)cfg('img_max_bytes', 6000000) / 1000000);
+    $mb = imagen_max_mb();
     if ($e === UPLOAD_ERR_INI_SIZE || $e === UPLOAD_ERR_FORM_SIZE) return t('La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.', $mb);
     if ($e !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return t('La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.', (int)$e);
     if (filesize($file['tmp_name']) > (int)cfg('img_max_bytes', 6000000)) return t('La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.', $mb);
@@ -170,7 +186,7 @@ function comunidad_imagen_desde_subida(array $file, int $w, int $h): ?string {
  *  Antes fallaba en silencio y la noticia se publicaba sin foto. Se llama despues de imagen_desde_subida() con el mismo $_FILES. */
 function imagen_subida_error(array $file): ?string {
     $e = $file['error'] ?? UPLOAD_ERR_NO_FILE;
-    $mb = (int)round((int)cfg('img_max_bytes', 6000000) / 1000000);
+    $mb = imagen_max_mb();
     if ($e === UPLOAD_ERR_NO_FILE) return null;
     if ($e === UPLOAD_ERR_INI_SIZE || $e === UPLOAD_ERR_FORM_SIZE) return t('La foto pesa demasiado: el máximo es %d MB. Redúcela o elige otra.', $mb);
     if ($e !== UPLOAD_ERR_OK) return t('La foto no se ha podido subir (error %d). Inténtalo de nuevo o elige otra.', (int)$e);

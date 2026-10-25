@@ -67,6 +67,13 @@ if [ -d /etc/php/8.3/fpm/conf.d ] && [ ! -f "$INI" ]; then
   printf '; Deltha: la sesion iniciada dura 30 dias (ver README, «Sesiones»)\nsession.gc_maxlifetime = 2592000\n' > "$INI"
   systemctl restart php8.3-fpm || true
 fi
+# Subida de fotos: PHP trae upload_max_filesize = 2M y post_max_size = 8M; sin esto, una foto de 3 MB fallaba con el aviso
+# «el máximo es 6 MB» (img_max_bytes) y el servidor la descartaba antes de que Deltha la viese (25/10/2026).
+INI=/etc/php/8.3/fpm/conf.d/99-deltha-subidas.ini
+if [ -d /etc/php/8.3/fpm/conf.d ] && [ ! -f "$INI" ]; then
+  printf '; Deltha: fotos de hasta img_max_bytes (6 MB); LimitRequestBody de apache.conf va a juego (8 MB)\nupload_max_filesize = 6M\npost_max_size = 8M\n' > "$INI"
+  systemctl restart php8.3-fpm || true
+fi
 sed -e "s/deltha\.eu/$DOMAIN/g" "$DIR/apache.conf.example" > /etc/apache2/sites-available/deltha.conf
 # HTTPS con certificado de origen de Cloudflare si esta en /etc/ssl/deltha/
 if [ -f /etc/ssl/deltha/origin.pem ] && [ -f /etc/ssl/deltha/origin.key ]; then

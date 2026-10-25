@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['url'])) {
     $step = '1';
 }
 
-if (post_descartado()) $err = t('El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.', (int)round((int)cfg('img_max_bytes', 6000000) / 1000000));
+if (post_descartado()) $err = t('El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.', imagen_max_mb());
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['url'] = url_limpia(post('url'));   // sin utm ni codigos de seguimiento (lib/app.php)
     if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }

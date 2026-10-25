@@ -23,7 +23,7 @@ function contar_palabras(string $t): int {
     return $t === '' ? 0 : count(explode(' ', $t));
 }
 
-if (post_descartado()) $err = t('El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.', (int)round((int)cfg('img_max_bytes', 6000000) / 1000000));
+if (post_descartado()) $err = t('El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.', imagen_max_mb());
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['title']   = mb_substr(post('title'), 0, 200);
     $f['content'] = mb_substr(post('content'), 0, $maxChars);
@@ -39,9 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (!in_array($f['topic'], array_column($topics, 'topic_id'), false)) $err = t('Elige un tema.');
     elseif ($foros && !isset($foros[$f['f']])) $err = t('Elige un foro.');
 
-    if (!$err && ($ie = imagen_subida_error($_FILES['photo'] ?? [])) !== null) $err = $ie;   // la foto no entra: se avisa antes de publicar, por si quiere cambiarla (12/10/2026)
+    // la foto se procesa primero y solo si no entra se pide el motivo: imagen_subida_error() da «no se ha podido procesar» para cualquier
+    // foto valida, y al llamarla antes de intentarlo (12/10/2026) ningun articulo podia llevar foto (25/10/2026)
+    $image = null;
     if (!$err) {
-        $image = imagen_desde_subida($_FILES['photo'] ?? []);
+        if (($up = imagen_desde_subida($_FILES['photo'] ?? [])) !== null) $image = $up;
+        elseif (($ie = imagen_subida_error($_FILES['photo'] ?? [])) !== null) $err = $ie;   // la foto no entra: se avisa antes de publicar, por si quiere cambiarla
+    }
+    if (!$err) {
         $u = user();
         $status = 'nuevas';   // posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
         $pdo->beginTransaction();
