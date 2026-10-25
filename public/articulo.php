@@ -61,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mod_enqueue($pdo, 'story', $sid);
         if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
         $pdo->commit();
+        story_touch($pdo, $sid);   // last_activity = fecha del hilo (migra-170)
         avisos_story($pdo, $sid, $u['user_id'] ?? null, $alias, $f['content']);   // @mencionados en el texto (migra-169, 25/10/2026)
         redirect("/hilo/$sid");
     }

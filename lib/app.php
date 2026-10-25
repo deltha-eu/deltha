@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 234);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 235);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -614,6 +614,7 @@ function comment_purge(PDO $pdo, int $id): bool {
         }
         $pdo->prepare("UPDATE stories SET comments = GREATEST(comments - 1, 0) WHERE story_id = ?")->execute([(int)$c['story_id']]);
         $pdo->commit();
+        story_touch($pdo, (int)$c['story_id']);
     } catch (Throwable $e) { $pdo->rollBack(); throw $e; }
     if (!empty($c['image']) && function_exists('imagen_comentario_borrar')) imagen_comentario_borrar((string)$c['image']);
     return true;
@@ -971,6 +972,90 @@ function foro(string $slug): ?array { return foros(true)[$slug] ?? null; }
 /** El foro de un envio (por stories.forum_id); null para los enlaces y los originales anteriores a la migracion. */
 function foro_de(array $s): ?array { $id = (int)($s['forum_id'] ?? 0); if (!$id) return null; foreach (foros(true) as $f) if ((int)$f['forum_id'] === $id) return $f; return null; }
 function foro_url(array $f): string { return '/foros?f=' . rawurlencode((string)$f['slug']); }
+
+/* ---- seguir foros e hilos sin leer (migra-170, 25/10/2026) ----------------------------------------------------------------
+ * user_forums: foros que sigue cada persona (Deltha por defecto). story_reads: ultima lectura de cada hilo. Un hilo cuenta como
+ * «sin leer» si esta en un foro seguido, su last_activity es posterior al suelo (user_forums.created) y nunca se abrio o se abrio
+ * antes de esa actividad. El total sale junto a «Foros» en el menu y por foro en las pestañas de /foros; se cachea en sesion
+ * forum_unread_cache_sec segundos y se invalida al abrir un hilo o cambiar los foros seguidos. Sin migra-170, todo devuelve vacio. */
+/** forum_id => created de los foros que sigue el usuario actual (una consulta por pagina). */
+function foros_seguidos(): array {
+    static $c = null; global $pdo;
+    if ($c !== null) return $c;
+    $c = [];
+    if ($u = user()) { try { $st = $pdo->prepare("SELECT forum_id, created FROM user_forums WHERE user_id = ?"); $st->execute([$u['user_id']]); foreach ($st as $r) $c[(int)$r['forum_id']] = (string)$r['created']; } catch (Throwable $e) {} }
+    return $c;
+}
+function foro_seguido(int $fid): bool { return isset(foros_seguidos()[$fid]); }
+/** Cuenta nueva: sigue los foros por defecto (config forum_follow_default, slugs separados por coma; «deltha» de salida). */
+function foros_seguir_por_defecto(PDO $pdo, int $uid): void {
+    foreach (array_filter(array_map('trim', explode(',', (string)cfg('forum_follow_default', 'deltha')))) as $slug) {
+        if ($f = foro($slug)) { try { $pdo->prepare("INSERT IGNORE INTO user_forums (user_id, forum_id) VALUES (?,?)")->execute([$uid, (int)$f['forum_id']]); } catch (Throwable $e) {} }
+    }
+}
+function foro_seguir_set(PDO $pdo, int $uid, int $fid, bool $on): void {
+    if ($on) $pdo->prepare("INSERT IGNORE INTO user_forums (user_id, forum_id) VALUES (?,?)")->execute([$uid, $fid]);
+    else $pdo->prepare("DELETE FROM user_forums WHERE user_id = ? AND forum_id = ?")->execute([$uid, $fid]);
+    unset($_SESSION['ddd_foros_nl']);
+}
+/** Boton «Seguir» / «Siguiendo» de un foro (form.seguir, como comunidades y fuentes; app/scroll.js lo envia sin saltar). */
+function foro_seguir_form(array $f): string {
+    $u = user(); if (!$u || ($f['status'] ?? 'on') !== 'on' || !foro_abierto($f)) return '';
+    $on = foro_seguido((int)$f['forum_id']);
+    $title = h($on ? t('dejar de seguir %s', $f['name']) : t('Seguir %s', $f['name']));
+    return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/seguir-foro\"><input type=\"hidden\" name=\"f\" value=\"" . (int)$f['forum_id'] . "\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
+         . "<button title=\"$title\">" . h($on ? t('Siguiendo') : t('Seguir')) . "</button></form>";
+}
+/** Hilos sin leer por foro seguido: [forum_id => n] (solo los que tienen alguno). Cacheado en sesion. */
+function foros_sin_leer(): array {
+    static $m = null; global $pdo;
+    if ($m !== null) return $m;
+    $m = [];
+    $u = user(); if (!$u || !foros_seguidos()) return $m;
+    $ttl = max(0, (int)cfg('forum_unread_cache_sec', 120));
+    $c = $_SESSION['ddd_foros_nl'] ?? null;
+    if (is_array($c) && isset($c['t'], $c['m']) && time() - (int)$c['t'] < $ttl) return $m = (array)$c['m'];
+    try {
+        $st = $pdo->prepare("SELECT s.forum_id, COUNT(*) AS n FROM stories s JOIN user_forums uf ON uf.forum_id = s.forum_id AND uf.user_id = ?"
+            . " LEFT JOIN story_reads r ON r.story_id = s.story_id AND r.user_id = ?"
+            . " WHERE s.content_type = 'article' AND s.status IN ('nuevas','destacadas') AND s.last_activity > uf.created"
+            . " AND (r.read_at IS NULL OR s.last_activity > r.read_at)" . stories_mylang_sql() . foros_cerrados_sql() . " GROUP BY s.forum_id");
+        $st->execute([$u['user_id'], $u['user_id']]);
+        foreach ($st as $r) $m[(int)$r['forum_id']] = (int)$r['n'];
+    } catch (Throwable $e) { $m = []; }
+    $_SESSION['ddd_foros_nl'] = ['t' => time(), 'm' => $m];
+    return $m;
+}
+function foros_sin_leer_total(): int { return array_sum(foros_sin_leer()); }
+/** Apunta que el usuario actual acaba de leer un hilo de foro (al pintar /hilo/N). */
+function story_read_mark(PDO $pdo, array $s): void {
+    $u = user(); if (!$u || ($s['content_type'] ?? '') !== 'article') return;
+    try {
+        $pdo->prepare("INSERT INTO story_reads (user_id, story_id, read_at) VALUES (?,?,NOW()) ON DUPLICATE KEY UPDATE read_at = NOW()")->execute([$u['user_id'], (int)$s['story_id']]);
+        unset($_SESSION['ddd_foros_nl']);
+    } catch (Throwable $e) {}
+}
+/** story_id => true de los hilos sin leer entre los dados, para la lista de /foros (negrita). */
+function story_reads_pendientes(PDO $pdo, array $stories, string $suelo): array {
+    $u = user(); if (!$u || !$stories) return [];
+    $ids = array_map(fn($s) => (int)$s['story_id'], $stories);
+    $out = [];
+    try {
+        $st = $pdo->prepare("SELECT story_id, read_at FROM story_reads WHERE user_id = ? AND story_id IN (" . implode(',', $ids) . ")"); $st->execute([$u['user_id']]);
+        $leido = []; foreach ($st as $r) $leido[(int)$r['story_id']] = (string)$r['read_at'];
+        foreach ($stories as $s) {
+            $la = (string)($s['last_activity'] ?? $s['sent_date']);
+            if (($s['status'] ?? '') === 'archived') continue;   // los cerrados no cuentan (y su lectura se poda)
+            if ($la > $suelo && (!isset($leido[(int)$s['story_id']]) || $la > $leido[(int)$s['story_id']])) $out[(int)$s['story_id']] = true;
+        }
+    } catch (Throwable $e) {}
+    return $out;
+}
+/** Recalcula stories.last_activity de un hilo (ultimo comentario visible o la fecha del hilo); se llama al comentar o retirar un comentario. */
+function story_touch(PDO $pdo, int $sid): void {
+    try { $pdo->prepare("UPDATE stories s SET s.last_activity = GREATEST(s.sent_date, COALESCE((SELECT MAX(c.created) FROM comments c WHERE c.story_id = s.story_id AND c.status = 'ok'), s.sent_date)) WHERE s.story_id = ?")->execute([$sid]); }
+    catch (Throwable $e) {}   // sin migra-170
+}
 /** Minutos minimos entre dos publicaciones en Canales. */
 function canales_gap(): int { return max(1, (int)cfg('canales_gap_min', 15)); }
 /** Instante de la ultima publicacion en Canales (0 = nunca). */
@@ -1455,7 +1540,8 @@ function nav_tabs(string $tab, string $cls): void {
         $on = $k === $tab ? ' class="on"' : '';
         if ($ctr && $k === 'radar') { echo "</span><a class=\"radar" . ($k === $tab ? ' on' : '') . "\" href=\"" . h($href) . "\">" . icon($ic) . "<span>" . h($label) . "</span></a><span class=\"g r\">"; continue; }
         if ($href === null) { echo "<span class=\"soon\" title=\"" . t('pronto') . "\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
-        $badge = ($k === 'mensajes' && ($n = unread_msgs()) > 0) ? "<i class=\"badge\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
+        $n = $k === 'mensajes' ? unread_msgs() : ($k === 'foros' ? foros_sin_leer_total() : 0);   // Foros: hilos sin leer en los foros seguidos (migra-170)
+        $badge = $n > 0 ? "<i class=\"badge\" title=\"" . ($k === 'foros' ? h(t('%d hilos sin leer', $n)) : '') . "\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
         echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . $badge . "<span>" . h($label) . "</span></a>";
     }
     echo ($ctr ? '</span>' : '') . "</nav>";

@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("INSERT INTO users (login, email, pass, verified, aura) VALUES (?,?,?,0,?)")
                 ->execute([$login, $email, password_hash($pass, PASSWORD_DEFAULT), (float)cfg('aura_start', 5)]);
             $uid = (int)$pdo->lastInsertId();
+            foros_seguir_por_defecto($pdo, $uid);   // el foro Deltha, seguido de salida (migra-170)
             $pdo->prepare("INSERT INTO reg_attempts (fp) VALUES (?)")->execute([$fp]);
             $enviado = send_activation($pdo, $uid, $email);
             reg_log_add($pdo, $login, $email, 'pendiente', $enviado ? '' : 'no se pudo enviar el correo de activación', $uid);

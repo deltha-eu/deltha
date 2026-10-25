@@ -24,4 +24,10 @@ foreach (lang_tick($pdo) as $l) echo date('c') . "  $l\n";   // idioma de los en
 foreach (url_key_tick($pdo) as $l) echo date('c') . "  $l\n";   // clave canonica del enlace en los envios anteriores (migra-168)
 try { foreach (agentes_tick($pdo) as $l) echo date('c') . "  $l\n"; } catch (Throwable $e) { echo date('c') . "  agentes: ERROR " . $e->getMessage() . "\n"; }
 foreach (ana_tick($pdo) as $l) echo date('c') . "  $l\n";   // analitica: cierra los dias completos en ana_daily y poda hits
+// lecturas de hilos de foro (migra-170): se olvidan las de hilos archivados y las de mas de forum_reads_days dias (una vez al dia, en la primera pasada tras las 4:00)
+if ((int)date('G') === 4 && (int)date('i') < 2) { try {
+    $d = max(7, (int)cfg('forum_reads_days', 180));
+    $n = $pdo->prepare("DELETE r FROM story_reads r JOIN stories s ON s.story_id = r.story_id WHERE s.status = 'archived' OR r.read_at < DATE_SUB(NOW(), INTERVAL ? DAY)"); $n->execute([$d]);
+    if ($n->rowCount()) echo date('c') . "  foros: podadas " . $n->rowCount() . " lecturas\n";
+} catch (Throwable $e) {} }
 flock($lock, LOCK_UN);

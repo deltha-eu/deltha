@@ -603,6 +603,8 @@ return [
 '<b>%s</b> ha respondido a tu comentario' => '<b>%s</b> yorumunu yanıtladı',
 '<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b> Sohbet\'te senden bahsetti',
 '<b>%s</b> te ha mencionado en un hilo' => '<b>%s</b> bir başlıkta senden bahsetti',
+'%d hilos sin leer' => '%d okunmamış başlık',
+'sin leer' => 'okunmamış',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b> Sohbet\'teki mesajını alıntıladı',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b> sana bir mesaj gönderdi',
 'Escribir un artículo' => 'Makale yaz',

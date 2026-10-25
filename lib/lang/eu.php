@@ -568,6 +568,8 @@ return [
 '<b>%s</b> ha respondido a tu comentario' => '<b>%s</b>(e)k zure iruzkinari erantzun dio',
 '<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b>(e)k Txatean aipatu zaitu',
 '<b>%s</b> te ha mencionado en un hilo' => '<b>%s</b>(e)k hari batean aipatu zaitu',
+'%d hilos sin leer' => 'irakurri gabeko %d hari',
+'sin leer' => 'irakurri gabe',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b>(e)k zure Txateko mezua aipatu du',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b>(e)k mezu bat bidali dizu',
 // paginas sin <h1> repetido

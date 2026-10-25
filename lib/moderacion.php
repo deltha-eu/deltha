@@ -74,12 +74,19 @@ function mod_item_text(PDO $pdo, string $type, int $id): ?array {
     return null;
 }
 
+/** last_activity del hilo de un comentario (migra-170), al ocultarlo o reponerlo. */
+function mod_touch_story(PDO $pdo, int $cid): void {
+    if (!function_exists('story_touch')) return;
+    $q = $pdo->prepare("SELECT story_id FROM comments WHERE comment_id = ?"); $q->execute([$cid]);
+    if ($sid = (int)$q->fetchColumn()) story_touch($pdo, $sid);
+}
 /** Oculta provisionalmente (status pending_mod). Devuelve el estado previo (para restaurarlo) o null si no se pudo. */
 function mod_hide(PDO $pdo, string $type, int $id): ?string {
     if ($type === 'comment') {
         $st = $pdo->prepare("UPDATE comments SET status = 'pending_mod' WHERE comment_id = ? AND status = 'ok' AND deleted = 0"); $st->execute([$id]);
         if (!$st->rowCount()) return null;
         $pdo->prepare("UPDATE stories s JOIN comments c ON c.story_id = s.story_id SET s.comments = GREATEST(s.comments - 1, 0) WHERE c.comment_id = ?")->execute([$id]);
+        mod_touch_story($pdo, $id);
         return 'ok';
     }
     if ($type === 'chat') {
@@ -97,7 +104,7 @@ function mod_hide(PDO $pdo, string $type, int $id): ?string {
 function mod_unhide(PDO $pdo, string $type, int $id, ?string $prev): void {
     if ($type === 'comment') {
         $st = $pdo->prepare("UPDATE comments SET status = 'ok' WHERE comment_id = ? AND status = 'pending_mod'"); $st->execute([$id]);
-        if ($st->rowCount()) $pdo->prepare("UPDATE stories s JOIN comments c ON c.story_id = s.story_id SET s.comments = s.comments + 1 WHERE c.comment_id = ?")->execute([$id]);
+        if ($st->rowCount()) { $pdo->prepare("UPDATE stories s JOIN comments c ON c.story_id = s.story_id SET s.comments = s.comments + 1 WHERE c.comment_id = ?")->execute([$id]); mod_touch_story($pdo, $id); }
     } elseif ($type === 'chat') {
         $pdo->prepare("UPDATE chat SET status = 'ok' WHERE msg_id = ? AND status = 'pending_mod'")->execute([$id]);
     } else {

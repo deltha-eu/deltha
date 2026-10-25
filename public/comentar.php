@@ -37,6 +37,7 @@ $pdo->prepare("INSERT INTO comments (story_id, parent_id, root_id, user_id, alia
     ->execute([$id, $parent ?: null, $root, $uid, $alias, $key, $aura, $content, $image, $cstatus]);
 $cid = (int)$pdo->lastInsertId();
 $pdo->prepare("UPDATE stories SET comments = comments + 1 WHERE story_id = ?")->execute([$id]);
+story_touch($pdo, $id);   // last_activity (migra-170)
 mod_enqueue($pdo, 'comment', $cid);
 if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_comentario', 0.02), 'comentario', $cid);
 $pdo->commit();

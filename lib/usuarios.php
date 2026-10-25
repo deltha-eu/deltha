@@ -85,6 +85,7 @@ function user_create(PDO $pdo, string $login, string $email, string $pass, strin
             ->execute([$login, $email, password_hash($pass, PASSWORD_DEFAULT), $verified ? 1 : 0, round($aura, 3), $level]);
     } catch (PDOException $e) { return [0, 'Ese usuario o correo ya existe.']; }
     $uid = (int)$pdo->lastInsertId();
+    foros_seguir_por_defecto($pdo, $uid);   // migra-170
     reg_log_add($pdo, $login, $email, $verified ? 'activada' : 'pendiente', 'creada por un admin', $uid);   // historico de registros
     return [$uid, null];
 }
