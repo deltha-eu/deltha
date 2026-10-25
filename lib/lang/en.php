@@ -607,6 +607,7 @@ return [
 '<b>%s</b> te ha mencionado en un comentario' => '<b>%s</b> mentioned you in a comment',
 '<b>%s</b> ha respondido a tu comentario' => '<b>%s</b> replied to your comment',
 '<b>%s</b> te ha mencionado en el Chat' => '<b>%s</b> mentioned you in the Chat',
+'<b>%s</b> te ha mencionado en un hilo' => '<b>%s</b> mentioned you in a thread',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b> quoted your Chat message',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b> sent you a message',
 // paginas sin <h1> repetido

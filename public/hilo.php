@@ -32,7 +32,7 @@ $cs->execute([(int)(user()['user_id'] ?? 0), $id]);
 $can_vote = $open && (bool)user();   // sol / lagrima: registrados, hilo abierto (el comentario propio se excluye en comment_block)
 $all = []; $byId = [];
 foreach ($cs as $c) { $all[] = $c; $byId[$c['comment_id']] = $c; }
-avisos_preload_nicks($pdo, array_column($all, 'content'));   // @nick → enlace al perfil en comment_block()
+avisos_preload_nicks($pdo, array_merge($s['content_type'] === 'article' ? [(string)$s['content']] : [], array_column($all, 'content')));   // @nick → enlace al perfil en comment_block() y en el texto del hilo (25/10/2026)
 // Dos vistas de los comentarios (subpestañas «Por hilos» / «Por tiempo» bajo la barra del envio):
 //  · por hilos (la de siempre, ahora en arbol): cada conversacion = comentario raiz + sus respuestas, cada respuesta justo debajo
 //    del comentario al que contesta y sangrada segun su nivel (tope 6), sin rayas;

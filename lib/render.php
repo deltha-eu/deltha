@@ -335,13 +335,14 @@ function md_comentario(string $content): string {
 }
 function md_articulo(string $content): string {   // parrafos separados por linea en blanco; cada uno .lead.para (o cita)
     $out = '';
+    $nick = fn(string $h): string => function_exists('nicks_format') ? nicks_format($h) : $h;   // @nick → perfil, como en los comentarios (25/10/2026)
     foreach (preg_split('/\R{2,}/', trim($content)) as $para) {
         $para = trim($para);
         if ($para === '') continue;
         if (preg_match('/^>\s?/u', $para)) {
             $para = preg_replace('/^>\s?/mu', '', $para);
-            $out .= "<blockquote class=\"lead para cita\">" . saltos(md_inline(h(trim($para)))) . "</blockquote>";
-        } else $out .= "<p class=\"lead para\">" . saltos(md_inline(h($para))) . "</p>";
+            $out .= "<blockquote class=\"lead para cita\">" . saltos($nick(md_inline(h(trim($para))))) . "</blockquote>";
+        } else $out .= "<p class=\"lead para\">" . saltos($nick(md_inline(h($para)))) . "</p>";
     }
     return $out;
 }

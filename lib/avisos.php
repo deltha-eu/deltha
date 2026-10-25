@@ -2,6 +2,7 @@
 /** lib/avisos.php — avisos (la campanita): una sola tabla, `notifications`, y una sola burbuja con el numero de no leidos
  *  delante del avatar (cabecera en movil, rail en escritorio). Tipos:
  *    mention_comment  alguien escribe @tunick en un comentario      → /hilo/S#cN
+ *    mention_story    alguien escribe @tunick en un hilo de foro     → /hilo/S          (migra-169, 25/10/2026)
  *    reply_comment    alguien responde a un comentario tuyo         → /hilo/S#cN
  *    mention_chat     alguien escribe @tunick en el Chat            → /chat?m=N#mN
  *    reply_chat       alguien cita (#N) un mensaje tuyo del Chat    → /chat?m=N#mN
@@ -67,6 +68,14 @@ function avisos_comment(PDO $pdo, array $c, ?array $parent = null, array $skip =
         aviso_insert($pdo, (int)$parent['user_id'], $from, $name, 'reply_comment', (int)$c['comment_id'], (int)$c['story_id'], (string)$c['content']);
     }
 }
+/** Hilo de foro nuevo o editado (migra-169): avisa a los @mencionados en el texto. $who = alias del autor en el hilo;
+ *  $skip = nicks (minusculas) ya avisados por una version anterior del texto (edicion). */
+function avisos_story(PDO $pdo, int $sid, ?int $uid, string $who, string $content, array $skip = []): void {
+    if (!avisos_on()) return;
+    foreach (avisos_users_by_nick($pdo, array_diff(avisos_nicks($content), $skip)) as $u) {
+        aviso_insert($pdo, $u['user_id'], $uid, $who, 'mention_story', $sid, $sid, $content);
+    }
+}
 /** Mensaje nuevo del Chat: @mencionados y, si cita #N de un registrado, su autor. $who = nick o alias anonimo de quien escribe. */
 function avisos_chat(PDO $pdo, int $mid, ?int $uid, string $who, string $content, ?int $replyTo): void {
     if (!avisos_on()) return;
@@ -119,6 +128,7 @@ function avisos_bell(string $cls = ''): string {
 function aviso_href(array $n): string {
     switch ($n['kind']) {
         case 'mention_comment': case 'reply_comment': return "/hilo/" . (int)$n['story_id'] . "#c" . (int)$n['ref_id'];
+        case 'mention_story': return "/hilo/" . (int)$n['story_id'];
         case 'mention_chat':    case 'reply_chat':    return "/chat?m=" . (int)$n['ref_id'] . "#m" . (int)$n['ref_id'];
         case 'dm': return !empty($n['login']) ? "/mensajes?u=" . rawurlencode($n['login']) : "/mensajes";
     }
@@ -136,6 +146,7 @@ function aviso_who(array $n): string {
 function aviso_text(array $n, string $who): string {
     return match ($n['kind']) {
         'mention_comment' => t('<b>%s</b> te ha mencionado en un comentario', $who),
+        'mention_story'   => t('<b>%s</b> te ha mencionado en un hilo', $who),
         'reply_comment'   => t('<b>%s</b> ha respondido a tu comentario', $who),
         'mention_chat'    => t('<b>%s</b> te ha mencionado en el Chat', $who),
         'reply_chat'      => t('<b>%s</b> ha citado tu mensaje del Chat', $who),

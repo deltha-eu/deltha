@@ -470,7 +470,7 @@ CREATE TABLE `notifications` (
   `user_id` int unsigned NOT NULL,
   `from_id` int unsigned DEFAULT NULL,
   `from_name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `kind` enum('mention_comment','reply_comment','mention_chat','reply_chat','dm') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `kind` enum('mention_comment','reply_comment','mention_chat','reply_chat','dm','mention_story') COLLATE utf8mb4_unicode_ci NOT NULL,
   `ref_id` int unsigned NOT NULL DEFAULT '0',
   `story_id` int unsigned DEFAULT NULL,
   `snippet` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',

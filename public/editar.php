@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
         if ($isArt) {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, indexable=?, lang=?$mark WHERE story_id=?")
                 ->execute([$title, $content, $topic, $image, $idx, $lang, $id]);
+            if ($content !== (string)($s['content'] ?? '')) avisos_story($pdo, $id, (int)user()['user_id'], (string)($s['author_alias'] ?? user()['login']), $content, avisos_nicks((string)$s['content']));   // solo los @nick nuevos (25/10/2026)
             if ($forosSel && ($fid = (int)post('forum')) && $fid !== (int)($s['forum_id'] ?? 0)) {   // cambio de foro: no marca «editado» (el texto no cambia)
                 $okF = false; foreach ($forosSel as $f) if ((int)$f['forum_id'] === $fid) $okF = $f;
                 if ($okF) $pdo->prepare("UPDATE stories SET forum_id = ? WHERE story_id = ?")->execute([$fid, $id]);   // el registro de arriba (editar-envio) ya guarda forum=N
