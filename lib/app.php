@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 235);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 237);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1542,7 +1542,7 @@ function nav_tabs(string $tab, string $cls): void {
         if ($href === null) { echo "<span class=\"soon\" title=\"" . t('pronto') . "\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
         $n = $k === 'mensajes' ? unread_msgs() : ($k === 'foros' ? foros_sin_leer_total() : 0);   // Foros: hilos sin leer en los foros seguidos (migra-170)
         $badge = $n > 0 ? "<i class=\"badge\" title=\"" . ($k === 'foros' ? h(t('%d hilos sin leer', $n)) : '') . "\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
-        echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . $badge . "<span>" . h($label) . "</span></a>";
+        echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . "<span>" . h($label) . "</span>" . $badge . "</a>";   // la burbuja, detras del rotulo (en el rail queda a la derecha y el rotulo alineado)
     }
     echo ($ctr ? '</span>' : '') . "</nav>";
 }

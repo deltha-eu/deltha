@@ -125,7 +125,7 @@ nav.sub.foros a small { font-weight: 400; font-style: italic; opacity: .7; }
    los hilos pendientes, con un punto de color delante del titulo */
 nav.sub.foros a .badge, nav.tabs-top .badge, .rail nav .badge { font-style: normal; font-family: var(--sans); font-size: 10px; font-weight: 700; line-height: 1; background: var(--accent); color: var(--bg); border-radius: 999px; padding: 3px 5px; min-width: 16px; box-sizing: border-box; text-align: center; }
 nav.sub.foros a .badge { display: inline-block; margin-left: 5px; vertical-align: 1px; }
-nav.tabs-top .badge { position: absolute; top: 5px; left: calc(50% + 20px); }   /* a la derecha del rotulo, que va centrado (el icono no se ve arriba) */
+nav.tabs-top .badge { display: inline-block; margin-left: 5px; vertical-align: 2px; }   /* detras del rotulo */
 nav.sub.foros .acts { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
 nav.sub.foros .acts a.ayuda { margin-left: 0; }
 nav.sub.foros form.seguir button { font-size: 12px; padding: 3px 10px; }
@@ -139,6 +139,7 @@ nav.sub.foros form.seguir button { font-size: 12px; padding: 3px 10px; }
 .post.compact h2 { font-size: 17px; }
 .lead { margin: 0 0 8px; color: var(--fg); }
 .post p { margin: 2px 0 0; white-space: pre-wrap; }
+.hilo.foro .post.reply p, .hilo.foro .post.reply blockquote { font-size: 16px; line-height: 1.45; }   /* hilos de foro: la letra de los comentarios, un punto mas (25/10/2026); las skins con tamaño propio (comunidad) mandan abajo */
 .media { display: block; position: relative; width: 100%; aspect-ratio: 16 / 9;   /* previas: proporcion de X; en el hilo, 4:3 entera */ border-radius: 16px; overflow: hidden; margin: 8px 0 10px;
   background: var(--line) center/cover no-repeat; border: 1px solid var(--line); }
 .media.sm { aspect-ratio: 16 / 9; }
