@@ -905,6 +905,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('mod_max_retries',     '3',    'Fallos del modelo con un mismo elemento antes de pasarlo a revision humana'),
 ('mod_auto_hide',       '0',    '1 = la IA oculta provisionalmente lo muy claro (confianza >= mod_hide_score) hasta que lo vea un moderador; 0 = solo señala'),
 ('mod_hide_score',      '0.90', 'Confianza minima para ocultar provisionalmente (con mod_auto_hide = 1)'),
+('mod_hide_links_only', '1',    '1 = la IA solo oculta provisionalmente (mod_auto_hide) lo que lleva algun enlace; sin enlace se limita a señalar. 0 = oculta por confianza, lleve enlace o no'),
 ('mod_flag_score',      '0.60', 'Confianza minima para señalar a los moderadores; por debajo se da por bueno'),
 ('mod_lease_sec',       '300',  'Segundos que el worker tiene reservado un elemento antes de que vuelva a la cola'),
 ('mod_worker_seen',     '',     'Ultima conexion del worker de IA local (lo escribe /api/moderacion.php)');
