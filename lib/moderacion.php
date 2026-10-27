@@ -44,6 +44,12 @@ function mod_requeue(PDO $pdo, string $type, int $id): void {
     } catch (Throwable $e) {}
 }
 
+/** ¿Lleva algun enlace? (http/https, www. o dominio.tld de los habituales). Con mod_hide_links_only = 1 la IA solo oculta lo que lo lleve:
+ *  el spam que importa es el que mete un enlace; un insulto o una tonteria sin enlace se señala y lo decide una persona (27/10/2026). */
+function mod_has_link(string $t): bool {
+    return (bool)preg_match('~https?://|www\.|\b[a-z0-9-]+\.(com|net|org|es|eu|info|io|co|me|app|xyz|win|site|online|shop|store|top|club|biz|ru|cn|uk|de|fr|it|pt|mx|ar|cl|br|link|click|live|vip|pro|cc|tv)\b~i', $t);
+}
+
 /** Texto que ve el modelo: el contenido y, aparte, algo de contexto (titular del hilo, mensaje al que responde). Null si ya no existe o ya lo retiro un moderador. */
 function mod_item_text(PDO $pdo, string $type, int $id): ?array {
     if ($type === 'story') {
@@ -115,7 +121,7 @@ function mod_unhide(PDO $pdo, string $type, int $id, ?string $prev): void {
 
 /**
  * Aplica el veredicto del modelo. $v = [categoria, confianza, motivo, cita, modelo].
- * La politica (umbrales, ocultar o no) se decide aqui, no en el PC: se cambia desde admin → Config.
+ * La politica (umbrales, ocultar o no, solo con enlace) se decide aqui, no en el PC: se cambia desde admin → Config.
  * Devuelve el estado final del elemento en la cola.
  */
 function mod_apply_verdict(PDO $pdo, array $item, array $v): string {
@@ -126,7 +132,9 @@ function mod_apply_verdict(PDO $pdo, array $item, array $v): string {
     $status = 'ok'; $prev = null;
     if ($cat !== null && $score >= $flagAt) {
         $status = 'flag';
-        if (cfg('mod_auto_hide') === '1' && $score >= $hideAt && $cat !== 'otro') {
+        $conEnlace = cfg('mod_hide_links_only', '1') !== '1'
+            || mod_has_link((string)(mod_item_text($pdo, $item['item_type'], (int)$item['ref_id'])['text'] ?? ''));   // solo se oculta lo que lleva enlace (27/10/2026)
+        if (cfg('mod_auto_hide') === '1' && $score >= $hideAt && $cat !== 'otro' && $conEnlace) {
             $prev = mod_hide($pdo, $item['item_type'], (int)$item['ref_id']);
             if ($prev !== null) $status = 'hidden';
         }
