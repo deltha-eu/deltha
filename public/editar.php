@@ -1,8 +1,8 @@
 <?php
 /** /editar?id=N — edición de un envío. Moderadores y admin: todo (titular, texto, enlace, tema,
  *  comunidad, foto, eliminar). El autor, en plazo (aura > story_edit_min_aura, story_edit_minutes
- *  desde el envío y mientras no llegue a portada): titular, entradilla/texto, tema y foto — el
- *  enlace no se toca — y retirar el envío. Toda edición que cambie algo marca stories.edited_at. */
+ *  desde el envío y mientras no llegue a portada): titular, entradilla/texto, tema, comunidad
+ *  principal (27/10/2026) y foto — el enlace no se toca — y retirar el envío. Toda edición que cambie algo marca stories.edited_at. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/imagen.php';
 if (!user()) redirect('/login');
@@ -24,7 +24,11 @@ if (!is_mod() && !$own && !$retire) {
 }
 
 $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
-$comms  = $pdo->query("SELECT community_id, name FROM communities ORDER BY name")->fetchAll();
+$comms  = $pdo->query("SELECT community_id, name FROM communities" . ($own ? " WHERE status = 'ok'" : "") . " ORDER BY name")->fetchAll();   // el autor elige entre las visibles, como en /enviar (27/10/2026)
+if ($own && (int)$s['community_id'] && !in_array((int)$s['community_id'], array_column($comms, 'community_id'), false)) {   // la principal actual no esta visible: que siga saliendo elegida y no se pierda al guardar
+    $qc = $pdo->prepare("SELECT community_id, name FROM communities WHERE community_id = ?"); $qc->execute([(int)$s['community_id']]);
+    if ($rc = $qc->fetch()) $comms[] = $rc;
+}
 $isArt = $s['content_type'] === 'article';
 $forosSel = $isArt && !is_mod() ? [] : ($isArt ? foros(is_admin()) : []);   // mover el hilo a otro foro (19/10/2026): mods, entre los encendidos; admin, tambien a los apagados
 $maxLen = $isArt ? max(2000, (int)cfg('article_max_words', 1000) * 12) : 2000;   // articulos: tope de caracteres derivado del de palabras (config)
@@ -55,11 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     $topic   = (int)post('topic');
     $lang    = lang_post() ?: lang_for_story($pdo, $isArt ? null : (post('url') ?: (string)$s['url']), $title, $content);   // idioma: el elegido o, en «detectar», el que salga (08/10/2026)
     $idx     = $isArt && cfg('index_articles', '1') === '1' ? (post('indexable') === '1' ? 1 : 0) : (int)($s['indexable'] ?? 0);   // abrir el articulo a buscadores: no cuenta como edicion
-    if (!$own) {   // la comunidad principal solo la cambia moderacion; las adoptadas se gestionan desde el hilo
-        $comm = (int)post('community');
-        if ($comm && !in_array($comm, array_column($comms, 'community_id'), false)) $comm = 0;
-        story_set_main_community($pdo, $id, $comm, (int)user()['user_id']);
-    }
+    // comunidad principal: moderacion siempre; el autor tambien, en plazo (27/10/2026), igual que el tema. Las adoptadas se gestionan desde el hilo
+    $comm = (int)post('community');
+    if ($comm && !in_array($comm, array_column($comms, 'community_id'), false)) $comm = $own ? (int)$s['community_id'] : 0;   // el autor no puede colar una que no este en su lista
+    $commChanged = $comm !== (int)$s['community_id'];
     $url     = $isArt ? null : ($own ? (string)$s['url'] : url_limpia(post('url')));   // el autor no toca el enlace
     $image   = $s['image'];
     if (post('quitar') === '1') $image = null;
@@ -78,8 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
 
     if (!$err) {
         $changed = $title !== $s['title'] || $content !== (string)($s['content'] ?? '') || $topic !== (int)$s['topic_id']
-                || (string)$image !== (string)($s['image'] ?? '') || (!$isArt && ($url ?: null) !== $s['url']);
+                || (string)$image !== (string)($s['image'] ?? '') || (!$isArt && ($url ?: null) !== $s['url']) || $commChanged;
         $mark = $changed ? ", edited_at = NOW()" : "";
+        if ($commChanged) story_set_main_community($pdo, $id, $comm, (int)user()['user_id']);   // solo si el resto valida: una edicion con error no cambia nada
         if ($isArt) {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, indexable=?, lang=?$mark WHERE story_id=?")
                 ->execute([$title, $content, $topic, $image, $idx, $lang, $id]);
@@ -94,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
         }
         redirect("/hilo/$id");
     }
-    $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'url' => $url, 'image' => $image, 'indexable' => $idx]);
+    $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'community_id' => $comm ?: null, 'url' => $url, 'image' => $image, 'indexable' => $idx]);
 }
 
 page_header(($retire ? t('Retirar') : ($isArt ? t('Editar artículo') : t('Editar envío'))) . " #$id");   // sin <h1>: el titulo ya va en la cabecera
@@ -125,8 +129,8 @@ if ($forosSel) {   // mover el hilo a otro foro (19/10/2026)
     foreach ($forosSel as $f) echo "<option value=\"{$f['forum_id']}\"" . ((int)($s['forum_id'] ?? 0) === (int)$f['forum_id'] ? ' selected' : '') . ">" . h($f['name']) . ($f['status'] !== 'on' ? ' (' . t('apagado') . ')' : '') . "</option>";
     echo "</select>";
 }
-if (!$own) {
-    echo "<label>Comunidad principal</label><select name=\"community\"><option value=\"0\">— ninguna —</option>";
+if (!$own || $comms) {   // el autor tambien puede cambiarla en plazo (27/10/2026); mismas cadenas que /enviar
+    echo ($own ? t('<label>Comunidad (opcional)</label>') : "<label>Comunidad principal</label>") . "<select name=\"community\"><option value=\"0\"" . t('>— ninguna —</option>');
     foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$s['community_id'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
     echo "</select>";
 }
