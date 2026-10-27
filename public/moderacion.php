@@ -280,7 +280,7 @@ foreach ($q as $m) {
     echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth((string)$m['txt'], 0, 600, '…'))) . "</blockquote>";
     if (!empty($v['cita'])) echo "<p class=\"meta\">Fragmento: «" . h($v['cita']) . "»</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"ia\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
-    echo "<button class=\"btn danger\" name=\"dec\" value=\"remove\" title=\"" . ($m['item_type'] === 'story' ? 'el envío se rechaza' : 'se queda con el texto sustituido por el aviso') . "\">Retirar</button> ";
+    echo "<button class=\"btn danger\" name=\"dec\" value=\"remove\" title=\"" . ($m['item_type'] === 'story' ? 'el envío se rechaza' : ($m['status'] === 'hidden' ? 'desaparece sin dejar rastro (estaba oculto)' : 'se queda con el texto sustituido por el aviso')) . "\">Retirar</button> ";
     echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está') . "\">" . ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda') . "</button></form></div></div>";
 }
 

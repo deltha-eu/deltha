@@ -145,6 +145,20 @@ function mod_apply_verdict(PDO $pdo, array $item, array $v): string {
     return $status;
 }
 
+/** Retira sin rastro un comentario o mensaje de chat que estaba oculto provisionalmente (pending_mod): comentario → status
+ *  'rejected' (como los rechazados desde admin), chat → 'gone'. En los dos, deleted = 1 y el original en content_orig; se cierran
+ *  sus reportes y se borra la imagen adjunta si la hay. No pasa por mod_unhide(), asi que el contador del hilo no se toca. */
+function mod_remove_hidden(PDO $pdo, string $type, int $id, int $by): void {
+    if ($type === 'comment') {
+        try { $qi = $pdo->prepare("SELECT image FROM comments WHERE comment_id = ?"); $qi->execute([$id]); if (($img = $qi->fetchColumn()) && function_exists('imagen_comentario_borrar')) { imagen_comentario_borrar((string)$img); $pdo->prepare("UPDATE comments SET image = NULL WHERE comment_id = ?")->execute([$id]); } } catch (Throwable $e) {}
+        $pdo->prepare("UPDATE comments SET content_orig = IF(deleted = 1, content_orig, content), deleted = 1, status = 'rejected' WHERE comment_id = ? AND status = 'pending_mod'")->execute([$id]);
+        try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([$by, $id]); } catch (Throwable $e) {}
+    } else {
+        $pdo->prepare("UPDATE chat SET content_orig = IF(deleted = 1, content_orig, content), deleted_at = IF(deleted = 1, deleted_at, NOW()), deleted = 1, status = 'gone' WHERE msg_id = ? AND status = 'pending_mod'")->execute([$id]);
+        try { $pdo->prepare("UPDATE chat_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([$by, $id]); } catch (Throwable $e) {}
+    }
+}
+
 /** Decision humana sobre un elemento señalado u oculto: 'keep' (se queda / vuelve a verse) o 'remove' (se retira como cualquier borrado de moderacion). */
 function mod_human(PDO $pdo, int $itemId, string $dec, int $by): ?string {
     $q = $pdo->prepare("SELECT * FROM mod_queue WHERE item_id = ?"); $q->execute([$itemId]);
@@ -152,11 +166,17 @@ function mod_human(PDO $pdo, int $itemId, string $dec, int $by): ?string {
     if (!$it || !in_array($it['status'], array_merge(MOD_OPEN, ['queued', 'processing', 'ok']), true)) return null;
     $type = $it['item_type']; $id = (int)$it['ref_id'];
     $pdo->beginTransaction();
-    mod_unhide($pdo, $type, $id, $it['prev_status']);   // en los dos casos: retirar = texto sustituido a la vista, no desaparecer
-    if ($dec === 'remove') {
-        if ($type === 'comment') comment_delete($pdo, $id);
-        elseif ($type === 'chat') chat_delete_mod($pdo, $id);
-        else $pdo->prepare("UPDATE stories SET status = 'rejected' WHERE story_id = ?")->execute([$id]);
+    if ($dec === 'remove' && $it['status'] === 'hidden' && in_array($type, ['comment', 'chat'], true)) {
+        // Oculto provisionalmente y retirado: no vuelve a la vista ni con el aviso de «eliminado», desaparece sin dejar marca (27/10/2026).
+        // El texto se conserva en content_orig por si hace falta ante un requerimiento; el contador del hilo ya lo bajo mod_hide().
+        mod_remove_hidden($pdo, $type, $id, $by);
+    } else {
+        mod_unhide($pdo, $type, $id, $it['prev_status']);   // lo que estaba a la vista: retirar = texto sustituido a la vista, no desaparecer
+        if ($dec === 'remove') {
+            if ($type === 'comment') comment_delete($pdo, $id);
+            elseif ($type === 'chat') chat_delete_mod($pdo, $id);
+            else $pdo->prepare("UPDATE stories SET status = 'rejected' WHERE story_id = ?")->execute([$id]);
+        }
     }
     $pdo->prepare("UPDATE mod_queue SET status = ?, decided_by = ?, processed = NOW() WHERE item_id = ?")->execute([$dec === 'remove' ? 'human_removed' : 'human_ok', $by, $itemId]);
     $pdo->commit();
