@@ -132,9 +132,14 @@ function mod_apply_verdict(PDO $pdo, array $item, array $v): string {
     $status = 'ok'; $prev = null;
     if ($cat !== null && $score >= $flagAt) {
         $status = 'flag';
+        // Que se oculta (28/10/2026): solo los tipos de mod_hide_types (comment) y las categorias de mod_hide_cats (spam), y con
+        // enlace si mod_hide_links_only = 1. Todo lo demas (envios, chat, insultos...) se señala y se decide a posteriori.
+        $tipos = array_filter(array_map('trim', explode(',', (string)cfg('mod_hide_types', 'comment'))));
+        $cats  = array_filter(array_map('trim', explode(',', (string)cfg('mod_hide_cats', 'spam'))));
+        $ocultable = ($tipos === [] || in_array($item['item_type'], $tipos, true)) && ($cats === [] || in_array($cat, $cats, true));
         $conEnlace = cfg('mod_hide_links_only', '1') !== '1'
             || mod_has_link((string)(mod_item_text($pdo, $item['item_type'], (int)$item['ref_id'])['text'] ?? ''));   // solo se oculta lo que lleva enlace (27/10/2026)
-        if (cfg('mod_auto_hide') === '1' && $score >= $hideAt && $cat !== 'otro' && $conEnlace) {
+        if (cfg('mod_auto_hide') === '1' && $score >= $hideAt && $cat !== 'otro' && $ocultable && $conEnlace) {
             $prev = mod_hide($pdo, $item['item_type'], (int)$item['ref_id']);
             if ($prev !== null) $status = 'hidden';
         }
