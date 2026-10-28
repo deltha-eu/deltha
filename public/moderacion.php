@@ -270,7 +270,7 @@ echo "<nav class=\"tabs\">";
 foreach ($TABS as $k => $v) echo "<a href=\"/moderacion?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v" . (!empty($pend[$k]) ? " <small>{$pend[$k]}</small>" : '') . "</a>";
 echo "</nav>";
 if ($tab === 'ia') { if (!mod_on()) echo "<p class=\"notice\">La IA moderadora está apagada (<code>mod_enabled = 0</code>): todo se publica y nada pasa por ella. Los reportes siguen llegando aquí.</p>";
-else echo "<p class=\"notice\">Todo se publica al momento. La IA local (en el PC de la redacción) lo revisa después con el criterio de las <a href=\"/normas\">normas de uso</a> y señala aquí lo dudoso" . (cfg('mod_auto_hide') === '1' ? "; lo muy claro" . (cfg('mod_hide_links_only', '1') === '1' ? " que lleve enlace" : "") . " lo oculta hasta que lo veáis" : "; no oculta nada (<code>mod_auto_hide = 0</code>)") . ". Decidís vosotros. " . h(mod_worker_line()) . "</p>";
+else echo "<p class=\"notice\">Todo se publica al momento. La IA local (en el PC de la redacción) lo revisa después con el criterio de las <a href=\"/normas\">normas de uso</a> y señala aquí lo dudoso" . (cfg('mod_auto_hide') === '1' ? "; lo muy claro" . (($hc = trim((string)cfg('mod_hide_cats', 'spam'))) !== '' ? " (" . h($hc) . ")" : "") . (($ht = trim((string)cfg('mod_hide_types', 'comment'))) !== '' ? " en " . h(str_replace(['comment', 'story', 'chat'], ['comentarios', 'envíos', 'chat'], $ht)) : "") . (cfg('mod_hide_links_only', '1') === '1' ? ", y solo con enlace," : "") . " lo oculta hasta que lo veáis" : "; no oculta nada (<code>mod_auto_hide = 0</code>)") . ". Decidís vosotros. " . h(mod_worker_line()) . "</p>";
 }
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
 
