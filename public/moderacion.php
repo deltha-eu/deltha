@@ -235,11 +235,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
 try {
     $q = $pdo->query("SELECT m.*, u.login AS decider,
                              CASE m.item_type WHEN 'story' THEN s.title WHEN 'comment' THEN c.content ELSE ch.content END AS txt,
-                             CASE m.item_type WHEN 'story' THEN s.story_id WHEN 'comment' THEN c.story_id ELSE NULL END AS sid
+                             CASE m.item_type WHEN 'story' THEN s.story_id WHEN 'comment' THEN c.story_id ELSE NULL END AS sid,
+                             cs.title AS stitle, cs.status AS sstatus, COALESCE(au.login, c.alias, ch.alias) AS autor,
+                             pc.comment_id AS pid, COALESCE(pu.login, pc.alias) AS pautor, pc.content AS ptxt, pc.status AS pstatus,
+                             chr.msg_id AS rid, COALESCE(ru.login, chr.alias) AS rautor, chr.content AS rtxt
                         FROM mod_queue m
                         LEFT JOIN stories s  ON m.item_type = 'story'   AND s.story_id  = m.ref_id
                         LEFT JOIN comments c ON m.item_type = 'comment' AND c.comment_id = m.ref_id
                         LEFT JOIN chat ch    ON m.item_type = 'chat'    AND ch.msg_id   = m.ref_id
+                        LEFT JOIN stories cs ON cs.story_id = c.story_id
+                        LEFT JOIN users au   ON au.user_id = COALESCE(c.user_id, ch.user_id)
+                        LEFT JOIN comments pc ON pc.comment_id = c.parent_id
+                        LEFT JOIN users pu   ON pu.user_id = pc.user_id
+                        LEFT JOIN chat chr   ON chr.msg_id = ch.reply_to
+                        LEFT JOIN users ru   ON ru.user_id = chr.user_id
                         LEFT JOIN users u    ON u.user_id = m.decided_by
                        WHERE m.status IN ('hidden','flag','needs_human')
                        ORDER BY FIELD(m.status, 'hidden', 'flag', 'needs_human'), m.score DESC, m.item_id LIMIT 100")->fetchAll();
@@ -277,6 +286,16 @@ foreach ($q as $m) {
     $estado = ['hidden' => '<b>oculto provisionalmente</b>', 'flag' => 'visible, señalado', 'needs_human' => 'la IA no ha podido decidir'][$m['status']];
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . $TY[$m['item_type']] . " #{$m['ref_id']}</b> " . ($m['status'] !== 'hidden' ? "<a href=\"$link\">ver</a>" : "") . "<span class=\"meta\"> · $estado · " . h(hace($m['created'])) . ($m['priority'] ? " · reportado" : "") . "</span></div>";
     echo "<p class=\"meta\">" . h(mod_note_line($m)) . "</p>";
+    // donde esta (28/10/2026): hilo al que pertenece el comentario y de que cuelga; en el chat, a que mensaje responde
+    if ($m['item_type'] === 'comment') {
+        $ctx = "Por <b>" . h((string)$m['autor']) . "</b> en el hilo <a href=\"/hilo/{$m['sid']}\">«" . h(mb_strimwidth((string)$m['stitle'], 0, 90, '…')) . "»</a>"
+             . (in_array($m['sstatus'], ['pending_mod', 'rejected', 'discard'], true) ? " <i>(hilo no visible: {$m['sstatus']})</i>" : "");
+        if ($m['pid']) $ctx .= " · responde a <a href=\"/hilo/{$m['sid']}#c{$m['pid']}\">#{$m['pid']}</a> de <b>" . h((string)$m['pautor']) . "</b>: «" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$m['ptxt']), 0, 120, '…')) . "»" . ($m['pstatus'] !== 'ok' ? " <i>(no visible)</i>" : "");
+        else $ctx .= " · comentario raíz";
+        echo "<p class=\"meta\">$ctx</p>";
+    } elseif ($m['item_type'] === 'chat') {
+        echo "<p class=\"meta\">Por <b>" . h((string)$m['autor']) . "</b>" . ($m['rid'] ? " · responde a <a href=\"/chat?m={$m['rid']}#m{$m['rid']}\">#{$m['rid']}</a> de <b>" . h((string)$m['rautor']) . "</b>: «" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$m['rtxt']), 0, 120, '…')) . "»" : "") . "</p>";
+    }
     echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth((string)$m['txt'], 0, 600, '…'))) . "</blockquote>";
     if (!empty($v['cita'])) echo "<p class=\"meta\">Fragmento: «" . h($v['cita']) . "»</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"ia\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
