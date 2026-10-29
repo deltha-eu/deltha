@@ -339,19 +339,21 @@ function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $ma
 /** Lee los feeds de una fuente y sincroniza source_items.
  *  $xmls (lector local, /api/lector.php): los feeds ya descargados desde fuera, ['portada' => xml, 'nuevas' => xml]; entonces el
  *  servidor no pide nada a la fuente (ni feeds ni fotos: las fotos pendientes se apuntan en $GLOBALS['ddd_relay_pend'] para que
- *  las traiga el lector). Una fuente con relay = 1 no se lee nunca desde el servidor: su web rechaza la IP del droplet. */
-function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
+ *  las traiga el lector). Una fuente con relay = 1 no se lee nunca desde el servidor: su web rechaza la IP del droplet.
+ *  $manual (29/10/2026, /moderacion -> Errores -> «pegar el feed»): $xmls lo pego un admin a mano; el servidor si pide las fotos. */
+function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null, bool $manual = false): array {
     $log = []; $err = [];
     if (!empty($src['relay']) && $xmls === null) return ["fuente {$src['slug']}: la lee el lector local (relay), no el servidor"];
-    $GLOBALS['DDD_RELAY'] = $xmls !== null; $GLOBALS['ddd_relay_pend'] = [];
+    $GLOBALS['DDD_RELAY'] = $xmls !== null && !$manual; $GLOBALS['ddd_relay_pend'] = [];
     $timeout = max(3, (int)cfg('sources_timeout_sec', 8));
     $feeds = ['portada' => $src['feed_portada'], 'nuevas' => $src['feed_nuevas']];
     fuente_imagen($src, [], true);   // contadores de imagenes a cero para esta fuente
     // primero la cola y luego la portada: si un item esta en las dos, gana 'portada'
     foreach (['nuevas', 'portada'] as $phase) {
         $url = trim((string)$feeds[$phase]);
-        if ($url === '') continue;
+        if ($url === '' && !($manual && isset($xmls[$phase]))) continue;
         $xml = $xmls !== null ? (isset($xmls[$phase]) && $xmls[$phase] !== '' ? (string)$xmls[$phase] : null) : http_get($url, $timeout, 4000000);
+        if ($xml === null && $xmls !== null && $manual) continue;   // pegado a mano: solo la fase que se pego
         if ($xml === null && $xmls !== null) { $err[] = "$phase: el lector local no pudo descargarlo" . (!empty($xmls["error_$phase"]) ? ' (' . mb_substr((string)$xmls["error_$phase"], 0, 120) . ')' : ''); continue; }
         if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
