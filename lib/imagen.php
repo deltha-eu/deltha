@@ -451,10 +451,23 @@ function imagen_candidatas_cuerpo(string $html, string $pageUrl): array {
     return $out;
 }
 
+/** Miniatura de un video de YouTube: la que se ve en su pagina. Se prueban por orden maxresdefault (1280x720), sddefault
+ *  (640x480), hqdefault (480x360) y mqdefault, y vale la primera que sea foto de verdad: cuando esa medida no existe, YouTube
+ *  responde 404 o el marcador de «sin imagen» de 120x90, que imagen_desde_bytes() ya rechaza (29/10/2026). */
+function imagen_youtube(string $id): ?string {
+    foreach (['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault'] as $q) {
+        $bytes = http_get('https://i.ytimg.com/vi/' . $id . '/' . $q . '.jpg', 4, 4000000);
+        if ($bytes && ($f = imagen_desde_bytes($bytes))) return $f;
+    }
+    return null;
+}
+
 /** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null).
  *  $conImagen = false: no descarga la og:image (el llamante ya tiene foto, p. ej. la del RSS de un medio). */
 function extraer_meta(string $url, bool $conImagen = true): array {
     $out = ['title' => '', 'description' => '', 'image' => null, 'channel' => null, 'canonical' => null];   // channel: id del canal (UC…) si es un video de YouTube (topes de envio, 15/10/2026); canonical: el <head> para url_resolver (migra-168)
+    $yt = youtube_video_id($url);   // video de YouTube: sus propios datos mandan sobre lo que diga la pagina (29/10/2026)
+    if ($yt !== '' && $conImagen) $out['image'] = imagen_youtube($yt);   // no depende de la pagina: cuando llegaba la de consentimiento o la de «no eres un bot», el envio se quedaba sin foto
     $html = http_get($url, (int)cfg('og_timeout_sec', 3), og_max_bytes());
     if (!$html) return $out;
     $out['canonical'] = substr($html, 0, 60000);   // solo la cabecera: canonical y og:url van ahi
@@ -481,12 +494,22 @@ function extraer_meta(string $url, bool $conImagen = true): array {
     $title = $meta(['og:title', 'twitter:title']);
     if (!$title && preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $m)) $title = texto_plano($m[1]);
     if ($title) {
-        // quitar sufijo de medio: "Titular - El Pais" / "Titular | eldiario.es"
-        $title = preg_replace('/\s+[\-|–—·]\s+[^\-|–—·]{2,40}$/u', '', $title);
+        // quitar sufijo de medio: "Titular - El Pais" / "Titular | eldiario.es". Nunca en un video de YouTube: su og:title es el
+        // titulo del video y «PSY - GANGNAM STYLE» o «Luis Fonsi - Despacito» se quedaban en «PSY» y «Luis Fonsi» (29/10/2026).
+        if ($yt === '') $title = preg_replace('/\s+[\-|–—·]\s+[^\-|–—·]{2,40}$/u', '', $title);
         $out['title'] = mb_substr(preg_replace('/\s+/', ' ', $title), 0, 200);
     }
-    $desc = $meta(['og:description', 'twitter:description', 'description']);
-    if ($desc) $out['description'] = mb_substr(preg_replace('/\s+/', ' ', $desc), 0, 2000);
-    if ($conImagen) $out['image'] = imagen_desde_og($url, $raw);
+    if ($yt !== '') {
+        // descripcion entera del video, con sus saltos de linea: og:description la corta YouTube a ~160 caracteres y le pone «...»
+        foreach (['/"shortDescription":"((?:[^"\\\\]|\\\\.)*)"/', '/"attributedDescription":\{"content":"((?:[^"\\\\]|\\\\.)*)"/'] as $re) {
+            if (!preg_match($re, $html, $m)) continue;
+            $d = json_decode('"' . $m[1] . '"');   // el JSON de la pagina escapa saltos, comillas y acentos
+            if (is_string($d) && ($d = texto_plano($d)) !== '') { $out['description'] = mb_substr(preg_replace('/\n{3,}/', "\n\n", $d), 0, 2000); break; }
+        }
+    } else {
+        $desc = $meta(['og:description', 'twitter:description', 'description']);
+        if ($desc) $out['description'] = mb_substr(preg_replace('/\s+/', ' ', $desc), 0, 2000);
+    }
+    if ($conImagen && $yt === '') $out['image'] = imagen_desde_og($url, $raw);
     return $out;
 }
