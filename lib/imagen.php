@@ -67,8 +67,10 @@ function imagen_max_bytes(): int {
 /** El tope en MB redondeado, para los avisos. */
 function imagen_max_mb(): int { return max(1, (int)round(imagen_max_bytes() / 1000000)); }
 
-/** Devuelve nombre de fichero guardado en /media o null. */
-function imagen_desde_bytes(string $bytes): ?string {
+/** Devuelve nombre de fichero guardado en /media o null.
+ *  $recortar = false: la foto entera, sin recortar a la proporcion del sitio (img_w:img_h), solo encajada en esa caja. Lo usa la
+ *  miniatura de YouTube (29/10/2026): es 16:9 y recortarla a 4:3 se comia los lados del poster. */
+function imagen_desde_bytes(string $bytes, bool $recortar = true): ?string {
     if (strlen($bytes) < 100 || strlen($bytes) > (int)cfg('img_max_bytes', 6000000)) return null;
     $src = imagen_decodificar($bytes);
     if (!$src) return null;
@@ -80,9 +82,15 @@ function imagen_desde_bytes(string $bytes): ?string {
     $ratio = $W / $H;
     if ($sw / $sh > $ratio) { $cw = (int)round($sh * $ratio); $ch = $sh; $cx = intdiv($sw - $cw, 2); $cy = 0; }
     else                    { $cw = $sw; $ch = (int)round($sw / $ratio); $cx = 0; $cy = intdiv($sh - $ch, 2); }
+    $dw = $W; $dh = $H;
+    if (!$recortar) {   // entera: la caja manda (cabe a lo ancho o a lo alto) y la proporcion se queda como estaba
+        $k = min($W / $sw, $H / $sh);
+        $cw = $sw; $ch = $sh; $cx = 0; $cy = 0;
+        $dw = max(1, (int)round($sw * $k)); $dh = max(1, (int)round($sh * $k));
+    }
 
-    $dst = imagecreatetruecolor($W, $H);
-    imagecopyresampled($dst, $src, 0, 0, $cx, $cy, $W, $H, $cw, $ch);
+    $dst = imagecreatetruecolor($dw, $dh);
+    imagecopyresampled($dst, $src, 0, 0, $cx, $cy, $dw, $dh, $cw, $ch);
     imagedestroy($src);
 
     $name = bin2hex(random_bytes(12)) . '.jpg';
@@ -453,11 +461,12 @@ function imagen_candidatas_cuerpo(string $html, string $pageUrl): array {
 
 /** Miniatura de un video de YouTube: la que se ve en su pagina. Se prueban por orden maxresdefault (1280x720), sddefault
  *  (640x480), hqdefault (480x360) y mqdefault, y vale la primera que sea foto de verdad: cuando esa medida no existe, YouTube
- *  responde 404 o el marcador de «sin imagen» de 120x90, que imagen_desde_bytes() ya rechaza (29/10/2026). */
+ *  responde 404 o el marcador de «sin imagen» de 120x90, que imagen_desde_bytes() ya rechaza. Se guarda sin recortar, con su
+ *  16:9: es el poster del video y recortarlo a 4:3 se comia los lados (29/10/2026). */
 function imagen_youtube(string $id): ?string {
     foreach (['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault'] as $q) {
         $bytes = http_get('https://i.ytimg.com/vi/' . $id . '/' . $q . '.jpg', 4, 4000000);
-        if ($bytes && ($f = imagen_desde_bytes($bytes))) return $f;
+        if ($bytes && ($f = imagen_desde_bytes($bytes, false))) return $f;
     }
     return null;
 }

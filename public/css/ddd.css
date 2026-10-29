@@ -143,6 +143,8 @@ nav.sub.foros form.seguir button { font-size: 12px; padding: 3px 10px; }
 .media { display: block; position: relative; width: 100%; aspect-ratio: 16 / 9;   /* previas: proporcion de X; en el hilo, 4:3 entera */ border-radius: 16px; overflow: hidden; margin: 8px 0 10px;
   background: var(--line) center/cover no-repeat; border: 1px solid var(--line); }
 .media.sm { aspect-ratio: 16 / 9; }
+/* /enviar y /editar: la foto encontrada (o la actual) como miniatura, no como banner de lado a lado (29/10/2026) */
+.plain .media { max-width: 240px; margin: 6px 0 10px; }
 .media .pic { position: absolute; inset: 0; background: center/cover no-repeat; }
 .tag { display: inline-block; color: #fff; background: rgba(0,0,0,.72); font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .02em; padding: 3px 10px; border-radius: 999px; text-decoration: none; }
 .media .tag { position: absolute; left: 10px; bottom: 10px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -186,6 +188,7 @@ form.fav.on .i { fill: currentColor; }
 .hilo .post.main { border-bottom: 0; }
 .hilo .main h2 { font-size: 24px; line-height: 1.2; }
 .hilo .main .media { aspect-ratio: 4 / 3; }
+.hilo .main .media.yt { aspect-ratio: 16 / 9; }   /* el poster de un video se ve entero, como en YouTube (y como el reproductor, .media.playing) */
 .hilo .main .lead { line-height: 1.5; }   /* mismo cuerpo de letra que en la portada: lo fija cada plantilla en su .lead */
 .hilo .main .lead.para { margin: 0 0 1em; }   /* articulos: un parrafo, un hueco */
 .hilo .main .lead.para:last-of-type { margin-bottom: 8px; }
