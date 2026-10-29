@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_editar') {
 }
 
 /* ---- fuentes con error (11/10/2026, /moderacion -> Errores): apagar, volver a encender o releer ahora ---- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer', 'fuente_resuelto', 'fuente_feed'], true)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer', 'fuente_resuelto', 'fuente_feed', 'fuente_pegar'], true)) {
     require_once __DIR__ . '/../lib/fuentes.php';
     $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
     if (!($fsrc = $q->fetch())) $out[] = 'Esa fuente no existe.';
@@ -174,6 +174,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apag
             $fsrc['feed_portada'] = $fp; $fsrc['feed_nuevas'] = $fn;
             try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc)); $out[] = "«{$fsrc['name']}»: feed cambiado y releída."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: feed cambiado; ERROR al releer: " . $e->getMessage(); }
         }
+    }
+    elseif (post('act') === 'fuente_pegar') {   // 29/10/2026: pegar (o subir) el XML del feed a mano y procesarlo como si se hubiera descargado
+        $xml = (string)($_POST['xml'] ?? '');
+        if ($xml === '' && !empty($_FILES['xmlfile']['tmp_name']) && is_uploaded_file($_FILES['xmlfile']['tmp_name'])) $xml = (string)file_get_contents($_FILES['xmlfile']['tmp_name']);
+        $xml = preg_replace('/^\xEF\xBB\xBF|^[\s\p{Z}\p{C}]+/u', '', $xml);   // BOM y basura invisible delante del <?xml
+        $phase = post('phase') === 'nuevas' ? 'nuevas' : 'portada';
+        if (trim($xml) === '') $out[] = 'No has pegado ni subido nada.';
+        elseif (strlen($xml) > 4000000) $out[] = 'El feed pegado pasa de 4 MB.';
+        else { try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc, [$phase => $xml], true)); $out[] = "«{$fsrc['name']}»: feed pegado procesado como «$phase»."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: ERROR " . $e->getMessage(); } }
     }
     elseif (post('act') === 'fuente_resuelto') {   // 29/10/2026: dar el error por resuelto a mano (p. ej. URL corregida): fuera de la lista y de su historial
         $pdo->prepare("UPDATE sources SET last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]);
@@ -480,7 +489,7 @@ if ($eh === 'apagadas') {
     if (!$fe) echo "<p>Ninguna fuente apagada.</p>";
 } else {
 echo "<h3>Fuentes que dan error (" . count($fe) . ")</h3>";
-echo "<p><small>Fuentes encendidas cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece); <b>cambiar el feed</b> permite pegar otra dirección (p. ej. el feed de una sección cuando el general está congelado) y releer al momento. Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
+echo "<p><small>Fuentes encendidas cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece); <b>cambiar el feed</b> permite pegar otra dirección (p. ej. el feed de una sección cuando el general está congelado) y releer al momento; <b>pegar el feed a mano</b> procesa el XML que pegues o subas como si lo hubiera descargado el lector (para comprobar si el problema es el feed o la descarga desde el servidor). Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
 if (!$fe) echo "<p>Ninguna fuente con error. 🙂</p>";
 }
 foreach ($fe as $f) {
@@ -496,6 +505,11 @@ foreach ($fe as $f) {
     echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a>";
     if (!$off) echo "<details style=\"flex-basis:100%\"><summary style=\"cursor:pointer;font-size:14px;color:var(--muted)\">cambiar el feed</summary><form method=\"post\" class=\"repacts\" style=\"display:flex;margin-top:6px\"><input type=\"hidden\" name=\"act\" value=\"fuente_feed\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\">"
        . "<input type=\"url\" name=\"feed_portada\" value=\"" . h((string)$f['feed_portada']) . "\" placeholder=\"RSS de portada\" style=\"flex:1;min-width:220px\" required> <input type=\"url\" name=\"feed_nuevas\" value=\"" . h((string)$f['feed_nuevas']) . "\" placeholder=\"RSS de nuevas (opcional)\" style=\"flex:1;min-width:220px\"> <button class=\"btn\" title=\"guardar y releer ahora\">Guardar y releer</button></form></details>";
+    if (!$off) echo "<details style=\"flex-basis:100%\"><summary style=\"cursor:pointer;font-size:14px;color:var(--muted)\">pegar el feed a mano</summary><form method=\"post\" enctype=\"multipart/form-data\" class=\"repacts\" style=\"display:flex;margin-top:6px\"><input type=\"hidden\" name=\"act\" value=\"fuente_pegar\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\">"
+       . "<textarea name=\"xml\" rows=\"5\" placeholder=\"Pega aquí el XML del feed (RSS o Atom) tal como lo ves en tu navegador\" style=\"flex-basis:100%;font-family:monospace;font-size:12px\"></textarea>"
+       . "<label>o sube el archivo <input type=\"file\" name=\"xmlfile\" accept=\".xml,.rss,.atom,text/xml,application/xml,application/rss+xml,application/atom+xml\"></label> "
+       . "<label>como <select name=\"phase\"><option value=\"portada\">portada</option><option value=\"nuevas\">nuevas</option></select></label> "
+       . "<button class=\"btn\" title=\"procesarlo como si lo hubiera descargado el lector\">Procesar</button></form></details>";
     echo "</div></div>";
 }
 } elseif (!$hayHist) echo "<p class=\"error\">No se puede leer el historial (source_errors, migra-137): " . h($histErr) . "</p>";
