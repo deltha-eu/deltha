@@ -357,7 +357,7 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null, bool $manu
         if ($xml === null && $xmls !== null) { $err[] = "$phase: el lector local no pudo descargarlo" . (!empty($xmls["error_$phase"]) ? ' (' . mb_substr((string)$xmls["error_$phase"], 0, 120) . ')' : ''); continue; }
         if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
-        if (!$items) { $err[] = "$phase: " . (($d = fuente_desafio($xml)) !== '' ? "$d en vez del feed: veto a la IP del servidor; probar con «lector local»" : 'feed vacio o ilegible'); continue; }
+        if (!$items) { $err[] = "$phase: " . (($d = fuente_desafio($xml)) !== '' ? "$d en vez del feed: veto a la IP del servidor; probar con «lector local»" : 'feed vacio o ilegible (' . fuente_ilegible_motivo($xml) . ')'); continue; }
         if (fuente_feed_actividad($src, $items)) {   // foro XenForo 1 (ForoMTB): el feed va por actividad pero pubDate es la creacion del hilo
             $t0 = time();
             foreach ($items as $k => &$it) { $it['pub_date'] = date('Y-m-d H:i:s', $t0 - $k); $it['actividad'] = true; }   // la fecha de lectura, en el orden del feed
@@ -416,6 +416,23 @@ function fuente_desafio(string $body): string {
     if (stripos($h, 'datadome') !== false) return 'desafio de DataDome';
     if (stripos($h, 'captcha') !== false && stripos($h, '<html') !== false) return 'captcha';
     return '';
+}
+
+/** Por que no se ha sacado ningun item de un cuerpo (29/10/2026): si es HTML, lo dice; si es XML, el primer error de libxml o que no
+ *  tiene <item>/<entry> (p. ej. un feed vacio de verdad o sin <link> en los items); y siempre con que empieza el texto. */
+function fuente_ilegible_motivo(string $body): string {
+    $ini = trim(preg_replace('/\s+/u', ' ', mb_substr(ltrim($body), 0, 70)));
+    if ($ini === '') return 'respuesta vacia';
+    if (preg_match('/^\s*<(!doctype html|html)/i', $body)) return 'es HTML, no un feed; empieza: ' . $ini;
+    $prev = libxml_use_internal_errors(true);
+    $doc = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+    $le = libxml_get_errors(); libxml_clear_errors(); libxml_use_internal_errors($prev);
+    if (!$doc) return 'XML mal formado: ' . ($le ? trim($le[0]->message) . ' (linea ' . $le[0]->line . ')' : 'sin detalle') . '; empieza: ' . $ini;
+    $root = $doc->getName();
+    if ($root === 'feed') return 'Atom sin <entry> con enlace';
+    if ($root !== 'rss' && $root !== 'RDF') return "raiz <$root>, no <rss> ni <feed>; empieza: $ini";
+    if (!isset($doc->channel->item)) return 'RSS sin ningun <item>';
+    return 'items sin <link>';
 }
 
 /** Historial de errores de lectura (source_errors, migra-137; se ve en /moderacion -> Errores). Una fila por fuente y texto de error:
