@@ -447,32 +447,40 @@ foreach ($props as $p) {
  *  Vistas (29/10/2026, ?eh=): «fuentes» = las que fallaron en su ultima lectura, con apagar/releer; «activos», «resueltos» y «todos» = el
  *  historial. Un error del historial esta activo mientras siga siendo el ultimo de una fuente encendida; resuelto cuando una lectura
  *  posterior salio bien (o falla por otra cosa) o la fuente esta apagada. Los resueltos no se borran solos: se borran desde aqui. ---- */
-$eh = in_array((string)($_GET['eh'] ?? ''), ['fuentes', 'activos', 'resueltos', 'todos'], true) ? (string)$_GET['eh'] : 'fuentes';
+$eh = in_array((string)($_GET['eh'] ?? ''), ['fuentes', 'apagadas', 'activos', 'resueltos', 'todos'], true) ? (string)$_GET['eh'] : 'fuentes';
 $resuelto = "(s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR s.last_error <> e.error)";
-$nFe = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE last_error IS NOT NULL AND last_error <> ''")->fetchColumn();
+$nFe = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'ok' AND last_error IS NOT NULL AND last_error <> ''")->fetchColumn();
+$nOff = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'off'")->fetchColumn();
 try { $cnt = $pdo->query("SELECT SUM(NOT $resuelto) act, SUM($resuelto) res FROM source_errors e JOIN sources s ON s.source_id = e.source_id")->fetch(); $hayHist = true; }
 catch (Throwable $e) { $cnt = []; $hayHist = false; }
 $nAct = (int)($cnt['act'] ?? 0); $nRes = (int)($cnt['res'] ?? 0);
 echo "<nav class=\"sub\" style=\"padding-left:0;margin:-8px 0 16px\">";
-foreach (['fuentes' => "Con error ($nFe)", 'activos' => "Historial activos ($nAct)", 'resueltos' => "Resueltos ($nRes)", 'todos' => 'Todo el historial (' . ($nAct + $nRes) . ')'] as $k => $v)
+foreach (['fuentes' => "Con error ($nFe)", 'apagadas' => "Apagadas ($nOff)", 'activos' => "Historial activos ($nAct)", 'resueltos' => "Resueltos ($nRes)", 'todos' => 'Todo el historial (' . ($nAct + $nRes) . ')'] as $k => $v)
     echo "<a href=\"/moderacion?t=errores&amp;eh=$k\"" . ($k === $eh ? ' class="on"' : '') . ">$v</a>";
 echo "</nav>";
-if ($eh === 'fuentes') {
+if ($eh === 'fuentes' || $eh === 'apagadas') {
+// «Con error»: solo las encendidas (29/10/2026; las apagadas tienen su propia vista, con las que se apagaron por error o a mano)
 $fe = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT MAX(pub_date) FROM source_items i WHERE i.source_id = s.source_id) ult
-                     FROM sources s WHERE s.last_error IS NOT NULL AND s.last_error <> '' ORDER BY (s.status = 'ok') DESC, s.last_fetch DESC")->fetchAll();
-echo "<h3>Fuentes que dan error (" . count(array_filter($fe, fn($f) => $f['status'] === 'ok')) . " activas)</h3>";
-echo "<p><small>Fuentes cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece). Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
+                     FROM sources s WHERE " . ($eh === 'apagadas' ? "s.status = 'off' ORDER BY s.last_fetch DESC" : "s.status = 'ok' AND s.last_error IS NOT NULL AND s.last_error <> '' ORDER BY s.last_fetch DESC"))->fetchAll();
+if ($eh === 'apagadas') {
+    echo "<h3>Fuentes apagadas (" . count($fe) . ")</h3>";
+    echo "<p><small>No se leen ni salen en el catálogo. Las que se apagaron por un error conservan su último error, por si el medio arregla el feed. <b>Encender</b> la vuelve a poner en el lector (y borra el error).</small></p>";
+    if (!$fe) echo "<p>Ninguna fuente apagada.</p>";
+} else {
+echo "<h3>Fuentes que dan error (" . count($fe) . ")</h3>";
+echo "<p><small>Fuentes encendidas cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece). Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
 if (!$fe) echo "<p>Ninguna fuente con error. 🙂</p>";
+}
 foreach ($fe as $f) {
     $sid = (int)$f['source_id']; $off = $f['status'] === 'off';
     echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($off ? ' · <i>apagada</i>' : '') . (!empty($f['relay']) ? ' · lector local' : '') . " · <a href=\"/fuente/" . h($f['slug']) . "\">ver</a> · <a href=\"" . h($f['home']) . "\" rel=\"noopener nofollow\" target=\"_blank\">web</a>"
        . "<span class=\"meta\"> · {$f['n']} noticias" . ($f['ult'] ? ', la última ' . h(hace($f['ult'])) : ', ninguna') . " · intentado " . ($f['last_fetch'] ? h(hace($f['last_fetch'])) : 'nunca') . "</span></div>";
-    echo "<pre class=\"ftest err\">" . h((string)$f['last_error']) . "</pre>";
+    if ((string)$f['last_error'] !== '') echo "<pre class=\"ftest err\">" . h((string)$f['last_error']) . "</pre>";
     echo "<div class=\"repacts\">";
     if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_apagar\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn danger\" title=\"deja de leerse y de salir en el catálogo\">Apagar</button></form>";
     else echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_encender\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\">Encender</button></form>";
-    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_releer\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"intentar leerla ahora\">Releer</button></form>";
-    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_resuelto\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"quitar el error de aquí y del historial sin releer; si vuelve a fallar, reaparece\">Resuelto</button></form>";
+    if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_releer\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"intentar leerla ahora\">Releer</button></form>";
+    if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_resuelto\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"quitar el error de aquí y del historial sin releer; si vuelve a fallar, reaparece\">Resuelto</button></form>";
     echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a></div></div>";
 }
 } elseif (!$hayHist) echo "<p class=\"error\">Falta la tabla source_errors (migra-137).</p>";
