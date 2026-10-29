@@ -303,7 +303,23 @@ function curl_impersonate_bin(): ?string {
 /** Rastro de la ultima http_get(): un texto por intento («curl-impersonate: HTTP 403 en 210 ms»), para el diagnostico de admin. */
 function http_last(): array { return $GLOBALS['ddd_http_last'] ?? []; }
 
-/** Peticion HTTP. 1) curl-impersonate como Chrome si existe; 2) curl de PHP con cascada navegador -> Twitterbot -> facebookexternalhit. */
+/** Un cuerpo (con 200, 202, 403...) que no es la pagina sino un desafio anti-bots: reCAPTCHA, Cloudflare, AWS WAF (Irish Mirror / Reach:
+ *  devuelve 202 con un HTML que pide ejecutar JS), Imperva, PerimeterX, DataDome. Devuelve el nombre o '' (29/10/2026). */
+function http_es_desafio(string $body): string {
+    $h = substr($body, 0, 6000);
+    if (stripos($h, 'recaptcha/challengepage') !== false || stripos($h, 'RecaptchaChallengePage') !== false) return 'reCAPTCHA de Google';
+    if (stripos($h, 'cf-chl') !== false || stripos($h, 'challenge-platform') !== false || stripos($h, 'Just a moment') !== false) return 'desafio de Cloudflare';
+    if (stripos($h, 'awsWafCookie') !== false || stripos($h, 'aws-waf-token') !== false || stripos($h, 'awswaf') !== false) return 'desafio de AWS WAF';
+    if (stripos($h, '_Incapsula_Resource') !== false || stripos($h, 'Incapsula incident') !== false) return 'desafio de Imperva/Incapsula';
+    if (stripos($h, 'px-captcha') !== false || stripos($h, 'perimeterx') !== false) return 'desafio de PerimeterX';
+    if (stripos($h, 'datadome') !== false) return 'desafio de DataDome';
+    if (stripos($h, 'captcha') !== false && stripos($h, '<html') !== false) return 'captcha';
+    return '';
+}
+
+/** Peticion HTTP. 1) curl-impersonate como Chrome si existe; 2) curl de PHP con cascada navegador -> bot propio -> Twitterbot ->
+ *  facebookexternalhit. Un cuerpo que es un desafio anti-bots (http_es_desafio) no vale como respuesta: se pasa al siguiente intento,
+ *  porque muchos WAF solo retan a lo que parece un navegador y sirven el feed tal cual a un bot declarado (Irish Mirror, 29/10/2026). */
 function http_get(string $url, int $timeout, int $max = 3000000): ?string {
     $GLOBALS['ddd_http_last'] = [];
     if (!preg_match('#^https?://[^\s\'"]+$#i', $url)) { $GLOBALS['ddd_http_last'][] = 'URL no valida'; return null; }
@@ -322,14 +338,16 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
         if (is_string($out) && ($pos = strrpos($out, "\n")) !== false) {
             $code = (int)substr($out, $pos + 1);
             $body = substr($out, 0, $pos);
-            $traza('curl-impersonate', $code, strlen($body));
-            if ($code > 0 && $code < 400 && $body !== '') return $body;
+            $des = $body !== '' ? http_es_desafio($body) : '';
+            $traza('curl-impersonate', $code, strlen($body), $des);
+            if ($code > 0 && $code < 400 && $body !== '' && $des === '') return $body;
         } else $traza('curl-impersonate', 0, 0, 'sin salida');
         // si falla, seguimos con el curl normal
     }
 
     $agents = [
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (compatible; Deltha/1.0; +https://deltha.eu)',   // bot declarado: AWS WAF y similares no le ponen el desafio JS
         'Twitterbot/1.0',
         'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
     ];
@@ -354,8 +372,10 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
         $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         $err  = curl_errno($ch) ? curl_error($ch) : '';
         curl_close($ch);
-        $traza('curl ' . explode('/', $ua)[0], $code, is_string($data) ? strlen($data) : 0, $err);
-        if ($data !== false && $code > 0 && $code < 400 && strlen($data) > 0) return $data;
+        $des = is_string($data) && $data !== '' ? http_es_desafio($data) : '';
+        $traza('curl ' . (str_starts_with($ua, 'Mozilla/5.0 (compatible; Deltha') ? 'Deltha' : explode('/', $ua)[0]), $code, is_string($data) ? strlen($data) : 0, $err !== '' ? $err : $des);
+        if ($data !== false && $code > 0 && $code < 400 && strlen($data) > 0 && $des === '') return $data;
+        if ($des !== '') continue;   // desafio anti-bots (200/202/403...): probar con el siguiente agente
         if ($code !== 403 && $code !== 429 && $code !== 503 && $code !== 0) return null; // 404 etc: no reintentar
     }
     return null;
