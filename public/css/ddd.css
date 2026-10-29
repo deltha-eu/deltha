@@ -188,7 +188,6 @@ form.fav.on .i { fill: currentColor; }
 .hilo .post.main { border-bottom: 0; }
 .hilo .main h2 { font-size: 24px; line-height: 1.2; }
 .hilo .main .media { aspect-ratio: 4 / 3; }
-.hilo .main .media.yt { aspect-ratio: 16 / 9; }   /* el poster de un video se ve entero, como en YouTube (y como el reproductor, .media.playing) */
 .hilo .main .lead { line-height: 1.5; }   /* mismo cuerpo de letra que en la portada: lo fija cada plantilla en su .lead */
 .hilo .main .lead.para { margin: 0 0 1em; }   /* articulos: un parrafo, un hueco */
 .hilo .main .lead.para:last-of-type { margin-bottom: 8px; }
@@ -3689,6 +3688,10 @@ p.fz-add.on a::before { content: "× "; }
 /* ---- canales de YouTube (v148): triangulo de «reproducir» sobre la miniatura de un video (.media.yt); el enlace abre el video en YouTube ---- */
 .media.yt .pic::after { content: ""; position: absolute; left: 50%; top: 50%; width: 64px; height: 44px; margin: -22px 0 0 -32px; border-radius: 12px; background: rgba(0, 0, 0, .62) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6.5v11l9-5.5z' fill='%23fff'/%3E%3C/svg%3E") center / 30px no-repeat; transition: background-color .15s; }
 .media.yt .pic:hover::after { background-color: rgba(0, 0, 0, .82); }
+/* (29/10/2026) el poster de un video se ve entero, como en YouTube: 16:9 tambien donde el marco de la foto es 4:3 (el hilo y
+   las pieles que ponen la miniatura pequena al lado). La foto del envio se guarda con su 16:9 (imagen_youtube). */
+.hilo .main .media.yt, [data-skin="flujo"] .post .media.yt, [data-fam="orange"] .post .media.yt,
+[data-skin="www1998"] .post.full .media.yt, [data-skin="www1998"] .post.compact .media.yt { aspect-ratio: 16 / 9; }
 
 /* ---- v149: una URL o palabra larguisima en el titular o la entradilla (descripciones de YouTube con enlaces de afiliado) se parte
    en vez de salirse de la columna y pisar la lateral ---- */
