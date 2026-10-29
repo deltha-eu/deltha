@@ -159,11 +159,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_editar') {
 }
 
 /* ---- fuentes con error (11/10/2026, /moderacion -> Errores): apagar, volver a encender o releer ahora ---- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer', 'fuente_resuelto'], true)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer', 'fuente_resuelto', 'fuente_feed'], true)) {
     require_once __DIR__ . '/../lib/fuentes.php';
     $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
     if (!($fsrc = $q->fetch())) $out[] = 'Esa fuente no existe.';
     elseif (post('act') === 'fuente_apagar') { $pdo->prepare("UPDATE sources SET status = 'off' WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» apagada: no se lee ni sale en el catálogo. Se vuelve a encender desde aquí o desde admin → Fuentes."; }
+    elseif (post('act') === 'fuente_feed') {   // 29/10/2026: cambiar el feed a mano desde Errores (feed congelado, URL con basura invisible...) y releer
+        $limpia = fn(string $u) => preg_replace('/^[\s\p{Z}\p{C}]+|[\s\p{Z}\p{C}]+$/u', '', $u);   // trim() no quita U+2060, U+200B, nbsp...
+        $fp = mb_substr($limpia(post('feed_portada')), 0, 300); $fn = mb_substr($limpia(post('feed_nuevas')), 0, 300);
+        if ($fp === '') $out[] = 'El feed de portada no puede quedar vacío.';
+        elseif (!fprop_url_ok($fp) || ($fn !== '' && !fprop_url_ok($fn))) $out[] = 'Dirección no válida (https://… pública).';
+        else {
+            $pdo->prepare("UPDATE sources SET feed_portada = ?, feed_nuevas = ?, last_error = NULL WHERE source_id = ?")->execute([$fp, $fn, (int)$fsrc['source_id']]);
+            $fsrc['feed_portada'] = $fp; $fsrc['feed_nuevas'] = $fn;
+            try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc)); $out[] = "«{$fsrc['name']}»: feed cambiado y releída."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: feed cambiado; ERROR al releer: " . $e->getMessage(); }
+        }
+    }
     elseif (post('act') === 'fuente_resuelto') {   // 29/10/2026: dar el error por resuelto a mano (p. ej. URL corregida): fuera de la lista y de su historial
         $pdo->prepare("UPDATE sources SET last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]);
         try { $pdo->prepare("DELETE FROM source_errors WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); } catch (Throwable $e) { /* sin la migra 137 */ }
@@ -469,7 +480,7 @@ if ($eh === 'apagadas') {
     if (!$fe) echo "<p>Ninguna fuente apagada.</p>";
 } else {
 echo "<h3>Fuentes que dan error (" . count($fe) . ")</h3>";
-echo "<p><small>Fuentes encendidas cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece). Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
+echo "<p><small>Fuentes encendidas cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece); <b>cambiar el feed</b> permite pegar otra dirección (p. ej. el feed de una sección cuando el general está congelado) y releer al momento. Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
 if (!$fe) echo "<p>Ninguna fuente con error. 🙂</p>";
 }
 foreach ($fe as $f) {
@@ -482,7 +493,10 @@ foreach ($fe as $f) {
     else echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_encender\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\">Encender</button></form>";
     if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_releer\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"intentar leerla ahora\">Releer</button></form>";
     if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_resuelto\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"quitar el error de aquí y del historial sin releer; si vuelve a fallar, reaparece\">Resuelto</button></form>";
-    echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a></div></div>";
+    echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a>";
+    if (!$off) echo "<details style=\"flex-basis:100%\"><summary style=\"cursor:pointer;font-size:14px;color:var(--muted)\">cambiar el feed</summary><form method=\"post\" class=\"repacts\" style=\"display:flex;margin-top:6px\"><input type=\"hidden\" name=\"act\" value=\"fuente_feed\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\">"
+       . "<input type=\"url\" name=\"feed_portada\" value=\"" . h((string)$f['feed_portada']) . "\" placeholder=\"RSS de portada\" style=\"flex:1;min-width:220px\" required> <input type=\"url\" name=\"feed_nuevas\" value=\"" . h((string)$f['feed_nuevas']) . "\" placeholder=\"RSS de nuevas (opcional)\" style=\"flex:1;min-width:220px\"> <button class=\"btn\" title=\"guardar y releer ahora\">Guardar y releer</button></form></details>";
+    echo "</div></div>";
 }
 } elseif (!$hayHist) echo "<p class=\"error\">No se puede leer el historial (source_errors, migra-137): " . h($histErr) . "</p>";
 else {
