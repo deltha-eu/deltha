@@ -359,7 +359,7 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null, bool $manu
         $items = fuentes_parse_rss($xml);
         if (!$items) {
             $d = fuente_desafio($xml); $mot = $d === '' ? fuente_ilegible_motivo($xml) : '';
-            if ($d === '' && fuente_sin_novedades_normal($src) && str_starts_with($mot, 'RSS sin ningun <item>')) { $log[] = "fuente {$src['slug']} $phase: feed sin entradas (normal en un substack)"; continue; }   // no es un error
+            if ($d === '' && fuente_sin_novedades_normal($src) && (str_starts_with($mot, 'RSS sin ningun <item>') || str_starts_with($mot, 'Atom sin <entry>'))) { $log[] = "fuente {$src['slug']} $phase: feed sin entradas (normal en substacks y canales)"; continue; }   // no es un error
             $err[] = "$phase: " . ($d !== '' ? "$d en vez del feed: veto a la IP del servidor; probar con «lector local»" : "feed vacio o ilegible ($mot)"); continue;
         }
         if (fuente_feed_actividad($src, $items)) {   // foro XenForo 1 (ForoMTB): el feed va por actividad pero pubDate es la creacion del hilo
@@ -379,7 +379,7 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null, bool $manu
             $items = array_values(array_filter($items, fn($it) => $it['pub_date'] >= $lim));
             if ($n0 - count($items)) $log[] = "fuente {$src['slug']} $phase: " . ($n0 - count($items)) . " items de hace mas de $maxAge dias, descartados";
             if (!$items) {
-                if (fuente_sin_novedades_normal($src)) { $log[] = "fuente {$src['slug']} $phase: nada en los ultimos $maxAge dias (normal en un substack)"; continue; }   // no es un error
+                if (fuente_sin_novedades_normal($src)) { $log[] = "fuente {$src['slug']} $phase: nada en los ultimos $maxAge dias (normal en substacks y canales)"; continue; }   // no es un error
                 $err[] = "$phase: todo lo del feed tiene mas de $maxAge dias"; continue;
             }
         }
@@ -412,10 +412,11 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null, bool $manu
     return $log;
 }
 
-/** Substacks (kind newsletter o alojadas en substack.com): el feed siempre funciona, y que venga sin entradas o sin nada reciente
- *  solo quiere decir que el autor lleva tiempo sin publicar. No es un error y no debe salir en /moderacion -> Errores (29/10/2026). */
+/** Substacks (kind newsletter o alojadas en substack.com) y canales de YouTube: el feed siempre funciona, y que venga sin entradas o
+ *  sin nada reciente solo quiere decir que el autor lleva tiempo sin publicar. No es un error y no sale en /moderacion -> Errores (29/10/2026). */
 function fuente_sin_novedades_normal(array $src): bool {
-    return ($src['kind'] ?? '') === 'newsletter' || str_contains((string)($src['home'] ?? ''), 'substack.com') || str_contains((string)($src['feed_portada'] ?? ''), 'substack.com');
+    return in_array($src['kind'] ?? '', ['newsletter', 'youtube'], true) || str_contains((string)($src['home'] ?? ''), 'substack.com') || str_contains((string)($src['feed_portada'] ?? ''), 'substack.com')
+        || str_contains((string)($src['feed_portada'] ?? ''), 'youtube.com/feeds/');
 }
 
 /** Un 200 cuyo cuerpo no es el feed sino un desafio anti-bots (29/10/2026: Semrush devolvia un reCAPTCHA al droplet; Cloudflare, un
