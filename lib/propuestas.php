@@ -95,6 +95,7 @@ function fprop_probar(string $feed, string $home): array {
             return $r;
         }
         // no es un feed: si es una pagina, buscar sus RSS anunciados; si no anuncia ninguno, probar /feed
+        if (($d = fuente_desafio($body)) !== '') { $errores[] = "$url: devuelve un $d en vez de la página (veto a la IP del servidor; probar con «lector local»)"; continue; }
         if (stripos($body, '<html') !== false || stripos($body, '<head') !== false) {
             $found = 0;
             if (preg_match_all('#<link\b[^>]*>#i', $body, $mm)) foreach ($mm[0] as $tag) {
