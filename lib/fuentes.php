@@ -425,7 +425,7 @@ function fuente_ilegible_motivo(string $body): string {
     if ($ini === '') return 'respuesta vacia';
     if (preg_match('/^\s*<(!doctype html|html)/i', $body)) return 'es HTML, no un feed; empieza: ' . $ini;
     $prev = libxml_use_internal_errors(true);
-    $doc = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+    $doc = simplexml_load_string(fuentes_envolver_fragmento($body), 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     $le = libxml_get_errors(); libxml_clear_errors(); libxml_use_internal_errors($prev);
     if (!$doc) return 'XML mal formado: ' . ($le ? trim($le[0]->message) . ' (linea ' . $le[0]->line . ')' : 'sin detalle') . '; empieza: ' . $ini;
     $root = $doc->getName();
@@ -602,6 +602,17 @@ function fuentes_ns(SimpleXMLElement $i, string $uri): SimpleXMLElement {
     if (!count($c)) $c = $i->children(str_starts_with($uri, 'https://') ? 'http://' . substr($uri, 8) : 'https://' . substr($uri, 7));
     return $c;
 }
+/** Un trozo de feed pegado a mano que empieza por <item> o <entry> (sin la cabecera <rss>/<feed> con los xmlns) se envuelve en un canal
+ *  con los espacios de nombres habituales, para que libxml no lo rechace por «Namespace prefix media not defined» (29/10/2026). */
+function fuentes_envolver_fragmento(string $xml): string {
+    $t = ltrim($xml);
+    if (preg_match('/^<item[\s>]/i', $t)) return '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:dc="http://purl.org/dc/elements/1.1/"'
+        . ' xmlns:dcterms="http://purl.org/dc/terms" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:slash="http://purl.org/rss/1.0/modules/slash/"'
+        . ' xmlns:meneame="http://meneame.net/faq-es.php" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"'
+        . ' xmlns:georss="http://www.georss.org/georss" xmlns:yt="http://www.youtube.com/xml/schemas/2015"><channel><title>fragmento</title>' . $t . '</channel></rss>';
+    if (preg_match('/^<entry[\s>]/i', $t)) return '<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:dc="http://purl.org/dc/elements/1.1/">' . $t . '</feed>';
+    return $xml;
+}
 function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'id="tablatemas"')) return fuentes_parse_mediavida($xml);   // Mediavida: no hay feed, se lee la tabla de hilos
     if (str_contains($xml, 'class="ap-card"')) return fuentes_parse_asimov($xml);        // Asimov Press: sin feed, se lee /articles (migra-130)
@@ -609,6 +620,7 @@ function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'm-preview-') && str_contains($xml, 'publico.es')) return fuentes_parse_publico($xml);   // Público: sin RSS desde 2024, se lee la portada (migra-136)
     if (str_contains($xml, 'gatopardo.com') && str_contains($xml, '/articulos/') && str_contains($xml, 'website-files.com')) return fuentes_parse_gatopardo($xml);   // Gatopardo (Webflow, sin RSS): se lee la portada (migra-161)
     if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"rendered"') && str_contains($xml, '"link"')) return fuentes_parse_wpjson($xml);   // WordPress sin RSS: su API REST /wp-json/wp/v2/posts (migra-150, Rebelión)
+    $xml = fuentes_envolver_fragmento($xml);
     $prev = libxml_use_internal_errors(true);
     $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     libxml_clear_errors(); libxml_use_internal_errors($prev);
