@@ -168,6 +168,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apag
     else { try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc)); $out[] = "«{$fsrc['name']}» releída."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: ERROR " . $e->getMessage(); } }
 }
 
+/* ---- historial de errores (29/10/2026, /moderacion -> Errores -> Resueltos): borrar una fila o todas las ya resueltas.
+ *  Un error esta resuelto cuando ya no es el ultimo de su fuente (una lectura posterior salio bien o falla por otra cosa),
+ *  o la fuente esta apagada; las filas no se borran solas para que se vea si una fuente falla a ratos. ---- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['error_borrar', 'errores_borrar_resueltos'], true)) {
+    try {
+        if (post('act') === 'error_borrar') {
+            $st = $pdo->prepare("DELETE FROM source_errors WHERE err_id = ?"); $st->execute([(int)post('err_id')]);
+            $out[] = $st->rowCount() ? 'Error borrado del historial.' : 'Ese error ya no estaba.';
+        } else {
+            $n = $pdo->exec("DELETE e FROM source_errors e JOIN sources s ON s.source_id = e.source_id
+                             WHERE s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR s.last_error <> e.error");
+            $out[] = "$n " . ($n === 1 ? 'error resuelto borrado' : 'errores resueltos borrados') . ' del historial.';
+        }
+    } catch (Throwable $e) { $out[] = 'ERROR ' . $e->getMessage(); }
+}
+
 /* ---- fuentes propuestas por los usuarios (lib/propuestas.php) ---- */
 $fprop_test = [];   // valores recién probados: el formulario los conserva aunque no todos sean columnas de source_proposals
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_probar', 'fprop_ok', 'fprop_no'], true)) {
@@ -440,12 +456,27 @@ foreach ($fe as $f) {
     echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a></div></div>";
 }
 try {
-    $hist = $pdo->query("SELECT e.*, s.name, s.slug, s.status FROM source_errors e JOIN sources s ON s.source_id = e.source_id ORDER BY e.last_seen DESC LIMIT 100")->fetchAll();
-    echo "<h3>Historial (" . count($hist) . " últimos)</h3><p><small>Cada error distinto de cada fuente, con cuántas veces se ha repetido y cuándo fue la primera y la última. Sirve para ver si una fuente falla a ratos o lleva días caída.</small></p>";
-    if (!$hist) echo "<p>Sin errores registrados todavía.</p>";
+    // activo = sigue siendo el ultimo error de una fuente encendida; resuelto = una lectura posterior salio bien (o falla por otra
+    // cosa) o la fuente esta apagada. Los resueltos no se borran solos (sirven para ver si una fuente falla a ratos): se borran aqui.
+    $eh = in_array((string)($_GET['eh'] ?? ''), ['activos', 'resueltos', 'todos'], true) ? (string)$_GET['eh'] : 'activos';
+    $resuelto = "(s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR s.last_error <> e.error)";
+    $cnt = $pdo->query("SELECT SUM(NOT $resuelto) act, SUM($resuelto) res FROM source_errors e JOIN sources s ON s.source_id = e.source_id")->fetch();
+    $nAct = (int)($cnt['act'] ?? 0); $nRes = (int)($cnt['res'] ?? 0);
+    $hist = $pdo->query("SELECT e.*, s.name, s.slug, s.status, $resuelto res FROM source_errors e JOIN sources s ON s.source_id = e.source_id"
+                      . ($eh === 'activos' ? " WHERE NOT $resuelto" : ($eh === 'resueltos' ? " WHERE $resuelto" : '')) . " ORDER BY e.last_seen DESC LIMIT 200")->fetchAll();
+    echo "<h3>Historial</h3><p><small>Cada error distinto de cada fuente, con cuántas veces se ha repetido y cuándo fue la primera y la última. Sirve para ver si una fuente falla a ratos o lleva días caída. Un error queda <b>resuelto</b> cuando una lectura posterior sale bien (o falla por otra cosa) o la fuente se apaga; los resueltos no se borran solos.</small></p>";
+    echo "<nav class=\"sub\" style=\"padding-left:0;margin-bottom:12px\">";
+    foreach (['activos' => "Activos ($nAct)", 'resueltos' => "Resueltos ($nRes)", 'todos' => 'Todos (' . ($nAct + $nRes) . ')'] as $k => $v) echo "<a href=\"/moderacion?t=errores&amp;eh=$k\"" . ($k === $eh ? ' class="on"' : '') . ">$v</a>";
+    echo "</nav>";
+    if ($eh !== 'activos' && $nRes) echo "<form method=\"post\" class=\"repacts\" onsubmit=\"return confirm('¿Borrar del historial los $nRes errores resueltos?')\"><input type=\"hidden\" name=\"act\" value=\"errores_borrar_resueltos\"><button class=\"btn danger\">Borrar los $nRes resueltos</button></form>";
+    if (!$hist) echo "<p>" . ($eh === 'activos' ? 'Ningún error activo.' : ($eh === 'resueltos' ? 'Ningún error resuelto pendiente de borrar.' : 'Sin errores registrados todavía.')) . "</p>";
     else {
-        echo "<table class=\"modlog\"><tr><th>fuente</th><th>error</th><th>veces</th><th>primera</th><th>última</th></tr>";
-        foreach ($hist as $e) echo "<tr><td><a href=\"/fuente/" . h($e['slug']) . "\">" . h($e['name']) . "</a>" . ($e['status'] === 'off' ? ' <i>(apagada)</i>' : '') . "</td><td><small>" . h($e['error']) . "</small></td><td class=\"num\">{$e['times']}</td><td style=\"white-space:nowrap\">" . h(hace($e['first_seen'])) . "</td><td style=\"white-space:nowrap\">" . h(hace($e['last_seen'])) . "</td></tr>";
+        echo "<table class=\"modlog\"><tr><th>fuente</th><th>error</th><th>veces</th><th>primera</th><th>última</th>" . ($eh !== 'activos' ? '<th></th>' : '') . "</tr>";
+        foreach ($hist as $e) {
+            echo "<tr><td><a href=\"/fuente/" . h($e['slug']) . "\">" . h($e['name']) . "</a>" . ($e['status'] === 'off' ? ' <i>(apagada)</i>' : '') . ($eh === 'todos' && $e['res'] ? ' <i>(resuelto)</i>' : '') . "</td><td><small>" . h($e['error']) . "</small></td><td class=\"num\">{$e['times']}</td><td style=\"white-space:nowrap\">" . h(hace($e['first_seen'])) . "</td><td style=\"white-space:nowrap\">" . h(hace($e['last_seen'])) . "</td>";
+            if ($eh !== 'activos') echo "<td>" . ($e['res'] ? "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"error_borrar\"><input type=\"hidden\" name=\"err_id\" value=\"{$e['err_id']}\"><button class=\"btn\" title=\"quitar del historial\">borrar</button></form>" : '') . "</td>";
+            echo "</tr>";
+        }
         echo "</table>";
     }
 } catch (Throwable $e) { echo "<p class=\"error\">Falta la tabla source_errors (migra-137).</p>"; }
