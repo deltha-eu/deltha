@@ -355,7 +355,7 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
         if ($xml === null && $xmls !== null) { $err[] = "$phase: el lector local no pudo descargarlo" . (!empty($xmls["error_$phase"]) ? ' (' . mb_substr((string)$xmls["error_$phase"], 0, 120) . ')' : ''); continue; }
         if ($xml === null) { $err[] = "$phase: sin respuesta" . (($tr = http_last()) ? ' (' . implode(' · ', $tr) . ')' : ''); continue; }   // con el rastro HTTP: 403 = veto del CDN a la IP
         $items = fuentes_parse_rss($xml);
-        if (!$items) { $err[] = "$phase: feed vacio o ilegible"; continue; }
+        if (!$items) { $err[] = "$phase: " . (($d = fuente_desafio($xml)) !== '' ? "$d en vez del feed: veto a la IP del servidor; probar con «lector local»" : 'feed vacio o ilegible'); continue; }
         if (fuente_feed_actividad($src, $items)) {   // foro XenForo 1 (ForoMTB): el feed va por actividad pero pubDate es la creacion del hilo
             $t0 = time();
             foreach ($items as $k => &$it) { $it['pub_date'] = date('Y-m-d H:i:s', $t0 - $k); $it['actividad'] = true; }   // la fecha de lectura, en el orden del feed
@@ -401,6 +401,19 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null): array {
         ->execute([$err ? mb_substr(implode(' · ', $err), 0, 255) : null, $src['source_id']]);
     if ($err) { $log[] = "fuente {$src['slug']}: " . implode(' · ', $err); fuente_error_log($pdo, (int)$src['source_id'], implode(' · ', $err)); }
     return $log;
+}
+
+/** Un 200 cuyo cuerpo no es el feed sino un desafio anti-bots (29/10/2026: Semrush devolvia un reCAPTCHA al droplet; Cloudflare, un
+ *  «Just a moment…»). Devuelve el nombre del desafio o '' si el cuerpo no lo parece. Solo se mira cuando el parser no saca nada. */
+function fuente_desafio(string $body): string {
+    $h = substr($body, 0, 6000);
+    if (stripos($h, 'recaptcha/challengepage') !== false || stripos($h, 'RecaptchaChallengePage') !== false) return 'reCAPTCHA de Google';
+    if (stripos($h, 'cf-chl') !== false || stripos($h, 'challenge-platform') !== false || stripos($h, 'Just a moment') !== false) return 'desafio de Cloudflare';
+    if (stripos($h, '_Incapsula_Resource') !== false || stripos($h, 'Incapsula incident') !== false) return 'desafio de Imperva/Incapsula';
+    if (stripos($h, 'px-captcha') !== false || stripos($h, 'perimeterx') !== false) return 'desafio de PerimeterX';
+    if (stripos($h, 'datadome') !== false) return 'desafio de DataDome';
+    if (stripos($h, 'captcha') !== false && stripos($h, '<html') !== false) return 'captcha';
+    return '';
 }
 
 /** Historial de errores de lectura (source_errors, migra-137; se ve en /moderacion -> Errores). Una fila por fuente y texto de error:
