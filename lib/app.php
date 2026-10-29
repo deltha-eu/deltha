@@ -538,6 +538,37 @@ function story_set_main_community(PDO $pdo, int $story_id, int $community_id, ?i
     $pdo->prepare("UPDATE stories SET community_id = ? WHERE story_id = ?")->execute([$community_id ?: null, $story_id]);
 }
 
+/** Fusiona dos comunidades (admin, 28/10/2026): todo lo de $from pasa a $to y $from desaparece. Envíos (story_communities y la
+ *  principal en stories), seguidores (user_communities) y quien aterrizaba en ella (users.landing); los que ya estaban en las dos
+ *  quedan una vez. Logo y portada de $from se borran del disco. Devuelve null si va bien (y rellena $info) o el mensaje de error. */
+function community_merge(PDO $pdo, int $from, int $to, ?array &$info = null): ?string {
+    if ($from === $to) return 'Elige dos comunidades distintas.';
+    $st = $pdo->prepare("SELECT community_id, name, slug, logo, cover FROM communities WHERE community_id = ?");
+    $st->execute([$from]); $a = $st->fetch();
+    $st->execute([$to]);   $b = $st->fetch();
+    if (!$a || !$b) return 'Esa comunidad no existe.';
+    $cnt = function (string $sql) use ($pdo, $from): int { $q = $pdo->prepare($sql); $q->execute([$from]); return (int)$q->fetchColumn(); };
+    $info = ['from' => $a['name'], 'to' => $b['name'], 'slug_from' => $a['slug'], 'slug_to' => $b['slug'],
+             'envios' => $cnt("SELECT COUNT(*) FROM story_communities WHERE community_id = ?"),
+             'seguidores' => $cnt("SELECT COUNT(*) FROM user_communities WHERE community_id = ?"),
+             'landing' => $cnt("SELECT COUNT(*) FROM users WHERE landing = CONCAT('c:', ?)")];
+    $pdo->beginTransaction();
+    try {
+        // envios: se copian a la de destino (si ya estaban en ella, INSERT IGNORE los deja como estaban) y se quitan de la de origen
+        $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by, created) SELECT story_id, ?, added_by, created FROM story_communities WHERE community_id = ?")->execute([$to, $from]);
+        $pdo->prepare("DELETE FROM story_communities WHERE community_id = ?")->execute([$from]);
+        $pdo->prepare("UPDATE stories SET community_id = ? WHERE community_id = ?")->execute([$to, $from]);
+        // seguidores y pagina de entrada
+        $pdo->prepare("INSERT IGNORE INTO user_communities (user_id, community_id) SELECT user_id, ? FROM user_communities WHERE community_id = ?")->execute([$to, $from]);
+        $pdo->prepare("DELETE FROM user_communities WHERE community_id = ?")->execute([$from]);
+        $pdo->prepare("UPDATE users SET landing = ? WHERE landing = ?")->execute(["c:$to", "c:$from"]);
+        $pdo->prepare("DELETE FROM communities WHERE community_id = ?")->execute([$from]);
+        $pdo->commit();
+    } catch (PDOException $e) { $pdo->rollBack(); return 'No se pudo fusionar: ' . $e->getMessage(); }
+    foreach (['logo', 'cover'] as $f) if (!empty($a[$f])) @unlink(DDD_MEDIA_DIR . '/comunidades/' . $a[$f]);
+    return null;
+}
+
 /* ---- temas: renombrar y borrar (moderadores y admin) ---------------- */
 /** Renombra un tema (minusculas, 2-32 letras/numeros/espacio/guion). Devuelve null o el error. */
 function topic_rename(PDO $pdo, int $topic_id, string $name): ?string {

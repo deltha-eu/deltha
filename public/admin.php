@@ -98,6 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$slug, $nm, mb_substr(trim(post('descr')), 0, 300), post('on') === '1' ? 'on' : 'off', $pos, post('orden') === 'actividad' ? 'actividad' : 'fecha']);
             $out[] = "Foro «" . h($nm) . "» creado (/foros?f=$slug), " . (post('on') === '1' ? 'activado.' : 'apagado: solo lo ves tú hasta que lo actives.');
         }
+    } elseif ($act === 'comunidad_fusionar') {   // fusionar dos comunidades (28/10/2026): la de origen desaparece y todo pasa a la de destino
+        if (post('seguro') !== '1') $out[] = 'Marca la casilla de confirmación para fusionar las comunidades.';
+        else {
+            $e = community_merge($pdo, (int)post('from'), (int)post('to'), $inf);
+            $out[] = $e ?: "Comunidad «{$inf['from']}» fusionada en «{$inf['to']}»: {$inf['envios']} envíos, {$inf['seguidores']} seguidores y {$inf['landing']} páginas de entrada han pasado a /comunidad/{$inf['slug_to']}. La URL /comunidad/{$inf['slug_from']} ya no existe.";
+        }
     } elseif ($act === 'tema_borrar') {
         if (post('seguro') !== '1') $out[] = 'Marca la casilla de confirmación para borrar el tema.';
         else { $e = topic_delete($pdo, (int)post('topic_id'), (int)post('to')); $out[] = $e ?: 'Tema borrado; sus envíos han pasado al tema elegido.'; }
@@ -429,7 +435,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'foros' => 'Foros', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'avisos' => 'Avisos', 'registro' => 'Registro'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'comunidades' => 'Comunidades', 'foros' => 'Foros', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'avisos' => 'Avisos', 'registro' => 'Registro'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -668,6 +674,26 @@ if ($tab === 'usuarios') {
         echo " <label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> seguro</label> <button class=\"btn danger\">Borrar tema</button></form>";
     }
     echo "<p><small>El bonus se <b>suma</b> al δ de los envíos del tema que tienen apoyo neto (con 0,3, un envío con un voto que cuenta vale 1,3 en vez de 1). Antes era un coeficiente multiplicador, que también amplificaba los votos negativos y el decaimiento; se cambió el 26/09/2026 (migra-080). El color es el velo de la foto y la etiqueta. Al borrar un tema, sus envíos (y los medios que lo proponían, y quien lo tenía como página de entrada) pasan al tema elegido. Los moderadores también renombran y borran temas desde /moderacion.</small></p>";
+
+} elseif ($tab === 'comunidades') {   // comunidades (28/10/2026): lista y fusion de dos en una
+    echo "<h3>Comunidades</h3><p><small>Las comunidades las crean y editan sus dueños (y los moderadores) en su propia página; aquí solo se listan y se fusionan. <b>Ocultas</b> = las ha ocultado un moderador: no se ven ni admiten envíos, pero siguen existiendo.</small></p>";
+    $cl = $pdo->query("SELECT c.community_id, c.slug, c.name, c.status, c.created, u.login AS owner,
+                              (SELECT COUNT(*) FROM story_communities sc WHERE sc.community_id = c.community_id) AS n,
+                              (SELECT COUNT(*) FROM user_communities uc WHERE uc.community_id = c.community_id) AS f
+                         FROM communities c JOIN users u ON u.user_id = c.owner_id ORDER BY c.name")->fetchAll();
+    if (!$cl) echo "<p>No hay comunidades.</p>";
+    else {
+        echo "<table><tr><th>comunidad</th><th>slug</th><th>dueño</th><th>envíos</th><th>seguidores</th><th>creada</th><th>estado</th></tr>";
+        foreach ($cl as $c) echo "<tr><td><a href=\"/comunidad/" . rawurlencode($c['slug']) . "\">" . h($c['name']) . "</a></td><td><code>" . h($c['slug']) . "</code></td><td><a href=\"/u/" . rawurlencode($c['owner']) . "\">" . h($c['owner']) . "</a></td><td class=\"num\">{$c['n']}</td><td class=\"num\">{$c['f']}</td><td>" . h(substr((string)$c['created'], 0, 10)) . "</td><td>" . ($c['status'] === 'ok' ? 'visible' : '<i>oculta</i>') . "</td></tr>";
+        echo "</table>";
+    }
+    if (count($cl) > 1) {
+        $opts = ''; foreach ($cl as $c) $opts .= "<option value=\"{$c['community_id']}\">" . h($c['name']) . ($c['status'] !== 'ok' ? ' (oculta)' : '') . " · {$c['n']} envíos</option>";
+        echo "<h3>Fusionar dos comunidades</h3><form method=\"post\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"comunidad_fusionar\">";
+        echo "fusionar <select name=\"from\">$opts</select> dentro de <select name=\"to\">$opts</select>";
+        echo " <label><input type=\"checkbox\" name=\"seguro\" value=\"1\"> seguro</label> <button class=\"btn danger\">Fusionar</button></form>";
+        echo "<p><small>La <b>primera</b> desaparece y todo lo suyo pasa a la <b>segunda</b>, que conserva su nombre, slug, dueño, color, skin, logo y portada: los envíos (también como comunidad principal), los seguidores y quien la tenía como página de entrada. Un envío o un seguidor que ya estuviera en las dos queda una sola vez. El logo y la portada de la primera se borran y su URL deja de existir. No hay vuelta atrás.</small></p>";
+    }
 
 } elseif ($tab === 'foros') {   // foros (migra-159): lo que era Originales, ahora una pestaña por foro en /foros
     echo "<h3>Foros</h3><p><small>La sección <a href=\"/foros\">Foros</a> enseña una pestaña por foro, por el orden indicado. <b>Activo</b> = lo ve todo el mundo; desmarcado = apagado: solo lo ves tú (en cursiva, con «apagado»), y sus hilos siguen abriéndose por URL. El slug es la URL (<code>/foros?f=slug</code>) y el grupo de destacados; no se cambia. La descripción es el aviso gris de cabecera del foro. <b>Orden de los hilos</b>: por fecha (el hilo más reciente arriba, como Originales) o por actividad (el último mensaje arriba, como un foro clásico). Las destacadas van siempre las primeras.</small></p>";
