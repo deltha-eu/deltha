@@ -159,11 +159,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_editar') {
 }
 
 /* ---- fuentes con error (11/10/2026, /moderacion -> Errores): apagar, volver a encender o releer ahora ---- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer'], true)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer', 'fuente_resuelto'], true)) {
     require_once __DIR__ . '/../lib/fuentes.php';
     $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
     if (!($fsrc = $q->fetch())) $out[] = 'Esa fuente no existe.';
     elseif (post('act') === 'fuente_apagar') { $pdo->prepare("UPDATE sources SET status = 'off' WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» apagada: no se lee ni sale en el catálogo. Se vuelve a encender desde aquí o desde admin → Fuentes."; }
+    elseif (post('act') === 'fuente_resuelto') {   // 29/10/2026: dar el error por resuelto a mano (p. ej. URL corregida): fuera de la lista y de su historial
+        $pdo->prepare("UPDATE sources SET last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]);
+        try { $pdo->prepare("DELETE FROM source_errors WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); } catch (Throwable $e) { /* sin la migra 137 */ }
+        $out[] = "«{$fsrc['name']}»: error dado por resuelto. Si vuelve a fallar, reaparecerá aquí en su próxima lectura.";
+    }
     elseif (post('act') === 'fuente_encender') { $pdo->prepare("UPDATE sources SET status = 'ok', last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» encendida; el lector la leerá en los próximos minutos."; }
     else { try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc)); $out[] = "«{$fsrc['name']}» releída."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: ERROR " . $e->getMessage(); } }
 }
@@ -456,7 +461,7 @@ if ($eh === 'fuentes') {
 $fe = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT MAX(pub_date) FROM source_items i WHERE i.source_id = s.source_id) ult
                      FROM sources s WHERE s.last_error IS NOT NULL AND s.last_error <> '' ORDER BY (s.status = 'ok') DESC, s.last_fetch DESC")->fetchAll();
 echo "<h3>Fuentes que dan error (" . count(array_filter($fe, fn($f) => $f['status'] === 'ok')) . " activas)</h3>";
-echo "<p><small>Fuentes cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo. Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
+echo "<p><small>Fuentes cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece). Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
 if (!$fe) echo "<p>Ninguna fuente con error. 🙂</p>";
 foreach ($fe as $f) {
     $sid = (int)$f['source_id']; $off = $f['status'] === 'off';
@@ -467,6 +472,7 @@ foreach ($fe as $f) {
     if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_apagar\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn danger\" title=\"deja de leerse y de salir en el catálogo\">Apagar</button></form>";
     else echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_encender\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\">Encender</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_releer\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"intentar leerla ahora\">Releer</button></form>";
+    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_resuelto\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"quitar el error de aquí y del historial sin releer; si vuelve a fallar, reaparece\">Resuelto</button></form>";
     echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a></div></div>";
 }
 } elseif (!$hayHist) echo "<p class=\"error\">Falta la tabla source_errors (migra-137).</p>";
