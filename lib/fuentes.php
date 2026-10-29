@@ -425,14 +425,16 @@ function fuente_ilegible_motivo(string $body): string {
     if ($ini === '') return 'respuesta vacia';
     if (preg_match('/^\s*<(!doctype html|html)/i', $body)) return 'es HTML, no un feed; empieza: ' . $ini;
     $prev = libxml_use_internal_errors(true);
-    $doc = simplexml_load_string(fuentes_envolver_fragmento($body), 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+    $raw = simplexml_load_string(fuentes_envolver_fragmento($body), 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
     $le = libxml_get_errors(); libxml_clear_errors(); libxml_use_internal_errors($prev);
+    $doc = fuentes_xml($body);   // con las reparaciones (& sueltos, RECOVER)
     if (!$doc) return 'XML mal formado: ' . ($le ? trim($le[0]->message) . ' (linea ' . $le[0]->line . ')' : 'sin detalle') . '; empieza: ' . $ini;
+    $rep = !$raw && $le ? ' (XML reparado: ' . trim($le[0]->message) . ', linea ' . $le[0]->line . ')' : '';
     $root = $doc->getName();
-    if ($root === 'feed') return 'Atom sin <entry> con enlace';
-    if ($root !== 'rss' && $root !== 'RDF') return "raiz <$root>, no <rss> ni <feed>; empieza: $ini";
-    if (!isset($doc->channel->item)) return 'RSS sin ningun <item>';
-    return 'items sin <link>';
+    if ($root === 'feed') return 'Atom sin <entry> con enlace' . $rep;
+    if ($root !== 'rss' && $root !== 'RDF') return "raiz <$root>, no <rss> ni <feed>; empieza: $ini" . $rep;
+    if (!isset($doc->channel->item)) return 'RSS sin ningun <item>' . $rep;
+    return 'items sin <link>' . $rep;
 }
 
 /** Historial de errores de lectura (source_errors, migra-137; se ve en /moderacion -> Errores). Una fila por fuente y texto de error:
@@ -613,6 +615,22 @@ function fuentes_envolver_fragmento(string $xml): string {
     if (preg_match('/^<entry[\s>]/i', $t)) return '<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:dc="http://purl.org/dc/elements/1.1/">' . $t . '</feed>';
     return $xml;
 }
+/** Carga un feed con simplexml tolerando lo que libxml rechaza y es frecuente en feeds reales (29/10/2026, Irish Mirror / Reach plc):
+ *  1) tal cual; 2) escapando los «&» sueltos (xmlParseEntityRef: no name); 3) en modo RECOVER. Devuelve null si ni asi. */
+function fuentes_xml(string $xml): ?SimpleXMLElement {
+    $xml = fuentes_envolver_fragmento($xml);
+    $prev = libxml_use_internal_errors(true);
+    $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+    if (!$doc) {
+        $fix = preg_replace('/&(?!(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#x[0-9A-Fa-f]+);)/', '&amp;', $xml);
+        if ($fix !== $xml) { libxml_clear_errors(); $doc = simplexml_load_string($fix, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET); }
+        if (!$doc) { libxml_clear_errors(); $doc = simplexml_load_string($fix ?? $xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET | 1 /* XML_PARSE_RECOVER: PHP no define la constante */ | LIBXML_NOERROR | LIBXML_NOWARNING); }
+    }
+    libxml_clear_errors(); libxml_use_internal_errors($prev);
+    if (!($doc instanceof SimpleXMLElement)) return null;
+    try { $doc->getName(); } catch (Throwable $e) { return null; }   // en modo RECOVER con texto que no es XML, simplexml devuelve un objeto sin inicializar
+    return $doc;
+}
 function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'id="tablatemas"')) return fuentes_parse_mediavida($xml);   // Mediavida: no hay feed, se lee la tabla de hilos
     if (str_contains($xml, 'class="ap-card"')) return fuentes_parse_asimov($xml);        // Asimov Press: sin feed, se lee /articles (migra-130)
@@ -620,10 +638,7 @@ function fuentes_parse_rss(string $xml): array {
     if (str_contains($xml, 'm-preview-') && str_contains($xml, 'publico.es')) return fuentes_parse_publico($xml);   // Público: sin RSS desde 2024, se lee la portada (migra-136)
     if (str_contains($xml, 'gatopardo.com') && str_contains($xml, '/articulos/') && str_contains($xml, 'website-files.com')) return fuentes_parse_gatopardo($xml);   // Gatopardo (Webflow, sin RSS): se lee la portada (migra-161)
     if (preg_match('/^\s*\[\s*\{/', $xml) && str_contains($xml, '"rendered"') && str_contains($xml, '"link"')) return fuentes_parse_wpjson($xml);   // WordPress sin RSS: su API REST /wp-json/wp/v2/posts (migra-150, Rebelión)
-    $xml = fuentes_envolver_fragmento($xml);
-    $prev = libxml_use_internal_errors(true);
-    $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
-    libxml_clear_errors(); libxml_use_internal_errors($prev);
+    $doc = fuentes_xml($xml);
     if (!$doc) return [];
     if ($doc->getName() === 'feed') return fuentes_parse_atom($doc);   // Atom (The Conversation, Blogger, GitHub...)
     if (!isset($doc->channel->item)) return [];
