@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['error_borra
             $out[] = $st->rowCount() ? 'Error borrado del historial.' : 'Ese error ya no estaba.';
         } else {
             $n = $pdo->exec("DELETE e FROM source_errors e JOIN sources s ON s.source_id = e.source_id
-                             WHERE s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR s.last_error <> e.error");
+                             WHERE s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR e.errhash <> MD5(s.last_error)");
             $out[] = "$n " . ($n === 1 ? 'error resuelto borrado' : 'errores resueltos borrados') . ' del historial.';
         }
     } catch (Throwable $e) { $out[] = 'ERROR ' . $e->getMessage(); }
@@ -448,11 +448,12 @@ foreach ($props as $p) {
  *  historial. Un error del historial esta activo mientras siga siendo el ultimo de una fuente encendida; resuelto cuando una lectura
  *  posterior salio bien (o falla por otra cosa) o la fuente esta apagada. Los resueltos no se borran solos: se borran desde aqui. ---- */
 $eh = in_array((string)($_GET['eh'] ?? ''), ['fuentes', 'apagadas', 'activos', 'resueltos', 'todos'], true) ? (string)$_GET['eh'] : 'fuentes';
-$resuelto = "(s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR s.last_error <> e.error)";
+// se compara por errhash (md5 del texto) y no por texto: sources y source_errors tienen collation distinta y MySQL no deja compararlas
+$resuelto = "(s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR e.errhash <> MD5(s.last_error))";
 $nFe = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'ok' AND last_error IS NOT NULL AND last_error <> ''")->fetchColumn();
 $nOff = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'off'")->fetchColumn();
 try { $cnt = $pdo->query("SELECT SUM(NOT $resuelto) act, SUM($resuelto) res FROM source_errors e JOIN sources s ON s.source_id = e.source_id")->fetch(); $hayHist = true; }
-catch (Throwable $e) { $cnt = []; $hayHist = false; }
+catch (Throwable $e) { $cnt = []; $hayHist = false; $histErr = $e->getMessage(); }
 $nAct = (int)($cnt['act'] ?? 0); $nRes = (int)($cnt['res'] ?? 0);
 echo "<nav class=\"sub\" style=\"padding-left:0;margin:-8px 0 16px\">";
 foreach (['fuentes' => "Con error ($nFe)", 'apagadas' => "Apagadas ($nOff)", 'activos' => "Historial activos ($nAct)", 'resueltos' => "Resueltos ($nRes)", 'todos' => 'Todo el historial (' . ($nAct + $nRes) . ')'] as $k => $v)
@@ -483,7 +484,7 @@ foreach ($fe as $f) {
     if (!$off) echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"fuente_resuelto\"><input type=\"hidden\" name=\"source_id\" value=\"$sid\"><button class=\"btn\" title=\"quitar el error de aquí y del historial sin releer; si vuelve a fallar, reaparece\">Resuelto</button></form>";
     echo "<a class=\"btn\" href=\"/moderacion?t=fuentes&amp;fq=" . rawurlencode($f['slug']) . "\">editar</a></div></div>";
 }
-} elseif (!$hayHist) echo "<p class=\"error\">Falta la tabla source_errors (migra-137).</p>";
+} elseif (!$hayHist) echo "<p class=\"error\">No se puede leer el historial (source_errors, migra-137): " . h($histErr) . "</p>";
 else {
     $hist = $pdo->query("SELECT e.*, s.name, s.slug, s.status, $resuelto res FROM source_errors e JOIN sources s ON s.source_id = e.source_id"
                       . ($eh === 'activos' ? " WHERE NOT $resuelto" : ($eh === 'resueltos' ? " WHERE $resuelto" : '')) . " ORDER BY e.last_seen DESC LIMIT 300")->fetchAll();
