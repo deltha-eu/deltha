@@ -421,16 +421,7 @@ function fuente_sin_novedades_normal(array $src): bool {
 
 /** Un 200 cuyo cuerpo no es el feed sino un desafio anti-bots (29/10/2026: Semrush devolvia un reCAPTCHA al droplet; Cloudflare, un
  *  «Just a moment…»). Devuelve el nombre del desafio o '' si el cuerpo no lo parece. Solo se mira cuando el parser no saca nada. */
-function fuente_desafio(string $body): string {
-    $h = substr($body, 0, 6000);
-    if (stripos($h, 'recaptcha/challengepage') !== false || stripos($h, 'RecaptchaChallengePage') !== false) return 'reCAPTCHA de Google';
-    if (stripos($h, 'cf-chl') !== false || stripos($h, 'challenge-platform') !== false || stripos($h, 'Just a moment') !== false) return 'desafio de Cloudflare';
-    if (stripos($h, '_Incapsula_Resource') !== false || stripos($h, 'Incapsula incident') !== false) return 'desafio de Imperva/Incapsula';
-    if (stripos($h, 'px-captcha') !== false || stripos($h, 'perimeterx') !== false) return 'desafio de PerimeterX';
-    if (stripos($h, 'datadome') !== false) return 'desafio de DataDome';
-    if (stripos($h, 'captcha') !== false && stripos($h, '<html') !== false) return 'captcha';
-    return '';
-}
+function fuente_desafio(string $body): string { return http_es_desafio($body); }   // la deteccion vive en imagen.php (http_get la usa en la cascada)
 
 /** Por que no se ha sacado ningun item de un cuerpo (29/10/2026): si es HTML, lo dice; si es XML, el primer error de libxml o que no
  *  tiene <item>/<entry> (p. ej. un feed vacio de verdad o sin <link> en los items); y siempre con que empieza el texto. */
