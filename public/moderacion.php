@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apag
         $phase = post('phase') === 'nuevas' ? 'nuevas' : 'portada';
         if (trim($xml) === '') $out[] = 'No has pegado ni subido nada.';
         elseif (strlen($xml) > 4000000) $out[] = 'El feed pegado pasa de 4 MB.';
-        else { try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc, [$phase => $xml], true)); $out[] = "«{$fsrc['name']}»: feed pegado procesado como «$phase»."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: ERROR " . $e->getMessage(); } }
+        else { try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc, [$phase => $xml], true)); $out[] = "«{$fsrc['name']}»: feed pegado procesado como «{$phase}»."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: ERROR " . $e->getMessage(); } }
     }
     elseif (post('act') === 'fuente_resuelto') {   // 29/10/2026: dar el error por resuelto a mano (p. ej. URL corregida): fuera de la lista y de su historial
         $pdo->prepare("UPDATE sources SET last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]);
