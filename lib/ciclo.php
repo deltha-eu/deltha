@@ -153,5 +153,8 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
     // 7. trabajos de IA terminados mas viejos que ia_keep_days (migra-173)
     if (function_exists('ia_limpiar')) ia_limpiar($pdo);
 
+    // 8. vectores de titulares que falten (envios de cuando el servicio no estaba, o anteriores a migra-175), 40 por pasada
+    if (function_exists('vectores_rellenar') && ($nv = vectores_rellenar($pdo, 40))) $log[] = "vectores de titulares: $nv";
+
     return $log;
 }

@@ -1,14 +1,15 @@
 <?php
 /**
- * lib/ia.php — capa comun de IA (migra-173). Una sola forma de usar el modelo desde cualquier parte del PHP.
+ * lib/ia.php — capa comun de IA (migra-173). Una sola forma de usar el modelo del PC desde cualquier parte del PHP.
+ * (Lo que tiene que responder al momento, como «¿es la misma noticia?» al enviar, no va por aqui: lib/vectores.php.)
  *
  * El modelo NO esta en el droplet: corre en el PC de la redaccion y es el PC quien pide trabajo a /api/ia.php (worker
  * generico local/ia/ia.py). Por eso aqui no hay «llamar al modelo y esperar»: hay una cola (ia_jobs) y, para cada tarea,
  * un handler PHP que se ejecuta cuando llega el resultado. Si el PC esta apagado, la cola espera y la web sigue igual.
  *
- *   ia_pedir($pdo, 'relacionadas', ['user' => $texto, ...datos], 'story', $sid)   encola (o devuelve el trabajo ya en cola)
- *   ia_handler('relacionadas', function (PDO $pdo, array $job, array $res): void { ... })   que hacer con la respuesta
- *   ia_resultado($pdo, 'relacionadas', 'story', $sid)                              ultimo resultado terminado, o null
+ *   ia_pedir($pdo, 'resumen', ['user' => $texto, ...datos], 'story', $sid)        encola (o devuelve el trabajo ya en cola)
+ *   ia_handler('resumen', function (PDO $pdo, array $job, array $res): void { ... })   que hacer con la respuesta
+ *   ia_resultado($pdo, 'resumen', 'story', $sid)                                   ultimo resultado terminado, o null
  *
  * Cada tarea vive en ia_tasks (admin → IA): prompt de sistema, esquema JSON de la respuesta (el worker lo pasa como
  * response_format json_schema; si esta vacio el modelo responde texto libre y el resultado llega como ['text' => ...]),
@@ -21,7 +22,7 @@
  */
 
 /** Tareas que trae de serie la migracion y que el codigo da por existentes. */
-const IA_TAREAS_BASE = ['moderacion', 'relacionadas'];
+const IA_TAREAS_BASE = ['moderacion'];   // «relacionadas» fue tarea de la IA hasta migra-175: ahora lo hacen los vectores de titulares (lib/vectores.php)
 
 function ia_on(): bool { return cfg('ia_enabled', '1') === '1'; }
 
@@ -157,68 +158,4 @@ function ia_worker_line(): string {
 /** Resumen de la cola por tarea y estado (admin → IA). */
 function ia_resumen(PDO $pdo): array {
     try { return $pdo->query("SELECT task_key, status, COUNT(*) n, MAX(created) ultimo FROM ia_jobs GROUP BY task_key, status")->fetchAll(); } catch (Throwable $e) { return []; }
-}
-
-/* ---- tarea «relacionadas» ----------------------------------------------------------------------------------------
- * Al publicarse un envio (enviar.php) se buscan candidatas por texto completo (ft_stories: titulo + entradilla) entre
- * las ultimas relacionadas_dias y, si hay alguna, se le pide al modelo que diga cuales tratan de lo mismo. El handler
- * guarda las que pasen de relacionadas_min en story_related, en los dos sentidos. En el hilo: story_relacionadas(). */
-
-/** Candidatas por texto completo para una noticia: [story_id => fila]. */
-function relacionadas_candidatas(PDO $pdo, array $s, int $max = 15): array {
-    $texto = trim((string)$s['title'] . ' ' . mb_substr((string)($s['content'] ?? ''), 0, 300));
-    if (mb_strlen($texto) < 12) return [];
-    $dias = max(1, (int)cfg('relacionadas_dias', 90));
-    try {
-        // tope de 300 ms (MySQL 8; MariaDB lo ignora): si la busqueda se alarga, se corta y quien envia no ve la caja, pero no espera (30/10/2026)
-        $q = $pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(300) */ story_id, title, source, content, sent_date, MATCH(title, content) AGAINST (? IN NATURAL LANGUAGE MODE) rel
-                              FROM stories WHERE story_id <> ? AND status IN ('nuevas','destacadas','archived') AND sent_date >= NOW() - INTERVAL ? DAY
-                               AND MATCH(title, content) AGAINST (? IN NATURAL LANGUAGE MODE)
-                             ORDER BY rel DESC LIMIT " . max(1, $max));
-        $q->execute([$texto, (int)$s['story_id'], $dias, $texto]);
-        $out = [];
-        foreach ($q as $r) $out[(int)$r['story_id']] = $r;
-        return $out;
-    } catch (Throwable $e) { return []; }
-}
-
-/** Encola la busqueda de relacionadas para un envio recien publicado (o corregido). Devuelve el job_id o null. */
-function relacionadas_pedir(PDO $pdo, int $sid): ?int {
-    if (!ia_tarea_activa($pdo, 'relacionadas')) return null;
-    $q = $pdo->prepare("SELECT story_id, title, source, content FROM stories WHERE story_id = ?"); $q->execute([$sid]);
-    if (!($s = $q->fetch())) return null;
-    $cand = relacionadas_candidatas($pdo, $s);
-    if (!$cand) return null;
-    $txt = "<datos>\nNOTICIA NUEVA\nTitular: " . $s['title'] . "\n" . ($s['source'] ? "Medio: {$s['source']}\n" : '')
-         . ($s['content'] ? "Entradilla: " . mb_substr(preg_replace('/\s+/u', ' ', (string)$s['content']), 0, 500) . "\n" : '') . "\nYA ENVIADAS\n";
-    foreach ($cand as $id => $c)
-        $txt .= "[$id] " . $c['title'] . ($c['source'] ? " — {$c['source']}" : '') . " — " . substr((string)$c['sent_date'], 0, 10)
-              . ($c['content'] ? "\n    " . mb_substr(preg_replace('/\s+/u', ' ', (string)$c['content']), 0, 220) : '') . "\n";
-    $txt .= "</datos>";
-    return ia_pedir($pdo, 'relacionadas', ['user' => $txt, 'candidatas' => array_keys($cand)], 'story', $sid);
-}
-
-ia_handler('relacionadas', function (PDO $pdo, array $job, array $res): void {
-    $sid = (int)$job['ref_id'];
-    $cand = array_map('intval', (array)($job['input']['candidatas'] ?? []));
-    $min = (float)cfg('relacionadas_min', 0.5);
-    $pdo->prepare("DELETE FROM story_related WHERE story_id = ?")->execute([$sid]);   // se recalcula entero (p. ej. tras corregir el envio)
-    $ins = $pdo->prepare("INSERT INTO story_related (story_id, related_id, score, note) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE score = GREATEST(score, VALUES(score)), note = VALUES(note)");
-    foreach ((array)($res['relacionadas'] ?? []) as $r) {
-        $id = (int)($r['id'] ?? 0); $sc = max(0.0, min(1.0, (float)($r['relacion'] ?? 0)));
-        if ($id <= 0 || $id === $sid || !in_array($id, $cand, true) || $sc < $min) continue;   // solo lo que se le ofrecio: el modelo no inventa ids
-        $nota = mb_substr(trim((string)($r['nota'] ?? '')), 0, 160) ?: null;
-        $ins->execute([$sid, $id, $sc, $nota]);
-        $ins->execute([$id, $sid, $sc, $nota]);
-    }
-});
-
-/** Relacionadas de un hilo, para mostrarlas: filas con story_id, title, score, note. */
-function story_relacionadas(PDO $pdo, int $sid): array {
-    try {
-        $q = $pdo->prepare("SELECT s.story_id, s.title, s.source, s.content_type, s.sent_date, r.score, r.note FROM story_related r JOIN stories s ON s.story_id = r.related_id
-                             WHERE r.story_id = ? AND s.status IN ('nuevas','destacadas','archived') ORDER BY r.score DESC, s.sent_date DESC LIMIT " . max(1, (int)cfg('relacionadas_max', 5)));
-        $q->execute([$sid]);
-        return $q->fetchAll();
-    } catch (Throwable $e) { return []; }
 }

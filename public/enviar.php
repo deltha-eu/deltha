@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mod_enqueue($pdo, 'story', $sid);
             if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
             $pdo->commit();
-            relacionadas_pedir($pdo, $sid);   // noticias relacionadas (tarea de IA «relacionadas», migra-173): se ven en el hilo cuando el PC responde
+            story_relacionadas_calcular($pdo, $sid);   // vector del titular y «Relacionadas» del hilo (lib/vectores.php, migra-175); si el servicio no esta, lo rellena el ciclo
             redirect("/hilo/$sid");
         }
     }
@@ -161,9 +161,9 @@ if ($step === '1') {
     echo "<input type=\"hidden\" name=\"url\" value=\"" . h($f['url']) . "\">";
     if ($f['pub'] !== null && str_starts_with($f['pub'], 'yt:')) echo "<input type=\"hidden\" name=\"pub\" value=\"" . h($f['pub']) . "\">";   // canal de YouTube leido en el paso 1
     if ($f['url']) echo "<p class=\"meta\">" . h(source_of($f['url'])) . "" . t(' · <a href="/enviar">cambiar enlace</a>') . "</p>";
-    // ¿ya esta enviada? Antes de publicar se enseñan las noticias ya enviadas que se parecen por texto completo (titulo + entradilla, lib/ia.php,
-    // sin pasar por el modelo: esto es inmediato), con enlace al hilo para votarla en vez de repetirla (30/10/2026). La IA afina despues en el hilo.
-    if (function_exists('relacionadas_candidatas') && $f['title'] !== '' && ($par = relacionadas_candidatas($pdo, ['story_id' => 0, 'title' => $f['title'], 'content' => $f['content']], 5))) {
+    // ¿ya esta enviada? Antes de publicar se enseñan las noticias ya enviadas que son casi seguro la misma (parecidas_al_enviar(), lib/vectores.php: vector del
+    // titular contra los de los ultimos dias, en el droplet, al momento; si el servicio no responde en 300 ms, filtro de palabras), con enlace al hilo para votarla (30/10/2026).
+    if (function_exists('parecidas_al_enviar') && $f['title'] !== '' && ($par = parecidas_al_enviar($pdo, $f['title'], $f['content']))) {   // vectores (o palabras si el servicio no responde); 3 como mucho; lo normal es que no salga nada
         echo "<div class=\"related parecidas\"><b>" . t('¿Es la misma noticia?') . "</b><p class=\"meta\" style=\"padding:0\">" . t('Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.') . "</p><ul>";
         foreach ($par as $r) echo "<li><a href=\"/hilo/{$r['story_id']}\">" . h($r['title']) . "</a><small>" . ($r['source'] ? h($r['source']) . ' · ' : '') . h(hace($r['sent_date'])) . " · <a href=\"/hilo/{$r['story_id']}\">" . t('ver y votar') . "</a></small></li>";
         echo "</ul></div>";

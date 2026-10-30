@@ -126,6 +126,9 @@ enabled = true
 EOJ
 systemctl enable -q --now fail2ban; systemctl restart fail2ban
 
+# Vectores de titulares (lib/vectores.php, migra-175): servicio Python en 127.0.0.1:8090; descarga el modelo la primera vez
+bash "$DIR/scripts/vectores/instalar.sh" || echo "[AVISO] el servicio de vectores no ha arrancado: bash $DIR/scripts/vectores/instalar.sh"
+
 echo
 echo "================ LISTO ================"
 echo "Registro DKIM para Cloudflare (TXT, nombre deltha._domainkey, nube gris). Contenido, unido en una linea:"

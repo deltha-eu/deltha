@@ -1,6 +1,6 @@
 -- Deltha — esquema completo (MySQL 8, InnoDB, utf8mb4)
 -- Regenerado el 20/10/2026 a partir de la base real (scripts/regenerar-esquema.sh, mysqldump --no-data deltha): las tablas tal como estan
--- en produccion con las migraciones 001-167 aplicadas (ia_tasks, ia_jobs, story_related y sus claves de config: migra-173, añadidas a mano).
+-- en produccion con las migraciones 001-167 aplicadas (ia_tasks, ia_jobs, story_related, story_vectors y sus claves de config: migra-173 y 175, añadidas a mano).
 --
 -- Uso (instalacion nueva; lo hacen install.sh y scripts/install-droplet.sh):
 --   mysql -e "CREATE DATABASE IF NOT EXISTS deltha CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
@@ -767,6 +767,15 @@ CREATE TABLE `story_related` (
   KEY idx_rel (related_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `story_vectors` (
+  story_id INT UNSIGNED NOT NULL,
+  dim      SMALLINT UNSIGNED NOT NULL,
+  vec      BLOB NOT NULL COMMENT 'float32 little-endian, normalizado (pack g*)',
+  model    VARCHAR(80) DEFAULT NULL,
+  updated  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (story_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `thread_aliases` (
   `story_id` int unsigned NOT NULL,
@@ -962,9 +971,15 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('ia_enabled',       '1',  '1 = la libreria de IA encola trabajos (ia_jobs) para el worker del PC; 0 = no se encola nada (la moderacion sigue con mod_enabled)'),
 ('ia_worker_seen',   '',   'Ultima conexion del worker generico de IA (lo escribe /api/ia.php)'),
 ('ia_keep_days',     '30', 'Dias que se conservan los trabajos terminados en ia_jobs (los borra el ciclo)'),
-('relacionadas_min', '0.5','Relacion minima (0-1) que da el modelo para guardar una noticia como relacionada'),
-('relacionadas_dias','90', 'Hasta que antiguedad (dias) se buscan candidatas a noticias relacionadas'),
 ('relacionadas_max', '5',  'Relacionadas que se muestran en el hilo'),
+('vectores_on',            '1',                     '1 = se usan los vectores de titulares (servicio scripts/vectores en el droplet) para «¿es la misma noticia?» al enviar y las relacionadas del hilo; 0 = solo el filtro de palabras'),
+('vectores_url',           'http://127.0.0.1:8090', 'Donde escucha el servicio de vectores (scripts/vectores/servidor.py)'),
+('vectores_timeout_ms',    '300',                   'Milisegundos que se espera al servicio de vectores al enviar; pasados, se cae al filtro de palabras y el envio sigue'),
+('vectores_dias',          '90',                    'Hasta que antiguedad (dias) se comparan los envios al buscar parecidas y relacionadas'),
+('parecidas_vector_min',   '0.75',                  'Parecido minimo (coseno, 0-1) para avisar en /enviar de que ya hay una noticia igual; subir si avisa de mas, bajar si se le escapan'),
+('relacionadas_vector_min','0.65',                  'Parecido minimo (coseno, 0-1) para que un envio salga en «Relacionadas» del hilo de otro'),
+('parecidas_min_comunes',  '3',                     'Respaldo sin servicio de vectores: palabras con sustancia del titular que tienen que coincidir para avisar en /enviar'),
+('parecidas_min',          '0.5',                   'Respaldo sin servicio de vectores: fraccion minima de palabras del titular mas corto que tienen que coincidir'),
 ('mod_flag_score',      '0.60', 'Confianza minima para señalar a los moderadores; por debajo se da por bueno'),
 ('mod_lease_sec',       '300',  'Segundos que el worker tiene reservado un elemento antes de que vuelva a la cola'),
 ('mod_worker_seen',     '',     'Ultima conexion del worker de IA local (lo escribe /api/moderacion.php)');

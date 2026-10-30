@@ -113,6 +113,7 @@ require_once __DIR__ . '/ghost.php';      // «Ghostear» a un usuario: velo sim
 require_once __DIR__ . '/destacar.php';   // «Destacar»: envios y noticias RSS los primeros de su lista, con halo (migra-111)
 require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
 require_once __DIR__ . '/ia.php';         // capa comun de IA: ia_pedir() encola para el worker del PC, cada tarea su handler (migra-173)
+require_once __DIR__ . '/vectores.php';   // vectores de titulares: «¿es la misma noticia?» al enviar y relacionadas del hilo, al momento (migra-175)
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
  * guardada unos minutos, solo para contar visitantes en /estadisticas.
