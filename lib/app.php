@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 237);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 239);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -355,6 +355,9 @@ function url_key(?string $url): string {
 function url_resolver(string $url, ?string $html = null): string {
     $url = url_limpia($url);
     if ($url === '' || !preg_match('~^https?://~i', $url) || cfg('url_resolve', '1') !== '1') return $url;
+    // Un video de YouTube ya tiene enlace canonico y no hace falta salir a la red a averiguarlo: sin ?t=, sin listas y, sobre todo,
+    // sin que una redireccion a consent.youtube.com o a la pagina de «no eres un bot» sustituya al video (29/10/2026).
+    if (($yt = youtube_video_id($url)) !== '') return 'https://www.youtube.com/watch?v=' . $yt;
     $host = strtolower((string)parse_url($url, PHP_URL_HOST));
     $final = $url;
     if (function_exists('curl_init')) {
