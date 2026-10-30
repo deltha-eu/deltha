@@ -22,6 +22,9 @@ After=network.target
 [Service]
 User=www-data
 Environment=VECTORES_CACHE=/var/lib/deltha-vectores
+# HOME propio: el de www-data (/var/www) no es escribible y la descarga del modelo lo necesita
+Environment=HOME=/var/lib/deltha-vectores
+Environment=HF_HOME=/var/lib/deltha-vectores/hf
 ExecStart=$VENV/bin/python $DIR/scripts/vectores/servidor.py
 Restart=always
 RestartSec=5
