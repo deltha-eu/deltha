@@ -96,6 +96,13 @@ if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width
 if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h(t('en el radar, hacia %s', t(DDD_PORTADAS[portada_de($pdo, $s)]))) . "</div>";
 echo "</div></article>";
 
+// noticias relacionadas (tarea de IA «relacionadas», story_related, migra-173): las elige el modelo del PC entre las candidatas por texto completo
+if ($rel = story_relacionadas($pdo, $id)) {
+    echo "<div class=\"related\"><b>" . t('Relacionadas') . "</b><ul>";
+    foreach ($rel as $r) echo "<li><a href=\"/hilo/{$r['story_id']}\">" . h($r['title']) . "</a><small>" . ($r['source'] ? h($r['source']) . ' · ' : '') . h(hace($r['sent_date'])) . ($r['note'] ? ' · ' . h($r['note']) : '') . "</small></li>";
+    echo "</ul></div>";
+}
+
 echo "<div class=\"stats\" id=\"comentarios\"><span class=\"cmt\" title=\"" . count($all) . " " . t('comentarios') . "\">" . icon('reply') . "<b>" . count($all) . "</b></span>" . story_contadores($s);   // icono + cifra, como en el feed: la palabra partia la barra en dos lineas
 if ($s['status'] === 'destacadas') echo "<span>" . h(queda($s['published_date'])) . "</span>";
 if ($s['status'] === 'archived')   echo "<span>" . t('archivado') . "</span>";

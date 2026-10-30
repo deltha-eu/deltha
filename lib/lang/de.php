@@ -926,4 +926,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Todos los idiomas' => 'Alle Sprachen',
 'cambiar' => 'ändern',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Markierungen: <code>**fett**</code> · <code>*kursiv*</code> · eine Zeile, die mit <code>&gt;</code> beginnt, ist ein Zitat · <code>[Text](https://link)</code>. Absätze werden durch eine Leerzeile getrennt.',
+'Relacionadas' => 'Verwandte Beiträge',
 ];

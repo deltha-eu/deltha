@@ -14,6 +14,8 @@ const DDD_PROCESSES_VOTES_WHO = [
 ];
 require __DIR__ . '/../lib/ciclo.php';
 require __DIR__ . '/../lib/fuentes.php';
+require_once __DIR__ . '/../lib/moderacion.php';
+require_once __DIR__ . '/../lib/ia.php';   // pestaña IA (migra-173)
 if (!is_admin()) { http_response_code(403); exit('Solo admin'); }
 
 $out = [];
@@ -34,6 +36,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st->execute([trim((string)$v), (string)$k]);
         }
         $out[] = 'Config guardada.';
+    } elseif ($act === 'ia_tarea') {
+        // pestaña IA (migra-173): la ficha de una tarea; el worker se baja los cambios en su siguiente pasada
+        $k = preg_replace('/[^a-z0-9_]/', '', strtolower(post('task_key')));
+        $sch = post('schema_json');
+        if ($k === '') $out[] = 'La clave de la tarea tiene que ser a-z, 0-9 o _.';
+        elseif ($sch !== '' && json_decode($sch, true) === null) $out[] = "El esquema JSON de «$k» no es JSON válido; no se ha guardado.";
+        else {
+            $pdo->prepare("INSERT INTO ia_tasks (task_key, name, descr, enabled, kind, model, system_prompt, schema_json, temperature, max_tokens, priority, lease_sec, max_retries, per_day)
+                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                           ON DUPLICATE KEY UPDATE name = VALUES(name), descr = VALUES(descr), enabled = VALUES(enabled), kind = VALUES(kind), model = VALUES(model), system_prompt = VALUES(system_prompt),
+                           schema_json = VALUES(schema_json), temperature = VALUES(temperature), max_tokens = VALUES(max_tokens), priority = VALUES(priority), lease_sec = VALUES(lease_sec), max_retries = VALUES(max_retries), per_day = VALUES(per_day)")
+                ->execute([$k, mb_substr(post('name', $k), 0, 80), mb_substr(post('descr'), 0, 500), post('enabled') === '1' ? 1 : 0, post('kind') === 'embed' ? 'embed' : 'chat', mb_substr(post('model'), 0, 80),
+                           (string)($_POST['system_prompt'] ?? ''), $sch !== '' ? json_encode(json_decode($sch, true), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) : null,
+                           max(0, min(2, (float)str_replace(',', '.', post('temperature', '0')))), max(16, min(32000, (int)post('max_tokens', '400'))), max(0, min(9, (int)post('priority', '5'))),
+                           max(60, min(3600, (int)post('lease_sec', '300'))), max(1, min(10, (int)post('max_retries', '3'))), max(0, (int)post('per_day', '0'))]);
+            $out[] = "Tarea «$k» guardada. El worker la verá en su siguiente pasada.";
+        }
+    } elseif ($act === 'ia_borrar') {
+        $k = post('task_key');
+        if (in_array($k, IA_TAREAS_BASE, true)) $out[] = "La tarea «$k» es de serie: apágala, pero no se borra.";
+        else { $pdo->prepare("DELETE FROM ia_tasks WHERE task_key = ?")->execute([$k]); $pdo->prepare("DELETE FROM ia_jobs WHERE task_key = ?")->execute([$k]); $out[] = "Tarea «$k» borrada con sus trabajos."; }
+    } elseif ($act === 'ia_reintentar') {
+        $st = $pdo->prepare("UPDATE ia_jobs SET status = 'queued', attempts = 0, leased_until = NULL WHERE status IN ('needs_human','failed')" . (post('task_key') !== '' ? " AND task_key = ?" : ""));
+        $st->execute(post('task_key') !== '' ? [post('task_key')] : []);
+        $out[] = $st->rowCount() . ' trabajos devueltos a la cola.';
+    } elseif ($act === 'ia_relacionadas_hilo') {
+        // probar la tarea con un hilo concreto (o recalcularlo)
+        $sid = (int)post('story_id');
+        $jid = $sid > 0 ? relacionadas_pedir($pdo, $sid) : null;
+        $out[] = $jid ? "Hilo #$sid encolado (trabajo #$jid): el worker lo resolverá en su siguiente pasada." : "No se ha encolado el hilo #$sid (¿tarea apagada, hilo inexistente o sin candidatas por texto completo?).";
     } elseif ($act === 'aviso') {
         // aviso a la comunidad (13/10/2026): texto de hasta 150 palabras + interruptor; sustituye los avisos grises de cabecera mientras este activado
         $txt = trim(str_replace(["\r\n", "\r"], "\n", (string)post('aviso_txt')));
@@ -435,7 +467,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'comunidades' => 'Comunidades', 'foros' => 'Foros', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'avisos' => 'Avisos', 'registro' => 'Registro'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'comunidades' => 'Comunidades', 'foros' => 'Foros', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'ia' => 'IA', 'avisos' => 'Avisos', 'registro' => 'Registro'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -612,6 +644,69 @@ if ($tab === 'usuarios') {
                     foreach ($rows as $r) echo "<tr><td><small>" . h(hace($r['created'])) . "</small></td><td class=\"who\">" . h(mb_strimwidth((string)$r['title'], 0, 80, '…')) . "<small>" . h((string)$r['source']) . "</small></td><td class=\"num\">" . ((int)$r['score'] >= agent_review_min() ? '<b>' . (int)$r['score'] . '</b>' : (int)$r['score']) . "</td><td><small>" . h((string)$r['note']) . "</small></td><td>" . ((int)$r['sent'] ? ($r['story_id'] ? "<a href=\"/hilo/" . (int)$r['story_id'] . "\">enviada</a>" : 'enviada') : '') . "</td></tr>";
                     echo "</table>";
                 }
+            }
+        }
+    }
+} elseif ($tab === 'ia') {
+    // capa comun de IA (migra-173, lib/ia.php): tareas que sirve el worker generico del PC (local/ia/ia.py), estado de la cola y edicion de cada tarea
+    echo "<h3>IA</h3>";
+    $tareas = ia_tareas($pdo);
+    if (!$tareas && !ia_tarea($pdo, 'moderacion')) echo "<p class=\"meta\">Falta la migración 173 (tablas <code>ia_tasks</code> e <code>ia_jobs</code>).</p>";
+    else {
+        echo "<p class=\"meta\">" . h(ia_worker_line()) . " El modelo corre en el PC de la redacción (<code>local/ia/</code>); el PC pide trabajo a <code>/api/ia.php</code> y se baja estas tareas en cada pasada, así que lo que cambies aquí se aplica sin tocar el PC. "
+           . "Capa encendida: <b>" . (ia_on() ? 'sí' : 'no') . "</b> (Config → <code>ia_enabled</code>). Desde el PHP: <code>ia_pedir(\$pdo, 'tarea', ['user' => \$texto], 'story', \$id)</code> encola y el <i>handler</i> de la tarea (<code>ia_handler()</code> en <code>lib/ia.php</code>) aplica la respuesta cuando llega.</p>";
+        // cola por tarea y estado
+        $res = []; foreach (ia_resumen($pdo) as $r) $res[$r['task_key']][$r['status']] = (int)$r['n'];
+        $modq = [];
+        try { foreach ($pdo->query("SELECT status, COUNT(*) n FROM mod_queue GROUP BY status") as $r) $modq[$r['status']] = (int)$r['n']; } catch (Throwable $e) {}
+        echo "<table class=\"users\"><tr><th>tarea</th><th>estado</th><th>cola</th><th>parámetros</th><th></th></tr>";
+        foreach ($tareas as $t) {
+            $k = $t['task_key'];
+            if ($k === 'moderacion') $cola = "en cola " . (($modq['queued'] ?? 0) + ($modq['processing'] ?? 0)) . " · esperan a un moderador " . (($modq['flag'] ?? 0) + ($modq['hidden'] ?? 0) + ($modq['needs_human'] ?? 0)) . " <small>(mod_queue)</small>";
+            else { $c = $res[$k] ?? []; $cola = "en cola " . (($c['queued'] ?? 0) + ($c['processing'] ?? 0)) . " · hechos " . ($c['done'] ?? 0) . " · fallidos " . ($c['failed'] ?? 0) . " · sin resolver " . ($c['needs_human'] ?? 0); }
+            echo "<tr><td class=\"who\"><b>" . h($t['name']) . "</b> <code>$k</code><small>" . h(mb_strimwidth((string)$t['descr'], 0, 120, '…')) . "</small></td>"
+               . "<td>" . ((int)$t['enabled'] ? '<b>activa</b>' : 'apagada') . ($k === 'moderacion' && !mod_on() ? ' <small>(mod_enabled = 0)</small>' : '') . "</td><td><small>$cola</small></td>"
+               . "<td><small>" . h($t['kind']) . " · temp " . num_es($t['temperature']) . " · " . (int)$t['max_tokens'] . " tokens · prioridad " . (int)$t['priority'] . " · reserva " . (int)$t['lease_sec'] . " s · " . (int)$t['max_retries'] . " intentos" . ((int)$t['per_day'] ? " · " . (int)$t['per_day'] . "/día" : "") . ($t['model'] !== '' ? " · modelo " . h($t['model']) : "") . "</small></td>"
+               . "<td class=\"acc\"><a class=\"btn sm\" href=\"/admin?t=ia&amp;k=" . rawurlencode($k) . "\">editar</a></td></tr>";
+        }
+        echo "</table>";
+        echo "<p><form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"ia_reintentar\"><button class=\"btn sm\">Devolver a la cola los fallidos y sin resolver</button></form> "
+           . "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"ia_relacionadas_hilo\">Relacionadas de un hilo: #<input type=\"number\" name=\"story_id\" style=\"width:90px\"> <button class=\"btn sm\">encolar</button></form> "
+           . "<a class=\"btn sm\" href=\"/admin?t=ia&amp;k=nueva\">nueva tarea</a></p>";
+        // ultimos trabajos
+        try {
+            $ult = $pdo->query("SELECT job_id, task_key, ref_type, ref_id, status, attempts, model, ms, created, processed, result FROM ia_jobs ORDER BY job_id DESC LIMIT 30")->fetchAll();
+            if ($ult) {
+                echo "<h3>Últimos trabajos</h3><table class=\"users\"><tr><th>#</th><th>tarea</th><th>ref</th><th>estado</th><th>cuándo</th><th>resultado</th></tr>";
+                foreach ($ult as $j) {
+                    $ref = $j['ref_type'] === 'story' ? "<a href=\"/hilo/{$j['ref_id']}\">story #{$j['ref_id']}</a>" : h($j['ref_type'] . ' #' . $j['ref_id']);
+                    echo "<tr><td class=\"num\">{$j['job_id']}</td><td>" . h($j['task_key']) . "</td><td>$ref</td><td>" . h($j['status']) . ((int)$j['attempts'] ? " <small>({$j['attempts']} int.)</small>" : "") . "</td><td><small>" . h(hace($j['processed'] ?: $j['created'])) . ($j['ms'] ? " · " . (int)$j['ms'] . " ms" : "") . "</small></td><td><small>" . h(mb_strimwidth((string)$j['result'], 0, 160, '…')) . "</small></td></tr>";
+                }
+                echo "</table>";
+            }
+        } catch (Throwable $e) {}
+        // ficha de una tarea
+        $k = (string)($_GET['k'] ?? '');
+        if ($k !== '') {
+            $t = $k === 'nueva' ? ['task_key' => '', 'name' => '', 'descr' => '', 'enabled' => 0, 'kind' => 'chat', 'model' => '', 'system_prompt' => '', 'schema_json' => '', 'temperature' => '0.00', 'max_tokens' => 400, 'priority' => 5, 'lease_sec' => 300, 'max_retries' => 3, 'per_day' => 0] : ia_tarea($pdo, $k);
+            if (!$t) echo "<p class=\"end\">No existe la tarea «" . h($k) . "».</p>";
+            else {
+                $sel = fn($v, $cur) => $v === $cur ? ' selected' : '';
+                echo "<h3>" . ($k === 'nueva' ? 'Nueva tarea' : 'Tarea «' . h($t['task_key']) . '»') . "</h3><form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"ia_tarea\"><table>"
+                   . "<tr><td>clave</td><td>" . ($k === 'nueva' ? "<input type=\"text\" name=\"task_key\" pattern=\"[a-z0-9_]+\" required placeholder=\"p. ej. resumen\">" : "<code>" . h($t['task_key']) . "</code><input type=\"hidden\" name=\"task_key\" value=\"" . h($t['task_key']) . "\">") . " <small>la que usa el PHP en <code>ia_pedir()</code>; sin handler registrado el resultado solo se guarda en <code>ia_jobs</code></small></td></tr>"
+                   . "<tr><td>nombre</td><td><input type=\"text\" name=\"name\" value=\"" . h($t['name']) . "\" style=\"width:60%\"></td></tr>"
+                   . "<tr><td>descripción</td><td><input type=\"text\" name=\"descr\" value=\"" . h($t['descr']) . "\" style=\"width:100%\"></td></tr>"
+                   . "<tr><td>estado</td><td><select name=\"enabled\"><option value=\"1\"" . $sel('1', (string)(int)$t['enabled']) . ">activa</option><option value=\"0\"" . $sel('0', (string)(int)$t['enabled']) . ">apagada</option></select>"
+                   . " tipo <select name=\"kind\"><option value=\"chat\"" . $sel('chat', $t['kind']) . ">chat (prompt + respuesta)</option><option value=\"embed\"" . $sel('embed', $t['kind']) . ">embeddings (vector)</option></select>"
+                   . " modelo <input type=\"text\" name=\"model\" value=\"" . h($t['model']) . "\" placeholder=\"vacío = el del worker\" style=\"width:200px\"></td></tr>"
+                   . "<tr><td>parámetros</td><td>temperatura <input type=\"text\" name=\"temperature\" value=\"" . h((string)$t['temperature']) . "\" style=\"width:60px\"> · tokens de respuesta <input type=\"number\" name=\"max_tokens\" value=\"" . (int)$t['max_tokens'] . "\" style=\"width:80px\">"
+                   . " · prioridad (0-9) <input type=\"number\" name=\"priority\" value=\"" . (int)$t['priority'] . "\" min=\"0\" max=\"9\" style=\"width:60px\"> · reserva <input type=\"number\" name=\"lease_sec\" value=\"" . (int)$t['lease_sec'] . "\" style=\"width:80px\"> s"
+                   . " · intentos <input type=\"number\" name=\"max_retries\" value=\"" . (int)$t['max_retries'] . "\" min=\"1\" max=\"10\" style=\"width:60px\"> · tope diario <input type=\"number\" name=\"per_day\" value=\"" . (int)$t['per_day'] . "\" min=\"0\" style=\"width:80px\"> (0 = sin tope)</td></tr>"
+                   . "<tr><td>prompt de sistema</td><td><textarea name=\"system_prompt\" rows=\"18\" style=\"width:100%\">" . h((string)$t['system_prompt']) . "</textarea><br><small>El mensaje de usuario lo compone el PHP (<code>\$input['user']</code>); aquí va el criterio. En la moderación, el texto a revisar llega entre &lt;texto&gt; y &lt;/texto&gt;.</small></td></tr>"
+                   . "<tr><td>esquema JSON de la respuesta</td><td><textarea name=\"schema_json\" rows=\"10\" style=\"width:100%;font-family:monospace\">" . h((string)$t['schema_json']) . "</textarea><br><small>JSON Schema: el worker lo pasa al modelo como <code>response_format</code> y comprueba las claves <code>required</code>. Vacío = texto libre (el handler recibe <code>['text' => …]</code>).</small></td></tr>"
+                   . "</table><p><button class=\"btn\">Guardar tarea</button></p></form>";
+                if ($k !== 'nueva' && !in_array($t['task_key'], IA_TAREAS_BASE, true))
+                    echo "<form method=\"post\" onsubmit=\"return confirm('¿Borrar la tarea y sus trabajos?')\">$T<input type=\"hidden\" name=\"act\" value=\"ia_borrar\"><input type=\"hidden\" name=\"task_key\" value=\"" . h($t['task_key']) . "\"><button class=\"btn sm\">Borrar tarea</button></form>";
             }
         }
     }

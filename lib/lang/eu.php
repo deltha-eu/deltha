@@ -925,4 +925,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Todos los idiomas' => 'Hizkuntza guztiak',
 'cambiar' => 'aldatu',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Markak: <code>**lodia**</code> · <code>*etzana*</code> · <code>&gt;</code>-rekin hasten den lerroa aipamen bat da · <code>[testua](https://esteka)</code>. Paragrafoak lerro zuri batekin bereizten dira.',
+'Relacionadas' => 'Lotutakoak',
 ];

@@ -9,6 +9,9 @@ desktop.ini
 local/moderador/moderador.ini
 local/moderador/*.log
 local/moderador/__pycache__/
+local/ia/ia.ini
+local/ia/*.log
+local/ia/__pycache__/
 
 # trabajo ajeno a Deltha
 Entrevista_*

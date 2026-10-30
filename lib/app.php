@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 239);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 240);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -112,6 +112,7 @@ require_once __DIR__ . '/avisos.php';     // campanita: menciones, respuestas y 
 require_once __DIR__ . '/ghost.php';      // «Ghostear» a un usuario: velo simetrico, comentarios plegados (user_ghosts)
 require_once __DIR__ . '/destacar.php';   // «Destacar»: envios y noticias RSS los primeros de su lista, con halo (migra-111)
 require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
+require_once __DIR__ . '/ia.php';         // capa comun de IA: ia_pedir() encola para el worker del PC, cada tarea su handler (migra-173)
 
 /* ---- presencia anonima: huella no reversible (ip+navegador+dia, HMAC truncado)
  * guardada unos minutos, solo para contar visitantes en /estadisticas.

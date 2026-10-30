@@ -1,0 +1,19 @@
+; Copiar a ia.ini (no va al repositorio: lleva el token).
+[deltha]
+url   = https://deltha.eu
+; el mismo valor que [ia] token (o, si no existe, [mod] token) en /etc/deltha/config.ini del droplet
+token =
+
+[modelo]
+; el mismo modelo que arranca local/moderador/arrancar-modelo.ps1 (Strata o llama-server); una peticion cada vez
+url     = http://127.0.0.1:8080
+api_key =
+timeout = 180
+; nombre que se guarda con cada resultado (ia_jobs.model / mod_queue.model)
+nombre  = Qwen3.8-Flash-Next-IQ2_XS
+
+[worker]
+; trabajos que pide en cada pasada, segundos de espera con la cola vacia y tras un error
+lote         = 4
+espera       = 20
+espera_error = 60

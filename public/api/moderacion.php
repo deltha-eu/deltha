@@ -42,25 +42,7 @@ if ($act === 'ping') api_out(['ok' => true, 'enabled' => mod_on()]);
 
 if ($act === 'lease') {
     if (!mod_on()) api_out(['enabled' => false, 'items' => []]);
-    $n = max(1, min(20, (int)($_GET['n'] ?? 4)));
-    $lease = max(60, (int)cfg('mod_lease_sec', 300));
-    $items = [];
-    $pdo->beginTransaction();
-    $q = $pdo->prepare("SELECT item_id, item_type, ref_id, attempts FROM mod_queue
-                         WHERE status = 'queued' OR (status = 'processing' AND leased_until < NOW())
-                         ORDER BY priority DESC, item_id ASC LIMIT $n FOR UPDATE");
-    $q->execute();
-    foreach ($q->fetchAll() as $it) {
-        $t = mod_item_text($pdo, $it['item_type'], (int)$it['ref_id']);
-        if ($t === null) {   // ya no existe o ya lo retiro un moderador: nada que revisar
-            $pdo->prepare("UPDATE mod_queue SET status = 'ok', verdict = '{\"motivo\":\"ya no existe o ya estaba retirado\"}', leased_until = NULL, processed = NOW() WHERE item_id = ?")->execute([$it['item_id']]);
-            continue;
-        }
-        $pdo->prepare("UPDATE mod_queue SET status = 'processing', leased_until = NOW() + INTERVAL $lease SECOND WHERE item_id = ?")->execute([$it['item_id']]);
-        $items[] = ['id' => (int)$it['item_id'], 'type' => $it['item_type'], 'ref' => (int)$it['ref_id'], 'text' => $t['text'], 'context' => $t['context']];
-    }
-    $pdo->commit();
-    api_out(['enabled' => true, 'items' => $items]);
+    api_out(['enabled' => true, 'items' => mod_lease($pdo, (int)($_GET['n'] ?? 4))]);   // (la reserva vive en lib/moderacion.php desde migra-173: la comparte /api/ia.php)
 }
 
 if ($act === 'verdict' || $act === 'fail') {
@@ -69,13 +51,7 @@ if ($act === 'verdict' || $act === 'fail') {
     $it = $q->fetch();
     if (!$it) api_out(['error' => 'ese elemento no esta reservado (caducado o ya resuelto)'], 409);
 
-    if ($act === 'fail') {
-        $at = (int)$it['attempts'] + 1;
-        $ns = $at >= (int)cfg('mod_max_retries', 3) ? 'needs_human' : 'queued';
-        $err = json_encode(['motivo' => 'fallo del modelo: ' . mb_substr((string)($body['error'] ?? ''), 0, 300)], JSON_UNESCAPED_UNICODE);
-        $pdo->prepare("UPDATE mod_queue SET status = ?, attempts = ?, leased_until = NULL, verdict = ? WHERE item_id = ?")->execute([$ns, $at, $err, $it['item_id']]);
-        api_out(['ok' => true, 'status' => $ns]);
-    }
+    if ($act === 'fail') api_out(['ok' => true, 'status' => mod_fail($pdo, (int)$it['item_id'], (string)($body['error'] ?? ''))]);
 
     $cat = (string)($body['categoria'] ?? '');
     if ($cat !== 'ninguna' && !in_array($cat, MOD_CATS, true)) api_out(['error' => 'categoria desconocida: ' . mb_substr($cat, 0, 40)], 400);

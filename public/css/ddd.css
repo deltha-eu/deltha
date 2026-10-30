@@ -206,6 +206,13 @@ form.plain .mdhelp code { font-size: 12px; background: color-mix(in srgb, var(--
 .chat .cm > p + p, .chat .cm > p + blockquote, .chat .cm > blockquote + p, .chat .cm > blockquote + blockquote { margin-top: 8px; }
 .msg .bubble p { margin: 0 0 .45em; }
 .msg .bubble p:last-child { margin-bottom: 0; }
+/* noticias relacionadas en el hilo (story_related, migra-173) */
+.hilo .related { margin: 10px 0 4px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; }
+.hilo .related > b { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.hilo .related ul { margin: 0; padding: 0; list-style: none; }
+.hilo .related li { margin: 3px 0; }
+.hilo .related li a { color: var(--accent); }
+.hilo .related li small { display: block; color: var(--muted); font-size: 12px; }
 .hilo .source { display: inline-flex; gap: 6px; align-items: center; color: var(--accent); font-size: 14px; margin: 14px 0 6px; }   /* 01/10: aire sobre el enlace a la fuente, iba pegado al texto */
 /* barra del hilo: todo en una linea (~44px), icono + cifra en horizontal; cifras tabulares para que 0, 12 y 1234 no muevan el resto */
 .hilo .stats { display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }

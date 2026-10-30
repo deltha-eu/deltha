@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, url=?, source=?, lang=?$mark WHERE story_id=?")
                 ->execute([$title, $content ?: null, $topic, $image, $url ?: null, $url ? source_of($url) : null, $lang, $id]);
         }
+        if ($title !== (string)$s['title'] || $content !== (string)($s['content'] ?? '')) relacionadas_pedir($pdo, $id);   // el modelo vuelve a buscar relacionadas con el texto nuevo (migra-173)
         redirect("/hilo/$id");
     }
     $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'community_id' => $comm ?: null, 'url' => $url, 'image' => $image, 'indexable' => $idx]);

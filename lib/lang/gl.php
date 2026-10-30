@@ -925,4 +925,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Todos los idiomas' => 'Todos os idiomas',
 'cambiar' => 'cambiar',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · unha liña que comece por <code>&gt;</code> é unha cita · <code>[texto](https://enlace)</code>. Os parágrafos sepáranse cunha liña en branco.',
+'Relacionadas' => 'Relacionadas',
 ];

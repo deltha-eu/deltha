@@ -946,4 +946,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Todos los idiomas' => 'Tüm diller',
 'cambiar' => 'değiştir',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'İşaretler: <code>**kalın**</code> · <code>*italik*</code> · <code>&gt;</code> ile başlayan satır alıntıdır · <code>[metin](https://link)</code>. Paragraflar boş satırla ayrılır.',
+'Relacionadas' => 'İlgili haberler',
 ];

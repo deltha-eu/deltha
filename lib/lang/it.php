@@ -926,4 +926,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Todos los idiomas' => 'Tutte le lingue',
 'cambiar' => 'cambia',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marcature: <code>**grassetto**</code> · <code>*corsivo*</code> · una riga che inizia con <code>&gt;</code> è una citazione · <code>[testo](https://link)</code>. I paragrafi si separano con una riga vuota.',
+'Relacionadas' => 'Correlate',
 ];

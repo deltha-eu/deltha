@@ -80,6 +80,41 @@ function mod_item_text(PDO $pdo, string $type, int $id): ?array {
     return null;
 }
 
+/** Reserva hasta $n elementos de mod_queue para un worker (status processing hasta mod_lease_sec) y devuelve lo que el modelo
+ *  tiene que ver. Lo usan /api/moderacion.php (moderador.py) y /api/ia.php (worker generico, tarea «moderacion», migra-173). */
+function mod_lease(PDO $pdo, int $n): array {
+    $n = max(1, min(20, $n));
+    $lease = max(60, (int)cfg('mod_lease_sec', 300));
+    $items = [];
+    $pdo->beginTransaction();
+    $q = $pdo->prepare("SELECT item_id, item_type, ref_id, attempts FROM mod_queue
+                         WHERE status = 'queued' OR (status = 'processing' AND leased_until < NOW())
+                         ORDER BY priority DESC, item_id ASC LIMIT $n FOR UPDATE");
+    $q->execute();
+    foreach ($q->fetchAll() as $it) {
+        $t = mod_item_text($pdo, $it['item_type'], (int)$it['ref_id']);
+        if ($t === null) {   // ya no existe o ya lo retiro un moderador: nada que revisar
+            $pdo->prepare("UPDATE mod_queue SET status = 'ok', verdict = '{\"motivo\":\"ya no existe o ya estaba retirado\"}', leased_until = NULL, processed = NOW() WHERE item_id = ?")->execute([$it['item_id']]);
+            continue;
+        }
+        $pdo->prepare("UPDATE mod_queue SET status = 'processing', leased_until = NOW() + INTERVAL $lease SECOND WHERE item_id = ?")->execute([$it['item_id']]);
+        $items[] = ['id' => (int)$it['item_id'], 'type' => $it['item_type'], 'ref' => (int)$it['ref_id'], 'text' => $t['text'], 'context' => $t['context']];
+    }
+    $pdo->commit();
+    return $items;
+}
+
+/** El worker no pudo con un elemento reservado: vuelve a la cola o, tras mod_max_retries, a needs_human. Devuelve el estado o null si no estaba reservado. */
+function mod_fail(PDO $pdo, int $itemId, string $error): ?string {
+    $q = $pdo->prepare("SELECT item_id, attempts FROM mod_queue WHERE item_id = ? AND status = 'processing'"); $q->execute([$itemId]);
+    if (!($it = $q->fetch())) return null;
+    $at = (int)$it['attempts'] + 1;
+    $ns = $at >= (int)cfg('mod_max_retries', 3) ? 'needs_human' : 'queued';
+    $err = json_encode(['motivo' => 'fallo del modelo: ' . mb_substr($error, 0, 300)], JSON_UNESCAPED_UNICODE);
+    $pdo->prepare("UPDATE mod_queue SET status = ?, attempts = ?, leased_until = NULL, verdict = ? WHERE item_id = ?")->execute([$ns, $at, $err, $itemId]);
+    return $ns;
+}
+
 /** last_activity del hilo de un comentario (migra-170), al ocultarlo o reponerlo. */
 function mod_touch_story(PDO $pdo, int $cid): void {
     if (!function_exists('story_touch')) return;

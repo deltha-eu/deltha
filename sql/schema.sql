@@ -1,6 +1,6 @@
 -- Deltha — esquema completo (MySQL 8, InnoDB, utf8mb4)
 -- Regenerado el 20/10/2026 a partir de la base real (scripts/regenerar-esquema.sh, mysqldump --no-data deltha): las tablas tal como estan
--- en produccion con las migraciones 001-167 aplicadas.
+-- en produccion con las migraciones 001-167 aplicadas (ia_tasks, ia_jobs, story_related y sus claves de config: migra-173, añadidas a mano).
 --
 -- Uso (instalacion nueva; lo hacen install.sh y scripts/install-droplet.sh):
 --   mysql -e "CREATE DATABASE IF NOT EXISTS deltha CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
@@ -377,6 +377,47 @@ CREATE TABLE `hits` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ia_jobs` (
+  job_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  task_key     VARCHAR(32)  NOT NULL,
+  ref_type     VARCHAR(16)  NOT NULL DEFAULT '' COMMENT 'story, comment, chat, user... (para no duplicar y para el handler)',
+  ref_id       INT UNSIGNED NOT NULL DEFAULT 0,
+  status       ENUM('queued','processing','done','failed','needs_human') NOT NULL DEFAULT 'queued',
+  priority     TINYINT UNSIGNED NOT NULL DEFAULT 5,
+  attempts     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  input        MEDIUMTEXT NOT NULL COMMENT 'JSON: user (lo que ve el modelo) y datos para el handler',
+  result       MEDIUMTEXT COMMENT 'JSON que devolvio el modelo, o el error',
+  model        VARCHAR(80) DEFAULT NULL,
+  ms           INT UNSIGNED DEFAULT NULL,
+  tokens       INT UNSIGNED DEFAULT NULL,
+  leased_until DATETIME DEFAULT NULL,
+  created      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  processed    DATETIME DEFAULT NULL,
+  PRIMARY KEY (job_id),
+  KEY idx_lease (status, priority, job_id),
+  KEY idx_ref (task_key, ref_type, ref_id),
+  KEY idx_created (created)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `ia_tasks` (
+  task_key      VARCHAR(32)  NOT NULL,
+  name          VARCHAR(80)  NOT NULL,
+  descr         VARCHAR(500) NOT NULL DEFAULT '',
+  enabled       TINYINT(1)   NOT NULL DEFAULT 0,
+  kind          ENUM('chat','embed') NOT NULL DEFAULT 'chat',
+  model         VARCHAR(80)  NOT NULL DEFAULT '' COMMENT 'vacio = el modelo por defecto del worker',
+  system_prompt MEDIUMTEXT,
+  schema_json   TEXT COMMENT 'JSON Schema de la respuesta; vacio = texto libre (result.text)',
+  temperature   DECIMAL(3,2) NOT NULL DEFAULT 0.00,
+  max_tokens    SMALLINT UNSIGNED NOT NULL DEFAULT 400,
+  priority      TINYINT UNSIGNED NOT NULL DEFAULT 5 COMMENT 'mayor = antes en la cola',
+  lease_sec     SMALLINT UNSIGNED NOT NULL DEFAULT 300,
+  max_retries   TINYINT UNSIGNED NOT NULL DEFAULT 3,
+  per_day       INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'tope de trabajos al dia; 0 = sin tope',
+  updated       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (task_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `image_generic` (
   `domain` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
   `hash` char(40) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -716,6 +757,16 @@ CREATE TABLE `story_communities` (
   CONSTRAINT `fk_sc_user` FOREIGN KEY (`added_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `story_related` (
+  story_id   INT UNSIGNED NOT NULL,
+  related_id INT UNSIGNED NOT NULL,
+  score      DECIMAL(4,3) NOT NULL DEFAULT 0.000,
+  note       VARCHAR(160) DEFAULT NULL,
+  created    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (story_id, related_id),
+  KEY idx_rel (related_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `thread_aliases` (
   `story_id` int unsigned NOT NULL,
@@ -908,6 +959,12 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('mod_hide_links_only', '1',    '1 = la IA solo oculta provisionalmente (mod_auto_hide) lo que lleva algun enlace; sin enlace se limita a señalar. 0 = oculta por confianza, lleve enlace o no'),
 ('mod_hide_types',      'comment', 'Tipos que la IA puede ocultar provisionalmente (mod_auto_hide), separados por coma: comment, chat, story. Vacio = todos'),
 ('mod_hide_cats',       'spam',    'Categorias que la IA puede ocultar provisionalmente, separadas por coma: insulto, odio, acoso, datos, ilegal, spam. Vacio = todas menos otro'),
+('ia_enabled',       '1',  '1 = la libreria de IA encola trabajos (ia_jobs) para el worker del PC; 0 = no se encola nada (la moderacion sigue con mod_enabled)'),
+('ia_worker_seen',   '',   'Ultima conexion del worker generico de IA (lo escribe /api/ia.php)'),
+('ia_keep_days',     '30', 'Dias que se conservan los trabajos terminados en ia_jobs (los borra el ciclo)'),
+('relacionadas_min', '0.5','Relacion minima (0-1) que da el modelo para guardar una noticia como relacionada'),
+('relacionadas_dias','90', 'Hasta que antiguedad (dias) se buscan candidatas a noticias relacionadas'),
+('relacionadas_max', '5',  'Relacionadas que se muestran en el hilo'),
 ('mod_flag_score',      '0.60', 'Confianza minima para señalar a los moderadores; por debajo se da por bueno'),
 ('mod_lease_sec',       '300',  'Segundos que el worker tiene reservado un elemento antes de que vuelva a la cola'),
 ('mod_worker_seen',     '',     'Ultima conexion del worker de IA local (lo escribe /api/moderacion.php)');

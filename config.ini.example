@@ -22,6 +22,10 @@ smtp_pass = ""
 ; generar con:  openssl rand -hex 32
 token = ""
 
+[ia]
+; token del worker generico de IA (local/ia/ia.ini lleva el mismo; sirve la moderacion y el resto de tareas de admin > IA). Vacio = usa el de [mod].
+token = ""
+
 [agent]
 ; token del worker del agente comentarista (local/comentarista/comentarista.ini lleva el mismo). Vacio = usa el de [mod].
 token = ""

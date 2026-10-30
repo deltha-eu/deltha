@@ -138,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mod_enqueue($pdo, 'story', $sid);
             if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
             $pdo->commit();
+            relacionadas_pedir($pdo, $sid);   // noticias relacionadas (tarea de IA «relacionadas», migra-173): se ven en el hilo cuando el PC responde
             redirect("/hilo/$sid");
         }
     }

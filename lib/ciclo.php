@@ -150,5 +150,8 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
     $d = aura_daily_decay($pdo);
     if ($d >= 0) $log[] = "decaimiento diario de aura aplicado ($d usuarios)";
 
+    // 7. trabajos de IA terminados mas viejos que ia_keep_days (migra-173)
+    if (function_exists('ia_limpiar')) ia_limpiar($pdo);
+
     return $log;
 }
