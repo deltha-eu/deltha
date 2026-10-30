@@ -926,4 +926,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'cambiar' => 'canviar',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marques: <code>**negreta**</code> · <code>*cursiva*</code> · una línia que comenci per <code>&gt;</code> és una cita · <code>[text](https://enllaç)</code>. Els paràgrafs se separen amb una línia en blanc.',
 'Relacionadas' => 'Relacionades',
+'¿Es la misma noticia?' => 'És la mateixa notícia?',
+'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Aquestes ja estan enviades i s\'hi assemblen. Si és la mateixa, vota la que ja hi ha en lloc d\'enviar-la una altra vegada.',
+'ver y votar' => 'veure i votar',
 ];

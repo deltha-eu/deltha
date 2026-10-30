@@ -927,4 +927,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'cambiar' => 'ändern',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Markierungen: <code>**fett**</code> · <code>*kursiv*</code> · eine Zeile, die mit <code>&gt;</code> beginnt, ist ein Zitat · <code>[Text](https://link)</code>. Absätze werden durch eine Leerzeile getrennt.',
 'Relacionadas' => 'Verwandte Beiträge',
+'¿Es la misma noticia?' => 'Ist das dieselbe Nachricht?',
+'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Diese sind schon eingereicht und ähneln ihr. Wenn es dieselbe ist, stimme für die vorhandene, statt sie noch einmal einzureichen.',
+'ver y votar' => 'ansehen und abstimmen',
 ];

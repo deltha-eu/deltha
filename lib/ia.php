@@ -170,7 +170,8 @@ function relacionadas_candidatas(PDO $pdo, array $s, int $max = 15): array {
     if (mb_strlen($texto) < 12) return [];
     $dias = max(1, (int)cfg('relacionadas_dias', 90));
     try {
-        $q = $pdo->prepare("SELECT story_id, title, source, content, sent_date, MATCH(title, content) AGAINST (? IN NATURAL LANGUAGE MODE) rel
+        // tope de 300 ms (MySQL 8; MariaDB lo ignora): si la busqueda se alarga, se corta y quien envia no ve la caja, pero no espera (30/10/2026)
+        $q = $pdo->prepare("SELECT /*+ MAX_EXECUTION_TIME(300) */ story_id, title, source, content, sent_date, MATCH(title, content) AGAINST (? IN NATURAL LANGUAGE MODE) rel
                               FROM stories WHERE story_id <> ? AND status IN ('nuevas','destacadas','archived') AND sent_date >= NOW() - INTERVAL ? DAY
                                AND MATCH(title, content) AGAINST (? IN NATURAL LANGUAGE MODE)
                              ORDER BY rel DESC LIMIT " . max(1, $max));

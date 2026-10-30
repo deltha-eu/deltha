@@ -926,4 +926,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'cambiar' => 'aldatu',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Markak: <code>**lodia**</code> · <code>*etzana*</code> · <code>&gt;</code>-rekin hasten den lerroa aipamen bat da · <code>[testua](https://esteka)</code>. Paragrafoak lerro zuri batekin bereizten dira.',
 'Relacionadas' => 'Lotutakoak',
+'¿Es la misma noticia?' => 'Albiste bera da?',
+'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Hauek bidalita daude jada eta antzekoak dira. Bera bada, bozkatu dagoena berriro bidali beharrean.',
+'ver y votar' => 'ikusi eta bozkatu',
 ];

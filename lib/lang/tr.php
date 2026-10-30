@@ -947,4 +947,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'cambiar' => 'değiştir',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'İşaretler: <code>**kalın**</code> · <code>*italik*</code> · <code>&gt;</code> ile başlayan satır alıntıdır · <code>[metin](https://link)</code>. Paragraflar boş satırla ayrılır.',
 'Relacionadas' => 'İlgili haberler',
+'¿Es la misma noticia?' => 'Bu aynı haber mi?',
+'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Bunlar zaten gönderilmiş ve benziyor. Aynıysa, yeniden göndermek yerine mevcut olana oy ver.',
+'ver y votar' => 'gör ve oy ver',
 ];

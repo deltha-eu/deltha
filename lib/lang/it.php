@@ -927,4 +927,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'cambiar' => 'cambia',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marcature: <code>**grassetto**</code> · <code>*corsivo*</code> · una riga che inizia con <code>&gt;</code> è una citazione · <code>[testo](https://link)</code>. I paragrafi si separano con una riga vuota.',
 'Relacionadas' => 'Correlate',
+'¿Es la misma noticia?' => 'È la stessa notizia?',
+'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Queste sono già inviate e le somigliano. Se è la stessa, vota quella che c\'è già invece di inviarla di nuovo.',
+'ver y votar' => 'vedi e vota',
 ];

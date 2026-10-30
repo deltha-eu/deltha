@@ -981,4 +981,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Apagado' => 'Off',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · una línea que empiece por <code>&gt;</code> es una cita · <code>[texto](https://enlace)</code>. Los párrafos se separan con una línea en blanco.' => 'Marks: <code>**bold**</code> · <code>*italic*</code> · a line starting with <code>&gt;</code> is a quote · <code>[text](https://link)</code>. Paragraphs are separated by a blank line.',
 'Relacionadas' => 'Related',
+'¿Es la misma noticia?' => 'Is this the same story?',
+'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'These are already submitted and look alike. If it is the same one, vote for the existing one instead of submitting it again.',
+'ver y votar' => 'view and vote',
 ];
