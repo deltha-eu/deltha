@@ -28,6 +28,11 @@ require_once __DIR__ . '/destacar.php';  // destacar noticias de medios y substa
 
 const DDD_FUENTES_DIR = DDD_MEDIA_DIR . '/fuentes';
 
+/** Trozo del texto del error que deja una fuente cuando el feed responde pero todo lo que trae supera sources_max_age_days (45 dias
+ *  por defecto): el medio esta congelado o ha cambiado de feed, y releerlo no lo arregla. Vive aqui, junto al mensaje, porque
+ *  /moderacion -> Errores lo usa para separar esas fuentes en su propia vista (30/10/2026). */
+const DDD_ERROR_FEED_ANTIGUO = 'todo lo del feed tiene mas de';
+
 function fuentes_on(): bool { return (string)cfg('sources_enabled', '1') === '1'; }
 /** Agregadores (Meneame, Mediatize, Renegados, Burbuja, Areopago) activos? config.sources_agregadores, apagados por defecto (migra-070):
  *  fuentes_activas() no los devuelve, asi que desaparecen del catalogo, el rail, la franja, la columna derecha, el pie, /ultimo y /fuente,
@@ -380,7 +385,7 @@ function fuente_actualizar(PDO $pdo, array $src, ?array $xmls = null, bool $manu
             if ($n0 - count($items)) $log[] = "fuente {$src['slug']} $phase: " . ($n0 - count($items)) . " items de hace mas de $maxAge dias, descartados";
             if (!$items) {
                 if (fuente_sin_novedades_normal($src)) { $log[] = "fuente {$src['slug']} $phase: nada en los ultimos $maxAge dias (normal en substacks y canales)"; continue; }   // no es un error
-                $err[] = "$phase: todo lo del feed tiene mas de $maxAge dias"; continue;
+                $err[] = "$phase: " . DDD_ERROR_FEED_ANTIGUO . " $maxAge dias"; continue;
             }
         }
         if (($src['kind'] ?? '') === 'youtube' && (string)cfg('youtube_titulares', '1') === '1') {   // titulares de YouTube: sin GRITOS ni emojis

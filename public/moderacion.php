@@ -310,7 +310,7 @@ if (!isset($TABS[$tab])) $tab = 'ia';
 $pend = ['ia' => count($q)];
 try { $pend['reportes'] = (int)$pdo->query("SELECT (SELECT COUNT(DISTINCT r.comment_id) FROM comment_reports r JOIN comments c ON c.comment_id = r.comment_id WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0) + (SELECT COUNT(DISTINCT r.msg_id) FROM chat_reports r JOIN chat c ON c.msg_id = r.msg_id WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0)")->fetchColumn(); } catch (Throwable $e) { $pend['reportes'] = 0; }
 try { $pend['fuentes'] = (int)$pdo->query("SELECT COUNT(*) FROM source_proposals WHERE status = 'pending'")->fetchColumn(); } catch (Throwable $e) { $pend['fuentes'] = 0; }
-try { $pend['errores'] = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'ok' AND last_error IS NOT NULL AND last_error <> ''")->fetchColumn(); } catch (Throwable $e) { $pend['errores'] = 0; }
+try { $pend['errores'] = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'ok' AND last_error IS NOT NULL AND last_error <> '' AND last_error NOT LIKE '%" . DDD_ERROR_FEED_ANTIGUO . "%'")->fetchColumn(); } catch (Throwable $e) { $pend['errores'] = 0; }   // sin las del feed antiguo: esas tienen su vista y no son una avería (30/10/2026)
 page_header('Moderación');
 echo "<div class=\"admin\"><h1>Moderación</h1>";
 echo "<nav class=\"tabs\">";
@@ -470,33 +470,46 @@ foreach ($props as $p) {
 }
 } elseif ($tab === 'errores') {
 /* ---- fuentes que dan error (11/10/2026): las que fallaron en su ultima lectura, con el error, y el historial (source_errors, migra-137).
- *  Vistas (29/10/2026, ?eh=): «fuentes» = las que fallaron en su ultima lectura, con apagar/releer; «activos», «resueltos» y «todos» = el
- *  historial. Un error del historial esta activo mientras siga siendo el ultimo de una fuente encendida; resuelto cuando una lectura
- *  posterior salio bien (o falla por otra cosa) o la fuente esta apagada. Los resueltos no se borran solos: se borran desde aqui. ---- */
-$eh = in_array((string)($_GET['eh'] ?? ''), ['fuentes', 'apagadas', 'activos', 'resueltos', 'todos'], true) ? (string)$_GET['eh'] : 'fuentes';
+ *  Vistas (29/10/2026, ?eh=): «fuentes» = las que fallaron en su ultima lectura, con apagar/releer; «antiguas» (30/10/2026) = las que
+ *  fallan por la antiguedad del feed (su error menciona sources_max_age_days), que no se arreglan releyendo; «activos», «resueltos» y
+ *  «todos» = el historial. Un error del historial esta activo mientras siga siendo el ultimo de una fuente encendida; resuelto cuando
+ *  una lectura posterior salio bien (o falla por otra cosa) o la fuente esta apagada. Los resueltos no se borran solos: se borran desde aqui. ---- */
+$eh = in_array((string)($_GET['eh'] ?? ''), ['fuentes', 'antiguas', 'apagadas', 'activos', 'resueltos', 'todos'], true) ? (string)$_GET['eh'] : 'fuentes';
 // se compara por errhash (md5 del texto) y no por texto: sources y source_errors tienen collation distinta y MySQL no deja compararlas
 $resuelto = "(s.status <> 'ok' OR s.last_error IS NULL OR s.last_error = '' OR e.errhash <> MD5(s.last_error))";
-$nFe = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'ok' AND last_error IS NOT NULL AND last_error <> ''")->fetchColumn();
+// las encendidas con error se leen de una vez y se reparten: feed antiguo (solo por antiguedad) y el resto
+try { $errSrc = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT MAX(pub_date) FROM source_items i WHERE i.source_id = s.source_id) ult
+                               FROM sources s WHERE s.status = 'ok' AND s.last_error IS NOT NULL AND s.last_error <> '' ORDER BY s.last_fetch DESC")->fetchAll(); }
+catch (Throwable $e) { $errSrc = []; }
+$fOld = array_values(array_filter($errSrc, fn($f) => str_contains((string)$f['last_error'], DDD_ERROR_FEED_ANTIGUO)));
+$fErr = array_values(array_filter($errSrc, fn($f) => !str_contains((string)$f['last_error'], DDD_ERROR_FEED_ANTIGUO)));
+$nFe = count($fErr); $nOld = count($fOld);
 $nOff = (int)$pdo->query("SELECT COUNT(*) FROM sources WHERE status = 'off'")->fetchColumn();
 try { $cnt = $pdo->query("SELECT SUM(NOT $resuelto) act, SUM($resuelto) res FROM source_errors e JOIN sources s ON s.source_id = e.source_id")->fetch(); $hayHist = true; }
 catch (Throwable $e) { $cnt = []; $hayHist = false; $histErr = $e->getMessage(); }
 $nAct = (int)($cnt['act'] ?? 0); $nRes = (int)($cnt['res'] ?? 0);
 echo "<nav class=\"sub\" style=\"padding-left:0;margin:-8px 0 16px\">";
-foreach (['fuentes' => "Con error ($nFe)", 'apagadas' => "Apagadas ($nOff)", 'activos' => "Historial activos ($nAct)", 'resueltos' => "Resueltos ($nRes)", 'todos' => 'Todo el historial (' . ($nAct + $nRes) . ')'] as $k => $v)
+foreach (['fuentes' => "Con error ($nFe)", 'antiguas' => "Feed antiguo ($nOld)", 'apagadas' => "Apagadas ($nOff)", 'activos' => "Historial activos ($nAct)", 'resueltos' => "Resueltos ($nRes)", 'todos' => 'Todo el historial (' . ($nAct + $nRes) . ')'] as $k => $v)
     echo "<a href=\"/moderacion?t=errores&amp;eh=$k\"" . ($k === $eh ? ' class="on"' : '') . ">$v</a>";
 echo "</nav>";
-if ($eh === 'fuentes' || $eh === 'apagadas') {
+if ($eh === 'fuentes' || $eh === 'antiguas' || $eh === 'apagadas') {
 // «Con error»: solo las encendidas (29/10/2026; las apagadas tienen su propia vista, con las que se apagaron por error o a mano)
-$fe = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT MAX(pub_date) FROM source_items i WHERE i.source_id = s.source_id) ult
-                     FROM sources s WHERE " . ($eh === 'apagadas' ? "s.status = 'off' ORDER BY s.last_fetch DESC" : "s.status = 'ok' AND s.last_error IS NOT NULL AND s.last_error <> '' ORDER BY s.last_fetch DESC"))->fetchAll();
 if ($eh === 'apagadas') {
+    $fe = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT MAX(pub_date) FROM source_items i WHERE i.source_id = s.source_id) ult
+                         FROM sources s WHERE s.status = 'off' ORDER BY s.last_fetch DESC")->fetchAll();
     echo "<h3>Fuentes apagadas (" . count($fe) . ")</h3>";
     echo "<p><small>No se leen ni salen en el catálogo. Las que se apagaron por un error conservan su último error, por si el medio arregla el feed. <b>Encender</b> la vuelve a poner en el lector (y borra el error).</small></p>";
     if (!$fe) echo "<p>Ninguna fuente apagada.</p>";
+} elseif ($eh === 'antiguas') {
+    $fe = $fOld;
+    echo "<h3>Fuentes con el feed antiguo (" . count($fe) . ")</h3>";
+    echo "<p><small>El feed responde, pero todo lo que trae tiene más de <b>" . (int)cfg('sources_max_age_days', 45) . " días</b> (<code>sources_max_age_days</code>): el medio está congelado, ha cambiado de feed o publica en otro sitio. <b>Releer no lo arregla</b>, porque el problema es lo que trae el feed. Lo normal: <b>cambiar el feed</b> por uno que sí publique (una sección, otro formato…), <b>apagarla</b> si el medio sigue vivo pero su feed no, o <b>borrarla</b> si ha cerrado. Están aquí en vez de en «Con error» para no tapar las averías de verdad. Si además falla por otra cosa, el error completo sale en su ficha.</small></p>";
+    if (!$fe) echo "<p>Ninguna fuente con el feed antiguo. 🙂</p>";
 } else {
-echo "<h3>Fuentes que dan error (" . count($fe) . ")</h3>";
-echo "<p><small>Fuentes encendidas cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece); <b>borrar</b> elimina la fuente con sus noticias y seguidores (pide confirmación, no se deshace); <b>cambiar el feed</b> permite pegar otra dirección (p. ej. el feed de una sección cuando el general está congelado) y releer al momento; <b>pegar el feed a mano</b> procesa el XML que pegues o subas como si lo hubiera descargado el lector (para comprobar si el problema es el feed o la descarga desde el servidor). Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes). Las que llevan muchos días sin publicar nada probablemente han cerrado.</small></p>";
-if (!$fe) echo "<p>Ninguna fuente con error. 🙂</p>";
+    $fe = $fErr;
+    echo "<h3>Fuentes que dan error (" . count($fe) . ")</h3>";
+    echo "<p><small>Fuentes encendidas cuya última lectura falló (RSS caído, 403, HTML que ya no se entiende, error de base de datos…). El error desaparece de aquí en cuanto una lectura sale bien. <b>Apagar</b> la deja fuera del catálogo y del lector hasta que alguien la encienda; <b>releer</b> la intenta ahora mismo; <b>resuelto</b> quita el error de aquí y del historial sin releer (si vuelve a fallar, reaparece); <b>borrar</b> elimina la fuente con sus noticias y seguidores (pide confirmación, no se deshace); <b>cambiar el feed</b> permite pegar otra dirección (p. ej. el feed de una sección cuando el general está congelado) y releer al momento; <b>pegar el feed a mano</b> procesa el XML que pegues o subas como si lo hubiera descargado el lector (para comprobar si el problema es el feed o la descarga desde el servidor). Si el error es 403 o certificado, suele arreglarse con «lector local» (ficha de la fuente en admin → Fuentes)." . ($nOld ? " Las que solo fallan porque su feed es antiguo están en <a href=\"/moderacion?t=errores&amp;eh=antiguas\">Feed antiguo</a> ($nOld)." : '') . "</small></p>";
+    if (!$fe) echo "<p>Ninguna fuente con error. 🙂</p>";
 }
 foreach ($fe as $f) {
     $sid = (int)$f['source_id']; $off = $f['status'] === 'off';
