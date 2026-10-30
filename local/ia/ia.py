@@ -42,7 +42,7 @@ def cargar_config(ruta: Path) -> configparser.ConfigParser:
         "worker": {"lote": "4", "espera": "20", "espera_error": "60"},
     })
     if ruta.exists():
-        cfg.read(ruta, encoding="utf-8")
+        cfg.read(ruta, encoding="utf-8-sig")   # -sig: PowerShell suele guardar con BOM
     return cfg
 
 
