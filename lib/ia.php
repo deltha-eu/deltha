@@ -189,7 +189,7 @@ function relacionadas_pedir(PDO $pdo, int $sid): ?int {
     $cand = relacionadas_candidatas($pdo, $s);
     if (!$cand) return null;
     $txt = "<datos>\nNOTICIA NUEVA\nTitular: " . $s['title'] . "\n" . ($s['source'] ? "Medio: {$s['source']}\n" : '')
-         . ($s['content'] ? "Entradilla: " . mb_substr(preg_replace('/\s+/u', ' ', (string)$s['content']), 0, 500) . "\n" : '') . "\nCANDIDATAS\n";
+         . ($s['content'] ? "Entradilla: " . mb_substr(preg_replace('/\s+/u', ' ', (string)$s['content']), 0, 500) . "\n" : '') . "\nYA ENVIADAS\n";
     foreach ($cand as $id => $c)
         $txt .= "[$id] " . $c['title'] . ($c['source'] ? " — {$c['source']}" : '') . " — " . substr((string)$c['sent_date'], 0, 10)
               . ($c['content'] ? "\n    " . mb_substr(preg_replace('/\s+/u', ' ', (string)$c['content']), 0, 220) : '') . "\n";
