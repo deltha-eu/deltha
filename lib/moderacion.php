@@ -164,6 +164,20 @@ function mod_remove_hidden(PDO $pdo, string $type, int $id, int $by): void {
     }
 }
 
+/** Estado previo de todo lo que va a tocar mod_human() (migra-173), para poder deshacer la decisión. */
+function mod_undo_human(PDO $pdo, int $itemId): void {
+    $q = $pdo->prepare("SELECT * FROM mod_queue WHERE item_id = ?"); $q->execute([$itemId]);
+    if (!($it = $q->fetch())) return;
+    mod_undo_row($pdo, 'mod_queue', $itemId);
+    $id = (int)$it['ref_id'];
+    if ($it['item_type'] === 'comment') {
+        mod_undo_comment($pdo, $id);
+        $s = $pdo->prepare("SELECT story_id FROM comments WHERE comment_id = ?"); $s->execute([$id]);
+        if ($sid = (int)$s->fetchColumn()) mod_undo_row($pdo, 'stories', $sid, ['status', 'comments']);   // mod_hide/mod_unhide mueven el contador del hilo
+    } elseif ($it['item_type'] === 'chat') mod_undo_chat($pdo, $id);
+    else mod_undo_row($pdo, 'stories', $id, ['status', 'comments']);
+}
+
 /** Decision humana sobre un elemento señalado u oculto: 'keep' (se queda / vuelve a verse) o 'remove' (se retira como cualquier borrado de moderacion). */
 function mod_human(PDO $pdo, int $itemId, string $dec, int $by): ?string {
     $q = $pdo->prepare("SELECT * FROM mod_queue WHERE item_id = ?"); $q->execute([$itemId]);

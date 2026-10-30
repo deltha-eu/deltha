@@ -228,8 +228,144 @@ function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = ''):
     register_shutdown_function(function () use ($pdo, $uid, $accion, $detalle, $extra, &$out, $ip) {
         $res = $out ? mb_strimwidth(implode(' | ', array_map('strval', (array)$out)), 0, 500, '…') : null;
         if ($extra !== '') $res = trim($extra . ($res !== null ? " | $res" : ''));
-        try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip) VALUES (?,?,?,?,?)")->execute([$uid, mb_substr($accion, 0, 60), $detalle ?: null, $res, $ip]); } catch (Throwable $e) {}
+        // migra-173: lo que haga falta para deshacer la acción, sellado con el estado en que quedó (mod_undo_seal)
+        $ops = mod_undo_seal($pdo, mod_undo_ops());
+        $undo = $ops ? json_encode(['ops' => $ops], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) : null;
+        try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip, undo_ops) VALUES (?,?,?,?,?,?)")->execute([$uid, mb_substr($accion, 0, 60), $detalle ?: null, $res, $ip, $undo]); }
+        catch (Throwable $e) {   // sin la migración 173: se apunta la acción igualmente, sin poder deshacerla
+            try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip) VALUES (?,?,?,?,?)")->execute([$uid, mb_substr($accion, 0, 60), $detalle ?: null, $res, $ip]); } catch (Throwable $e2) {}
+        }
     });
+}
+
+/* ---- deshacer una acción del registro (migra-173, 30/10/2026) ----------------------------------------
+ * Cada manejador de /moderacion copia el estado de la fila ANTES de tocarla con mod_undo_row(); al terminar la petición,
+ * mod_log_post() guarda esas operaciones inversas en mod_log.undo_ops, selladas con los valores que quedaron (mod_undo_seal).
+ * mod_log_revert() las aplica al revés y solo si la fila sigue como la dejó la acción: si alguien la ha cambiado después,
+ * se niega en vez de pisar el cambio. Las tablas y columnas que se pueden tocar están en MOD_UNDO_COLS y no hay más. */
+const MOD_UNDO_COLS = [   // tabla => [clave primaria, columnas restaurables]
+    'comments'        => ['comment_id', ['status', 'deleted', 'content', 'content_orig']],
+    'chat'            => ['msg_id',     ['status', 'deleted', 'deleted_at', 'content', 'content_orig']],
+    'comment_reports' => ['report_id',  ['status', 'decided_by', 'decided']],
+    'chat_reports'    => ['report_id',  ['status', 'decided_by', 'decided']],
+    'mod_queue'       => ['item_id',    ['status', 'decided_by', 'processed', 'prev_status', 'category', 'score', 'verdict', 'reason', 'leased_until', 'attempts']],
+    'sources'         => ['source_id',  ['slug', 'kind', 'name', 'home', 'descr', 'lang', 'topic_id', 'feed_portada', 'feed_nuevas', 'interval_min', 'status', 'last_error', 'listed', 'featured']],
+    'topics'          => ['topic_id',   ['name', 'color', 'bonus']],
+    'banned_domains'  => ['domain',     ['domain', 'reason', 'added_by']],
+    'allowed_domains' => ['domain',     ['domain', 'reason', 'added_by']],
+    'banned_sources'  => ['domain',     ['domain', 'reason', 'added_by']],
+    'stories'         => ['story_id',   ['status', 'comments']],
+];
+/** Operaciones inversas pendientes de la petición. */
+function mod_undo_add(array $op): void { $GLOBALS['DDD_UNDO'][] = $op; }
+function mod_undo_ops(): array { return $GLOBALS['DDD_UNDO'] ?? []; }
+/** Copia el estado actual de una fila antes de modificarla: al deshacer, esas columnas vuelven a tener estos valores.
+ *  Devuelve false si la fila no existía (entonces la acción la va a crear y al deshacer se borra). */
+function mod_undo_row(PDO $pdo, string $table, $id, array $cols = []): bool {
+    if (!isset(MOD_UNDO_COLS[$table])) return false;
+    [$pk, $validas] = MOD_UNDO_COLS[$table];
+    $cols = array_values(array_unique(array_merge(array_intersect($cols ?: $validas, $validas), [$pk])));   // con la clave: sirve para reinsertar la fila
+    if ($cols === []) return false;
+    try {
+        $q = $pdo->prepare("SELECT " . implode(', ', $cols) . " FROM $table WHERE $pk = ?"); $q->execute([$id]);
+        $row = $q->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) { return false; }
+    if (!$row) { mod_undo_add(['t' => 'del', 'table' => $table, 'pk' => $pk, 'id' => $id]); return false; }
+    mod_undo_add(['t' => 'set', 'table' => $table, 'pk' => $pk, 'id' => $id, 'set' => $row]);
+    return true;
+}
+/** Las filas que la acción va a tocar de golpe (reportes de un comentario, por ejemplo): una operación por fila. */
+function mod_undo_rows(PDO $pdo, string $table, array $ids, array $cols): void {
+    foreach ($ids as $id) mod_undo_row($pdo, $table, $id, $cols);
+}
+/** La acción acaba de crear esta fila: al deshacer se borra. */
+function mod_undo_created(string $table, $id): void {
+    if (!isset(MOD_UNDO_COLS[$table])) return;
+    mod_undo_add(['t' => 'del', 'table' => $table, 'pk' => MOD_UNDO_COLS[$table][0], 'id' => $id]);
+}
+/** Comentario con sus reportes (borrarlo o descartarlos cambia las dos cosas). */
+function mod_undo_comment(PDO $pdo, int $cid, bool $reports = true): void {
+    if (!mod_undo_row($pdo, 'comments', $cid, ['status', 'deleted', 'content', 'content_orig'])) return;
+    if (!$reports) return;
+    try { $q = $pdo->prepare("SELECT report_id FROM comment_reports WHERE comment_id = ?"); $q->execute([$cid]); mod_undo_rows($pdo, 'comment_reports', $q->fetchAll(PDO::FETCH_COLUMN), ['status', 'decided_by', 'decided']); } catch (Throwable $e) {}
+}
+/** Mensaje del chat con sus reportes. */
+function mod_undo_chat(PDO $pdo, int $mid): void {
+    if (!mod_undo_row($pdo, 'chat', $mid, ['status', 'deleted', 'deleted_at', 'content', 'content_orig'])) return;
+    try { $q = $pdo->prepare("SELECT report_id FROM chat_reports WHERE msg_id = ?"); $q->execute([$mid]); mod_undo_rows($pdo, 'chat_reports', $q->fetchAll(PDO::FETCH_COLUMN), ['status', 'decided_by', 'decided']); } catch (Throwable $e) {}
+}
+/** Sella las operaciones con el estado en que quedaron y las convierte en lo que de verdad hay que hacer al deshacer:
+ *   · la fila sigue igual ...................... no se apunta nada (la acción falló o dejó el mismo valor);
+ *   · la fila cambió ........................... se restaura a los valores de antes;
+ *   · la acción la borró ....................... se vuelve a insertar tal como estaba;
+ *   · la fila que la acción creó no existe ..... no se apunta nada.
+ *  Devuelve null si algo va raro (mejor no ofrecer el deshacer que hacerlo mal). */
+function mod_undo_seal(PDO $pdo, array $ops): ?array {
+    $out = [];
+    foreach ($ops as $op) {
+        $t = $op['t'] ?? '';
+        try {
+            if ($t === 'set') {
+                $cols = array_keys($op['set']);
+                $q = $pdo->prepare("SELECT " . implode(', ', $cols) . " FROM {$op['table']} WHERE {$op['pk']} = ?"); $q->execute([$op['id']]);
+                $now = $q->fetch(PDO::FETCH_ASSOC);
+                if (!$now) { $out[] = ['t' => 'new', 'table' => $op['table'], 'pk' => $op['pk'], 'id' => $op['id'], 'vals' => $op['set']]; continue; }   // la borró la acción
+                $cambio = false;
+                foreach ($op['set'] as $c => $v) if ((string)$now[$c] !== (string)$v) { $cambio = true; break; }
+                if (!$cambio) continue;
+                $op['was'] = $now;
+            } elseif ($t === 'del') {
+                $q = $pdo->prepare("SELECT 1 FROM {$op['table']} WHERE {$op['pk']} = ?"); $q->execute([$op['id']]);
+                if (!$q->fetchColumn()) continue;   // nunca llegó a crearse
+            } else continue;
+        } catch (Throwable $e) { return null; }
+        $out[] = $op;
+    }
+    return $out;
+}
+/** Deshace una acción apuntada en mod_log. null si fue bien; si no, el motivo (para enseñarlo tal cual). */
+function mod_log_revert(PDO $pdo, int $log_id, int $by): ?string {
+    try { $q = $pdo->prepare("SELECT * FROM mod_log WHERE log_id = ?"); $q->execute([$log_id]); $row = $q->fetch(); }
+    catch (Throwable $e) { return 'falta la migración 173 (mod_log.undo_ops).'; }
+    if (!$row) return 'esa acción no está en el registro.';
+    if (!empty($row['undone'])) return 'esa acción ya se deshizo el ' . date('d/m/Y H:i', strtotime((string)$row['undone'])) . '.';
+    $data = json_decode((string)($row['undo_ops'] ?? ''), true);
+    $ops = is_array($data['ops'] ?? null) ? $data['ops'] : [];
+    if (!$ops) return 'esa acción no se puede deshacer desde aquí.';
+    $pdo->beginTransaction();
+    try {
+        foreach (array_reverse($ops) as $op) {
+            $tab = (string)($op['table'] ?? '');
+            if (!isset(MOD_UNDO_COLS[$tab])) throw new RuntimeException('operación desconocida en el registro.');
+            [$pk, $validas] = MOD_UNDO_COLS[$tab];
+            if (($op['t'] ?? '') === 'set') {
+                if (!empty($op['was'])) {   // nadie lo ha cambiado desde entonces
+                    $q = $pdo->prepare("SELECT " . implode(', ', array_keys($op['was'])) . " FROM $tab WHERE $pk = ?"); $q->execute([$op['id']]);
+                    $now = $q->fetch(PDO::FETCH_ASSOC);
+                    if (!$now) throw new RuntimeException("el dato ya no existe ($tab #{$op['id']}).");
+                    foreach ($op['was'] as $c => $v) if (array_key_exists($c, $now) && (string)$now[$c] !== (string)$v) throw new RuntimeException("alguien lo ha cambiado después ($tab #{$op['id']}: $c).");
+                }
+                $set = []; $args = [];
+                foreach ((array)$op['set'] as $c => $v) if (in_array($c, $validas, true)) { $set[] = "$c = ?"; $args[] = $v; }
+                if (!$set) continue;
+                $args[] = $op['id'];
+                $pdo->prepare("UPDATE $tab SET " . implode(', ', $set) . " WHERE $pk = ?")->execute($args);
+            } elseif (($op['t'] ?? '') === 'new') {   // la acción borró la fila: se vuelve a insertar
+                $newId = $op['id'] ?? ($op['vals'][$pk] ?? null);
+                $q = $pdo->prepare("SELECT 1 FROM $tab WHERE $pk = ?"); $q->execute([$newId]);
+                if ($q->fetchColumn()) throw new RuntimeException("ya hay otra fila con ese identificador ($tab #$newId): se ha vuelto a crear después.");
+                $cols = []; $args = [];
+                foreach ((array)$op['vals'] as $c => $v) if (in_array($c, $validas, true) || $c === $pk) { $cols[] = $c; $args[] = $v; }
+                if (!$cols) throw new RuntimeException('no hay datos para reponer la fila.');
+                $pdo->prepare("INSERT INTO $tab (" . implode(', ', $cols) . ") VALUES (" . implode(', ', array_fill(0, count($cols), '?')) . ")")->execute($args);
+            } elseif (($op['t'] ?? '') === 'del') {
+                $pdo->prepare("DELETE FROM $tab WHERE $pk = ?")->execute([$op['id']]);
+            } else throw new RuntimeException('operación desconocida en el registro.');
+        }
+        $pdo->prepare("UPDATE mod_log SET undone = NOW(), undone_by = ? WHERE log_id = ?")->execute([$by, $log_id]);
+        $pdo->commit();
+    } catch (Throwable $e) { $pdo->rollBack(); return $e->getMessage(); }
+    return null;
 }
 // Los navegadores envian los textarea con CRLF: se normaliza a LF, que es lo que esperan los parrafos (\n\n) al pintar.
 function post(string $k, string $d = ''): string { return trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST[$k] ?? $d))); }

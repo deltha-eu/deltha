@@ -632,7 +632,7 @@ if ($tab === 'usuarios') {
 } elseif ($tab === 'registro') {   // registro de acciones de moderadores y admin (mod_log, migra-134)
     $rq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64)); $ru = trim(mb_substr((string)($_GET['u'] ?? ''), 0, 32));
     $rp = max(1, (int)($_GET['p'] ?? 1)); $rper = 100;
-    echo "<h3>Registro de moderación y administración</h3><p><small>Cada acción hecha desde /moderacion, /admin, la ficha de usuario, el chat (mensajes a la comunidad), destacados del admin y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta quién, qué (página:acción), los campos enviados (sin contraseñas) y el resultado que vio en pantalla. Las lecturas no se registran; los destacados de los usuarios están en su aura.</small></p>";
+    echo "<h3>Registro de moderación y administración</h3><p><small>Cada acción hecha desde /moderacion, /admin, la ficha de usuario, el chat (mensajes a la comunidad), destacados del admin y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta quién, qué (página:acción), los campos enviados (sin contraseñas) y el resultado que vio en pantalla. Las lecturas no se registran; los destacados de los usuarios están en su aura. Para deshacer una acción, la pestaña <a href=\"/moderacion?t=registro\">Registro de /moderacion</a>.</small></p>";
     try {
         $quien = $pdo->query("SELECT DISTINCT u.login FROM mod_log l JOIN users u ON u.user_id = l.user_id ORDER BY u.login")->fetchAll(PDO::FETCH_COLUMN);
         echo "<form method=\"get\" action=\"/admin\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"registro\"><select name=\"u\"><option value=\"\">— todos —</option>";

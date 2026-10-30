@@ -12,18 +12,24 @@ if (!is_mod()) { http_response_code(403); page_header('Moderación'); echo "<p c
 
 $out = [];
 mod_log_post($pdo, 'moderacion', $out);   // registro de acciones (migra-134): apunta accion, campos y resultado al terminar
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'registro_deshacer') {   // deshacer una acción del registro (migra-173)
+    $e = mod_log_revert($pdo, (int)post('log_id'), (int)user()['user_id']);
+    $out[] = $e === null ? 'Hecho: la acción se ha deshecho.' : 'No se ha podido deshacer: ' . $e;
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema') {
     $name = mb_strtolower(trim(post('name')));
     if (!preg_match('/^[\\p{L}\\p{N} \\-]{2,32}$/u', $name)) $out[] = 'Nombre de tema no válido (2-32 letras).';
     else {
         try {
             $pdo->prepare("INSERT INTO topics (name, bonus) VALUES (?, 0)")->execute([$name]);
+            mod_undo_created('topics', $pdo->lastInsertId());
             $out[] = "Tema «{$name}» creado.";
         } catch (PDOException $e) { $out[] = 'Ese tema ya existe.'; }
     }
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'tema_editar') {   // renombrar y cambiar el color (el bonus sigue siendo del admin)
     $tid = (int)post('topic_id');
+    mod_undo_row($pdo, 'topics', $tid, ['name', 'color']);
     $e = topic_rename($pdo, $tid, post('name'));
     if (!$e && preg_match('/^#[0-9a-fA-F]{6}$/', post('color'))) $pdo->prepare("UPDATE topics SET color = ? WHERE topic_id = ?")->execute([post('color'), $tid]);
     $out[] = $e ?: 'Tema guardado.';
@@ -36,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio') {
     $d = email_domain_normalize(post('domain'));   // admite pegar un correo entero
     if ($d === null) $out[] = 'Dominio no válido.';
     else {
+        mod_undo_row($pdo, 'banned_domains', $d); mod_undo_row($pdo, 'allowed_domains', $d);   // vetar quita de la blanca (migra-173)
         $pdo->prepare("INSERT IGNORE INTO banned_domains (domain, reason, added_by) VALUES (?,?,?)")->execute([$d, mb_substr(post('reason'), 0, 120) ?: null, user()['user_id']]);
         try { $pdo->prepare("DELETE FROM allowed_domains WHERE domain = ?")->execute([$d]); } catch (Throwable $e) {}
         $out[] = "Dominio $d vetado (y quitado de la lista blanca si estaba).";
@@ -46,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['blanca', 'd
     $d = email_domain_normalize(post('domain'));
     if ($d === null) $out[] = 'Dominio no válido.';
     else {
+        mod_undo_row($pdo, 'allowed_domains', $d); mod_undo_row($pdo, 'banned_domains', $d);   // migra-173
         $motivo = mb_substr(post('reason'), 0, 120) ?: (post('act') === 'dominio_a_blanca' ? 'revisado a mano' : null);
         $pdo->prepare("INSERT INTO allowed_domains (domain, reason, added_by) VALUES (?,?,?) ON DUPLICATE KEY UPDATE reason = VALUES(reason), added_by = VALUES(added_by)")->execute([$d, $motivo, user()['user_id']]);
         $pdo->prepare("DELETE FROM banned_domains WHERE domain = ?")->execute([$d]);
@@ -65,34 +73,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio_probar') {
     }
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'blanca_quitar') {
+    mod_undo_row($pdo, 'allowed_domains', post('domain'));   // migra-173
     $pdo->prepare("DELETE FROM allowed_domains WHERE domain = ?")->execute([post('domain')]);
     $out[] = 'Dominio retirado de la lista blanca (vuelve a pasar la comprobación normal).';
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'dominio_quitar') {
+    mod_undo_row($pdo, 'banned_domains', post('domain'));   // migra-173
     $pdo->prepare("DELETE FROM banned_domains WHERE domain = ?")->execute([post('domain')]);
     $out[] = 'Dominio retirado de la lista.';
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'medio') {
+    $md = source_domain_normalize(post('domain'));
+    if ($md !== null) mod_undo_row($pdo, 'banned_sources', $md);   // migra-173
     $d = source_block_add($pdo, post('domain'), post('reason'), (int)user()['user_id']);   // admite pegar el enlace entero
     $out[] = $d ? "Medio $d bloqueado (y todos sus subdominios)." : 'Dominio o enlace no válido.';
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'medio_quitar') {
+    $md = source_domain_normalize(post('domain'));
+    if ($md !== null) mod_undo_row($pdo, 'banned_sources', $md);   // migra-173
     source_block_remove($pdo, post('domain'));
     $out[] = 'Medio retirado de la lista de bloqueados.';
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['rep_borrar', 'rep_descartar'], true)) {
     $cid = (int)post('cid');
+    mod_undo_comment($pdo, $cid);   // texto, estado y reportes, para poder deshacerlo (migra-173)
     if (post('act') === 'rep_borrar') { comment_delete($pdo, $cid); $out[] = "Comentario #$cid eliminado (texto sustituido por el aviso)."; }
     else { $pdo->prepare("UPDATE comment_reports SET status = 'dismissed', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([user()['user_id'], $cid]); $out[] = "Reportes del comentario #$cid descartados."; }
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['chat_borrar', 'chat_descartar'], true)) {
     $mid = (int)post('mid');
+    mod_undo_chat($pdo, $mid);   // texto, estado y reportes (migra-173)
     if (post('act') === 'chat_borrar') { chat_delete_mod($pdo, $mid); $out[] = "Mensaje #$mid del chat eliminado (texto sustituido por el aviso)."; }
     else { $pdo->prepare("UPDATE chat_reports SET status = 'dismissed', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([user()['user_id'], $mid]); $out[] = "Reportes del mensaje #$mid descartados."; }
     if (post('back') === '1') redirect("/chat?m=$mid#m$mid");   // «eliminar» desde el propio chat
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'ia') {   // decision humana sobre lo que ha señalado u ocultado la IA
     $item = (int)post('item');
+    mod_undo_human($pdo, $item);   // cola, elemento, reportes y contador del hilo (migra-173)
     $r = mod_human($pdo, $item, post('dec') === 'remove' ? 'remove' : 'keep', (int)user()['user_id']);
     $out[] = $r ? "#$item: $r." : "#$item ya estaba resuelto.";
 }
@@ -152,6 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_editar') {
     if ($name === '') $out[] = 'Falta el nombre.';
     elseif (!preg_match('#^https?://[^\s]+$#i', $home)) $out[] = 'La web debe ser una URL http(s).';
     else {
+        mod_undo_row($pdo, 'sources', $sid, ['name', 'kind', 'home', 'feed_portada', 'descr', 'lang', 'interval_min', 'status']);   // migra-173
         $pdo->prepare("UPDATE sources SET name = ?, kind = ?, home = ?, feed_portada = ?, descr = ?, lang = ?, interval_min = ?, status = ? WHERE source_id = ?")
             ->execute([$name, $kind, mb_substr($home, 0, 200), mb_substr($feed, 0, 300), mb_substr(trim(post('descr')), 0, 200) ?: null, $slang, $iv, $status, $sid]);
         $out[] = "«{$name}» guardada.";
@@ -163,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apag
     require_once __DIR__ . '/../lib/fuentes.php';
     $q = $pdo->prepare("SELECT * FROM sources WHERE source_id = ?"); $q->execute([(int)post('source_id')]);
     if (!($fsrc = $q->fetch())) $out[] = 'Esa fuente no existe.';
-    elseif (post('act') === 'fuente_apagar') { $pdo->prepare("UPDATE sources SET status = 'off' WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» apagada: no se lee ni sale en el catálogo. Se vuelve a encender desde aquí o desde admin → Fuentes."; }
+    elseif (post('act') === 'fuente_apagar') { mod_undo_row($pdo, 'sources', (int)$fsrc['source_id'], ['status', 'last_error']); $pdo->prepare("UPDATE sources SET status = 'off' WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» apagada: no se lee ni sale en el catálogo. Se vuelve a encender desde aquí o desde admin → Fuentes."; }
     elseif (post('act') === 'fuente_feed') {   // 29/10/2026: cambiar el feed a mano desde Errores (feed congelado, URL con basura invisible...) y releer
         $limpia = fn(string $u) => preg_replace('/^[\s\p{Z}\p{C}]+|[\s\p{Z}\p{C}]+$/u', '', $u);   // trim() no quita U+2060, U+200B, nbsp...
         $fp = mb_substr($limpia(post('feed_portada')), 0, 300); $fn = mb_substr($limpia(post('feed_nuevas')), 0, 300);
@@ -195,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apag
         try { $pdo->prepare("DELETE FROM source_errors WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); } catch (Throwable $e) { /* sin la migra 137 */ }
         $out[] = "«{$fsrc['name']}»: error dado por resuelto. Si vuelve a fallar, reaparecerá aquí en su próxima lectura.";
     }
-    elseif (post('act') === 'fuente_encender') { $pdo->prepare("UPDATE sources SET status = 'ok', last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» encendida; el lector la leerá en los próximos minutos."; }
+    elseif (post('act') === 'fuente_encender') { mod_undo_row($pdo, 'sources', (int)$fsrc['source_id'], ['status', 'last_error']); $pdo->prepare("UPDATE sources SET status = 'ok', last_error = NULL WHERE source_id = ?")->execute([(int)$fsrc['source_id']]); $out[] = "«{$fsrc['name']}» encendida; el lector la leerá en los próximos minutos."; }
     else { try { $out = array_merge($out, fuente_actualizar($pdo, $fsrc)); $out[] = "«{$fsrc['name']}» releída."; } catch (Throwable $e) { $out[] = "«{$fsrc['name']}»: ERROR " . $e->getMessage(); } }
 }
 
@@ -303,7 +321,7 @@ try {
                                   SUM(category IS NOT NULL AND processed > NOW() - INTERVAL 1 DAY) sen24 FROM mod_queue")->fetch();
 } catch (Throwable $e) { $q = []; $qstats = null; }   // sin la migracion 062
 
-$TABS = ['ia' => 'IA', 'reportes' => 'Reportes', 'fuentes' => 'Fuentes', 'errores' => 'Errores', 'votos' => 'Votos', 'temas' => 'Temas', 'dominios' => 'Correos', 'medios' => 'Medios bloqueados'];
+$TABS = ['ia' => 'IA', 'reportes' => 'Reportes', 'fuentes' => 'Fuentes', 'errores' => 'Errores', 'votos' => 'Votos', 'temas' => 'Temas', 'dominios' => 'Correos', 'medios' => 'Medios bloqueados', 'registro' => 'Registro'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'ia');
 if (!isset($TABS[$tab])) $tab = 'ia';
 // pendientes en la pestaña: lo que espera decision (señalado por la IA, reportes abiertos, propuestas de fuentes)
@@ -632,6 +650,47 @@ if ($bs) {
     }
     echo "</table></details>";
 }
+} elseif ($tab === 'registro') {
+/* ---- registro de moderación con deshacer (migra-173, 30/10/2026): todo lo que apunta mod_log_post(), con la fecha y la hora,
+ *      quién lo hizo y, cuando la acción tiene vuelta atrás, un botón para dejarlo como estaba. ---- */
+$rq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64));
+$ru = trim(mb_substr((string)($_GET['u'] ?? ''), 0, 32));
+$rp = max(1, (int)($_GET['p'] ?? 1)); $rper = 60;
+echo "<h3 id=\"registro\">Registro de moderación</h3>";
+echo "<p><small>Qué se ha hecho, cuándo y quién: /moderacion, /admin, la ficha de usuario, el chat, los destacados y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta la acción, los campos enviados (sin contraseñas) y el resultado que se vio en pantalla. <b>Deshacer</b> devuelve el dato a como estaba justo antes (texto, estado y reportes); si algo ha cambiado después, no se toca nada y se dice por qué. Las acciones sin vuelta atrás (borrar o releer una fuente, borrar un tema, avisar a quien propuso una fuente) salen sin botón.</small></p>";
+try {
+    $quien = $pdo->query("SELECT DISTINCT u.login FROM mod_log l JOIN users u ON u.user_id = l.user_id ORDER BY u.login")->fetchAll(PDO::FETCH_COLUMN);
+    echo "<form method=\"get\" action=\"/moderacion\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"registro\"><select name=\"u\"><option value=\"\">— todos —</option>";
+    foreach ($quien as $ql) echo "<option value=\"" . h($ql) . "\"" . ($ru === $ql ? ' selected' : '') . ">" . h($ql) . "</option>";
+    echo "</select><input type=\"search\" name=\"q\" value=\"" . h($rq) . "\" maxlength=\"64\" placeholder=\"acción, campo o resultado (p. ej. rep_borrar, fuente_editar, #123)\"><button class=\"btn sm\">Buscar</button>" . ($rq !== '' || $ru !== '' ? " <a href=\"/moderacion?t=registro\">todo</a>" : '') . "</form>";
+    $w = []; $args = [];
+    if ($ru !== '') { $w[] = "u.login = ?"; $args[] = $ru; }
+    if ($rq !== '') { $w[] = "(l.action LIKE ? OR l.detail LIKE ? OR l.result LIKE ?)"; $like = '%' . $rq . '%'; array_push($args, $like, $like, $like); }
+    $ws = $w ? ' WHERE ' . implode(' AND ', $w) : '';
+    $cn = $pdo->prepare("SELECT COUNT(*) FROM mod_log l JOIN users u ON u.user_id = l.user_id$ws"); $cn->execute($args); $rtotal = (int)$cn->fetchColumn();
+    $st = $pdo->prepare("SELECT l.*, u.login, d.login AS undone_login FROM mod_log l JOIN users u ON u.user_id = l.user_id LEFT JOIN users d ON d.user_id = l.undone_by$ws ORDER BY l.log_id DESC LIMIT $rper OFFSET " . (($rp - 1) * $rper)); $st->execute($args); $rl = $st->fetchAll();
+    echo "<p><small>$rtotal " . ($rtotal === 1 ? 'acción' : 'acciones') . ($rq !== '' || $ru !== '' ? ' que coinciden' : '') . ".</small></p>";
+    if (!$rl) echo "<p class=\"end\">Nada registrado todavía.</p>";
+    else {
+        echo "<table class=\"modlog\"><tr><th>fecha y hora</th><th>quién</th><th>acción</th><th>detalle</th><th>resultado</th><th></th></tr>";
+        foreach ($rl as $r) {
+            $puede = empty($r['undone']) && !empty($r['undo_ops']);
+            echo "<tr><td style=\"white-space:nowrap\">" . h(date('d/m/Y H:i', strtotime($r['created']))) . "<br><small class=\"meta\">" . h(hace($r['created'])) . "</small></td>";
+            echo "<td><a href=\"/u/" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></td>";
+            echo "<td><code>" . h($r['action']) . "</code></td><td><small>" . h((string)$r['detail']) . "</small></td><td><small>" . h((string)$r['result']) . "</small></td>";
+            echo "<td style=\"white-space:nowrap\">";
+            if (!empty($r['undone'])) echo "<small class=\"meta\">deshecho" . ($r['undone_login'] ? " por <a href=\"/u/" . rawurlencode($r['undone_login']) . "\">" . h($r['undone_login']) . "</a>" : '') . " " . h(hace($r['undone'])) . "</small>";
+            elseif ($puede) echo "<form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"registro_deshacer\"><input type=\"hidden\" name=\"t\" value=\"registro\"><input type=\"hidden\" name=\"log_id\" value=\"{$r['log_id']}\"><button class=\"btn sm\" title=\"devolver el dato a como estaba antes de esta acción\">Deshacer</button></form>";
+            else echo "<small class=\"meta\" title=\"no hay vuelta atrás\">—</small>";
+            echo "</td></tr>";
+        }
+        echo "</table>";
+        if ($rtotal > $rper) {
+            $base = "/moderacion?t=registro" . ($ru !== '' ? '&amp;u=' . rawurlencode($ru) : '') . ($rq !== '' ? '&amp;q=' . rawurlencode($rq) : '');
+            echo "<p>" . ($rp > 1 ? "<a class=\"btn\" href=\"$base&amp;p=" . ($rp - 1) . "\">← más recientes</a> " : '') . ($rp * $rper < $rtotal ? "<a class=\"btn\" href=\"$base&amp;p=" . ($rp + 1) . "\">anteriores →</a>" : '') . "</p>";
+        }
+    }
+} catch (Throwable $e) { echo "<p class=\"error\">Falta la tabla mod_log (migra-134): " . h($e->getMessage()) . "</p>"; }
 }
 echo "</div>";
 page_footer();
