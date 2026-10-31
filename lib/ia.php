@@ -1,7 +1,8 @@
 <?php
 /**
  * lib/ia.php — capa comun de IA (migra-173). Una sola forma de usar el modelo del PC desde cualquier parte del PHP.
- * (Lo que tiene que responder al momento, como «¿es la misma noticia?» al enviar, no va por aqui: lib/vectores.php.)
+ * (Lo que tiene que responder al momento, como «¿es la misma noticia?» al enviar, no va por aqui: lib/vectores.php.
+ *  Las dos cosas se complementan: los vectores rellenan «Relacionadas» del hilo al instante y la tarea «relacionadas» de abajo la afina.)
  *
  * El modelo NO esta en el droplet: corre en el PC de la redaccion y es el PC quien pide trabajo a /api/ia.php (worker
  * generico local/ia/ia.py). Por eso aqui no hay «llamar al modelo y esperar»: hay una cola (ia_jobs) y, para cada tarea,
@@ -22,7 +23,7 @@
  */
 
 /** Tareas que trae de serie la migracion y que el codigo da por existentes. */
-const IA_TAREAS_BASE = ['moderacion'];   // «relacionadas» fue tarea de la IA hasta migra-175: ahora lo hacen los vectores de titulares (lib/vectores.php)
+const IA_TAREAS_BASE = ['moderacion', 'relacionadas'];
 
 function ia_on(): bool { return cfg('ia_enabled', '1') === '1'; }
 
@@ -159,3 +160,44 @@ function ia_worker_line(): string {
 function ia_resumen(PDO $pdo): array {
     try { return $pdo->query("SELECT task_key, status, COUNT(*) n, MAX(created) ultimo FROM ia_jobs GROUP BY task_key, status")->fetchAll(); } catch (Throwable $e) { return []; }
 }
+
+/* ---- tarea «relacionadas» (migra-173, retirada en migra-175, de vuelta en migra-177) ----------------------------------------
+ * La caja «Relacionadas» del hilo la rellenan los vectores al publicar (story_relacionadas_calcular, lib/vectores.php) con lo que
+ * pasa de relacionadas_vector_min. Despues el modelo del PC decide, entre las candidatas por vector (desde relacionadas_cand_min,
+ * mas amplio), cuales tratan del mismo asunto y con que nota («misma noticia en otro medio», «la sentencia del caso»). El handler
+ * sustituye lo de los vectores por lo que diga el modelo, salvo lo que ya era casi seguro la misma noticia (>= parecidas_vector_min),
+ * que se queda aunque el modelo no lo nombre. Solo entre las candidatas que se le ofrecieron: el modelo no inventa ids. */
+
+/** Encola la tarea para un envio recien publicado o corregido. $v = su vector si ya se tiene. Devuelve el job_id o null. */
+function relacionadas_pedir(PDO $pdo, int $sid, ?array $v = null): ?int {
+    if (!ia_tarea_activa($pdo, 'relacionadas')) return null;
+    $q = $pdo->prepare("SELECT story_id, title, source, content FROM stories WHERE story_id = ?"); $q->execute([$sid]);
+    if (!($s = $q->fetch())) return null;
+    $cand = function_exists('relacionadas_candidatas_vector') ? relacionadas_candidatas_vector($pdo, $sid, $v) : [];
+    if (!$cand) return null;
+    $txt = "<datos>\nNOTICIA NUEVA\nTitular: " . $s['title'] . "\n" . ($s['source'] ? "Medio: {$s['source']}\n" : '')
+         . ($s['content'] ? "Entradilla: " . mb_substr(preg_replace('/\s+/u', ' ', (string)$s['content']), 0, 500) . "\n" : '') . "\nYA ENVIADAS\n";
+    foreach ($cand as $id => $c)
+        $txt .= "[$id] " . $c['title'] . ($c['source'] ? " — {$c['source']}" : '') . " — " . substr((string)$c['sent_date'], 0, 10)
+              . (!empty($c['content']) ? "\n    " . mb_substr(preg_replace('/\s+/u', ' ', (string)$c['content']), 0, 220) : '') . "\n";
+    $txt .= "</datos>";
+    return ia_pedir($pdo, 'relacionadas', ['user' => $txt, 'candidatas' => array_keys($cand)], 'story', $sid);
+}
+
+ia_handler('relacionadas', function (PDO $pdo, array $job, array $res): void {
+    $sid = (int)$job['ref_id'];
+    $cand = array_map('intval', (array)($job['input']['candidatas'] ?? []));
+    $min = (float)cfg('relacionadas_min', 0.5);
+    $seguras = (float)cfg('parecidas_vector_min', 0.75);
+    // lo de los vectores se sustituye, salvo lo casi seguro (misma noticia por vector), que no depende del modelo
+    $pdo->prepare("DELETE FROM story_related WHERE story_id = ? AND score < ?")->execute([$sid, $seguras]);
+    $pdo->prepare("DELETE FROM story_related WHERE related_id = ? AND score < ?")->execute([$sid, $seguras]);
+    $ins = $pdo->prepare("INSERT INTO story_related (story_id, related_id, score, note) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE score = GREATEST(score, VALUES(score)), note = VALUES(note)");
+    foreach ((array)($res['relacionadas'] ?? []) as $r) {
+        $id = (int)($r['id'] ?? 0); $sc = max(0.0, min(1.0, (float)($r['relacion'] ?? 0)));
+        if ($id <= 0 || $id === $sid || !in_array($id, $cand, true) || $sc < $min) continue;
+        $nota = mb_substr(trim((string)($r['nota'] ?? '')), 0, 160) ?: null;
+        $ins->execute([$sid, $id, $sc, $nota]);
+        $ins->execute([$id, $sid, $sc, $nota]);
+    }
+});

@@ -96,7 +96,7 @@ if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width
 if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h(t('en el radar, hacia %s', t(DDD_PORTADAS[portada_de($pdo, $s)]))) . "</div>";
 echo "</div></article>";
 
-// noticias relacionadas (tarea de IA «relacionadas», story_related, migra-173): las elige el modelo del PC entre las candidatas por texto completo
+// noticias relacionadas (story_related): las ponen los vectores al publicar (migra-175) y las afina la IA del PC con su nota (tarea «relacionadas», migra-177)
 if ($rel = story_relacionadas($pdo, $id)) {
     echo "<div class=\"related\"><b>" . t('Relacionadas') . "</b><ul>";
     foreach ($rel as $r) echo "<li><a href=\"/hilo/{$r['story_id']}\">" . h($r['title']) . "</a><small>" . ($r['source'] ? h($r['source']) . ' · ' : '') . h(hace($r['sent_date'])) . ($r['note'] ? ' · ' . h($r['note']) : '') . "</small></li>";
