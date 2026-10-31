@@ -71,6 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sid = (int)post('story_id');
         $jid = $sid > 0 ? relacionadas_pedir($pdo, $sid) : null;
         $out[] = $jid ? "Hilo #$sid encolado (trabajo #$jid): el worker lo resolverá en su siguiente pasada." : "No se ha encolado el hilo #$sid (¿tarea apagada, hilo inexistente o sin candidatas parecidas?).";
+    } elseif ($act === 'ia_relacionadas_lote') {
+        // pasar por la tarea «relacionadas» los ultimos N envios (los publicados antes de la tarea no han mirado hacia atras con el modelo)
+        $n = max(1, min(500, (int)post('n', '50')));
+        $q = $pdo->prepare("SELECT story_id FROM stories WHERE status IN ('nuevas','destacadas','archived') ORDER BY story_id DESC LIMIT $n"); $q->execute();
+        $enc = 0; $sin = 0;
+        foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $sid) { if (relacionadas_pedir($pdo, (int)$sid)) $enc++; else $sin++; }
+        $out[] = "Últimos $n envíos: $enc encolados para el modelo, $sin sin candidatas parecidas (o ya en cola). A unos segundos por hilo en el PC.";
     } elseif ($act === 'vec_probar') {
         // ¿que diria /enviar con este titular? (para calibrar parecidas_vector_min / relacionadas_vector_min)
         $tit = post('titular');
@@ -688,6 +695,7 @@ if ($tab === 'usuarios') {
         echo "</table>";
         echo "<p><form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"ia_reintentar\"><button class=\"btn sm\">Devolver a la cola los fallidos y sin resolver</button></form> "
            . "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"ia_relacionadas_hilo\">Relacionadas de un hilo por IA: #<input type=\"number\" name=\"story_id\" style=\"width:90px\"> <button class=\"btn sm\">encolar</button></form> "
+           . "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"ia_relacionadas_lote\">o los últimos <input type=\"number\" name=\"n\" value=\"50\" min=\"1\" max=\"500\" style=\"width:70px\"> envíos <button class=\"btn sm\">encolar</button></form> "
            . "<a class=\"btn sm\" href=\"/admin?t=ia&amp;k=nueva\">nueva tarea</a></p>";
         // vectores de titulares (lib/vectores.php, migra-175): servicio en el droplet, no en el PC; «¿es la misma noticia?» al enviar y relacionadas del hilo
         $ve = vec_estado();
