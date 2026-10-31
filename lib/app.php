@@ -230,7 +230,7 @@ function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = ''):
     register_shutdown_function(function () use ($pdo, $uid, $accion, $detalle, $extra, &$out, $ip) {
         $res = $out ? mb_strimwidth(implode(' | ', array_map('strval', (array)$out)), 0, 500, '…') : null;
         if ($extra !== '') $res = trim($extra . ($res !== null ? " | $res" : ''));
-        // migra-173: lo que haga falta para deshacer la acción, sellado con el estado en que quedó (mod_undo_seal)
+        // migra-176: lo que haga falta para deshacer la acción, sellado con el estado en que quedó (mod_undo_seal)
         $ops = mod_undo_seal($pdo, mod_undo_ops());
         $undo = $ops ? json_encode(['ops' => $ops], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) : null;
         try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip, undo_ops) VALUES (?,?,?,?,?,?)")->execute([$uid, mb_substr($accion, 0, 60), $detalle ?: null, $res, $ip, $undo]); }
@@ -240,7 +240,7 @@ function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = ''):
     });
 }
 
-/* ---- deshacer una acción del registro (migra-173, 30/10/2026) ----------------------------------------
+/* ---- deshacer una acción del registro (migra-176, 30/10/2026) ----------------------------------------
  * Cada manejador de /moderacion copia el estado de la fila ANTES de tocarla con mod_undo_row(); al terminar la petición,
  * mod_log_post() guarda esas operaciones inversas en mod_log.undo_ops, selladas con los valores que quedaron (mod_undo_seal).
  * mod_log_revert() las aplica al revés y solo si la fila sigue como la dejó la acción: si alguien la ha cambiado después,

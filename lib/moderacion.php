@@ -199,7 +199,7 @@ function mod_remove_hidden(PDO $pdo, string $type, int $id, int $by): void {
     }
 }
 
-/** Estado previo de todo lo que va a tocar mod_human() (migra-173), para poder deshacer la decisión. */
+/** Estado previo de todo lo que va a tocar mod_human() (migra-176), para poder deshacer la decisión. */
 function mod_undo_human(PDO $pdo, int $itemId): void {
     $q = $pdo->prepare("SELECT * FROM mod_queue WHERE item_id = ?"); $q->execute([$itemId]);
     if (!($it = $q->fetch())) return;
