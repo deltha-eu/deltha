@@ -1,6 +1,6 @@
 -- Deltha — esquema completo (MySQL 8, InnoDB, utf8mb4)
 -- Regenerado el 20/10/2026 a partir de la base real (scripts/regenerar-esquema.sh, mysqldump --no-data deltha): las tablas tal como estan
--- en produccion con las migraciones 001-167 aplicadas (ia_tasks, ia_jobs, story_related, story_vectors y sus claves de config: migra-173 y 175, añadidas a mano).
+-- en produccion con las migraciones 001-167 aplicadas (ia_tasks, ia_jobs, story_related, story_vectors y sus claves de config: migra-173, 175 y 177, añadidas a mano).
 --
 -- Uso (instalacion nueva; lo hacen install.sh y scripts/install-droplet.sh):
 --   mysql -e "CREATE DATABASE IF NOT EXISTS deltha CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
@@ -975,6 +975,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('ia_worker_seen',   '',   'Ultima conexion del worker generico de IA (lo escribe /api/ia.php)'),
 ('ia_keep_days',     '30', 'Dias que se conservan los trabajos terminados en ia_jobs (los borra el ciclo)'),
 ('relacionadas_max', '5',  'Relacionadas que se muestran en el hilo'),
+('relacionadas_min',      '0.5',  'Relacion minima (0-1) que da el modelo para guardar una noticia como relacionada en el hilo'),
+('relacionadas_cand_min', '0.40', 'Parecido minimo por vector (coseno) para ofrecerle una noticia al modelo como candidata a relacionada (hasta 12)'),
 ('vectores_on',            '1',                     '1 = se usan los vectores de titulares (servicio scripts/vectores en el droplet) para «¿es la misma noticia?» al enviar y las relacionadas del hilo; 0 = solo el filtro de palabras'),
 ('vectores_url',           'http://127.0.0.1:8090', 'Donde escucha el servicio de vectores (scripts/vectores/servidor.py)'),
 ('vectores_timeout_ms',    '300',                   'Milisegundos que se espera al servicio de vectores al enviar; pasados, se cae al filtro de palabras y el envio sigue'),

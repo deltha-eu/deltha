@@ -6,7 +6,8 @@
  * fastembed/ONNX, sin GPU) convierte un titular en un vector de 384 numeros en decenas de milisegundos. Al publicar o corregir
  * un envio se guarda su vector (story_vectors); en el paso 2 de /enviar se compara el titular nuevo con los de los ultimos
  * vectores_dias por coseno (milisegundos en PHP) y solo salen los que pasan de parecidas_vector_min. Lo mismo, con un umbral
- * mas bajo (relacionadas_vector_min), rellena story_related al publicar: la caja «Relacionadas» del hilo.
+ * mas bajo (relacionadas_vector_min), rellena story_related al publicar: la caja «Relacionadas» del hilo, que luego afina la IA del PC
+ * (tarea «relacionadas» de lib/ia.php, migra-177: decide entre las candidatas por vector cuales tratan de lo mismo y lo anota).
  *
  * Nada de esto espera: pedir el vector tiene un tope de vectores_timeout_ms (300) y, si el servicio no responde, se cae al
  * filtro de palabras (relacionadas_parecidas()) y, si tampoco, no sale nada. El envio nunca se retrasa ni se bloquea.
@@ -111,8 +112,24 @@ function story_relacionadas_calcular(PDO $pdo, int $sid, ?int $timeoutMs = null)
         $pdo->prepare("DELETE FROM story_related WHERE story_id = ?")->execute([$sid]);
         $ins = $pdo->prepare("INSERT INTO story_related (story_id, related_id, score, note) VALUES (?,?,?,NULL) ON DUPLICATE KEY UPDATE score = VALUES(score)");
         foreach ($vecinos as $r) { $sc = round(min(1.0, $r['sim']), 3); $ins->execute([$sid, $r['story_id'], $sc]); $ins->execute([$r['story_id'], $sid, $sc]); }
+        // y la IA del PC afina despues (migra-177): decide entre las candidatas por vector cuales tratan de lo mismo y lo anota
+        if (function_exists('relacionadas_pedir')) relacionadas_pedir($pdo, $sid, $v);
         return count($vecinos);
     } catch (Throwable $e) { return 0; }
+}
+
+/** Candidatas para la tarea de IA «relacionadas»: vecinos por vector desde relacionadas_cand_min (0,40), hasta 12; sin servicio, texto completo. [story_id => fila]. */
+function relacionadas_candidatas_vector(PDO $pdo, int $sid, ?array $v = null): array {
+    if ($v === null) {
+        try { $q = $pdo->prepare("SELECT vec FROM story_vectors WHERE story_id = ?"); $q->execute([$sid]); $b = $q->fetchColumn(); $v = $b ? vec_unpack((string)$b) : null; } catch (Throwable $e) { $v = null; }
+    }
+    if ($v) {
+        $out = [];
+        foreach (vec_vecinos($pdo, $v, (float)cfg('relacionadas_cand_min', 0.40), 12, $sid) as $r) $out[(int)$r['story_id']] = $r;
+        return $out;
+    }
+    $q = $pdo->prepare("SELECT story_id, title, content FROM stories WHERE story_id = ?"); $q->execute([$sid]);
+    return ($s = $q->fetch()) ? relacionadas_candidatas($pdo, $s, 12) : [];
 }
 
 /** Relleno por tandas (lo llama el ciclo): envios recientes sin vector. Devuelve cuantos ha hecho. */

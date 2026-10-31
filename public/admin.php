@@ -66,6 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sid = (int)post('story_id');
         $n = $sid > 0 ? story_relacionadas_calcular($pdo, $sid, 5000) : null;
         $out[] = $n !== null ? "Hilo #$sid: vector guardado, $n relacionadas." : "No se ha podido vectorizar el hilo #$sid (¿servicio de vectores parado, o hilo inexistente?).";
+    } elseif ($act === 'ia_relacionadas_hilo') {
+        // pasar un hilo por la tarea de IA «relacionadas» (lib/ia.php, migra-177): candidatas por vector, decide el modelo
+        $sid = (int)post('story_id');
+        $jid = $sid > 0 ? relacionadas_pedir($pdo, $sid) : null;
+        $out[] = $jid ? "Hilo #$sid encolado (trabajo #$jid): el worker lo resolverá en su siguiente pasada." : "No se ha encolado el hilo #$sid (¿tarea apagada, hilo inexistente o sin candidatas parecidas?).";
     } elseif ($act === 'vec_probar') {
         // ¿que diria /enviar con este titular? (para calibrar parecidas_vector_min / relacionadas_vector_min)
         $tit = post('titular');
@@ -682,12 +687,13 @@ if ($tab === 'usuarios') {
         }
         echo "</table>";
         echo "<p><form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"ia_reintentar\"><button class=\"btn sm\">Devolver a la cola los fallidos y sin resolver</button></form> "
+           . "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"ia_relacionadas_hilo\">Relacionadas de un hilo por IA: #<input type=\"number\" name=\"story_id\" style=\"width:90px\"> <button class=\"btn sm\">encolar</button></form> "
            . "<a class=\"btn sm\" href=\"/admin?t=ia&amp;k=nueva\">nueva tarea</a></p>";
         // vectores de titulares (lib/vectores.php, migra-175): servicio en el droplet, no en el PC; «¿es la misma noticia?» al enviar y relacionadas del hilo
         $ve = vec_estado();
         $nv = ['con' => 0, 'sin' => 0];
         try { $nv = $pdo->query("SELECT SUM(x.story_id IS NOT NULL) con, SUM(x.story_id IS NULL) sin FROM stories s LEFT JOIN story_vectors x ON x.story_id = s.story_id WHERE s.status IN ('nuevas','destacadas','archived') AND s.sent_date >= NOW() - INTERVAL " . max(1, (int)cfg('vectores_dias', 90)) . " DAY")->fetch() ?: $nv; } catch (Throwable $e) {}
-        echo "<h3>Vectores de titulares</h3><p class=\"meta\">No es el modelo del PC: es un servicio pequeño en el droplet (<code>scripts/vectores/</code>, <code>" . h((string)cfg('vectores_url', 'http://127.0.0.1:8090')) . "</code>) que convierte cada titular en un vector al momento. Con él se avisa en <code>/enviar</code> de que una noticia ya está (<code>parecidas_vector_min</code> = " . num_es(cfg('parecidas_vector_min', 0.75)) . ") y se rellenan las «Relacionadas» del hilo (<code>relacionadas_vector_min</code> = " . num_es(cfg('relacionadas_vector_min', 0.65)) . "). Si el servicio no responde en " . (int)cfg('vectores_timeout_ms', 300) . " ms, <code>/enviar</code> usa el filtro de palabras y sigue.<br>"
+        echo "<h3>Vectores de titulares</h3><p class=\"meta\">No es el modelo del PC: es un servicio pequeño en el droplet (<code>scripts/vectores/</code>, <code>" . h((string)cfg('vectores_url', 'http://127.0.0.1:8090')) . "</code>) que convierte cada titular en un vector al momento. Con él se avisa en <code>/enviar</code> de que una noticia ya está (<code>parecidas_vector_min</code> = " . num_es(cfg('parecidas_vector_min', 0.75)) . ") y se rellenan al instante las «Relacionadas» del hilo (<code>relacionadas_vector_min</code> = " . num_es(cfg('relacionadas_vector_min', 0.65)) . "), que luego afina la tarea de IA «relacionadas» (candidatas desde <code>relacionadas_cand_min</code> = " . num_es(cfg('relacionadas_cand_min', 0.40)) . "). Si el servicio no responde en " . (int)cfg('vectores_timeout_ms', 300) . " ms, <code>/enviar</code> usa el filtro de palabras y sigue.<br>"
            . "Servicio: <b>" . ($ve['ok'] ? "responde (" . h((string)($ve['model'] ?? '')) . ", " . (int)$ve['dim'] . " dimensiones, " . (int)$ve['ms'] . " ms)" : "no responde — " . h((string)$ve['error'])) . "</b> · envíos de los últimos " . (int)cfg('vectores_dias', 90) . " días con vector: <b>" . (int)$nv['con'] . "</b>, sin vector: <b>" . (int)$nv['sin'] . "</b> (los rellena el ciclo, 40 por pasada).</p>";
         echo "<p><form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"vec_probar\">Probar un titular: <input type=\"text\" name=\"titular\" style=\"width:360px\" placeholder=\"¿con qué se parecería?\"> <button class=\"btn sm\">comparar</button></form> "
            . "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"vec_hilo\">Recalcular un hilo: #<input type=\"number\" name=\"story_id\" style=\"width:90px\"> <button class=\"btn sm\">vectorizar</button></form></p>";
