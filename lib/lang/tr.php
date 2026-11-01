@@ -194,6 +194,7 @@ return [
 'La del sitio (%s)' => 'Sitenin varsayılanı (%s)',
 'La gente de %s y sus <a href="/comunidades"><b>comunidades</b></a>' => '%s kullanıcıları ve <a href="/comunidades"><b>toplulukları</b></a>',
 'La URL no es válida.' => 'URL geçerli değil.',
+'Esa dirección no es una web pública.' => 'Bu adres herkese açık bir web sitesi değil.',
 'Las dos contraseñas no coinciden.' => 'İki parola eşleşmiyor.',
 'llega a <b>portada</b>' => '<b>ön sayfaya</b> ulaştı',
 'Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.' => 'Sitede olup bitenler, sırasıyla (%s). Gönderen, yorum yazan veya oy veren kişi, %d dk sonrasına kadar konudaki Ghost takma adıyla, sonra kendi adıyla görünür.',

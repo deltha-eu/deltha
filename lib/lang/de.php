@@ -194,6 +194,7 @@ return [
 'La del sitio (%s)' => 'Die der Website (%s)',
 'La gente de %s y sus <a href="/comunidades"><b>comunidades</b></a>' => 'Die Leute von %s und ihre <a href="/comunidades"><b>Communities</b></a>',
 'La URL no es válida.' => 'Die URL ist ungültig.',
+'Esa dirección no es una web pública.' => 'Diese Adresse ist keine öffentliche Website.',
 'Las dos contraseñas no coinciden.' => 'Die beiden Passwörter stimmen nicht überein.',
 'llega a <b>portada</b>' => 'schafft es auf die <b>Titelseite</b>',
 'Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.' => 'Was auf der Website passiert, der Reihe nach (%s). Wer einreicht, kommentiert oder abstimmt, erscheint bis %d Min. danach mit seinem Ghost-Alias des Threads; dann mit seinem Namen.',

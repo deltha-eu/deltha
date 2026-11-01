@@ -327,7 +327,9 @@ function http_es_desafio(string $body): string {
 
 /** Peticion HTTP. 1) curl-impersonate como Chrome si existe; 2) curl de PHP con cascada navegador -> bot propio -> Twitterbot ->
  *  facebookexternalhit. Un cuerpo que es un desafio anti-bots (http_es_desafio) no vale como respuesta: se pasa al siguiente intento,
- *  porque muchos WAF solo retan a lo que parece un navegador y sirven el feed tal cual a un bot declarado (Irish Mirror, 29/10/2026). */
+ *  porque muchos WAF solo retan a lo que parece un navegador y sirven el feed tal cual a un bot declarado (Irish Mirror, 29/10/2026).
+ *  Las redirecciones se siguen a mano (http_seguir): cada destino se comprueba antes de pedirlo, para que un enlace de usuario
+ *  no pueda acabar en la red interna del servidor (01/11/2026). */
 function http_get(string $url, int $timeout, int $max = 3000000): ?string {
     $GLOBALS['ddd_http_last'] = [];
     if (!preg_match('#^https?://[^\s\'"]+$#i', $url)) { $GLOBALS['ddd_http_last'][] = 'URL no valida'; return null; }
@@ -338,18 +340,11 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
     };
 
     if ($bin = curl_impersonate_bin()) {
-        $cmd = escapeshellarg($bin) . ' -s -L --max-redirs 4 --max-time ' . ((int)$timeout + 3) . ' --max-filesize ' . (int)$max
-             . ' -H ' . escapeshellarg('Accept-Language: es-ES,es;q=0.9')
-             . ' -H ' . escapeshellarg('Accept: text/html,application/xhtml+xml,image/avif,image/webp,image/*,*/*;q=0.8')
-             . ' -w ' . escapeshellarg('\n%{http_code}') . ' ' . escapeshellarg($url) . ' 2>/dev/null';
-        $out = shell_exec($cmd);
-        if (is_string($out) && ($pos = strrpos($out, "\n")) !== false) {
-            $code = (int)substr($out, $pos + 1);
-            $body = substr($out, 0, $pos);
-            $des = $body !== '' ? http_es_desafio($body) : '';
-            $traza('curl-impersonate', $code, strlen($body), $des);
-            if ($code > 0 && $code < 400 && $body !== '' && $des === '') return $body;
-        } else $traza('curl-impersonate', 0, 0, 'sin salida');
+        $r = http_seguir($url, $bin, '', $timeout, $max);
+        $des = $r['body'] !== '' ? http_es_desafio($r['body']) : '';
+        $traza('curl-impersonate', $r['code'], strlen($r['body']), $r['err'] !== '' ? $r['err'] : $des);
+        if ($r['code'] > 0 && $r['code'] < 400 && $r['body'] !== '' && $des === '') return $r['body'];
+        if (str_starts_with($r['err'], 'direccion no permitida')) return null;   // no insistir con otros agentes
         // si falla, seguimos con el curl normal
     }
 
@@ -360,33 +355,87 @@ function http_get(string $url, int $timeout, int $max = 3000000): ?string {
         'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
     ];
     foreach ($agents as $ua) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 4,
-            CURLOPT_CONNECTTIMEOUT => $timeout,
-            CURLOPT_TIMEOUT        => $timeout + 3,
-            CURLOPT_USERAGENT      => $ua,
-            CURLOPT_HTTPHEADER     => ['Accept: text/html,application/xhtml+xml,image/avif,image/webp,image/*,*/*;q=0.8',
-                                       'Accept-Language: es-ES,es;q=0.9', 'Cache-Control: no-cache'],
-            CURLOPT_ENCODING       => '',
-            CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-            CURLOPT_REDIR_PROTOCOLS=> CURLPROTO_HTTP | CURLPROTO_HTTPS,
-            CURLOPT_NOPROGRESS     => false,
-            CURLOPT_PROGRESSFUNCTION => function ($ch, $dlTotal, $dl) use ($max) { return $dl > $max ? 1 : 0; },
-        ]);
-        $data = curl_exec($ch);
-        $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-        $err  = curl_errno($ch) ? curl_error($ch) : '';
-        curl_close($ch);
-        $des = is_string($data) && $data !== '' ? http_es_desafio($data) : '';
-        $traza('curl ' . (str_starts_with($ua, 'Mozilla/5.0 (compatible; Deltha') ? 'Deltha' : explode('/', $ua)[0]), $code, is_string($data) ? strlen($data) : 0, $err !== '' ? $err : $des);
-        if ($data !== false && $code > 0 && $code < 400 && strlen($data) > 0 && $des === '') return $data;
+        $r = http_seguir($url, null, $ua, $timeout, $max);
+        $des = $r['body'] !== '' ? http_es_desafio($r['body']) : '';
+        $traza('curl ' . (str_starts_with($ua, 'Mozilla/5.0 (compatible; Deltha') ? 'Deltha' : explode('/', $ua)[0]), $r['code'], strlen($r['body']), $r['err'] !== '' ? $r['err'] : $des);
+        if ($r['code'] > 0 && $r['code'] < 400 && $r['body'] !== '' && $des === '') return $r['body'];
+        if (str_starts_with($r['err'], 'direccion no permitida')) return null;   // red interna: no se pide nada más
         if ($des !== '') continue;   // desafio anti-bots (200/202/403...): probar con el siguiente agente
-        if ($code !== 403 && $code !== 429 && $code !== 503 && $code !== 0) return null; // 404 etc: no reintentar
+        if ($r['code'] !== 403 && $r['code'] !== 429 && $r['code'] !== 503 && $r['code'] !== 0) return null; // 404 etc: no reintentar
     }
     return null;
+}
+
+/** Sigue hasta 4 redirecciones comprobando cada destino. Devuelve ['code','body','err'] del ultimo salto. */
+function http_seguir(string $url, ?string $bin, string $ua, int $timeout, int $max): array {
+    for ($i = 0; $i < 5; $i++) {
+        if (!url_publica_ok($url)) return ['code' => 0, 'body' => '', 'err' => 'direccion no permitida (red interna o puerto no habitual)'];
+        $r = http_salto($url, $bin, $ua, $timeout, $max);
+        if ($r['code'] >= 300 && $r['code'] < 400 && $r['loc'] !== '') { $url = http_absoluta($r['loc'], $url); continue; }
+        return ['code' => $r['code'], 'body' => $r['body'], 'err' => $r['err']];
+    }
+    return ['code' => 0, 'body' => '', 'err' => 'demasiadas redirecciones'];
+}
+
+/** Una sola peticion, sin seguir redirecciones. La conexion va clavada a la IP ya comprobada (CURLOPT_RESOLVE / --resolve),
+ *  asi que entre la comprobacion y la conexion el DNS no puede devolver otra cosa (rebinding).
+ *  $bin: curl-impersonate, o null para el curl de PHP. */
+function http_salto(string $url, ?string $bin, string $ua, int $timeout, int $max): array {
+    $r = ['code' => 0, 'body' => '', 'loc' => '', 'err' => ''];
+    $resolve = http_resolve_seguro($url);
+    if ($bin !== null) {
+        if (!$resolve) return $r + ['err' => 'direccion no permitida (sin IP publica)'];
+        $cmd = escapeshellarg($bin) . ' -s --max-time ' . ((int)$timeout + 3) . ' --max-filesize ' . (int)$max
+             . ' --resolve ' . escapeshellarg($resolve[0])
+             . ' -H ' . escapeshellarg('Accept-Language: es-ES,es;q=0.9')
+             . ' -H ' . escapeshellarg('Accept: text/html,application/xhtml+xml,image/avif,image/webp,image/*,*/*;q=0.8')
+             . ' -w ' . escapeshellarg("\n%{http_code}\n%{redirect_url}") . ' ' . escapeshellarg($url) . ' 2>/dev/null';
+        $out = (string)shell_exec($cmd);
+        $p2 = strrpos($out, "\n");
+        if ($p2 === false) return $r + ['err' => 'sin salida'];
+        $r['loc'] = trim(substr($out, $p2 + 1));
+        $rest = substr($out, 0, $p2);
+        $p1 = strrpos($rest, "\n");
+        $r['code'] = (int)substr($rest, $p1 === false ? 0 : $p1 + 1);
+        $r['body'] = $p1 === false ? '' : substr($rest, 0, $p1);
+        return $r;
+    }
+    $ch = curl_init($url);
+    $opts = [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,   // las sigue http_seguir(), comprobando cada salto
+        CURLOPT_CONNECTTIMEOUT => $timeout,
+        CURLOPT_TIMEOUT        => $timeout + 3,
+        CURLOPT_USERAGENT      => $ua,
+        CURLOPT_HTTPHEADER     => ['Accept: text/html,application/xhtml+xml,image/avif,image/webp,image/*,*/*;q=0.8',
+                                   'Accept-Language: es-ES,es;q=0.9', 'Cache-Control: no-cache'],
+        CURLOPT_ENCODING       => '',
+        CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+        CURLOPT_REDIR_PROTOCOLS=> CURLPROTO_HTTP | CURLPROTO_HTTPS,
+        CURLOPT_NOPROGRESS     => false,
+        CURLOPT_PROGRESSFUNCTION => function ($ch, $dlTotal, $dl) use ($max) { return $dl > $max ? 1 : 0; },
+    ];
+    if ($resolve) $opts[CURLOPT_RESOLVE] = $resolve;
+    curl_setopt_array($ch, $opts);
+    $data = curl_exec($ch);
+    $r['code'] = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $r['loc']  = (string)curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+    $r['err']  = curl_errno($ch) ? curl_error($ch) : '';
+    curl_close($ch);
+    $r['body'] = is_string($data) ? $data : '';
+    return $r;
+}
+
+/** Location relativa -> absoluta (para seguir las redirecciones a mano). */
+function http_absoluta(string $loc, string $base): string {
+    $loc = trim(html_entity_decode($loc, ENT_QUOTES));
+    if (preg_match('#^https?://#i', $loc)) return $loc;
+    $p = parse_url($base);
+    $sch = $p['scheme'] ?? 'https'; $host = $p['host'] ?? '';
+    if (str_starts_with($loc, '//')) return "$sch:$loc";
+    if (str_starts_with($loc, '/')) return "$sch://$host$loc";
+    $dir = preg_replace('#/[^/?]*$#', '/', (string)($p['path'] ?? '/')) ?: '/';
+    return "$sch://$host" . $dir . $loc;
 }
 
 /** Tope de bytes al leer el HTML de una noticia. Antes 400 KB fijos: las paginas grandes (medios con mucho JSON

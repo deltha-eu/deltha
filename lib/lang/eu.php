@@ -194,6 +194,7 @@ return [
 'La del sitio (%s)' => 'Gunearena (%s)',
 'La gente de %s y sus <a href="/comunidades"><b>comunidades</b></a>' => 'Jendea (%s) eta bere <a href="/comunidades"><b>komunitateak</b></a>',
 'La URL no es válida.' => 'URLa ez da baliozkoa.',
+'Esa dirección no es una web pública.' => 'Helbide hori ez da web publiko bat.',
 'Las dos contraseñas no coinciden.' => 'Bi pasahitzak ez datoz bat.',
 'llega a <b>portada</b>' => '<b>azalera</b> iritsi da',
 'Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.' => 'Gunean gertatzen dena, ordenan (%s). Bidali, iruzkindu edo bozkatzen duena hariko Ghost ezizenarekin agertzen da %d min geroago arte; gero bere izenarekin.',

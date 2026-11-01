@@ -28,18 +28,10 @@ function fprop_pendientes(PDO $pdo): int {
     return $n;
 }
 
-/** URL publica http(s) en los puertos normales y que no apunte a la red interna del servidor (el servidor la va a descargar). */
+/** URL publica http(s) en los puertos normales y que no apunte a la red interna del servidor (el servidor la va a descargar).
+ *  Ahora es el mismo guardián que usa http_get() (url_publica_ok, lib/app.php): una sola definición de «qué es una web pública». */
 function fprop_url_ok(string $url): bool {
-    if (!preg_match('#^https?://[^\s\'"<>]+$#i', $url)) return false;
-    $p = parse_url($url);
-    if (!$p || empty($p['host']) || isset($p['user']) || isset($p['pass'])) return false;
-    if (isset($p['port']) && !in_array((int)$p['port'], [80, 443], true)) return false;
-    $host = strtolower($p['host']);
-    if ($host === 'localhost' || !preg_match('/\.[a-z]{2,}$/', $host)) return false;
-    $ips = @gethostbynamel($host) ?: [];
-    if (!$ips) return false;
-    foreach ($ips as $ip) if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return false;
-    return true;
+    return url_publica_ok($url);
 }
 
 /** Enlace relativo de una pagina -> absoluto. */
