@@ -325,12 +325,27 @@ function mod_undo_seal(PDO $pdo, array $ops): ?array {
     }
     return $out;
 }
+/** ¿Puede este usuario deshacer esta fila del registro? (migra-176) Lo que hizo un administrador solo lo deshace un
+ *  administrador: moderar por aura no llega a las decisiones de quien sí lo es. Si el autor ya no existe, tampoco. */
+function mod_revert_puede(PDO $pdo, array $row, ?array $u = null): bool {
+    $u = $u ?? user();
+    if (!$u || !user_is_mod($u) || !empty($row['undone']) || empty($row['undo_ops'])) return false;
+    if (($u['level'] ?? '') === 'admin') return true;
+    try {
+        $q = $pdo->prepare("SELECT level FROM users WHERE user_id = ?"); $q->execute([(int)$row['user_id']]);
+        $autor = $q->fetchColumn();
+    } catch (Throwable $e) { return false; }
+    return $autor !== false && $autor !== null && $autor !== 'admin';
+}
 /** Deshace una acción apuntada en mod_log. null si fue bien; si no, el motivo (para enseñarlo tal cual). */
 function mod_log_revert(PDO $pdo, int $log_id, int $by): ?string {
     try { $q = $pdo->prepare("SELECT * FROM mod_log WHERE log_id = ?"); $q->execute([$log_id]); $row = $q->fetch(); }
-    catch (Throwable $e) { return 'falta la migración 173 (mod_log.undo_ops).'; }
+    catch (Throwable $e) { return 'falta la migración 176 (mod_log.undo_ops).'; }
     if (!$row) return 'esa acción no está en el registro.';
     if (!empty($row['undone'])) return 'esa acción ya se deshizo el ' . date('d/m/Y H:i', strtotime((string)$row['undone'])) . '.';
+    if (empty($row['undo_ops'])) return 'esa acción no se puede deshacer desde aquí.';
+    if (!user_is_mod(user())) return 'no tienes permiso.';
+    if (!mod_revert_puede($pdo, $row)) return 'esa acción la hizo un administrador: solo un administrador puede deshacerla.';
     $data = json_decode((string)($row['undo_ops'] ?? ''), true);
     $ops = is_array($data['ops'] ?? null) ? $data['ops'] : [];
     if (!$ops) return 'esa acción no se puede deshacer desde aquí.';

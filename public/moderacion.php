@@ -657,7 +657,7 @@ $rq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64));
 $ru = trim(mb_substr((string)($_GET['u'] ?? ''), 0, 32));
 $rp = max(1, (int)($_GET['p'] ?? 1)); $rper = 60;
 echo "<h3 id=\"registro\">Registro de moderación</h3>";
-echo "<p><small>Qué se ha hecho, cuándo y quién: /moderacion, /admin, la ficha de usuario, el chat, los destacados y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta la acción, los campos enviados (sin contraseñas) y el resultado que se vio en pantalla. <b>Deshacer</b> devuelve el dato a como estaba justo antes (texto, estado y reportes); si algo ha cambiado después, no se toca nada y se dice por qué. Las acciones sin vuelta atrás (borrar o releer una fuente, borrar un tema, avisar a quien propuso una fuente) salen sin botón.</small></p>";
+echo "<p><small>Qué se ha hecho, cuándo y quién: /moderacion, /admin, la ficha de usuario, el chat, los destacados y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta la acción, los campos enviados (sin contraseñas) y el resultado que se vio en pantalla. <b>Deshacer</b> devuelve el dato a como estaba justo antes (texto, estado y reportes); si algo ha cambiado después, no se toca nada y se dice por qué. Lo que hizo un administrador solo lo deshace un administrador. Las acciones sin vuelta atrás (borrar o releer una fuente, borrar un tema, avisar a quien propuso una fuente) salen sin botón.</small></p>";
 try {
     $quien = $pdo->query("SELECT DISTINCT u.login FROM mod_log l JOIN users u ON u.user_id = l.user_id ORDER BY u.login")->fetchAll(PDO::FETCH_COLUMN);
     echo "<form method=\"get\" action=\"/moderacion\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"registro\"><select name=\"u\"><option value=\"\">— todos —</option>";
@@ -673,14 +673,16 @@ try {
     if (!$rl) echo "<p class=\"end\">Nada registrado todavía.</p>";
     else {
         echo "<table class=\"modlog\"><tr><th>fecha y hora</th><th>quién</th><th>acción</th><th>detalle</th><th>resultado</th><th></th></tr>";
+        $yo = user();
         foreach ($rl as $r) {
-            $puede = empty($r['undone']) && !empty($r['undo_ops']);
+            $puede = mod_revert_puede($pdo, $r, $yo);
             echo "<tr><td style=\"white-space:nowrap\">" . h(date('d/m/Y H:i', strtotime($r['created']))) . "<br><small class=\"meta\">" . h(hace($r['created'])) . "</small></td>";
             echo "<td><a href=\"/u/" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></td>";
             echo "<td><code>" . h($r['action']) . "</code></td><td><small>" . h((string)$r['detail']) . "</small></td><td><small>" . h((string)$r['result']) . "</small></td>";
             echo "<td style=\"white-space:nowrap\">";
             if (!empty($r['undone'])) echo "<small class=\"meta\">deshecho" . ($r['undone_login'] ? " por <a href=\"/u/" . rawurlencode($r['undone_login']) . "\">" . h($r['undone_login']) . "</a>" : '') . " " . h(hace($r['undone'])) . "</small>";
             elseif ($puede) echo "<form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"registro_deshacer\"><input type=\"hidden\" name=\"t\" value=\"registro\"><input type=\"hidden\" name=\"log_id\" value=\"{$r['log_id']}\"><button class=\"btn sm\" title=\"devolver el dato a como estaba antes de esta acción\">Deshacer</button></form>";
+            elseif (!empty($r['undo_ops'])) echo "<small class=\"meta\" title=\"la hizo un administrador: solo un administrador puede deshacerla\">—</small>";
             else echo "<small class=\"meta\" title=\"no hay vuelta atrás\">—</small>";
             echo "</td></tr>";
         }
