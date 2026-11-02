@@ -503,31 +503,77 @@ function url_key(?string $url): string {
     if ($host === 'youtu.be') { $host = 'youtube.com'; $pares = ['v=' . trim($path, '/')]; $path = '/watch'; }   // youtu.be/ID = youtube.com/watch?v=ID
     return mb_substr($host . $path . ($pares ? '?' . implode('&', $pares) : ''), 0, 255);
 }
+/* ---- ¿se puede pedir esta URL desde el servidor? (SSRF, 01/11/2026) ---------------------------------------
+ * El servidor descarga lo que le mandan (un envío, una propuesta de fuente, la foto de una noticia), así que no debe poder
+ * llegar a su propia red ni a servicios internos: nada de localhost, 127.0.0.1, 169.254.169.254 (metadatos), 10.x, 172.16-31.x,
+ * 192.168.x, rangos reservados ni puertos que no sean 80/443. La IP se resuelve una vez y se clava en la conexión
+ * (CURLOPT_RESOLVE / --resolve) para que el DNS no devuelva otra cosa entre la comprobación y la petición, y las redirecciones
+ * se siguen a mano (http_seguir(), lib/imagen.php) comprobando cada salto. */
+/** IPs públicas de la URL (v4 y v6), o [] si no vale: esquema, puerto, credenciales, dominio real y ningún rango privado. */
+function url_ips_publicas(string $url): array {
+    if (!preg_match('#^https?://[^\s\'"<>]+$#i', $url)) return [];
+    $p = parse_url($url);
+    if (!$p || empty($p['host']) || isset($p['user']) || isset($p['pass'])) return [];
+    if (isset($p['port']) && !in_array((int)$p['port'], [80, 443], true)) return [];
+    $host = strtolower(trim((string)$p['host'], '[]'));
+    if ($host === '' || $host === 'localhost' || str_ends_with($host, '.localhost') || str_ends_with($host, '.local') || str_ends_with($host, '.internal')) return [];
+    if (filter_var($host, FILTER_VALIDATE_IP)) {   // IP escrita tal cual: no pasa por DNS
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) ? [$host] : [];
+    }
+    if (!preg_match('/\.[a-z]{2,}$/', $host)) return [];   // nombre sin dominio (una intranet, un host suelto)
+    $ips = @gethostbynamel($host) ?: [];
+    if (function_exists('dns_get_record')) foreach ((array)@dns_get_record($host, DNS_AAAA) as $r) if (!empty($r['ipv6'])) $ips[] = (string)$r['ipv6'];
+    $ips = array_values(array_unique($ips));
+    if (!$ips) return [];
+    foreach ($ips as $ip) if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return [];   // basta una privada: fuera
+    return $ips;
+}
+/** ¿Es una web pública a la que el servidor pueda pedir cosas? */
+function url_publica_ok(string $url): bool { return url_ips_publicas($url) !== []; }
+/** Para CURLOPT_RESOLVE / --resolve: clava la IP ya comprobada en el host de la URL (host:puerto:ip). [] si no hay ninguna. */
+function http_resolve_seguro(string $url): array {
+    $p = parse_url($url);
+    $host = strtolower(trim((string)($p['host'] ?? ''), '[]'));
+    if ($host === '') return [];
+    $port = (int)($p['port'] ?? (($p['scheme'] ?? '') === 'https' ? 443 : 80));
+    foreach (url_ips_publicas($url) as $ip) return ["$host:$port:" . (str_contains($ip, ':') ? "[$ip]" : $ip)];   // la IPv6, entre corchetes (curl >= 7.57)
+    return [];
+}
+
 /** Sigue redirecciones (acortadores) y, si la pagina declara canonical/og:url del mismo dominio registrable, devuelve ese enlace limpio.
- *  Si no, el enlace final de las redirecciones; si tampoco, el original. No sustituye por paginas de login/consentimiento. */
+ *  Si no, el enlace final de las redirecciones; si tampoco, el original. No sustituye por paginas de login/consentimiento.
+ *  No sale a la red hacia direcciones internas: un enlace de usuario no debe poder llegar a la red del servidor (01/11/2026, SSRF). */
 function url_resolver(string $url, ?string $html = null): string {
     $url = url_limpia($url);
     if ($url === '' || !preg_match('~^https?://~i', $url) || cfg('url_resolve', '1') !== '1') return $url;
     // Un video de YouTube ya tiene enlace canonico y no hace falta salir a la red a averiguarlo: sin ?t=, sin listas y, sobre todo,
     // sin que una redireccion a consent.youtube.com o a la pagina de «no eres un bot» sustituya al video (29/10/2026).
     if (($yt = youtube_video_id($url)) !== '') return 'https://www.youtube.com/watch?v=' . $yt;
+    if (!url_publica_ok($url)) return $url;   // red interna, puerto raro o host que no resuelve: no se pide nada
     $host = strtolower((string)parse_url($url, PHP_URL_HOST));
-    $final = $url;
+    $final = $url; $saltos = 0; $u = $url;
     if (function_exists('curl_init')) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [CURLOPT_NOBODY => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 6, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 4,
-            CURLOPT_RETURNTRANSFER => true, CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Deltha/1.0; +https://deltha.eu)', CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS]);
-        @curl_exec($ch);
-        $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); $eff = (string)curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-        curl_close($ch);
-        if ($eff !== '' && $eff !== $url && ($code === 200 || $code === 405 || $code === 403 || $code === 0 && $eff !== $url)   // HEAD: algunos sitios responden 405/403 pero ya han redirigido
-            && !preg_match('~/(login|signin|sign-in|acceso|consent|cookies?|captcha|challenge)~i', (string)parse_url($eff, PHP_URL_PATH))) $final = url_limpia($eff);
+        for ($i = 0; $i < 7; $i++) {   // las redirecciones se siguen a mano: cada destino se comprueba antes de pedirlo
+            if (!url_publica_ok($u)) break;
+            $ch = curl_init($u);
+            curl_setopt_array($ch, [CURLOPT_NOBODY => true, CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 4,
+                CURLOPT_RETURNTRANSFER => true, CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Deltha/1.0; +https://deltha.eu)', CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_RESOLVE => http_resolve_seguro($u)]);   // la IP comprobada, clavada: el DNS no puede cambiar de idea a mitad
+            @curl_exec($ch);
+            $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+            $loc  = (string)curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+            curl_close($ch);
+            if ($code < 300 || $code >= 400 || $loc === '') break;
+            $u = http_absoluta($loc, $u); $saltos++;
+        }
+        // HEAD: algunos sitios responden 405/403 y aun así han redirigido; lo que no sustituye nunca es una página de login o de consentimiento
+        if ($saltos > 0 && url_publica_ok($u) && !preg_match('~/(login|signin|sign-in|acceso|consent|cookies?|captcha|challenge)~i', (string)parse_url($u, PHP_URL_PATH))) $final = url_limpia($u);
     }
     // canonical de la propia pagina (misma raiz de dominio): quita ?m=1, /amp, versiones movil…
     if ($html !== null && $html !== '' && (preg_match('~<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\']~i', $html, $m) || preg_match('~<link[^>]+href=["\']([^"\']+)["\'][^>]+rel=["\']canonical["\']~i', $html, $m)
         || preg_match('~<meta[^>]+property=["\']og:url["\'][^>]+content=["\']([^"\']+)["\']~i', $html, $m))) {
         $can = html_entity_decode(trim($m[1]), ENT_QUOTES);
-        if (preg_match('~^https?://~i', $can)) {
+        if (preg_match('~^https?://~i', $can) && url_publica_ok($can)) {
             $raiz = fn(string $h) => implode('.', array_slice(explode('.', preg_replace('~^(www\d*|m|amp|mobile)\.~', '', strtolower($h))), -2));
             $hc = (string)parse_url($can, PHP_URL_HOST); $hf = (string)parse_url($final, PHP_URL_HOST);
             if ($hc !== '' && $raiz($hc) === $raiz($hf) && !preg_match('~/(login|signin|consent)~i', (string)parse_url($can, PHP_URL_PATH)) && strlen($can) < 600) $final = url_limpia($can);

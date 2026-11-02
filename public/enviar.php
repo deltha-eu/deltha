@@ -32,6 +32,8 @@ if (post_descartado()) $err = t('El envío era demasiado grande (la foto, segura
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $f['url'] = url_limpia(post('url'));   // sin utm ni codigos de seguimiento (lib/app.php)
     if ($f['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $f['url'])) { $err = t('La URL no es válida.'); $step = '1'; }
+    // el servidor es quien la descarga: solo webs públicas (nada de 127.0.0.1, 10.x, 169.254.169.254 ni puertos raros), ver url_publica_ok()
+    if (!$err && $f['url'] !== '' && !url_publica_ok($f['url'])) { $err = t('Esa dirección no es una web pública.'); $step = '1'; }
     if (!$err && $f['url'] !== '' && ($bloq = source_blocked($pdo, $f['url']))) { $err = t('Ese medio está bloqueado en este sitio (%s): no se admiten sus enlaces.', h($bloq)); $step = '1'; }
 
     if (!$err && $f['url'] !== '' && $step === '1') $f['url'] = url_resolver($f['url']);   // acortadores y redirecciones (migra-168): se envia el enlace final
