@@ -45,7 +45,7 @@ foreach ($items as $s) {
     $url = (string)($s['url'] ?: $hilo);
     $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
     $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
-    $lead = $s['content'] ? mb_strimwidth($s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'], 0, 400, '…') : '';
+    $lead = $s['content'] ? mb_strimwidth(md_plano((string)$s['content']), 0, 400, '…') : '';
     $meta = ($s['source'] ? h((string)$s['source']) . ' · ' : '') . ((int)$s['votes_pos'] - (int)$s['votes_neg']) . ' ' . h(t('votos')) . ' · '
           . '<a href="' . h($hilo) . '">' . (int)$s['comments'] . ' ' . h(t('comentarios')) . '</a>';
     $desc = ($lead !== '' ? '<p>' . h($lead) . '</p>' : '') . '<p>' . $meta . '</p>';

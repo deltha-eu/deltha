@@ -929,4 +929,6 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '¿Es la misma noticia?' => 'És la mateixa notícia?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Aquestes ja estan enviades i s\'hi assemblen. Si és la mateixa, vota la que ja hi ha en lloc d\'enviar-la una altra vegada.',
 'ver y votar' => 'veure i votar',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marques: <code>**negreta**</code> · <code>*cursiva*</code> · <code>[text](https://enllaç)</code>.',
+'copiar el enlace a este comentario' => 'copiar l\'enllaç a aquest comentari',
 ];

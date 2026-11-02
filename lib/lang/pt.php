@@ -966,4 +966,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '¿Es la misma noticia?' => 'É a mesma notícia?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Estas já estão enviadas e parecem-se. Se for a mesma, vota na que já existe em vez de a enviar outra vez.',
 'ver y votar' => 'ver e votar',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marcas: <code>**negrito**</code> · <code>*itálico*</code> · <code>[texto](https://ligação)</code>.',
+'copiar el enlace a este comentario' => 'copiar a ligação para este comentário',
 ];

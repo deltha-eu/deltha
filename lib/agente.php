@@ -224,7 +224,7 @@ function agent_reply_lease(PDO $pdo, array $a, int $n): array {
     $items = [];
     foreach ($st->fetchAll() as $s) {
         $items[] = ['agent' => $a['login'], 'story_id' => (int)$s['story_id'], 'kind' => $s['content_type'], 'title' => $s['title'], 'url' => $s['url'], 'source' => $s['source'],
-                    'lead' => $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'],
+                    'lead' => md_plano((string)$s['content']),
                     'topic' => $s['topic'], 'author' => $s['author'] ?: '', 'sent' => $s['sent_date'], 'status' => $s['status'],
                     'comments' => agent_thread_comments($pdo, (int)$s['story_id'], $uid), 'reply_to' => (int)$s['comment_id'], 'own' => (int)$s['parent_id']];
     }
@@ -263,7 +263,7 @@ function agent_lease(PDO $pdo, array $a, int $n): array {
                        ON DUPLICATE KEY UPDATE result = 'leased', leased_until = VALUES(leased_until)")->execute([$uid, $s['story_id']]);
         $comments = agent_thread_comments($pdo, (int)$s['story_id'], $uid);
         $items[] = ['agent' => $a['login'], 'story_id' => (int)$s['story_id'], 'kind' => $s['content_type'], 'title' => $s['title'], 'url' => $s['url'], 'source' => $s['source'],
-                    'lead' => $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'],
+                    'lead' => md_plano((string)$s['content']),
                     'topic' => $s['topic'], 'author' => $s['author'] ?: '', 'sent' => $s['sent_date'], 'status' => $s['status'], 'comments' => $comments];
     }
     return $items;

@@ -930,4 +930,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '¿Es la misma noticia?' => 'Ist das dieselbe Nachricht?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Diese sind schon eingereicht und ähneln ihr. Wenn es dieselbe ist, stimme für die vorhandene, statt sie noch einmal einzureichen.',
 'ver y votar' => 'ansehen und abstimmen',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Auszeichnungen: <code>**fett**</code> · <code>*kursiv*</code> · <code>[Text](https://link)</code>.',
+'copiar el enlace a este comentario' => 'Link zu diesem Kommentar kopieren',
 ];

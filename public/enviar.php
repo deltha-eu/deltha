@@ -169,7 +169,7 @@ if ($step === '1') {
         echo "</ul></div>";
     }
     echo "" . t('<label>Titular</label>') . "<input type=\"text\" name=\"title\" maxlength=\"200\" required value=\"" . h($f['title']) . "\">";
-    echo "" . t('<label>Entradilla</label>') . "<textarea name=\"content\" maxlength=\"2000\">" . h($f['content']) . "</textarea>";
+    echo "" . t('<label>Entradilla</label>') . "<textarea name=\"content\" maxlength=\"2000\">" . h($f['content']) . "</textarea>" . md_ayuda(true);   // **negrita**, *cursiva*, [texto](url) (02/11/2026)
     echo "" . t('<label>Tema</label>') . "<select name=\"topic\">";
     foreach ($topics as $t) {
         $sel = ((int)$f['topic'] === (int)$t['topic_id']) ? ' selected' : '';

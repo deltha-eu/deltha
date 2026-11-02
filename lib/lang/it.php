@@ -930,4 +930,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '¿Es la misma noticia?' => 'È la stessa notizia?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Queste sono già inviate e le somigliano. Se è la stessa, vota quella che c\'è già invece di inviarla di nuovo.',
 'ver y votar' => 'vedi e vota',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marcatori: <code>**grassetto**</code> · <code>*corsivo*</code> · <code>[testo](https://link)</code>.',
+'copiar el enlace a este comentario' => 'copia il link a questo commento',
 ];

@@ -75,7 +75,7 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 
 robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por su autor; lo demas, noindex
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
-page_header(t('Hilo'), $tab, og_tags($s['title'], $s['content_type'] === 'article' ? md_plano((string)$s['content']) : (string)$s['content'], $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo/' . $id)), $s['title']);
+page_header(t('Hilo'), $tab, og_tags($s['title'], md_plano((string)$s['content']), $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo/' . $id)), $s['title']);
 echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b>" . mod_real(['login' => $s['login'], 'user_id' => $s['user_id']], $rev) . "<span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . lang_tag($s) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
@@ -88,7 +88,7 @@ if ($s['content_type'] === 'article') {
     // cada parrafo con su aire (.para): la separacion la da el CSS, no los <br>
     echo md_articulo((string)$s['content']);   // **negrita** *cursiva* > cita [enlace](url), parrafo a parrafo (.para)
 } else {
-    if ($s['content']) echo "<p class=\"lead\">" . saltos(h($s['content'])) . "</p>";
+    if ($s['content']) echo "<p class=\"lead\">" . saltos(md_inline(h($s['content']))) . "</p>";   // **negrita**, *cursiva* y [texto](url) tambien en la entradilla (02/11/2026)
     if (!foco()) media_block($s, 'media', $dest);
 }
 if ($s['url']) echo "<a class=\"source\" href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . icon('link') . h($s['source']) . "</a>";

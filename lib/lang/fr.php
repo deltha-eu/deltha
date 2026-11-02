@@ -983,4 +983,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 '¿Es la misma noticia?' => 'Est-ce la même actualité ?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Celles-ci sont déjà envoyées et s\'en rapprochent. Si c\'est la même, votez pour celle qui existe au lieu de la renvoyer.',
 'ver y votar' => 'voir et voter',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marques : <code>**gras**</code> · <code>*italique*</code> · <code>[texte](https://lien)</code>.',
+'copiar el enlace a este comentario' => 'copier le lien vers ce commentaire',
 ];
