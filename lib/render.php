@@ -91,7 +91,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     if (foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');   // sin distracciones: la foto va antes del titular para flotar a su derecha
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
-    if ($s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth($s['content_type'] === 'article' ? md_plano($s['content']) : $s['content'], 0, $mode === 'full' ? 240 : 140, '…')) . "</p>";   // tambien en el radar (compact), mas corto
+    if ($s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth(md_plano((string)$s['content']), 0, $mode === 'full' ? 240 : 140, '…')) . "</p>";   // tambien en el radar (compact), mas corto
     if (!foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');
     if ($s['status'] === 'destacadas' && $s['published_date']) {
         echo "<div class=\"life\" title=\"" . h(queda($s['published_date'])) . "\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
@@ -192,6 +192,7 @@ function comment_block(array $c, bool $has_next = false, ?array $parent = null, 
     $acts = [];
     if ($can_reply && !$del) $acts[] = "<a href=\"/hilo/{$c['story_id']}?" . (($hv = (string)($GLOBALS['DDD_HILO_V'] ?? '')) !== '' ? "v=$hv&amp;" : '') . "r={$c['comment_id']}#responder\">" . icon('reply') . "<span>" . t('Responder') . "</span></a>";
     if (!$del && !is_mod() && can_edit_own_comment($c)) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario?id={$c['comment_id']}\" title=\"" . t('puedes corregirlo durante %d min', (int)cfg('comment_edit_minutes', 10)) . "\">" . t('editar') . "</a>";
+    if (!$del) $acts[] = "<a class=\"share\" href=\"" . h(abs_url("/hilo/{$c['story_id']}#c{$c['comment_id']}")) . "\" data-share data-copied=\"" . h(t('enlace copiado')) . "\" title=\"" . h(t('copiar el enlace a este comentario')) . "\">" . icon('share') . "<span>" . t('compartir') . "</span></a>";   // enlace directo al comentario (02/11/2026): con JS copia o abre el menu nativo
     if (!$del) $acts[] = "<a class=\"replink\" href=\"/reportar?id={$c['comment_id']}\" title=\"" . t('avisar a los moderadores') . "\">" . t('reportar') . "</a>";
     if (!$del && ($gl = ghost_link((int)($c['user_id'] ?? 0), $c['login'] ?? null, shown($c, $revealed))) !== '') $acts[] = $gl;   // solo con el nombre ya revelado
     if (is_mod() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-comentario?id={$c['comment_id']}\">" . t('editar · eliminar') . "</a>";

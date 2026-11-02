@@ -930,4 +930,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '¿Es la misma noticia?' => 'Albiste bera da?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Hauek bidalita daude jada eta antzekoak dira. Bera bada, bozkatu dagoena berriro bidali beharrean.',
 'ver y votar' => 'ikusi eta bozkatu',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Markak: <code>**lodia**</code> · <code>*etzana*</code> · <code>[testua](https://esteka)</code>.',
+'copiar el enlace a este comentario' => 'iruzkin honetarako esteka kopiatu',
 ];

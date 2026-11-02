@@ -951,4 +951,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '¿Es la misma noticia?' => 'Bu aynı haber mi?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Bunlar zaten gönderilmiş ve benziyor. Aynıysa, yeniden göndermek yerine mevcut olana oy ver.',
 'ver y votar' => 'gör ve oy ver',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'İşaretler: <code>**kalın**</code> · <code>*italik*</code> · <code>[metin](https://bağlantı)</code>.',
+'copiar el enlace a este comentario' => 'bu yorumun bağlantısını kopyala',
 ];

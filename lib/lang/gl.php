@@ -930,4 +930,6 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 '¿Es la misma noticia?' => 'É a mesma noticia?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'Estas xa están enviadas e parécense. Se é a mesma, vota a que xa está en vez de enviala outra vez.',
 'ver y votar' => 'ver e votar',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marcas: <code>**negra**</code> · <code>*cursiva*</code> · <code>[texto](https://ligazón)</code>.',
+'copiar el enlace a este comentario' => 'copiar a ligazón a este comentario',
 ];

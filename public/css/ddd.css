@@ -171,6 +171,8 @@ form.vote button.on .i { stroke-width: 3; }
 span.vote { display: inline-flex; gap: 22px; }
 .actions .share { margin-left: auto; font-size: 13px; }
 .actions .share.copied { color: var(--accent); }
+.reply .actions .share { margin-left: 0; }   /* en un comentario va en fila con el resto; el de la tarjeta sigue a la derecha */
+.post.reply:target { background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }   /* comentario enlazado (/hilo/ID#cID): resaltado como en el chat */
 .hilo .stats .share { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
 .hilo .stats .share .i { width: 18px; height: 18px; }
 .hilo .stats .share.copied { color: var(--accent); }

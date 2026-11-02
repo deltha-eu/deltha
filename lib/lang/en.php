@@ -985,4 +985,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '¿Es la misma noticia?' => 'Is this the same story?',
 'Estas ya están enviadas y se le parecen. Si es la misma, vota la que ya está en vez de enviarla otra vez.' => 'These are already submitted and look alike. If it is the same one, vote for the existing one instead of submitting it again.',
 'ver y votar' => 'view and vote',
+'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marks: <code>**bold**</code> · <code>*italic*</code> · <code>[text](https://link)</code>.',
+'copiar el enlace a este comentario' => 'copy the link to this comment',
 ];
