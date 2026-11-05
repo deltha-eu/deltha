@@ -986,4 +986,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'ver y votar' => 'voir et voter',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marques : <code>**gras**</code> · <code>*italique*</code> · <code>[texte](https://lien)</code>.',
 'copiar el enlace a este comentario' => 'copier le lien vers ce commentaire',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => 'Avec une aura supérieure à %s, on peut ajouter des envois à n’importe quelle communauté.',
 ];

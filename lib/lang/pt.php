@@ -969,4 +969,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'ver y votar' => 'ver e votar',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marcas: <code>**negrito**</code> · <code>*itálico*</code> · <code>[texto](https://ligação)</code>.',
 'copiar el enlace a este comentario' => 'copiar a ligação para este comentário',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => 'Com aura superior a %s podem adicionar-se envios a qualquer comunidade.',
 ];

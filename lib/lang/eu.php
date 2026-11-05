@@ -932,4 +932,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'ver y votar' => 'ikusi eta bozkatu',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Markak: <code>**lodia**</code> · <code>*etzana*</code> · <code>[testua](https://esteka)</code>.',
 'copiar el enlace a este comentario' => 'iruzkin honetarako esteka kopiatu',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => '%s baino aura handiagoarekin bidalketak edozein komunitatetara gehi daitezke.',
 ];

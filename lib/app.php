@@ -690,9 +690,18 @@ function comunidades_vista(PDO $pdo): string {
     return $v;
 }
 
+/** ¿Puede añadir envios a cualquier comunidad visible? Los mods y, sin moderar, quien tiene aura mayor que
+ *  config.comm_add_min_aura (migra-178, 05/11/2026: 20; 0 = solo dueños y mods). El permiso no depende de mod_aura. */
+function community_can_add_any(?array $u): bool {
+    if (!$u) return false;
+    if (user_is_mod($u)) return true;
+    $min = (float)cfg('comm_add_min_aura', 20);
+    return $min > 0 && (float)($u['aura'] ?? 0) > $min;
+}
+/** Comunidades a las que el usuario puede añadir envios: las suyas; los mods, el admin y quien supera comm_add_min_aura, todas las visibles. */
 function my_communities(PDO $pdo, ?array $u): array {
     if (!$u) return [];
-    if (is_mod()) return $pdo->query("SELECT community_id, name, slug FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
+    if (community_can_add_any($u)) return $pdo->query("SELECT community_id, name, slug FROM communities WHERE status = 'ok' ORDER BY name")->fetchAll();
     $st = $pdo->prepare("SELECT community_id, name, slug FROM communities WHERE owner_id = ? AND status = 'ok' ORDER BY name");
     $st->execute([$u['user_id']]);
     return $st->fetchAll();
@@ -702,6 +711,20 @@ function community_can_manage(PDO $pdo, ?array $u, int $community_id): bool {
     if (!$u) return false;
     if (is_mod()) return true;
     $st = $pdo->prepare("SELECT 1 FROM communities WHERE community_id = ? AND owner_id = ?"); $st->execute([$community_id, $u['user_id']]);
+    return (bool)$st->fetchColumn();
+}
+/** ¿Puede añadir envios a esa comunidad? Quien la gestiona y, por aura, cualquiera (community_can_add_any). */
+function community_can_add(PDO $pdo, ?array $u, int $community_id): bool {
+    return community_can_add_any($u) || community_can_manage($pdo, $u, $community_id);
+}
+/** ¿Puede quitar ese envio de esa comunidad? Quien la gestiona; ademas, quien lo añadio por aura puede deshacer lo suyo
+ *  (nunca la comunidad principal, que es la del autor: esa la cambian los mods). */
+function community_can_remove(PDO $pdo, ?array $u, int $story_id, int $community_id): bool {
+    if (!$u) return false;
+    if (community_can_manage($pdo, $u, $community_id)) return true;
+    $st = $pdo->prepare("SELECT 1 FROM story_communities sc JOIN stories s ON s.story_id = sc.story_id
+                          WHERE sc.story_id = ? AND sc.community_id = ? AND sc.added_by = ? AND (s.community_id IS NULL OR s.community_id <> sc.community_id)");
+    $st->execute([$story_id, $community_id, $u['user_id']]);
     return (bool)$st->fetchColumn();
 }
 /** Añade un envio a una comunidad (adopcion). Devuelve null si va bien o el mensaje de error. */

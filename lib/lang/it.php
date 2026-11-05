@@ -933,4 +933,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'ver y votar' => 'vedi e vota',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marcatori: <code>**grassetto**</code> · <code>*corsivo*</code> · <code>[testo](https://link)</code>.',
 'copiar el enlace a este comentario' => 'copia il link a questo commento',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => 'Con aura superiore a %s si possono aggiungere invii a qualsiasi comunità.',
 ];
