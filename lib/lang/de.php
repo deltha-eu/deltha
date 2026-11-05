@@ -933,4 +933,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'ver y votar' => 'ansehen und abstimmen',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Auszeichnungen: <code>**fett**</code> · <code>*kursiv*</code> · <code>[Text](https://link)</code>.',
 'copiar el enlace a este comentario' => 'Link zu diesem Kommentar kopieren',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => 'Mit einer Aura über %s kann man Beiträge zu jeder Community hinzufügen.',
 ];

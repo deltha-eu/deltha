@@ -124,6 +124,7 @@ if (is_mod()) {
 }
 // comunidades del envio: cualquier dueño de comunidad puede añadir aqui un envio publico (radar, portada o archivado)
 // a la suya y quitarlo; los moderadores arbitran (añaden y quitan en cualquiera). El autor no interviene.
+// Quien tiene aura mayor que comm_add_min_aura (migra-178) añade a cualquiera y puede quitar lo que el mismo añadio.
 if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
     $inComms = story_communities($pdo, $id);
     $mine = my_communities($pdo, $u);
@@ -131,13 +132,14 @@ if ($u && in_array($s['status'], ['nuevas', 'destacadas', 'archived'], true)) {
     $addable = array_values(array_filter($mine, fn($c) => !in_array((int)$c['community_id'], $inIds, true)));
     $max = max(1, (int)cfg('comm_max_per_story', 3));
     $canRemoveAny = false;
-    foreach ($inComms as $c) if (is_mod() || (int)$c['owner_id'] === (int)$u['user_id']) $canRemoveAny = true;
+    $puedeQuitar = fn($c) => is_mod() || (int)$c['owner_id'] === (int)$u['user_id'] || (!$c['main'] && (int)$c['added_by'] === (int)$u['user_id']);
+    foreach ($inComms as $c) if ($puedeQuitar($c)) $canRemoveAny = true;
     if ($canRemoveAny || ($addable && count($inComms) < $max)) {
         $f = '';
         foreach ($inComms as $c) {
             $f .= "<span class=\"chip\" style=\"--cc:" . h($c['color']) . "\"><i class=\"dot\"></i><a href=\"/comunidad/" . rawurlencode($c['slug']) . "\">" . h($c['name']) . "</a>";
             if ($c['main']) $f .= " <small>(" . t('principal') . ")</small>";
-            if (is_mod() || (int)$c['owner_id'] === (int)$u['user_id'])
+            if ($puedeQuitar($c))
                 $f .= "<form class=\"inl\" method=\"post\" action=\"/comunidad-envio\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"community\" value=\"{$c['community_id']}\"><input type=\"hidden\" name=\"act\" value=\"quitar\"><button class=\"x\" title=\"" . t('quitar de esta comunidad') . "\">×</button></form>";
             $f .= "</span>";
         }

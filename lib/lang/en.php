@@ -987,4 +987,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'ver y votar' => 'view and vote',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marks: <code>**bold**</code> · <code>*italic*</code> · <code>[text](https://link)</code>.',
 'copiar el enlace a este comentario' => 'copy the link to this comment',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => 'With aura above %s you can add posts to any community.',
 ];

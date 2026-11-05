@@ -932,4 +932,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'ver y votar' => 'veure i votar',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'Marques: <code>**negreta**</code> · <code>*cursiva*</code> · <code>[text](https://enllaç)</code>.',
 'copiar el enlace a este comentario' => 'copiar l\'enllaç a aquest comentari',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => 'Amb aura superior a %s es poden afegir enviaments a qualsevol comunitat.',
 ];

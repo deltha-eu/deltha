@@ -953,4 +953,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'ver y votar' => 'gör ve oy ver',
 'Marcas: <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://enlace)</code>.' => 'İşaretler: <code>**kalın**</code> · <code>*italik*</code> · <code>[metin](https://bağlantı)</code>.',
 'copiar el enlace a este comentario' => 'bu yorumun bağlantısını kopyala',
+'Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.' => 'Aurası %s değerinin üzerinde olanlar gönderileri herhangi bir topluluğa ekleyebilir.',
 ];
