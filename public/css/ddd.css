@@ -4136,7 +4136,9 @@ html[data-hacker] .rail details.rail-dd.hacker { display: block; }   /* con el m
 @media (min-width: 2400px) {   /* 2400 y no 2600: un 4K al 150 % (lo recomendado por Windows) mide 2560 logicos (21/10/2026) */
   .rail details.rail-dd.hacker { display: block; }
   html[data-hacker] .cols { grid-template-columns: 260px 980px 720px; column-gap: 40px; }
-  html[data-hacker] .side { display: block; columns: 2; column-gap: 24px; column-fill: balance; padding-top: 16px; }
+  /* sin tope de alto ni scroll propio: con max-height, el multicolumna seguia creando columnas hacia la derecha (ocultas) y con mas
+     de ~6 cajas (migra-179) se perdian las ultimas. La columna deja de ser pegajosa y baja con la pagina (06/11/2026). */
+  html[data-hacker] .side { display: block; columns: 2; column-gap: 24px; column-fill: balance; padding-top: 16px; position: static; max-height: none; overflow: visible; }
   html[data-hacker] .side .mod, html[data-hacker] .side footer { break-inside: avoid; margin-bottom: 14px; display: block; }
   html[data-hacker] .side .mod:last-child { margin-bottom: 0; }
 }
