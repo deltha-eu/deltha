@@ -93,30 +93,78 @@ function rail_medios(): void {
 }
 
 /** Columna derecha. */
-/** Modulos de la columna derecha: clave => [nombre para admin, funcion]. El orden y cuales se ven los fija
- *  config.side_order (claves separadas por comas; lo que no este, no se pinta) desde admin -> Lateral. */
+/** Modulos de la columna derecha: clave => [nombre para admin y para /mi-columna, funcion]. El orden y cuales se ven los fija
+ *  config.side_order (claves separadas por comas; lo que no este, no se pinta) desde admin -> Lateral; y, desde migra-179, cada
+ *  usuario con aura suficiente (side_user_aura) guarda los suyos en users.side_order (/mi-columna). */
 function side_modules(): array {
     return ['ciclo'       => [t('Próximo ciclo'), 'side_ciclo'],
             'temas'       => [t('Temas'), 'side_temas'],
             'comunidades' => [t('En comunidades'), 'side_comunidades'],
             'votadas'     => [t('Las más votadas'), 'side_votadas'],
+            'usuarios'    => [t('Últimas de usuarios'), 'side_usuarios'],
+            'radar'       => [t('Último en el radar'), 'side_radar'],
+            'medios_deltha' => [t('Medios en Deltha'), 'side_medios_deltha'],
+            'comentarios_foros'    => [t('Últimos comentarios en Foros'), 'side_comentarios_foros'],
+            'comentarios_noticias' => [t('Últimos comentarios en noticias'), 'side_comentarios_noticias'],
             'agregadores' => [t('Último en agregadores'), 'side_agregadores'],
             'medios'      => [t('Último en medios'), 'side_medios'],
             'substacks'   => [t('Último en substacks'), 'side_substacks'],
             'youtube'     => [t('Último en YouTube'), 'side_youtube']];
 }
+/** Que explica cada caja en /mi-columna (clave => frase). */
+function side_modules_descr(): array {
+    return ['ciclo'       => t('Cuándo es el próximo ciclo y qué envíos del radar llegan al δ mínimo.'),
+            'temas'       => t('Los temas de Deltha, con los envíos de esta semana.'),
+            'comunidades' => t('La última noticia de cada comunidad con actividad.'),
+            'votadas'     => t('Las más votadas de las últimas horas.'),
+            'usuarios'    => t('Los últimos envíos hechos por personas (sin agentes), en cualquier fase.'),
+            'radar'       => t('Lo último que ha entrado en el radar.'),
+            'medios_deltha' => t('Las últimas noticias ya en Deltha cuya fuente es un medio o substack del catálogo.'),
+            'comentarios_foros'    => t('Los últimos comentarios en los hilos de los foros.'),
+            'comentarios_noticias' => t('Los últimos comentarios en los hilos de noticias.'),
+            'agregadores' => t('Lo último publicado en los agregadores del catálogo, todavía fuera de Deltha.'),
+            'medios'      => t('Lo último publicado por los medios del catálogo, todavía fuera de Deltha: puedes enviarlo tú.'),
+            'substacks'   => t('Lo último publicado en los substacks del catálogo, todavía fuera de Deltha: puedes enviarlo tú.'),
+            'youtube'     => t('Los últimos vídeos de los canales del catálogo.')];
+}
 const DDD_SIDE_DEFAULT = 'ciclo,temas,comunidades,votadas,agregadores,medios,substacks,youtube';
-/** Orden en vigor (solo claves existentes). */
-function side_order(): array {
+/** Lista de claves validas (sin repetir) a partir de «a,b,c». */
+function side_parse(string $csv): array {
     $mods = side_modules(); $out = [];
-    foreach (explode(',', (string)cfg('side_order', DDD_SIDE_DEFAULT)) as $k) { $k = trim($k); if (isset($mods[$k]) && !in_array($k, $out, true)) $out[] = $k; }
+    foreach (explode(',', $csv) as $k) { $k = trim($k); if (isset($mods[$k]) && !in_array($k, $out, true)) $out[] = $k; }
     return $out;
 }
+/** Orden de admin (config.side_order; solo claves existentes). */
+function side_order(): array { return side_parse((string)cfg('side_order', DDD_SIDE_DEFAULT)); }
+/** ¿Puede esta cuenta elegir sus cajas? Aura >= side_user_aura (10); moderadores y admin, siempre; 0 = nadie salvo ellos. */
+function side_user_can(?array $u = null): bool {
+    $u = $u ?? user();
+    if (!$u) return false;
+    if (user_is_mod($u)) return true;
+    $min = (float)cfg('side_user_aura', 10);
+    return $min > 0 && (float)($u['aura'] ?? 0) >= $min;
+}
+/** Lo elegido por el usuario actual (users.side_order) o null si no ha elegido, no puede o falta la migra-179. */
+function side_user_order(): ?array {
+    static $c = false; global $pdo;
+    if ($c !== false) return $c;
+    $c = null; $u = user();
+    if ($u && side_user_can($u)) {
+        try {
+            $st = $pdo->prepare("SELECT side_order FROM users WHERE user_id = ?"); $st->execute([(int)$u['user_id']]);
+            $v = $st->fetchColumn();
+            if ($v !== null && $v !== false) $c = side_parse((string)$v);   // '' guardado = «ninguna caja», tambien vale
+        } catch (Throwable $e) { /* migra-179 sin aplicar */ }
+    }
+    return $c;
+}
+/** Orden en vigor para quien mira: el suyo si lo tiene; si no, el de admin. */
+function side_order_actual(): array { return side_user_order() ?? side_order(); }
 function side(): void {
     global $pdo;
     $mods = side_modules();
     echo "<aside class=\"side\">";
-    foreach (side_order() as $k) { try { ($mods[$k][1])($pdo); } catch (Throwable $e) {} }
+    foreach (side_order_actual() as $k) { try { ($mods[$k][1])($pdo); } catch (Throwable $e) {} }
     echo "</aside>";
 }
 
@@ -190,6 +238,79 @@ function side_comunidades(PDO $pdo): void {
     }
     echo "</section>";
 }
+
+/* ---- Cajas de lo que ya esta dentro de Deltha (migra-179, 06/11/2026): envios de personas, radar, medios ya enviados y ultimos
+ *      comentarios. Todas con lo mismo para todo el mundo (solo el filtro de idioma del perfil); lo personal es cual se ve y donde. ---- */
+/** Filas «titular + dato» de envios: un enlace por fila al hilo, con la fecha o la fuente en small. */
+function side_rows_envios(string $cls, string $title, array $rows, string $more = '', string $moreTxt = ''): void {
+    if (!$rows) return;
+    echo "<section class=\"mod $cls\"><h3>" . h($title) . ($more !== '' ? "<span><a href=\"" . h($more) . "\">" . h($moreTxt) . "</a></span>" : '') . "</h3>";
+    foreach ($rows as $r) {
+        echo "<a class=\"row\" href=\"/hilo/" . (int)$r['story_id'] . "\"><span class=\"t\">" . (!empty($r['pre']) ? "<b>" . h($r['pre']) . "</b> " : '') . h(mb_strimwidth((string)$r['title'], 0, 80, '…')) . "</span><small>" . h($r['sub']) . "</small></a>";
+    }
+    echo "</section>";
+}
+/** Ultimos envios de personas: cuentas registradas que no son agentes (tabla agents), enlaces y articulos, en cualquier fase visible. */
+function side_usuarios(PDO $pdo): void {
+    require_once __DIR__ . '/agente.php';
+    $noAg = agents_on() ? " AND s.user_id NOT IN (SELECT a.user_id FROM agents a)" : '';
+    $rows = $pdo->query("SELECT s.story_id, s.title, s.sent_date, s.status, s.content_type, s.comments
+                           FROM stories s WHERE s.user_id IS NOT NULL AND s.status IN ('nuevas','destacadas','archived')$noAg" . stories_mylang_sql() . foros_cerrados_sql() . "
+                          ORDER BY s.sent_date DESC LIMIT 6")->fetchAll();
+    foreach ($rows as &$r) $r['sub'] = hace($r['sent_date']) . ((int)$r['comments'] > 0 ? " · " . t('%d comentarios', (int)$r['comments']) : '');
+    unset($r);
+    side_rows_envios('usuarios', t('Últimas de usuarios'), $rows, '/nuevas', t('todas'));
+}
+/** Lo ultimo que ha entrado en el radar (status nuevas, enlaces): la cola de la que salen las portadas. */
+function side_radar(PDO $pdo): void {
+    $rows = $pdo->query("SELECT s.story_id, s.title, s.sent_date, s.source FROM stories s
+                          WHERE s.status = 'nuevas' AND s.content_type = 'link'" . stories_mylang_sql() . " ORDER BY s.sent_date DESC LIMIT 6")->fetchAll();
+    foreach ($rows as &$r) $r['sub'] = hace($r['sent_date']) . ($r['source'] ? " · " . $r['source'] : '');
+    unset($r);
+    side_rows_envios('radar', t('Último en el radar'), $rows, '/procesos', t('ver el radar entero'));
+}
+/** Noticias ya enviadas a Deltha cuya fuente es un medio o substack del catalogo (lo contrario de «Ultimo en medios», que son las
+ *  que faltan por enviar). stories.source es el dominio; se casa con el de sources.home (fuente_por_dominio). Una por fuente, hasta 6. */
+function side_medios_deltha(PDO $pdo): void {
+    require_once __DIR__ . '/fuentes.php';
+    if (!fuentes_on()) return;
+    $dom = [];
+    foreach (['medio', 'newsletter'] as $k) foreach (fuentes_visibles($pdo, $k) as $f) if (($d = (string)source_of((string)$f['home'])) !== '') $dom[$d] = $f['name'];
+    if (!$dom) return;
+    $st = $pdo->prepare("SELECT s.story_id, s.title, s.sent_date, s.source FROM stories s
+                          WHERE s.status IN ('nuevas','destacadas','archived') AND s.content_type = 'link' AND s.source IN (" . implode(',', array_fill(0, count($dom), '?')) . ")"
+                          . stories_mylang_sql() . " ORDER BY s.sent_date DESC LIMIT 40");
+    $st->execute(array_keys($dom));
+    $rows = []; $vistas = [];
+    foreach ($st->fetchAll() as $r) {
+        if (isset($vistas[$r['source']])) continue;
+        $vistas[$r['source']] = true;
+        $rows[] = $r + ['pre' => $dom[$r['source']], 'sub' => hace($r['sent_date'])];
+        if (count($rows) >= 6) break;
+    }
+    side_rows_envios('medios-deltha', t('Medios en Deltha'), $rows, '/fuentes', t('todos'));
+}
+/** Ultimos comentarios (los N ultimos a secas, aunque repitan hilo: decision de Ángel 06/11/2026), revelados (ghost_minutes),
+ *  en hilos visibles. $foros = true: hilos de foro (articulos con forum_id); false: hilos de noticias (enlaces). */
+function side_comentarios(PDO $pdo, bool $foros, string $cls, string $title): void {
+    $gm = (int)cfg('ghost_minutes', 30);
+    $w = $foros ? "s.content_type = 'article' AND s.forum_id IS NOT NULL" . foros_cerrados_sql() : "s.content_type = 'link'";
+    $rows = $pdo->query("SELECT c.comment_id, c.story_id, c.content, c.created, c.alias, c.user_id, u.login, s.title
+                           FROM comments c JOIN stories s ON s.story_id = c.story_id LEFT JOIN users u ON u.user_id = c.user_id
+                          WHERE c.status = 'ok' AND c.created <= NOW() - INTERVAL $gm MINUTE AND (c.deleted IS NULL OR c.deleted = 0)
+                            AND s.status IN ('nuevas','destacadas','archived') AND $w" . ghost_sql_not_in('c.user_id') . "
+                          ORDER BY c.created DESC LIMIT 6")->fetchAll();
+    if (!$rows) return;
+    echo "<section class=\"mod $cls\"><h3>" . h($title) . "</h3>";
+    foreach ($rows as $r) {
+        $quien = display_name($r, true);
+        $txt = trim(preg_replace(['/\s+/u', '/\*\*?([^*]+)\*\*?/u', '/\[([^\]]+)\]\([^)]*\)/u', '/(^|\s)>\s*/u'], [' ', '$1', '$1', '$1'], strip_tags((string)$r['content'])));   // sin las marcas del Markdown minimo
+        echo "<a class=\"row\" href=\"/hilo/" . (int)$r['story_id'] . "#c" . (int)$r['comment_id'] . "\"><span class=\"t\"><b>" . h($quien) . "</b> " . h(mb_strimwidth($txt, 0, 90, '…')) . "</span><small>" . h(mb_strimwidth((string)$r['title'], 0, 60, '…')) . " · " . h(hace($r['created'])) . "</small></a>";
+    }
+    echo "</section>";
+}
+function side_comentarios_foros(PDO $pdo): void { side_comentarios($pdo, true, 'comentarios foros', t('Últimos comentarios en Foros')); }
+function side_comentarios_noticias(PDO $pdo): void { side_comentarios($pdo, false, 'comentarios noticias', t('Últimos comentarios en noticias')); }
 
 /** Fuentes externas en la columna derecha: un modulo por grupo («Ultimo en agregadores», «Ultimo en medios», «Ultimo en substacks»)
  *  con las cinco ultimas noticias de portada de TODO el catalogo del grupo (no solo las elegidas por el usuario), sin repetir

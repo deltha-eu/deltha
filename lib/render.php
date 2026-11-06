@@ -303,6 +303,8 @@ function profile_tabs(string $on): void {
     $tabs = ['perfil' => ['/perfil', t('Mi perfil')], 'favoritos' => ['/favoritos', t('Favoritos')]];
     require_once __DIR__ . '/fuentes.php';
     if (fuentes_on() && fuentes_tipos($pdo)) $tabs['misfuentes'] = ['/mis-fuentes', t('Mis fuentes')];
+    require_once __DIR__ . '/lateral.php';
+    if (side_user_can()) $tabs['micolumna'] = ['/mi-columna', t('Mi columna')];   // cajas de la columna derecha (migra-179)
     echo "<nav class=\"sub\">";
     foreach ($tabs as $k => [$href, $label]) echo "<a href=\"$href\"" . ($k === $on ? ' class="on"' : '') . ">" . h($label) . "</a>";
     echo "</nav>";
