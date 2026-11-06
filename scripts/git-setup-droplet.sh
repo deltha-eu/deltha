@@ -17,7 +17,9 @@ while read old new ref; do
   [ "$ref" = "refs/heads/main" ] || { echo "rama $ref ignorada (solo se despliega main)"; continue; }
   echo "== codigo (git $(echo "$new" | cut -c1-7))"
   git --work-tree="$DIR" --git-dir="$REPO" checkout -f main
-  chown -R root:root "$DIR"; chown -R www-data:www-data "$DIR/public/media"
+  # «|| true»: si una miniatura de /media desaparece entre listarla y tocarla (cron), el chown falla y con set -e el hook moria
+  # sin pasar migraciones ni php -l (06/11/2026)
+  chown -R root:root "$DIR" || true; chown -R www-data:www-data "$DIR/public/media" || true
   bash "$DIR/scripts/desplegar.sh" --git
 done
 HOOK
