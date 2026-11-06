@@ -1,5 +1,5 @@
 <?php
-/** /mi-columna — pestaña «Mi columna» del perfil (migra-179, 06/11/2026): cada usuario con aura >= side_user_aura elige qué cajas
+/** /mi-columna — pestaña «Mi barra lateral» del perfil (migra-179, 06/11/2026): cada usuario con aura >= side_user_aura elige qué cajas
  *  de la columna derecha (escritorio) ve y en qué orden. Se guarda en users.side_order (claves separadas por comas; NULL = el orden
  *  de admin -> Lateral). Sin JS: casillas, botones ↑/↓ (cada uno guarda) y «Guardar»; con /app/columna.js, además arrastrar y soltar. */
 require __DIR__ . '/../lib/app.php';
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $puede) {
 }
 if (isset($_GET['ok'])) $ok = $_GET['ok'] === '2' ? t('Vuelves a ver la columna como la tiene Deltha.') : t('Columna guardada.');
 
-page_header(t('Mi columna'));
+page_header(t('Mi barra lateral'));
 echo "<div class=\"profile\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<div><h1>" . h($u['login']) . "</h1>";
 if ($u['bio']) echo "<p class=\"bio\">" . h($u['bio']) . "</p>";
 echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . " · <a href=\"/u/" . rawurlencode($u['login']) . "\">" . t('ver perfil público') . "</a> · <a href=\"/salir\">" . t('salir') . "</a></p></div></div>";
@@ -60,7 +60,7 @@ foreach ($lista as $k) {
     $i++;
     echo "<li draggable=\"true\" data-k=\"$k\"><input type=\"hidden\" name=\"w[]\" value=\"$k\">"
        . "<span class=\"grip\" aria-hidden=\"true\" title=\"" . h(t('arrastra para ordenar')) . "\">⋮⋮</span>"
-       . "<label><input type=\"checkbox\" name=\"on[$k]\" value=\"1\"" . (in_array($k, $sel, true) ? ' checked' : '') . "> <b>" . h($mods[$k][0]) . "</b><small>" . h($descr[$k] ?? '') . "</small></label>"
+       . "<label><input type=\"checkbox\" name=\"on[$k]\" value=\"1\"" . (in_array($k, $sel, true) ? ' checked' : '') . "> <span><b>" . h($mods[$k][0]) . "</b><small>" . h($descr[$k] ?? '') . "</small></span></label>"
        . "<span class=\"mv\"><button name=\"mv\" value=\"up:$k\" title=\"" . h(t('subir')) . "\"" . ($i === 1 ? ' disabled' : '') . ">" . icon('up') . "</button><button name=\"mv\" value=\"down:$k\" title=\"" . h(t('bajar')) . "\"" . ($i === $n ? ' disabled' : '') . ">" . icon('down') . "</button></span></li>";
 }
 echo "</ol>";

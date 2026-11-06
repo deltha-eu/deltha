@@ -989,7 +989,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Lo último publicado por los medios del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'O último publicado pelos meios do catálogo, ainda fora de Deltha: podes enviá-lo tu.',
 'Lo último publicado en los substacks del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'O último publicado nos substacks do catálogo, ainda fora de Deltha: podes enviá-lo tu.',
 'Los últimos vídeos de los canales del catálogo.' => 'Os últimos vídeos dos canais do catálogo.',
-'Mi columna' => 'A minha coluna',
+'Mi barra lateral' => 'A minha barra lateral',
 'Columna guardada.' => 'Coluna guardada.',
 'Vuelves a ver la columna como la tiene Deltha.' => 'Voltas a ver a coluna como a tem Deltha.',
 'Las cajas de la columna derecha (solo en pantallas anchas) enseñan lo mismo a todo el mundo; aquí eliges cuáles ves y en qué orden. Las que no marques, no salen.' => 'As caixas da coluna direita (só em ecrãs largos) mostram o mesmo a toda a gente; aqui escolhes quais vês e por que ordem. As que não marcares não aparecem.',

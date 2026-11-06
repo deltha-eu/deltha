@@ -4142,10 +4142,11 @@ form.plain.colform { gap: 6px; }
 .colsel li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px 8px 6px; border: 1px solid var(--line2); border-radius: 12px; background: var(--bg); }
 .colsel.ro { padding: 0 16px 8px; }
 .colsel.ro li { grid-template-columns: minmax(0, 1fr); padding: 8px 12px; }
-.colsel li b { display: block; font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--fg); }
+.colsel li b { display: block; font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--fg); line-height: 1.25; }
 .colsel li small { display: block; font-size: 12px; color: var(--muted); }
-.colsel label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; cursor: pointer; font-size: inherit; color: inherit; }
-.colsel label input { margin-top: 5px; padding: 0; }
+.colsel label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: inherit; color: inherit; text-align: left; margin: 0; }
+.colsel label input { flex: none; width: 18px; height: 18px; margin: 3px 0 0; padding: 0; accent-color: var(--accent); }
+.colsel label span { min-width: 0; }
 .colsel .grip { display: none; color: var(--muted); font-size: 16px; letter-spacing: -3px; padding: 0 2px; cursor: grab; user-select: none; }
 .colsel.dnd .grip { display: inline; }
 .colsel .mv { display: flex; gap: 2px; }

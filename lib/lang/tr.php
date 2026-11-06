@@ -973,7 +973,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Lo último publicado por los medios del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'Katalogdaki medyanın yayımladığı son içerikler, henüz Deltha dışında: sen gönderebilirsin.',
 'Lo último publicado en los substacks del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'Katalogdaki substacklerde yayımlanan son içerikler, henüz Deltha dışında: sen gönderebilirsin.',
 'Los últimos vídeos de los canales del catálogo.' => 'Katalogdaki kanalların son videoları.',
-'Mi columna' => 'Sütunum',
+'Mi barra lateral' => 'Kenar çubuğum',
 'Columna guardada.' => 'Sütun kaydedildi.',
 'Vuelves a ver la columna como la tiene Deltha.' => 'Sütunu yeniden Deltha\'nın düzeninde görüyorsun.',
 'Las cajas de la columna derecha (solo en pantallas anchas) enseñan lo mismo a todo el mundo; aquí eliges cuáles ves y en qué orden. Las que no marques, no salen.' => 'Sağ sütundaki kutular (yalnızca geniş ekranlarda) herkese aynı şeyi gösterir; burada hangilerini ve hangi sırada göreceğini seçersin. İşaretlemediklerin görünmez.',

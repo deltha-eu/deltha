@@ -953,7 +953,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Lo último publicado por los medios del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'Das Neueste aus den Medien des Katalogs, noch außerhalb von Deltha: du kannst es einreichen.',
 'Lo último publicado en los substacks del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'Das Neueste aus den Substacks des Katalogs, noch außerhalb von Deltha: du kannst es einreichen.',
 'Los últimos vídeos de los canales del catálogo.' => 'Die neuesten Videos der Kanäle des Katalogs.',
-'Mi columna' => 'Meine Spalte',
+'Mi barra lateral' => 'Meine Seitenleiste',
 'Columna guardada.' => 'Spalte gespeichert.',
 'Vuelves a ver la columna como la tiene Deltha.' => 'Du siehst die Spalte wieder so, wie Deltha sie hat.',
 'Las cajas de la columna derecha (solo en pantallas anchas) enseñan lo mismo a todo el mundo; aquí eliges cuáles ves y en qué orden. Las que no marques, no salen.' => 'Die Kästen der rechten Spalte (nur auf breiten Bildschirmen) zeigen allen dasselbe; hier wählst du, welche du siehst und in welcher Reihenfolge. Was du nicht ankreuzt, erscheint nicht.',

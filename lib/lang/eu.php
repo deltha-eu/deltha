@@ -952,7 +952,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Lo último publicado por los medios del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'Katalogoko hedabideek argitaratutako azkena, oraindik Delthatik kanpo: zuk bidal dezakezu.',
 'Lo último publicado en los substacks del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'Katalogoko substacketan argitaratutako azkena, oraindik Delthatik kanpo: zuk bidal dezakezu.',
 'Los últimos vídeos de los canales del catálogo.' => 'Katalogoko kanalen azken bideoak.',
-'Mi columna' => 'Nire zutabea',
+'Mi barra lateral' => 'Nire alboko barra',
 'Columna guardada.' => 'Zutabea gorde da.',
 'Vuelves a ver la columna como la tiene Deltha.' => 'Zutabea Delthak duen bezala ikusten duzu berriro.',
 'Las cajas de la columna derecha (solo en pantallas anchas) enseñan lo mismo a todo el mundo; aquí eliges cuáles ves y en qué orden. Las que no marques, no salen.' => 'Eskuineko zutabeko kutxek (pantaila zabaletan bakarrik) gauza bera erakusten diete guztiei; hemen aukeratzen duzu zein ikusi eta zein ordenatan. Markatzen ez dituzunak ez dira agertzen.',
