@@ -4135,3 +4135,27 @@ html[data-hacker] .rail details.rail-dd.hacker { display: block; }   /* con el m
   html[data-hacker] .side .mod, html[data-hacker] .side footer { break-inside: avoid; margin-bottom: 14px; display: block; }
   html[data-hacker] .side .mod:last-child { margin-bottom: 0; }
 }
+
+/* ---- /mi-columna: elegir y ordenar las cajas de la columna derecha (migra-179) ---- */
+form.plain.colform { gap: 6px; }
+.colsel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.colsel li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px 8px 6px; border: 1px solid var(--line2); border-radius: 12px; background: var(--bg); }
+.colsel.ro { padding: 0 16px 8px; }
+.colsel.ro li { grid-template-columns: minmax(0, 1fr); padding: 8px 12px; }
+.colsel li b { display: block; font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--fg); }
+.colsel li small { display: block; font-size: 12px; color: var(--muted); }
+.colsel label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; cursor: pointer; font-size: inherit; color: inherit; }
+.colsel label input { margin-top: 5px; padding: 0; }
+.colsel .grip { display: none; color: var(--muted); font-size: 16px; letter-spacing: -3px; padding: 0 2px; cursor: grab; user-select: none; }
+.colsel.dnd .grip { display: inline; }
+.colsel .mv { display: flex; gap: 2px; }
+form.plain .colsel .mv button { padding: 4px; border-radius: 8px; background: transparent; color: var(--muted); border: 1px solid var(--line2); line-height: 0; }
+form.plain .colsel .mv button:hover:not(:disabled) { color: var(--fg); background: var(--hover); }
+form.plain .colsel .mv button:disabled { opacity: .3; cursor: default; }
+.colsel .mv .i { width: 16px; height: 16px; }
+.colsel li.dragging { opacity: .4; }
+.colsel li.moved { background: var(--hover); }
+.colsel li:has(input[type="checkbox"]:not(:checked)) b { color: var(--muted); font-weight: 400; }
+form.plain .colbtns { display: flex; gap: 14px; align-items: center; margin: 6px 0 0; }
+form.plain .colbtns button.link { background: transparent; color: var(--muted); font-weight: 400; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
+[data-skin="retro"] .colsel li, [data-skin="manga"] .colsel li, [data-skin="punk"] .colsel li, [data-skin="popart"] .colsel li { border-radius: 0; }
