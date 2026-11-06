@@ -984,4 +984,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'bajar' => 'aşağı',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Görmek istediklerini işaretle ve sürükleyerek (veya oklarla) sırala. Sütun yalnızca 1100 px genişlikten itibaren görünür; mobilde hiçbir şey değişmez.',
 'Volver al orden de Deltha' => 'Deltha\'nın sırasına dön',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => '%d kutu işaretledin ve yalnızca ilk %d tanesi gösteriliyor: diğerleri, onları yukarı taşıyana veya başkalarını kaldırana kadar görünmez.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'En fazla %d kutu gösterilir, listedeki ilkler.',
 ];

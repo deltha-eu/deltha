@@ -964,4 +964,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'bajar' => 'giù',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Spunta quelli che vuoi vedere e ordinali trascinando (o con le frecce). La colonna compare solo da 1100 px di larghezza; sul cellulare non cambia nulla.',
 'Volver al orden de Deltha' => 'Torna all\'ordine di Deltha',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Hai spuntato %d riquadri e si mostrano solo i primi %d: gli altri non compaiono finché non li sposti in alto o ne togli altri.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Si mostrano al massimo %d riquadri, i primi della lista.',
 ];

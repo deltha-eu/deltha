@@ -941,7 +941,7 @@ if ($tab === 'usuarios') {
 } elseif ($tab === 'lateral') {
     require_once __DIR__ . '/../lib/lateral.php';
     $order = side_order(); $mods = side_modules();
-    echo "<h3>Columna derecha (escritorio)</h3><p><small>Cada módulo con su posición (se ordenan de menor a mayor) y si se ve. Un módulo sin datos (p. ej. sin comunidades con actividad) no se pinta aunque esté activo. Los tres agregadores/medios dependen de <code>sources_enabled</code>. Este es el orden <b>por defecto</b>: desde la migra-179 cada usuario con aura ≥ <code>side_user_aura</code> (Config) puede elegir y ordenar sus cajas en /mi-columna, y entonces manda lo suyo.</small></p>";
+    echo "<h3>Columna derecha (escritorio)</h3><p><small>Cada módulo con su posición (se ordenan de menor a mayor) y si se ve. Un módulo sin datos (p. ej. sin comunidades con actividad) no se pinta aunque esté activo. Los tres agregadores/medios dependen de <code>sources_enabled</code>. Este es el orden <b>por defecto</b>: desde la migra-179 cada usuario con aura ≥ <code>side_user_aura</code> (Config) puede elegir y ordenar sus cajas en /mi-columna, y entonces manda lo suyo. Se pintan como mucho <code>side_max</code> cajas (Config; 10), las primeras del orden en vigor.</small></p>";
     echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"lateral\"><table><tr><th style=\"width:60px\">pos.</th><th>módulo</th><th style=\"width:60px\">se ve</th></tr>";
     $i = 0; $rows = [];
     foreach ($order as $k) $rows[$k] = ++$i;

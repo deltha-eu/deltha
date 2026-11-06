@@ -1017,4 +1017,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'bajar' => 'descendre',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Cochez celles que vous voulez voir et ordonnez-les en glissant (ou avec les flèches). La colonne n\'apparaît qu\'à partir de 1100 px de large ; sur mobile rien ne change.',
 'Volver al orden de Deltha' => 'Revenir à l\'ordre de Deltha',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Vous avez coché %d cases et seules les %d premières sont affichées : les autres n\'apparaîtront pas tant que vous ne les remontez pas ou n\'en décochez pas d\'autres.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Au plus %d cases sont affichées, les premières de la liste.',
 ];

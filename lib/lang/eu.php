@@ -963,4 +963,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'bajar' => 'jaitsi',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Markatu ikusi nahi dituzunak eta ordenatu arrastatuz (edo gezien bidez). Zutabea 1100 px-ko zabaleratik aurrera bakarrik agertzen da; mugikorrean ez da ezer aldatzen.',
 'Volver al orden de Deltha' => 'Itzuli Deltharen ordenara',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => '%d kutxa markatu dituzu eta lehen %d bakarrik erakusten dira: gainerakoak ez dira agertuko gora igo edo beste batzuk kendu arte.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Gehienez %d kutxa erakusten dira, zerrendako lehenak.',
 ];

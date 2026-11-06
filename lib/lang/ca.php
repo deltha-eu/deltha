@@ -963,4 +963,6 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'bajar' => 'baixar',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Marca les que vulguis veure i ordena-les arrossegant (o amb les fletxes). La columna només apareix a partir de 1100 px d\'amplada; al mòbil no canvia res.',
 'Volver al orden de Deltha' => 'Tornar a l\'ordre de Deltha',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Has marcat %d caixes i només es pinten les %d primeres: les altres no surten fins que les pugis o en treguis d\'altres.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Es pinten com a molt %d caixes, les primeres de la llista.',
 ];

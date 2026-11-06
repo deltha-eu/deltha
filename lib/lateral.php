@@ -158,8 +158,13 @@ function side_user_order(): ?array {
     }
     return $c;
 }
-/** Orden en vigor para quien mira: el suyo si lo tiene; si no, el de admin. */
-function side_order_actual(): array { return side_user_order() ?? side_order(); }
+/** Tope de cajas pintadas (config.side_max, migra-180; 0 = sin tope). */
+function side_max(): int { return max(0, (int)cfg('side_max', 10)); }
+/** Orden en vigor para quien mira: el suyo si lo tiene; si no, el de admin. Recortado al tope. */
+function side_order_actual(): array {
+    $o = side_user_order() ?? side_order();
+    return side_max() > 0 ? array_slice($o, 0, side_max()) : $o;
+}
 function side(): void {
     global $pdo;
     $mods = side_modules();

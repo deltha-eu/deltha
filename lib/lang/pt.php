@@ -1000,4 +1000,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'bajar' => 'descer',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Marca as que queres ver e ordena-as arrastando (ou com as setas). A coluna só aparece a partir de 1100 px de largura; no telemóvel nada muda.',
 'Volver al orden de Deltha' => 'Voltar à ordem de Deltha',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Marcaste %d caixas e só se mostram as %d primeiras: as restantes não aparecem até as subires ou desmarcares outras.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Mostram-se no máximo %d caixas, as primeiras da lista.',
 ];
