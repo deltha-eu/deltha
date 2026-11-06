@@ -1007,7 +1007,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Lo último publicado por los medios del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'The latest published by the catalogue\'s media outlets, still outside Deltha: you can submit it.',
 'Lo último publicado en los substacks del catálogo, todavía fuera de Deltha: puedes enviarlo tú.' => 'The latest published by the catalogue\'s substacks, still outside Deltha: you can submit it.',
 'Los últimos vídeos de los canales del catálogo.' => 'The latest videos from the catalogue\'s channels.',
-'Mi columna' => 'My column',
+'Mi barra lateral' => 'My sidebar',
 'Columna guardada.' => 'Column saved.',
 'Vuelves a ver la columna como la tiene Deltha.' => 'You see the column again as Deltha has it.',
 'Las cajas de la columna derecha (solo en pantallas anchas) enseñan lo mismo a todo el mundo; aquí eliges cuáles ves y en qué orden. Las que no marques, no salen.' => 'The boxes in the right column (wide screens only) show the same to everyone; here you choose which ones you see and in what order. Those you do not tick are not shown.',
