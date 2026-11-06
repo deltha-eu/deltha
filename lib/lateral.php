@@ -259,10 +259,16 @@ function side_rows_envios(string $cls, string $title, array $rows, string $more 
 function side_usuarios(PDO $pdo): void {
     require_once __DIR__ . '/agente.php';
     $noAg = agents_on() ? " AND s.user_id NOT IN (SELECT a.user_id FROM agents a)" : '';
-    $rows = $pdo->query("SELECT s.story_id, s.title, s.sent_date, s.status, s.content_type, s.comments
-                           FROM stories s WHERE s.user_id IS NOT NULL AND s.status IN ('nuevas','destacadas','archived')$noAg" . stories_mylang_sql() . foros_cerrados_sql() . "
+    $rows = $pdo->query("SELECT s.story_id, s.title, s.sent_date, s.status, s.content_type, s.comments, s.user_id, s.author_alias, s.revealed, u.login
+                           FROM stories s LEFT JOIN users u ON u.user_id = s.user_id
+                          WHERE s.user_id IS NOT NULL AND s.status IN ('nuevas','destacadas','archived')$noAg" . stories_mylang_sql() . foros_cerrados_sql() . ghost_sql_not_in('s.user_id') . "
                           ORDER BY s.sent_date DESC LIMIT 6")->fetchAll();
-    foreach ($rows as &$r) $r['sub'] = hace($r['sent_date']) . ((int)$r['comments'] > 0 ? " · " . t('%d comentarios', (int)$r['comments']) : '');
+    foreach ($rows as &$r) {
+        // quien lo envio, con la misma regla que las tarjetas (story_post): nombre real pasado el velo Ghost, alias mientras tanto
+        $rev = (int)$r['revealed'] === 1 || $r['content_type'] === 'article' || ghost_over($r['sent_date']);
+        $r['pre'] = display_name(['login' => $r['login'], 'alias' => $r['author_alias'], 'user_id' => $r['user_id']], $rev);
+        $r['sub'] = hace($r['sent_date']) . ((int)$r['comments'] > 0 ? " · " . t('%d comentarios', (int)$r['comments']) : '');
+    }
     unset($r);
     side_rows_envios('usuarios', t('Últimas de usuarios'), $rows, '/nuevas', t('todas'));
 }
