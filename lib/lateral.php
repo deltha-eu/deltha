@@ -168,9 +168,11 @@ function side_order_actual(): array {
 function side(): void {
     global $pdo;
     $mods = side_modules();
-    echo "<aside class=\"side\">";
+    // .mods envuelve las cajas (06/11/2026): en modo hacker el multicolumna va en ese div, no en el aside, que sigue siendo el que se
+    // pega arriba y hace scroll; si el multicolumna tenia el tope de alto, creaba columnas hacia la derecha y se perdian cajas
+    echo "<aside class=\"side\"><div class=\"mods\">";
     foreach (side_order_actual() as $k) { try { ($mods[$k][1])($pdo); } catch (Throwable $e) {} }
-    echo "</aside>";
+    echo "</div></aside>";
 }
 
 /** Proximo ciclo (y a que portada le toca) + las primeras del radar con estimacion (mini fisgona). */
