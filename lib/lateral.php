@@ -244,7 +244,7 @@ function side_comunidades(PDO $pdo): void {
 /** Filas «titular + dato» de envios: un enlace por fila al hilo, con la fecha o la fuente en small. */
 function side_rows_envios(string $cls, string $title, array $rows, string $more = '', string $moreTxt = ''): void {
     if (!$rows) return;
-    echo "<section class=\"mod $cls\"><h3>" . h($title) . ($more !== '' ? "<span><a href=\"" . h($more) . "\">" . h($moreTxt) . "</a></span>" : '') . "</h3>";
+    echo "<section class=\"mod lista $cls\"><h3>" . h($title) . ($more !== '' ? "<span><a href=\"" . h($more) . "\">" . h($moreTxt) . "</a></span>" : '') . "</h3>";
     foreach ($rows as $r) {
         echo "<a class=\"row\" href=\"/hilo/" . (int)$r['story_id'] . "\"><span class=\"t\">" . (!empty($r['pre']) ? "<b>" . h($r['pre']) . "</b> " : '') . h(mb_strimwidth((string)$r['title'], 0, 80, '…')) . "</span><small>" . h($r['sub']) . "</small></a>";
     }
@@ -301,7 +301,7 @@ function side_comentarios(PDO $pdo, bool $foros, string $cls, string $title): vo
                             AND s.status IN ('nuevas','destacadas','archived') AND $w" . ghost_sql_not_in('c.user_id') . "
                           ORDER BY c.created DESC LIMIT 6")->fetchAll();
     if (!$rows) return;
-    echo "<section class=\"mod $cls\"><h3>" . h($title) . "</h3>";
+    echo "<section class=\"mod lista $cls\"><h3>" . h($title) . "</h3>";
     foreach ($rows as $r) {
         $quien = display_name($r, true);
         $txt = trim(preg_replace(['/\s+/u', '/\*\*?([^*]+)\*\*?/u', '/\[([^\]]+)\]\([^)]*\)/u', '/(^|\s)>\s*/u'], [' ', '$1', '$1', '$1'], strip_tags((string)$r['content'])));   // sin las marcas del Markdown minimo
