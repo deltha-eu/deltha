@@ -129,10 +129,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $out[] = 'Temas guardados.';
     } elseif ($act === 'lateral') {   // orden y visibilidad de los modulos de la columna derecha
         require_once __DIR__ . '/../lib/lateral.php';
-        $pos = []; foreach (($_POST['pos'] ?? []) as $k => $v) if (isset(side_modules()[$k]) && !empty($_POST['on'][$k])) $pos[$k] = (int)$v;
-        asort($pos);
-        $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES ('side_order', ?, 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta') ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)")->execute([implode(',', array_keys($pos))]);
-        $out[] = 'Lateral guardado: ' . (implode(', ', array_keys($pos)) ?: 'sin módulos');
+        // misma lista que /mi-columna (06/11/2026): w[] en el orden del DOM (arrastrar y soltar con /app/columna.js), casillas on[] y
+        // flechas mv=up:clave|down:clave que funcionan sin JS; cada flecha guarda
+        $mods = side_modules(); $orden = [];
+        foreach ((array)($_POST['w'] ?? []) as $k) { $k = (string)$k; if (isset($mods[$k]) && !in_array($k, $orden, true)) $orden[] = $k; }
+        foreach ($mods as $k => $m) if (!in_array($k, $orden, true)) $orden[] = $k;
+        if (preg_match('/^(up|down):([a-z_]+)$/', post('mv'), $m) && isset($mods[$m[2]])) {
+            $i = array_search($m[2], $orden, true); $j = $m[1] === 'up' ? $i - 1 : $i + 1;
+            if ($i !== false && $j >= 0 && $j < count($orden)) { [$orden[$i], $orden[$j]] = [$orden[$j], $orden[$i]]; }
+        }
+        $on = array_values(array_filter($orden, fn($k) => !empty($_POST['on'][$k])));
+        $pdo->prepare("INSERT INTO config (ckey, cvalue, descr) VALUES ('side_order', ?, 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta') ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue)")->execute([implode(',', $on)]);
+        $out[] = 'Lateral guardado: ' . (implode(', ', $on) ?: 'sin módulos');
     } elseif ($act === 'foros') {   // foros (migra-159): activar/desactivar, nombre, descripcion, orden de pestañas y orden de hilos
         $st = $pdo->prepare("UPDATE forums SET status = ?, name = ?, descr = ?, position = ?, orden = ?, min_aura = ? WHERE forum_id = ?");
         foreach (($_POST['fname'] ?? []) as $id => $nm) {
@@ -940,19 +948,20 @@ if ($tab === 'usuarios') {
 
 } elseif ($tab === 'lateral') {
     require_once __DIR__ . '/../lib/lateral.php';
-    $order = side_order(); $mods = side_modules();
-    echo "<h3>Columna derecha (escritorio)</h3><p><small>Cada módulo con su posición (se ordenan de menor a mayor) y si se ve. Un módulo sin datos (p. ej. sin comunidades con actividad) no se pinta aunque esté activo. Los tres agregadores/medios dependen de <code>sources_enabled</code>. Este es el orden <b>por defecto</b>: desde la migra-179 cada usuario con aura ≥ <code>side_user_aura</code> (Config) puede elegir y ordenar sus cajas en /mi-columna, y entonces manda lo suyo. Se pintan como mucho <code>side_max</code> cajas (Config; 10), las primeras del orden en vigor.</small></p>";
-    echo "<form method=\"post\">$T<input type=\"hidden\" name=\"act\" value=\"lateral\"><table><tr><th style=\"width:60px\">pos.</th><th>módulo</th><th style=\"width:60px\">se ve</th></tr>";
-    $i = 0; $rows = [];
-    foreach ($order as $k) $rows[$k] = ++$i;
-    foreach ($mods as $k => $m) if (!isset($rows[$k])) $rows[$k] = ++$i;
-    asort($rows);
-    foreach ($rows as $k => $n) {
-        echo "<tr><td><input type=\"number\" name=\"pos[$k]\" value=\"$n\" min=\"1\" max=\"99\" style=\"width:56px\"></td><td>" . h($mods[$k][0]) . " <small><code>$k</code></small></td>";
-        echo "<td style=\"text-align:center\"><input type=\"checkbox\" name=\"on[$k]\" value=\"1\"" . (in_array($k, $order, true) ? ' checked' : '') . "></td></tr>";
+    $order = side_order(); $mods = side_modules(); $descr = side_modules_descr();
+    echo "<h3>Columna derecha (escritorio)</h3><p><small>Orden <b>por defecto</b> de las cajas: lo que ve quien no ha elegido el suyo o no llega a <code>side_user_aura</code> (Config); desde la migra-179 cada usuario con esa aura puede elegir y ordenar las suyas en /mi-columna, y entonces manda lo suyo. Marca las que se ven y ordénalas arrastrando (o con las flechas, que guardan al pulsar). Una caja sin datos (p. ej. sin comunidades con actividad) no se pinta aunque esté activa; las de fuentes dependen de <code>sources_enabled</code>. Se pintan como mucho <code>side_max</code> cajas (Config; " . side_max() . "), las primeras de la lista.</small></p>";
+    $lista = $order; foreach ($mods as $k => $m) if (!in_array($k, $lista, true)) $lista[] = $k;
+    echo "<form method=\"post\" class=\"colform\">$T<input type=\"hidden\" name=\"act\" value=\"lateral\"><ol class=\"colsel\" id=\"colsel\">";
+    $n = count($lista); $i = 0;
+    foreach ($lista as $k) {
+        $i++;
+        echo "<li draggable=\"true\" data-k=\"$k\"><input type=\"hidden\" name=\"w[]\" value=\"$k\"><span class=\"grip\" aria-hidden=\"true\" title=\"arrastra para ordenar\">⋮⋮</span>"
+           . "<label><input type=\"checkbox\" name=\"on[$k]\" value=\"1\"" . (in_array($k, $order, true) ? ' checked' : '') . "> <span><b>" . h($mods[$k][0]) . " <code>$k</code></b><small>" . h($descr[$k] ?? '') . "</small></span></label>"
+           . "<span class=\"mv\"><button name=\"mv\" value=\"up:$k\" title=\"subir\"" . ($i === 1 ? ' disabled' : '') . ">" . icon('up') . "</button><button name=\"mv\" value=\"down:$k\" title=\"bajar\"" . ($i === $n ? ' disabled' : '') . ">" . icon('down') . "</button></span></li>";
     }
-    echo "</table><p><button class=\"btn\">Guardar lateral</button></p></form>";
+    echo "</ol><p><button class=\"btn\">Guardar lateral</button></p></form>";
     echo "<p><small>Orden actual: <code>" . h(implode(',', $order)) . "</code> (config <code>side_order</code>).</small></p>";
+    echo "<script src=\"/app/columna.js?v=" . DDD_CSS_VER . "\" defer></script>";
 
 } elseif ($tab === 'logo') {
     echo "<h3>Logo de " . h(cfg('site_name')) . "</h3>";
