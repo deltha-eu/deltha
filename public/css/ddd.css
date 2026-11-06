@@ -3351,6 +3351,7 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .rail .sw-foro { --s1: #DAE0E6; --s2: #FF4500; }
   /* --- side --- */
   .side { padding: 16px 0 24px; gap: 14px; }
+  .side .mods { display: flex; flex-direction: column; gap: 14px; }
   .side .mod { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 10px; }
   .side .mod h3 { font-family: var(--serif); font-size: 17px; font-weight: 600; margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; }
   .side .mod h3 span { margin-left: auto; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--accent); }
@@ -4136,9 +4137,11 @@ html[data-hacker] .rail details.rail-dd.hacker { display: block; }   /* con el m
 @media (min-width: 2400px) {   /* 2400 y no 2600: un 4K al 150 % (lo recomendado por Windows) mide 2560 logicos (21/10/2026) */
   .rail details.rail-dd.hacker { display: block; }
   html[data-hacker] .cols { grid-template-columns: 260px 980px 720px; column-gap: 40px; }
-  /* sin tope de alto ni scroll propio: con max-height, el multicolumna seguia creando columnas hacia la derecha (ocultas) y con mas
-     de ~6 cajas (migra-179) se perdian las ultimas. La columna deja de ser pegajosa y baja con la pagina (06/11/2026). */
-  html[data-hacker] .side { display: block; columns: 2; column-gap: 24px; column-fill: balance; padding-top: 16px; position: static; max-height: none; overflow: visible; }
+  /* el multicolumna va en .mods, no en el aside: el aside sigue pegado arriba con su scroll (max-height 100vh) y .mods, sin tope de
+     alto, reparte las cajas en dos columnas equilibradas; si el multicolumna llevaba el tope, creaba columnas hacia la derecha y se
+     perdian cajas (06/11/2026) */
+  html[data-hacker] .side { padding-top: 16px; }
+  html[data-hacker] .side .mods { display: block; columns: 2; column-gap: 24px; column-fill: balance; }
   html[data-hacker] .side .mod, html[data-hacker] .side footer { break-inside: avoid; margin-bottom: 14px; display: block; }
   html[data-hacker] .side .mod:last-child { margin-bottom: 0; }
 }
