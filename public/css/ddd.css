@@ -3374,6 +3374,11 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   [data-fam="orange"] .side .mod.temas .chip::before { display: none; }
   [data-fam="orange"] .side .mod.temas .chip b { color: var(--or); }
   [data-skin="zen"] .side .mod.temas .chip { border: 0; padding-left: 0; font-variant: all-small-caps; letter-spacing: .06em; }
+  /* cajas de una sola columna (migra-179: usuarios, radar, medios en Deltha, comentarios): titular arriba y el dato debajo, sin columna de cifra */
+  .side .mod.lista .row { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+  .side .mod.lista .row small { grid-column: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side .mod.lista .row .t b { font-weight: 700; }
+  .side .mod.comentarios .row .t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .side .mod.votadas .row b { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; padding-top: 1px; }
   .side .mod.votadas .row b i { font-style: normal; color: var(--muted); font-weight: 600; width: 14px; text-align: right; margin-right: 2px; }
   .side .mod.votadas .row b .i { width: 14px; height: 14px; stroke-width: 2.4; }
