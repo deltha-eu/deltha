@@ -964,4 +964,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'bajar' => 'nach unten',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Kreuze an, was du sehen willst, und ordne es durch Ziehen (oder mit den Pfeilen). Die Spalte erscheint erst ab 1100 px Breite; auf dem Handy ändert sich nichts.',
 'Volver al orden de Deltha' => 'Zurück zur Reihenfolge von Deltha',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Du hast %d Kästen angekreuzt, gezeigt werden nur die ersten %d: die übrigen erscheinen erst, wenn du sie nach oben schiebst oder andere abwählst.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Es werden höchstens %d Kästen gezeigt, die ersten der Liste.',
 ];

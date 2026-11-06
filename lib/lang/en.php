@@ -1018,4 +1018,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'bajar' => 'move down',
 'Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.' => 'Tick the ones you want to see and order them by dragging (or with the arrows). The column only appears from 1100 px wide; nothing changes on mobile.',
 'Volver al orden de Deltha' => 'Back to Deltha\'s order',
+'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'You have ticked %d boxes and only the first %d are shown: the rest will not appear until you move them up or untick others.',
+'Se pintan como mucho %d cajas, las primeras de la lista.' => 'At most %d boxes are shown, the first ones in the list.',
 ];

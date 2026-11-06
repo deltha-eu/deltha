@@ -51,7 +51,9 @@ if (!$puede) {
 }
 if ($ok) echo "<p class=\"notice\">" . h($ok) . "</p>";
 
-$sel = $propio ?? $admin;               // lo marcado, en orden; debajo el resto sin marcar
+$sel = $propio ?? $admin;
+$max = side_max();
+if ($max > 0 && count($sel) > $max) echo "<p class=\"notice\">" . h(t('Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.', count($sel), $max)) . "</p>";               // lo marcado, en orden; debajo el resto sin marcar
 $lista = $sel; foreach ($mods as $k => $m) if (!in_array($k, $lista, true)) $lista[] = $k;
 echo "<form class=\"plain colform\" method=\"post\"><input type=\"hidden\" name=\"act\" value=\"guardar\">";
 echo "<ol class=\"colsel\" id=\"colsel\">";
@@ -64,7 +66,7 @@ foreach ($lista as $k) {
        . "<span class=\"mv\"><button name=\"mv\" value=\"up:$k\" title=\"" . h(t('subir')) . "\"" . ($i === 1 ? ' disabled' : '') . ">" . icon('up') . "</button><button name=\"mv\" value=\"down:$k\" title=\"" . h(t('bajar')) . "\"" . ($i === $n ? ' disabled' : '') . ">" . icon('down') . "</button></span></li>";
 }
 echo "</ol>";
-echo "<small class=\"hint\">" . t('Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.') . "</small>";
+echo "<small class=\"hint\">" . t('Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.') . ($max > 0 ? " " . h(t('Se pintan como mucho %d cajas, las primeras de la lista.', $max)) : '') . "</small>";
 echo "<p class=\"colbtns\"><button>" . t('Guardar') . "</button>" . ($propio !== null ? " <button class=\"link\" name=\"act\" value=\"restablecer\">" . t('Volver al orden de Deltha') . "</button>" : '') . "</p></form>";
 echo "<script src=\"/app/columna.js?v=" . DDD_CSS_VER . "\" defer></script>";
 page_footer();

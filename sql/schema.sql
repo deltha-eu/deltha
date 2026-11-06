@@ -938,6 +938,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('comm_add_min_aura',  '20',   'Aura (estricta: mayor que) desde la que se puede añadir un envio a cualquier comunidad (0 = solo dueños y moderadores)'),
 ('side_order',          'ciclo,temas,comunidades,votadas,agregadores,medios,substacks,youtube', 'Modulos de la columna derecha (escritorio), en orden; lo que no este no se pinta'),
 ('side_user_aura',      '10',   'Aura desde la que cada usuario elige y ordena las cajas de la columna derecha en /mi-columna (0 = nadie; moderadores y admin, siempre)'),
+('side_max',            '10',   'Cuantas cajas se pintan como mucho en la columna derecha (las N primeras del orden en vigor, de admin o del usuario); 0 = sin tope'),
 ('sources_smf_per_run', '12',   'Foros SMF (Areopago): paginas de mensaje que se leen por pasada para sacar autor y numero del mensaje'),
 ('comment_edit_minutes','10',   'Minutos tras publicar en los que el autor puede editar su comentario'),
 ('comment_edit_min_aura','6',   'Aura minima (estricta: mayor que) para poder editar los comentarios propios'),
