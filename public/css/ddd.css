@@ -4140,8 +4140,8 @@ html[data-hacker] .rail details.rail-dd.hacker { display: block; }   /* con el m
   /* el multicolumna va en .mods, no en el aside: el aside sigue pegado arriba con su scroll (max-height 100vh) y .mods, sin tope de
      alto, reparte las cajas en dos columnas equilibradas; si el multicolumna llevaba el tope, creaba columnas hacia la derecha y se
      perdian cajas (06/11/2026) */
-  html[data-hacker] .side { padding-top: 16px; }
-  html[data-hacker] .side .mods { display: block; columns: 2; column-gap: 24px; column-fill: balance; }
+  html[data-hacker] .side { display: block; padding-top: 16px; }   /* block, no flex: como flex item, el multicolumna tomaba el alto del aside y volvia a cortar */
+  html[data-hacker] .side .mods { display: block; columns: 2; column-gap: 24px; column-fill: balance; height: auto; max-height: none; overflow: visible; }
   html[data-hacker] .side .mod, html[data-hacker] .side footer { break-inside: avoid; margin-bottom: 14px; display: block; }
   html[data-hacker] .side .mod:last-child { margin-bottom: 0; }
 }
