@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 249);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 250);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1721,6 +1721,47 @@ function aviso_comunidad(): string {
 const DDD_AVISO_COOKIE = 'ddd_av';
 /** Huella corta del texto del aviso: es lo que guarda la cookie de «ya lo he cerrado» y lo que comprueba /cerrar-aviso. */
 function aviso_clave(string $txt): string { return substr(sha1($txt), 0, 12); }
+
+/* ---- Avisos de ayuda (migra-181, 07/11/2026): los <p class="notice ayuda" data-k="clave"> que explican cada pagina se pueden cerrar con
+ *      una × (uno a uno) y apagar o encender todos desde el perfil. Con cuenta: users.help_hidden ('' = todos se ven, '*' = ninguno,
+ *      si no claves cerradas separadas por comas); sin cuenta: cookie ddd_ayuda con lo mismo. page_footer() es quien pone la × y quita
+ *      los cerrados, sobre el buffer de la pagina. ---- */
+const DDD_AYUDA_COOKIE = 'ddd_ayuda';
+/** Lo guardado: '*' o lista de claves. */
+function ayuda_ocultos(): array {
+    static $c = null; global $pdo;
+    if ($c !== null) return $c;
+    $u = user(); $v = '';
+    if ($u) {
+        try { $st = $pdo->prepare("SELECT help_hidden FROM users WHERE user_id = ?"); $st->execute([(int)$u['user_id']]); $v = (string)$st->fetchColumn(); } catch (Throwable $e) { /* migra-181 sin aplicar */ }
+    } else $v = (string)($_COOKIE[DDD_AYUDA_COOKIE] ?? '');
+    return $c = ($v === '*') ? ['*'] : array_values(array_filter(array_map('trim', explode(',', $v)), fn($k) => $k !== ''));
+}
+function ayuda_apagada(): bool { return ayuda_ocultos() === ['*']; }
+function ayuda_visible(string $k): bool { $o = ayuda_ocultos(); return $o !== ['*'] && !in_array($k, $o, true); }
+/** Guarda '' / '*' / lista. */
+function ayuda_guardar(array $lista): void {
+    global $pdo;
+    $v = $lista === ['*'] ? '*' : implode(',', array_slice(array_unique($lista), 0, 80));
+    if ($u = user()) { try { $pdo->prepare("UPDATE users SET help_hidden = ? WHERE user_id = ?")->execute([$v, (int)$u['user_id']]); } catch (Throwable $e) {} }
+    else pref_cookie(DDD_AYUDA_COOKIE, $v);
+}
+/** Cierra un aviso (la ×). */
+function ayuda_cerrar(string $k): void {
+    if (!preg_match('/^[a-z0-9-]{1,40}$/', $k)) return;
+    $o = ayuda_ocultos(); if ($o === ['*'] || in_array($k, $o, true)) return;
+    $o[] = $k; ayuda_guardar($o);
+}
+/** Pone la × y quita los cerrados en el HTML de la pagina (page_footer). */
+function ayuda_filtrar(string $html): string {
+    if (!str_contains($html, 'class="notice ayuda')) return $html;
+    $x = h(t('cerrar este aviso'));
+    return preg_replace_callback('~<p class="notice ayuda(?: [^"]*)?" data-k="([a-z0-9-]+)"[^>]*>.*?</p>~su', function ($m) use ($x) {
+        if (!ayuda_visible($m[1])) return '';
+        $pos = strpos($m[0], '>') + 1;
+        return substr($m[0], 0, $pos) . "<a class=\"x\" href=\"/cerrar-aviso?a=" . $m[1] . "\" rel=\"nofollow\" title=\"$x\" aria-label=\"$x\">×</a>" . substr($m[0], $pos);
+    }, $html);
+}
 function page_header(string $title, string $tab = '', string $head = '', string $doc = ''): void {
     global $DDD_TAB; $DDD_TAB = $tab;
     $robots = robots_meta();   // antes del primer echo: tambien manda la cabecera X-Robots-Tag
@@ -1760,7 +1801,7 @@ function page_header(string $title, string $tab = '', string $head = '', string 
     nav_tabs($tab, 'tabs-top');
     nav_fuentes($tab);
     echo "<main>";
-    if (aviso_comunidad() !== '' && !preg_match('~/(admin|moderacion)(\.php)?$~', (string)$_SERVER['SCRIPT_NAME'])) { $GLOBALS['DDD_AVISO_OB'] = true; ob_start(); }   // aviso a la comunidad: se sustituyen los notice en page_footer()
+    if (!preg_match('~/(admin|moderacion)(\.php)?$~', (string)$_SERVER['SCRIPT_NAME'])) { $GLOBALS['DDD_AVISO_OB'] = true; ob_start(); }   // buffer: avisos de ayuda (× y cerrados, migra-181) y aviso a la comunidad   // aviso a la comunidad: se sustituyen los notice en page_footer()
 }
 /* Dos menus: arriba el contenido (las dos portadas, el radar del que se nutren y los foros), abajo la comunidad y las
  * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
@@ -1838,14 +1879,16 @@ function footer_links(): string {
     return $h;
 }
 function page_footer(): void {
-    if (!empty($GLOBALS['DDD_AVISO_OB'])) {   // aviso a la comunidad (aviso_comunidad): cada <p class="notice"> de la pagina pasa a ser el aviso
+    if (!empty($GLOBALS['DDD_AVISO_OB'])) {   // buffer de la pagina: avisos de ayuda (migra-181) y aviso a la comunidad (aviso_comunidad)
         $GLOBALS['DDD_AVISO_OB'] = false;
-        $cuerpo = (string)ob_get_clean();
-        // los <p class="notice keep"> no se tocan: llevan una accion (el «Escribe el tuyo» de /foros se perdia mientras habia aviso, 16/10/2026)
-        $re = '~<p class="notice(?![^"]*\\b(?:keep|aviso)\\b)(?: [^"]*)?">.*?</p>~su';   // tampoco el propio aviso ya insertado
-        $cuerpo = preg_replace($re, aviso_comunidad(), $cuerpo, 1, $n);   // el primero pasa a ser el aviso…
-        if (!$n) $cuerpo = aviso_comunidad() . $cuerpo;   // pagina sin aviso gris (o solo con keep): el aviso va arriba del todo
-        else $cuerpo = preg_replace($re, '', $cuerpo);   // …y los demas se quitan: /usuarios y /mis-fuentes llevan dos y salia duplicado (16/10/2026)
+        $cuerpo = ayuda_filtrar((string)ob_get_clean());   // avisos de ayuda: × y fuera los cerrados
+        if (aviso_comunidad() !== '') {   // aviso a la comunidad: cada <p class="notice"> de la pagina pasa a ser el aviso
+            // los <p class="notice keep"> no se tocan: llevan una accion (el «Escribe el tuyo» de /foros se perdia mientras habia aviso, 16/10/2026)
+            $re = '~<p class="notice(?![^"]*\\b(?:keep|aviso)\\b)(?: [^"]*)?"[^>]*>.*?</p>~su';   // tampoco el propio aviso ya insertado; [^>]* por el data-k de los de ayuda
+            $cuerpo = preg_replace($re, aviso_comunidad(), $cuerpo, 1, $n);   // el primero pasa a ser el aviso…
+            if (!$n) $cuerpo = aviso_comunidad() . $cuerpo;   // pagina sin aviso gris (o solo con keep): el aviso va arriba del todo
+            else $cuerpo = preg_replace($re, '', $cuerpo);   // …y los demas se quitan: /usuarios y /mis-fuentes llevan dos y salia duplicado (16/10/2026)
+        }
         echo $cuerpo;
     }
     echo "</main>";

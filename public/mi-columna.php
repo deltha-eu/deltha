@@ -42,7 +42,7 @@ profile_tabs('micolumna');
 $propio = side_user_order();            // null = sin elegir
 $admin  = side_order();
 $min = (float)cfg('side_user_aura', 10);
-echo "<p class=\"notice\">" . t('Las cajas de la columna derecha (solo en pantallas anchas) enseñan lo mismo a todo el mundo; aquí eliges cuáles ves y en qué orden. Las que no marques, no salen.') . "</p>";
+echo "<p class=\"notice ayuda\" data-k=\"mi-columna\">" . t('Las cajas de la columna derecha (solo en pantallas anchas) enseñan lo mismo a todo el mundo; aquí eliges cuáles ves y en qué orden. Las que no marques, no salen.') . "</p>";
 if (!$puede) {
     echo "<p class=\"notice\">" . h($min > 0 ? t('Podrás elegirlas cuando llegues a %s de aura. Mientras tanto se ven así:', num_es($min)) : t('Por ahora las cajas las elige la redacción. Se ven así:')) . "</p><ol class=\"colsel ro\">";
     foreach ($admin as $k) echo "<li><b>" . h($mods[$k][0]) . "</b><small>" . h($descr[$k] ?? '') . "</small></li>";

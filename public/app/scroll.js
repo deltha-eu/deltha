@@ -51,4 +51,14 @@
   var go = function () { window.scrollTo({ top: s.y, left: 0, behavior: 'instant' }); };
   go(); requestAnimationFrame(go);
   window.addEventListener('load', function () { go(); setTimeout(go, 0); setTimeout(function () { go(); if ('scrollRestoration' in history) history.scrollRestoration = 'auto'; }, 100); }, { once: true });
+
+  // la × de los avisos de ayuda (migra-181): se guarda con fetch (js=1 → 204) y se quita el aviso en el sitio; sin JS, el enlace recarga
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('.notice.ayuda a.x');
+    if (!a || !window.fetch) return;
+    e.preventDefault();
+    var p = a.closest('.notice'); p.style.transition = 'opacity .2s'; p.style.opacity = '0';
+    setTimeout(function () { p.remove(); }, 200);
+    fetch(a.href + '&js=1', { credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch' } }).catch(function () {});
+  });
 })();

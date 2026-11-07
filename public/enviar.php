@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 page_header(t('Enviar'));
-if (!user()) echo "<p class=\"notice\">" . t('Envías como anónimo. Si <a href="/login">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30))
+if (!user()) echo "<p class=\"notice ayuda\" data-k=\"enviar-anonimo\">" . t('Envías como anónimo. Si <a href="/login">entras</a>, publicarás con un alias temporal y tu nombre aparecerá a los %d minutos.', (int)cfg('ghost_minutes', 30))
     . ((int)cfg('send_anon_per_hour', 3) > 0 ? ' ' . t('Sin cuenta se pueden enviar %d noticias por hora.', (int)cfg('send_anon_per_hour', 3)) : '') . "</p>";
 if ($err) echo "<p class=\"error\">$err</p>";
 if (!$err && $aviso) echo "<p class=\"notice\">$aviso</p>";   // «de este medio ya van N de 5 hoy»: avisa, no impide

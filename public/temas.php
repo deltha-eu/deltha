@@ -11,7 +11,7 @@ $rows = $pdo->query("SELECT t.topic_id, t.name, t.color, t.bonus,
 
 if (user()) header('Cache-Control: private, no-cache'); else { header('Cache-Control: public, max-age=60'); header('Vary: Cookie'); }
 page_header(t('Temas'), 'temas');
-echo "<p class=\"notice\">" . t('Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por orden alfabético; cada tema muestra todo lo enviado en él, esté en la fase que esté.', h(cfg('site_name'))) . "</p>";
+echo "<p class=\"notice ayuda\" data-k=\"temas\">" . t('Los <b>temas</b> los pone %s; todo envío lleva uno. Aquí van por orden alfabético; cada tema muestra todo lo enviado en él, esté en la fase que esté.', h(cfg('site_name'))) . "</p>";
 if (!$rows) echo "<p class=\"end\">" . t('Todavía no hay temas.') . "</p>";
 foreach ($rows as $r) {
     $bonus = (float)$r['bonus'];

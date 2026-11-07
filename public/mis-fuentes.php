@@ -52,7 +52,7 @@ if (!$fuentes) $intro = t('Todavía no hay medios en el catálogo.');
 elseif ($mias) $intro = t('Sigues %d: %s.', count($mias), $nombres);
 elseif ($u) $intro = t('Todavía no sigues ninguno aquí; te enseñamos %s. Pulsa «Seguir» en los que quieras tener aquí.', $nombres);
 else $intro = t('Lo último de %s.', $nombres) . ' ' . t('<a href="/login">Entra</a> para elegir tus medios.');
-echo "<p class=\"notice\">$intro</p>";
+echo "<p class=\"notice ayuda\" data-k=\"mis-fuentes\">$intro</p>";
 // con pocas fuentes seguidas (cinco o menos, de todos los tipos), una ayuda breve en gris de como añadirlas
 if ($u) { $ns = 0; foreach (fuentes_tipos($pdo) as $kk => $v) $ns += count(mis_medios($pdo, $u, $kk)); if ($ns <= 5) echo "<p class=\"end ayuda-fuentes\">" . t('Para tener aquí lo que lees: entra en <a href="/fuentes">Todas las fuentes</a> y pulsa «Seguir» en los medios y substacks que te interesen; también puedes seguirlos desde cualquier noticia suya. Si falta alguno, abre «Seguir y dejar de seguir» aquí abajo y pega su dirección.') . "</p>"; }
 echo fuentes_casilla_idioma();   // el mismo control de idiomas que en el perfil y el catalogo
@@ -88,7 +88,7 @@ if ($u && fuentes_on()) {
             echo "<form class=\"plain\" method=\"post\" action=\"/anadir-fuente\"><input type=\"hidden\" name=\"k\" value=\"$k\">"
                . "<label>" . ($k === 'youtube' ? t('¿No está en el catálogo? Pega la dirección del canal y lo añadimos a los tuyos.') : t('¿No está en el catálogo? Pega la dirección de su web o de su RSS y lo añadimos a los tuyos.')) . "</label>"
                . "<input type=\"url\" name=\"url\" required maxlength=\"200\" placeholder=\"https://…\"><button>" . h($txt) . "</button></form>";
-        } else echo "<p class=\"notice\">" . t('Con aura %s o más podrás añadir aquí fuentes que no estén en el catálogo; la tuya es %s.', num_pg(lang(), cfg('source_add_aura', 5)), num_pg(lang(), round((float)$u['aura'], 1))) . "</p>";
+        } else echo "<p class=\"notice ayuda\" data-k=\"mis-fuentes-aura\">" . t('Con aura %s o más podrás añadir aquí fuentes que no estén en el catálogo; la tuya es %s.', num_pg(lang(), cfg('source_add_aura', 5)), num_pg(lang(), round((float)$u['aura'], 1))) . "</p>";
     }
     if (!$resto) echo "<p class=\"end\">" . t('Ya sigues todos los del catálogo.') . "</p>";
     foreach ($resto as $m) echo $fila($m);

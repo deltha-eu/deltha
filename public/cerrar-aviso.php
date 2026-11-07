@@ -5,6 +5,8 @@
 require __DIR__ . '/../lib/app.php';
 $txt = trim((string)cfg('aviso_txt', ''));
 if ($txt !== '' && (string)($_GET['k'] ?? '') === aviso_clave($txt)) pref_cookie(DDD_AVISO_COOKIE, aviso_clave($txt));
+// ?a=clave: la × de un aviso de ayuda (migra-181); con ?js=1 (app/scroll.js lo quita en el sitio) responde 204 y no redirige
+if (($a = (string)($_GET['a'] ?? '')) !== '') { ayuda_cerrar($a); if (isset($_GET['js'])) { http_response_code(204); exit; } }
 $back = (string)($_SERVER['HTTP_REFERER'] ?? '');
 $host = $_SERVER['HTTP_HOST'] ?? '';
 if ($back === '' || !$host || parse_url($back, PHP_URL_HOST) !== $host || str_contains($back, 'cerrar-aviso')) $back = '/';

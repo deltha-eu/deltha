@@ -965,4 +965,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Volver al orden de Deltha' => 'Itzuli Deltharen ordenara',
 'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => '%d kutxa markatu dituzu eta lehen %d bakarrik erakusten dira: gainerakoak ez dira agertuko gora igo edo beste batzuk kendu arte.',
 'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Gehienez %d kutxa erakusten dira, zerrendako lehenak.',
+// avisos de ayuda (migra-181)
+'Avisos de ayuda' => 'Laguntza-oharrak',
+'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Orrialde bakoitza azaltzen duten lauki grisak. Bakoitza bere × bidez itxi daiteke; kendu marka hau bat ere ez agertzeko.',
+'Volver a mostrar los %d que cerré' => 'Berriro erakutsi itxi nituen %d-ak',
 ];

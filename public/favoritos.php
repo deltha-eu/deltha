@@ -24,7 +24,7 @@ if ($total > 0) {
     foreach ($q as $s) story_post($pdo, $s, 'compact');
     paginate('/favoritos', $page, $total, $per);
 } else {
-    echo "<p class=\"notice\">" . t('Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.') . "</p>";
+    echo "<p class=\"notice ayuda\" data-k=\"favoritos\">" . t('Aquí verás lo que guardes con «guardar», junto a los votos, dentro de cualquier envío o artículo. Solo lo ves tú.') . "</p>";
     echo "<p class=\"end\">" . t('Todavía no has guardado nada.') . "</p>";
 }
 page_footer();

@@ -966,4 +966,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Volver al orden de Deltha' => 'Torna all\'ordine di Deltha',
 'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Hai spuntato %d riquadri e si mostrano solo i primi %d: gli altri non compaiono finché non li sposti in alto o ne togli altri.',
 'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Si mostrano al massimo %d riquadri, i primi della lista.',
+// avisos de ayuda (migra-181)
+'Avisos de ayuda' => 'Avvisi di aiuto',
+'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'I riquadri grigi che spiegano ogni pagina. Ognuno si chiude con la sua ×; togli la spunta perché non ne compaia nessuno.',
+'Volver a mostrar los %d que cerré' => 'Mostra di nuovo i %d che ho chiuso',
 ];

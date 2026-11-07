@@ -856,6 +856,7 @@ CREATE TABLE `users` (
   `src_langs` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'idiomas elegidos («es,en»); vacio = el de la interfaz',
   `show_follows` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 = los medios y substacks que sigue se ven en su ficha',
   `side_order` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'cajas de la columna derecha elegidas por el usuario, en orden (migra-179); NULL = las de config.side_order',
+  `help_hidden` varchar(1500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'avisos de ayuda cerrados (migra-181): claves separadas por comas; * = todos apagados',
   `aura` decimal(6,3) NOT NULL DEFAULT '5.000',
   `aura_suelo` decimal(8,3) NOT NULL DEFAULT '0.000',
   `pin_credits` smallint unsigned NOT NULL DEFAULT '0',

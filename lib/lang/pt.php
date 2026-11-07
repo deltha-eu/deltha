@@ -1002,4 +1002,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Volver al orden de Deltha' => 'Voltar à ordem de Deltha',
 'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Marcaste %d caixas e só se mostram as %d primeiras: as restantes não aparecem até as subires ou desmarcares outras.',
 'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Mostram-se no máximo %d caixas, as primeiras da lista.',
+// avisos de ayuda (migra-181)
+'Avisos de ayuda' => 'Avisos de ajuda',
+'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'As caixas cinzentas que explicam cada página. Cada uma fecha-se com o seu ×; desmarca isto para que não apareça nenhuma.',
+'Volver a mostrar los %d que cerré' => 'Voltar a mostrar os %d que fechei',
 ];

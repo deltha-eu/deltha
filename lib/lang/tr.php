@@ -986,4 +986,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Volver al orden de Deltha' => 'Deltha\'nın sırasına dön',
 'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => '%d kutu işaretledin ve yalnızca ilk %d tanesi gösteriliyor: diğerleri, onları yukarı taşıyana veya başkalarını kaldırana kadar görünmez.',
 'Se pintan como mucho %d cajas, las primeras de la lista.' => 'En fazla %d kutu gösterilir, listedeki ilkler.',
+// avisos de ayuda (migra-181)
+'Avisos de ayuda' => 'Yardım uyarıları',
+'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Her sayfayı açıklayan gri kutular. Her biri × ile kapatılabilir; hiçbiri görünmesin istiyorsan işareti kaldır.',
+'Volver a mostrar los %d que cerré' => 'Kapattığım %d uyarıyı yeniden göster',
 ];

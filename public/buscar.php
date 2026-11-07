@@ -168,7 +168,7 @@ if ($en !== '') echo "<input type=\"hidden\" name=\"en\" value=\"$en\">";
 echo "<button type=\"submit\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</button></form>";
 
 if ($q === '') {
-    echo "<p class=\"notice\">" . (user() ? t('Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.') : t('Busca en los hilos, los comentarios y las noticias de los medios y substacks.')) . " " . t('Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.') . "</p>";
+    echo "<p class=\"notice ayuda\" data-k=\"buscar\">" . (user() ? t('Busca en los hilos, los comentarios, las noticias de los medios y substacks y la gente.') : t('Busca en los hilos, los comentarios y las noticias de los medios y substacks.')) . " " . t('Las palabras se buscan por su comienzo («vacuna» encuentra «vacunas»); una frase entre comillas, tal cual.') . "</p>";
     page_footer(); exit;
 }
 $T = buscar_terminos($q);
