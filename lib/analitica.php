@@ -28,6 +28,9 @@ function ana_hit(): void {
     if ($done || PHP_SAPI === 'cli' || !ana_on()) return;
     $done = true;
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') return;
+    // peticiones del propio servidor (agentes, cron, comprobaciones) no son lecturas (07/11/2026)
+    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    if ($ip !== '' && in_array($ip, [(string)($_SERVER['SERVER_ADDR'] ?? ''), '127.0.0.1', '::1'], true)) return;
     $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
     if ($ua === '' || preg_match('~bot|crawl|spider|slurp|fetch|monitor|curl|wget|python|headless|lighthouse|preview~i', $ua)) return;
     if (($_SERVER['HTTP_SEC_PURPOSE'] ?? $_SERVER['HTTP_PURPOSE'] ?? '') !== '') return;   // prefetch/prerender: no es una lectura
@@ -45,7 +48,9 @@ function ana_hit(): void {
     $ref = '';
     $rh = strtolower((string)parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_HOST));
     $own = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
-    if ($rh !== '' && $rh !== $own && $rh !== "www.$own" && "www.$rh" !== $own) $ref = mb_substr(preg_replace('/^www\./', '', $rh), 0, 120);
+    // el propio sitio por su IP, localhost o la direccion del servidor tambien es «interno»: la IP del droplet salia en «Procedencia» (07/11/2026)
+    $interno = [$own, "www.$own", (string)($_SERVER['SERVER_ADDR'] ?? ''), (string)($_SERVER['SERVER_NAME'] ?? ''), '127.0.0.1', 'localhost'];
+    if ($rh !== '' && !in_array($rh, $interno, true) && "www.$rh" !== $own && !preg_match('/^\d{1,3}(\.\d{1,3}){3}$/', $rh)) $ref = mb_substr(preg_replace('/^www\./', '', $rh), 0, 120);
     $device = preg_match('~iPad|Tablet|Silk|Kindle|PlayBook~i', $ua) ? 'tablet' : (preg_match('~Mobi|Android|iPhone|IEMobile|Opera Mini~i', $ua) ? 'mobile' : 'desktop');
     $country = strtoupper(substr((string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? ''), 0, 2));
     if (!preg_match('/^[A-Z]{2}$/', $country)) $country = '';
