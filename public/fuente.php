@@ -54,7 +54,7 @@ if ($medio) {
 $intro .= ' ' . t('Se lee cada %d min · última lectura: %s.', (int)$src['interval_min'], h($last));
 if ($src['last_error'] && is_admin()) $intro .= " <b>" . h($src['last_error']) . "</b>";
 if (!empty($src['skin']) && user()) $intro .= ' · ' . skin_propio_link();   // la fuente tiene plantilla propia (migra-143)
-echo "<p class=\"notice\">$intro</p>";
+echo "<p class=\"notice ayuda\" data-k=\"fuente\">$intro</p>";
 if ($fav = fuente_fav_form($src, true)) echo "<div class=\"srcfav\">$fav</div>";   // «+ Seguir <medio>» / «✓ Siguiendo»
 if ($medio) echo fuente_quien_sigue($pdo, $src);   // «La siguen N personas» con avatares (12/10/2026)
 

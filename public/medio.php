@@ -26,7 +26,7 @@ $intro = t('Todo lo enviado de %s, esté donde esté: en portada, en el radar o 
 // si el dominio tiene fuente en el catalogo (12/10/2026): enlace a su ficha, boton «Seguir» y quien la sigue, como en /fuente/slug
 $src = fuentes_on() ? fuente_por_dominio($pdo, $m) : null;
 if ($src) $intro .= ' ' . t('Sus últimas noticias por RSS, en <a href="%s">%s</a>.', h(fuente_url($src)), h($src['name']));
-echo "<p class=\"notice\">$intro</p>";
+echo "<p class=\"notice ayuda\" data-k=\"medio\">$intro</p>";
 if ($src) {
     if ($fav = fuente_fav_form($src, true)) echo "<div class=\"srcfav\">$fav</div>";
     echo fuente_quien_sigue($pdo, $src);

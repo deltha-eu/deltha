@@ -1020,4 +1020,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Volver al orden de Deltha' => 'Back to Deltha\'s order',
 'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'You have ticked %d boxes and only the first %d are shown: the rest will not appear until you move them up or untick others.',
 'Se pintan como mucho %d cajas, las primeras de la lista.' => 'At most %d boxes are shown, the first ones in the list.',
+// avisos de ayuda (migra-181)
+'Avisos de ayuda' => 'Help notices',
+'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'The grey boxes that explain each page. Each one can be closed with its ×; untick this so none of them show.',
+'Volver a mostrar los %d que cerré' => 'Show again the %d I closed',
 ];

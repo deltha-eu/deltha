@@ -148,7 +148,7 @@ if ($v === 'moderacion') {
         $hist = $hist->fetchAll();
     } catch (Throwable $e) { $hist = []; $total = 0; }
 
-    echo "<p class=\"notice\">" . t('Todo se publica al momento. Después, una IA que corre en un ordenador de la redacción lo revisa con el criterio de las <a href="/normas">normas de uso</a> y señala lo dudoso; <b>quien decide es siempre una persona</b>. Aquí está lo que espera y todo lo que ya se decidió, con quién lo hizo.') . "</p>";
+    echo "<p class=\"notice ayuda\" data-k=\"procesos-ia\">" . t('Todo se publica al momento. Después, una IA que corre en un ordenador de la redacción lo revisa con el criterio de las <a href="/normas">normas de uso</a> y señala lo dudoso; <b>quien decide es siempre una persona</b>. Aquí está lo que espera y todo lo que ya se decidió, con quién lo hizo.') . "</p>";
 
     echo "<h3 class=\"sec\">" . t('Pendiente (%d)', count($pend) + count($repPend)) . "</h3>";
     if (!$pend && !$repPend) echo "<p class=\"end\">" . t('Nada esperando a moderación.') . "</p>";
@@ -279,7 +279,7 @@ if ($maxPub > 0 && ($sids = array_values(array_unique(array_map(fn($e) => (int)$
 }
 
 $ventana = $d === 'hoy' ? t('solo hoy') : ($d === 'todo' ? t('todo el histórico') : t('últimos %d días', $DIAS));
-echo "<p class=\"notice\">" . t('Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.', $ventana, (int)cfg('ghost_minutes', 30)) . "</p>";
+echo "<p class=\"notice ayuda\" data-k=\"procesos-registro\">" . t('Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.', $ventana, (int)cfg('ghost_minutes', 30)) . "</p>";
 if (!$ev) echo "<p class=\"end\">" . t('Todavía no hay actividad de este tipo.') . "</p>";
 foreach ($ev as $e) {
     $sid = (int)$e['story_id'];

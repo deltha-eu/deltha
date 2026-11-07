@@ -21,7 +21,7 @@ $tile = fn($num, string $label) => "<div class=\"tile\"><b>" . $n($num) . "</b><
 $full = ana_full();
 page_header(t('Analítica'), 'analitica', $full ? refresh_meta(60) : '');
 echo "<div class=\"statspage\">";
-echo "<p class=\"notice\">" . t('Cifras cerradas por días: se actualizan una vez al día, de madrugada. Medición propia, sin cookies ni servicios de terceros: contamos cada página vista con una huella no reversible que cambia cada día, así que «visitantes» son personas distintas por día (el mes y el año suman los días).') . "</p>";
+echo "<p class=\"notice ayuda\" data-k=\"analitica\">" . t('Cifras cerradas por días: se actualizan una vez al día, de madrugada. Medición propia, sin cookies ni servicios de terceros: contamos cada página vista con una huella no reversible que cambia cada día, así que «visitantes» son personas distintas por día (el mes y el año suman los días).') . "</p>";
 if ($first && $first > $anio) echo "<p class=\"meta\">" . t('Datos desde el %s.', date('d/m/Y', strtotime($first))) . "</p>";
 foreach ([['visitors', t('visitantes')], ['sessions', t('sesiones')], ['pageviews', t('páginas vistas')]] as [$k, $lbl]) {
     echo "<h3 class=\"anah\">" . h(ucfirst($lbl)) . "</h3><div class=\"grid\">";

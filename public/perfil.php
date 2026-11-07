@@ -35,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fuentes_guardar_idiomas($pdo, (int)$u['user_id'], $mlangs, $mylang);
         try { $pdo->prepare("UPDATE users SET twofa = ? WHERE user_id = ?")->execute([post('twofa') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-095 sin aplicar */ }
         try { $pdo->prepare("UPDATE users SET show_follows = ? WHERE user_id = ?")->execute([post('show_follows') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-116 sin aplicar */ }
+        // avisos de ayuda (migra-181): desmarcada = apagados todos ('*'); marcada = encendidos, y de paso vuelven los cerrados uno a uno
+        if (post('help_on') === '1') { if (ayuda_apagada() || !empty($_POST['help_reset'])) ayuda_guardar([]); } else ayuda_guardar(['*']);
         try { $pdo->prepare("UPDATE users SET skin_propio = ? WHERE user_id = ?")->execute([post('skin_propio') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-143 sin aplicar */ }
         redirect('/perfil?ok=1');
     }
@@ -47,7 +49,7 @@ echo "<div class=\"profile\">" . avatar((float)$u['aura'], $u['login'], $u['avat
 if ($u['bio']) echo "<p class=\"bio\">" . h($u['bio']) . "</p>";
 echo "<p class=\"meta\">" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . " · <a href=\"/u/" . rawurlencode($u['login']) . "\">" . t('ver perfil público') . "</a> · <a href=\"/usuarios\">" . t('usuarios') . "</a> · <a href=\"/comunidades\">" . t('comunidades') . "</a>" . (is_mod() ? " · <a href=\"/moderacion\">" . t('moderación') . "</a>" : "") . (is_admin() ? " · <a href=\"/admin\">admin</a>" : "") . " · <a href=\"/salir\">" . t('salir') . "</a></p></div></div>";
 profile_tabs('perfil');
-echo "<p class=\"notice\">" . t('Tu foto y tu frase se ven en tu perfil y junto a tu nombre cuando se revela, a los %d minutos de cada aportación. Hasta entonces eres un alias con halo.', (int)cfg('ghost_minutes', 30)) . "</p>";
+echo "<p class=\"notice ayuda\" data-k=\"perfil\">" . t('Tu foto y tu frase se ven en tu perfil y junto a tu nombre cuando se revela, a los %d minutos de cada aportación. Hasta entonces eres un alias con halo.', (int)cfg('ghost_minutes', 30)) . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($ok)  echo "<p class=\"notice\">" . h($ok) . "</p>";
 // ghosteados (lib/ghost.php): a quien he dejado de ver, con fecha y «deshacer»; solo si hay alguno o se acaba de tocar
@@ -78,6 +80,7 @@ if (fuentes_on()) {
     echo "</div><small class=\"hint\">" . t('Marca uno o varios. Si no marcas ninguno, se usa el idioma de la interfaz (%s). Dejan de salir las fuentes y envíos en los demás idiomas; los de idioma desconocido se ven siempre.', h(DDD_LANGS[lang()] ?? lang())) . "</small>";
 }
 // medios y substacks que sigo, visibles en mi ficha publica (migra-116): por defecto si
+echo "<label id=\"avisos\"><input type=\"checkbox\" name=\"help_on\" value=\"1\"" . (ayuda_apagada() ? '' : ' checked') . "> " . t('Avisos de ayuda') . "</label><small class=\"hint\">" . t('Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.') . (count(ayuda_ocultos()) && !ayuda_apagada() ? " <label class=\"inl\"><input type=\"checkbox\" name=\"help_reset\" value=\"1\"> " . t('Volver a mostrar los %d que cerré', count(ayuda_ocultos())) . "</label>" : '') . "</small>";
 if (fuentes_on()) echo "<label id=\"ficha-fuentes\"><input type=\"checkbox\" name=\"show_follows\" value=\"1\"" . (show_follows($pdo, (int)$u['user_id']) ? ' checked' : '') . "> " . t('Mostrar en mi ficha los medios y substacks que sigo') . "</label><small class=\"hint\">" . t('Cualquiera que abra tu perfil público verá la lista, como quien mira a quién sigues, y podrá seguirlos también. Si la desmarcas, solo la ves tú.') . "</small>";
 // verificacion en dos pasos por correo (lib/twofa.php): casilla; a los administradores se les puede exigir desde admin -> Config (twofa_admin)
 try {

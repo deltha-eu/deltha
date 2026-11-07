@@ -965,4 +965,8 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Volver al orden de Deltha' => 'Tornar a l\'ordre de Deltha',
 'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Has marcat %d caixes i només es pinten les %d primeres: les altres no surten fins que les pugis o en treguis d\'altres.',
 'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Es pinten com a molt %d caixes, les primeres de la llista.',
+// avisos de ayuda (migra-181)
+'Avisos de ayuda' => 'Avisos d\'ajuda',
+'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Els requadres grisos que expliquen cada pàgina. Cadascun es pot tancar amb la seva ×; desmarca això perquè no en surti cap.',
+'Volver a mostrar los %d que cerré' => 'Tornar a mostrar els %d que vaig tancar',
 ];

@@ -56,7 +56,7 @@ if ($v === 'medios' || $v === 'idioma') {
     $rows = $q->fetchAll();
     $sent = fuente_ya_enviadas($pdo, array_column($rows, 'url'));
     $nombres = implode(', ', array_map(fn($m) => "<a href=\"" . h(fuente_url($m)) . "\">" . h($m['name']) . "</a>", array_slice($fuentes, 0, 6))) . (count($fuentes) > 6 ? '…' : '');
-    echo "<p class=\"notice\">" . t('Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.', $nombres) . "</p>";
+    echo "<p class=\"notice ayuda\" data-k=\"tema-fuentes\">" . t('Lo último de los medios y substacks de este tema, todavía sin enviar: %s. Cada noticia lleva un botón para proponerla en el radar.', $nombres) . "</p>";
     foreach ($rows as $i) fuente_post($porId[$i['source_id']], $i, 'full', $sent);
     if (!$rows) echo "<p class=\"end\">" . t('El lector aún no ha pasado por esta fuente.') . "</p>";
     paginate("$base?v=$v", $page, $totalM, $per);
@@ -67,7 +67,7 @@ if ($v === 'medios' || $v === 'idioma') {
     $st->bindValue(2, $per, PDO::PARAM_INT);
     $st->bindValue(3, page_offset($page), PDO::PARAM_INT);
     $st->execute();
-    echo "<p class=\"notice\">" . t('Todo lo enviado en este tema, noticias y originales, estén donde estén: en una portada, en el radar o ya archivado. %d en total.', $total) . "</p>";
+    echo "<p class=\"notice ayuda\" data-k=\"tema-envios\">" . t('Todo lo enviado en este tema, noticias y originales, estén donde estén: en una portada, en el radar o ya archivado. %d en total.', $total) . "</p>";
     $n = 0;
     foreach ($st as $s) { story_post($pdo, $s, "compact"); $n++; }
     if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay nada en este tema.') . "</p>";

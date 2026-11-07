@@ -966,4 +966,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Volver al orden de Deltha' => 'Zurück zur Reihenfolge von Deltha',
 'Has marcado %d cajas y solo se pintan las %d primeras: las demás no salen hasta que las subas o quites otras.' => 'Du hast %d Kästen angekreuzt, gezeigt werden nur die ersten %d: die übrigen erscheinen erst, wenn du sie nach oben schiebst oder andere abwählst.',
 'Se pintan como mucho %d cajas, las primeras de la lista.' => 'Es werden höchstens %d Kästen gezeigt, die ersten der Liste.',
+// avisos de ayuda (migra-181)
+'Avisos de ayuda' => 'Hilfehinweise',
+'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Die grauen Kästen, die jede Seite erklären. Jeder lässt sich mit seinem × schließen; abwählen, damit keiner erscheint.',
+'Volver a mostrar los %d que cerré' => 'Die %d, die ich geschlossen habe, wieder zeigen',
 ];
