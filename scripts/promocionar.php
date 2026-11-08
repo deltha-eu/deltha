@@ -4,6 +4,7 @@
  *  El intervalo real lo marca config.cycle_minutes (admin -> Ciclo): cada ventana de cycle_minutes tiene UN minuto de
  *  ejecucion, imprevisible desde fuera (ciclo_toca, lib/app.php; cycle_jitter = 0 -> el minuto 0); el resto de veces sale en silencio.
  *  Con --force se ejecuta siempre (pruebas a mano).
+ *  Con --huerfanas barre ya las fotos huerfanas de /media (fuentes_barrer_huerfanas; si no, una vez al dia a las 4:00).
  *  Ademas lee las fuentes externas (lib/fuentes.php) cuando vence su intervalo (sources.interval_min). */
 declare(strict_types=1);
 $_SERVER['REQUEST_METHOD'] = 'CLI';
@@ -30,4 +31,8 @@ if ((int)date('G') === 4 && (int)date('i') < 2) { try {
     $n = $pdo->prepare("DELETE r FROM story_reads r JOIN stories s ON s.story_id = r.story_id WHERE s.status = 'archived' OR r.read_at < DATE_SUB(NOW(), INTERVAL ? DAY)"); $n->execute([$d]);
     if ($n->rowCount()) echo date('c') . "  foros: podadas " . $n->rowCount() . " lecturas\n";
 } catch (Throwable $e) {} }
+// fotos huerfanas de la raiz de /media (08/11/2026): una vez al dia, con la poda de las 4:00, o a mano con --huerfanas
+if (in_array('--huerfanas', $argv, true) || ((int)date('G') === 4 && (int)date('i') < 2)) {
+    try { foreach (fuentes_barrer_huerfanas($pdo) as $l) echo date('c') . "  $l\n"; } catch (Throwable $e) { echo date('c') . "  media: ERROR " . $e->getMessage() . "\n"; }
+}
 flock($lock, LOCK_UN);

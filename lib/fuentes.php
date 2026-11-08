@@ -315,6 +315,36 @@ function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'):
 
 /* ---- lectura de feeds (cron) ---------------------------------------- */
 
+/** Barrido de fotos huerfanas en la raiz de /media (08/11/2026). Las fotos de los items de los medios (imagen_de_pagina) y las de
+ *  los envios viven ahi con nombre hash; cuando una deja de estar referenciada (fuente borrada en cascada, item que al final no se
+ *  guardo, envio descartado, foto sustituida...) nadie la borra: en el primer mes se juntaron 280.000 huerfanas, 21 GB, que
+ *  llenaban el disco del droplet a 1 GB/dia. Borra las de mas de $minDias dias que no esten en stories.image ni en source_items.image.
+ *  Solo mira la raiz: avatars/, comunidades/, c/ (comentarios) y fuentes/ (miniaturas de agregadores) no se tocan. Devuelve lineas de log. */
+function fuentes_barrer_huerfanas(PDO $pdo, int $minDias = 2, int $max = 100000): array {
+    if (!is_dir(DDD_MEDIA_DIR)) return [];
+    $ref = [];
+    foreach (['stories', 'source_items'] as $t) {
+        foreach ($pdo->query("SELECT DISTINCT image FROM $t WHERE image IS NOT NULL AND image <> ''")->fetchAll(PDO::FETCH_COLUMN) as $f) $ref[(string)$f] = true;
+    }
+    if (!$ref) return ['media: sin fotos referenciadas en la BD, no se barre nada'];   // por si la consulta devolviera vacio: mejor no borrar
+    $lim = time() - max(1, $minDias) * 86400;
+    $dh = @opendir(DDD_MEDIA_DIR);
+    if (!$dh) return ['media: no se puede abrir ' . DDD_MEDIA_DIR];
+    $vistas = $n = $bytes = 0;
+    while (($f = readdir($dh)) !== false) {
+        if (!preg_match('/^[a-f0-9]{24}\.(?:jpg|jpeg|png|webp|gif)$/', $f)) continue;
+        $vistas++;
+        if (isset($ref[$f])) continue;
+        $p = DDD_MEDIA_DIR . '/' . $f;
+        $st = @stat($p);
+        if (!$st || $st['mtime'] > $lim) continue;   // recientes: pueden estar a medio guardar (item en curso, envio en el paso 2)
+        if (@unlink($p)) { $n++; $bytes += (int)$st['size']; if ($n >= $max) break; }
+    }
+    closedir($dh);
+    return ["media: $vistas fotos en la raiz, " . count($ref) . " referenciadas, $n huerfanas borradas (" . round($bytes / 1048576) . " MB)"];
+}
+
+
 /** Llamada cada minuto desde promocionar.php: lee las fuentes cuyo intervalo haya vencido. Devuelve lineas de log. */
 function fuentes_tick(PDO $pdo, bool $force = false, ?int $maxN = null, ?int $maxSec = null, string $kind = ''): array {   // $kind: solo ese tipo (boton de admin, 15/10/2026)
     if (!fuentes_on()) return [];
