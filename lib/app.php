@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 253);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 254);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -990,6 +990,8 @@ function page_body(array $pg): string {
         '{ttltxt}'   => dur_pg($L, (int)cfg('thread_ttl_hours', 48)),
         '{decay}'    => num_pg($L, delta_decay('medios')),
         '{decays}'   => num_pg($L, delta_decay('substacks')),
+        '{actk}'     => num_pg($L, delta_act_k()),
+        '{actmodo}'  => delta_por_actividad() ? t_in($L, 'actividad') : t_in($L, 'reloj'),
         '{quar}'     => (string)(int)cfg('vote_quarantine_hours', 24),
         '{quartxt}'  => dur_pg($L, (int)cfg('vote_quarantine_hours', 24)),
         '{bonustemas}' => bonus_temas_txt($L),
@@ -1125,19 +1127,45 @@ function delta_minpub(?string $portada): float {
 function delta_min_votes(): int { return max(0, (int)cfg('delta_min_votes', 2)); }
 /** Medias horas minimas antes de que empiece a descontar la antigüedad (= delta_min_age_min / 30). */
 function delta_hh_min(): int { return intdiv(max(0, (int)cfg('delta_min_age_min', 30)), 30); }
-/** Medias horas que descuentan a un envio enviado en $sent (0 mientras no es elegible). */
-function delta_hh(string $sent): int { return max(0, intdiv(max(0, time() - strtotime($sent)), 1800) - delta_hh_min()); }
+/* ---- edad por actividad (2026-11-09, migra-189) ------------------------------------------------------------------------------
+ * Deltha es internacional y el reloj no lo es: lo enviado de madrugada en Madrid perdia δ durante horas en las que nadie votaba. Con
+ * decay_edad = 'actividad' la «media hora» de la formula no la marca el reloj sino la actividad del sitio: cada decay_act_k votos que
+ * se emiten en todo Deltha (act_counter, que suma en /votar) cuentan como una media hora de espera. Cuando nadie vota, nada caduca;
+ * cuando el sitio hierve, el radar se renueva igual que antes. stories.sent_act guarda el contador al enviarse (NULL en lo anterior a
+ * la migra y si el contador falla: entonces se usa el reloj). El ciclo, la caducidad y el velo siguen en minutos. */
+function delta_por_actividad(): bool { return cfg('decay_edad', 'reloj') === 'actividad' && delta_act_k() > 0 && act_counter() > 0; }
+/** Votos del sitio que equivalen a una media hora de espera (la migra lo calcula con la media de los ultimos 7 dias). */
+function delta_act_k(): float { return max(0.0, (float)cfg('decay_act_k', 0)); }
+/** Contador de votos emitidos en todo el sitio (config act_counter; suma uno cada voto nuevo en /votar). */
+function act_counter(): int { return max(0, (int)cfg('act_counter', 0)); }
+/** Medias horas que descuentan a un envio enviado en $sent (0 mientras no es elegible). Con la edad por actividad y $sentAct
+ *  (stories.sent_act) conocido, las medias horas son los votos del sitio desde el envio entre decay_act_k. */
+function delta_hh(string $sent, ?int $sentAct = null): int {
+    if ($sentAct !== null && delta_por_actividad()) return max(0, (int)floor(max(0, act_counter() - $sentAct) / delta_act_k()) - delta_hh_min());
+    return max(0, intdiv(max(0, time() - strtotime($sent)), 1800) - delta_hh_min());
+}
+/** Edad de un envio en palabras: «3 h» por el reloj o «≈ 3 h» si es la equivalente por actividad (votos del sitio / decay_act_k). */
+function delta_edad_txt(array $s): string {
+    $act = isset($s['sent_act']) && $s['sent_act'] !== null && delta_por_actividad();
+    $hh = $act ? (int)floor(max(0, act_counter() - (int)$s['sent_act']) / delta_act_k()) : intdiv(max(0, time() - strtotime((string)$s['sent_date'])), 1800);
+    $txt = $hh < 2 ? ($hh * 30) . ' min' : number_format($hh / 2, $hh % 2 ? 1 : 0, ',', '') . ' h';
+    return $act ? '≈ ' . $txt : $txt;
+}
 /** Valor del delta en vivo de una noticia (misma formula que delta_sql). $s: eff_pos, eff_neg, bonus, portada, sent_date. */
 function delta_live(array $s): float {
     $n = (int)($s['eff_pos'] ?? 0) - (int)($s['eff_neg'] ?? 0);
     $bonus = $n > 0 ? (float)($s['bonus'] ?? 0) : 0.0;
-    return ($n <=> 0) * sqrt(abs($n)) + $bonus - delta_decay($s['portada'] ?? null) * delta_hh((string)$s['sent_date']);
+    return ($n <=> 0) * sqrt(abs($n)) + $bonus - delta_decay($s['portada'] ?? null) * delta_hh((string)$s['sent_date'], isset($s['sent_act']) ? (int)$s['sent_act'] : null);
 }
 /** Expresion SQL del delta en vivo (tablas: stories s, topics t). La usan el ciclo (para guardarlo) y las listas (para ordenar/mostrar). */
 function delta_sql(): string {
     $dm = number_format(delta_decay('medios'), 4, '.', ''); $ds = number_format(delta_decay('substacks'), 4, '.', ''); $dc = number_format(delta_decay('canales'), 4, '.', '');
     $n  = "(s.eff_pos - s.eff_neg)";
     $hh = "GREATEST(0, FLOOR(TIMESTAMPDIFF(MINUTE, s.sent_date, NOW()) / 30) - " . delta_hh_min() . ")";
+    if (delta_por_actividad()) {   // edad por actividad (migra-189): votos del sitio desde el envio / decay_act_k; el reloj solo para lo anterior a la migra
+        $act = "GREATEST(0, FLOOR(GREATEST(0, " . act_counter() . " - s.sent_act) / " . number_format(delta_act_k(), 2, '.', '') . ") - " . delta_hh_min() . ")";
+        $hh = "IF(s.sent_act IS NULL, $hh, $act)";
+    }
     return "(SIGN($n) * SQRT(ABS($n)) + IF($n > 0, t.bonus, 0) - (CASE s.portada WHEN 'substacks' THEN $ds WHEN 'canales' THEN $dc ELSE $dm END) * $hh)";
 }
 /** Huella de un voto: la misma para todas las cuentas que voten el mismo envio desde la misma conexion. HMAC truncado con el secreto
@@ -1370,11 +1398,11 @@ function delta_explica(array $s): string {
     $n = (int)($s['eff_pos'] ?? 0) - (int)($s['eff_neg'] ?? 0);
     $raiz = ($n <=> 0) * sqrt(abs($n));
     $bonus = $n > 0 ? (float)($s['bonus'] ?? 0) : 0.0;
-    $dec = delta_decay($s['portada'] ?? null) * delta_hh((string)$s['sent_date']);
+    $dec = delta_decay($s['portada'] ?? null) * delta_hh((string)$s['sent_date'], isset($s['sent_act']) ? (int)$s['sent_act'] : null);
     $f = fn(float $x) => number_format($x, 2, ',', '');
     $txt = ($n < 0 ? '−' : '') . '√' . abs($n) . ' ' . t('votos') . ' = ' . number_format($raiz, 2, ',', '');
     if ($bonus > 0) $txt .= ' + ' . $f($bonus) . ' ' . h((string)($s['topic'] ?? ''));
-    $txt .= ' − ' . $f($dec) . ' ' . t('por antigüedad');
+    $txt .= ' − ' . $f($dec) . ' ' . (isset($s['sent_act']) && $s['sent_act'] !== null && delta_por_actividad() ? t('por actividad') . ' (' . delta_edad_txt($s) . ')' : t('por antigüedad'));
     return $txt . ' = ' . number_format($raiz + $bonus - $dec, 1, ',', '');
 }
 /** Duracion en horas, en palabras y en el idioma de la pagina: 48 → «dos días», 168 → «una semana», 36 → «36 horas». */

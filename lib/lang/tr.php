@@ -1075,4 +1075,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'borrar los leídos' => 'okunanları sil',
 'borrar los de %s' => '%s bildirimlerini sil',
 'borrar este aviso' => 'bu bildirimi sil',
+// edad por actividad (migra-189)
+'por actividad' => 'etkinlik nedeniyle',
+'actividad' => 'etkinlik',
+'reloj' => 'saat',
 ];

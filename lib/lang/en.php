@@ -1109,4 +1109,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'borrar los leídos' => 'delete the read ones',
 'borrar los de %s' => 'delete those from %s',
 'borrar este aviso' => 'delete this notification',
+// edad por actividad (migra-189)
+'por actividad' => 'for activity',
+'actividad' => 'activity',
+'reloj' => 'clock',
 ];

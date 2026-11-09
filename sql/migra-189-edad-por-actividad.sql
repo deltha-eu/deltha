@@ -1,0 +1,48 @@
+-- migra-189 (2026-11-09): la antigüedad del δ se mide en actividad del sitio, no en reloj.
+-- Deltha es internacional y de madrugada (en la zona de la mayoría) casi nadie vota: lo enviado de noche perdía δ durante horas
+-- muertas. Ahora cada decay_act_k votos emitidos en todo el sitio (config act_counter, suma uno por voto nuevo en /votar) cuentan
+-- como una «media hora» de la fórmula. stories.sent_act guarda el contador al enviarse; lo anterior se rellena contando los votos
+-- posteriores a su envío. Lo que tenga sent_act NULL sigue con el reloj. El ciclo, el mínimo en el radar y la caducidad siguen en minutos.
+-- Idempotente. Volver al reloj: decay_edad = 'reloj' en Admin → Config (sin tocar nada más).
+SET NAMES utf8mb4;
+
+-- 1. Columna en stories
+SET @col := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'stories' AND COLUMN_NAME = 'sent_act');
+SET @sql := IF(@col = 0, 'ALTER TABLE stories ADD COLUMN sent_act INT UNSIGNED NULL DEFAULT NULL COMMENT ''act_counter al enviarse (migra-189)'' AFTER sent_date', 'SELECT 1');
+PREPARE st FROM @sql; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- 2. Contador de actividad = votos emitidos hasta ahora (solo la primera vez)
+INSERT INTO config (ckey, cvalue, descr) SELECT 'act_counter', COUNT(*), 'votos emitidos en todo el sitio; suma uno en /votar (edad del δ por actividad, migra-189)' FROM votes
+  ON DUPLICATE KEY UPDATE descr = VALUES(descr);
+
+-- 3. K = votos por media hora en los últimos 7 días (mínimo 1), solo la primera vez
+INSERT INTO config (ckey, cvalue, descr) SELECT 'decay_act_k', GREATEST(1, ROUND(COUNT(*) / 336, 1)), 'votos del sitio que equivalen a media hora de espera en el δ (migra-189)' FROM votes WHERE created > NOW() - INTERVAL 7 DAY
+  ON DUPLICATE KEY UPDATE descr = VALUES(descr);
+INSERT INTO config (ckey, cvalue, descr) VALUES ('decay_edad', 'actividad', 'qué marca la media hora de la antigüedad del δ: actividad (votos del sitio) o reloj (migra-189)')
+  ON DUPLICATE KEY UPDATE descr = VALUES(descr);
+
+-- 4. Relleno de lo que ya está en el radar/portada: contador − votos posteriores a su envío
+UPDATE stories s SET s.sent_act = GREATEST(0, (SELECT CAST(cvalue AS SIGNED) FROM config WHERE ckey = 'act_counter') - (SELECT COUNT(*) FROM votes v WHERE v.created > s.sent_date))
+  WHERE s.sent_act IS NULL AND s.status IN ('nuevas', 'destacadas');
+
+-- 5. /algoritmo en los diez idiomas: un párrafo antes de «Dos portadas y un radar» (marcadores {actk} y {actmodo} los rellena page_body)
+UPDATE pages SET body = REPLACE(body, '<h2>Dos portadas y un radar</h2>', '<p><b>Una media hora no es siempre media hora.</b> {site} se lee desde varias zonas horarias y de madrugada en una de ellas casi nadie vota: para que lo enviado de noche no pierda δ mientras el sitio duerme, la antigüedad se mide en actividad y no en reloj (modo actual: {actmodo}). Cada {actk} votos emitidos en todo {site} cuentan como una media hora de espera; cuando nadie vota, nada caduca, y cuando el sitio hierve, el radar se renueva igual que siempre. El tiempo mínimo en el radar, el ciclo y la caducidad sí van en minutos.</p>
+<h2>Dos portadas y un radar</h2>') WHERE slug = 'algoritmo' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Two front pages and a radar</h2>', '<p><b>Half an hour is not always half an hour.</b> {site} is read from several time zones and in the small hours of one of them hardly anyone votes: so that what is posted at night does not lose δ while the site sleeps, age is measured in activity rather than clock time (current mode: {actmodo}). Every {actk} votes cast across {site} count as half an hour of waiting; when nobody votes, nothing expires, and when the site is buzzing the radar turns over as it always did. The minimum time in the radar, the cycle and expiry are still in minutes.</p>
+<h2>Two front pages and a radar</h2>') WHERE slug = 'algoritmo.en' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Dues portades i un radar</h2>', '<p><b>Una mitja hora no sempre és mitja hora.</b> {site} es llegeix des de diverses zones horàries i de matinada en una d''elles gairebé ningú no vota: perquè el que s''envia de nit no perdi δ mentre el lloc dorm, l''antiguitat es mesura en activitat i no en rellotge (mode actual: {actmodo}). Cada {actk} vots emesos a tot {site} compten com una mitja hora d''espera; quan ningú no vota, res no caduca, i quan el lloc bull, el radar es renova igual que sempre. El temps mínim al radar, el cicle i la caducitat sí que van en minuts.</p>
+<h2>Dues portades i un radar</h2>') WHERE slug = 'algoritmo.ca' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Dúas portadas e un radar</h2>', '<p><b>Unha media hora non sempre é media hora.</b> {site} lese desde varias zonas horarias e de madrugada nunha delas case ninguén vota: para que o enviado de noite non perda δ mentres o sitio dorme, a antigüidade mídese en actividade e non en reloxo (modo actual: {actmodo}). Cada {actk} votos emitidos en todo {site} contan como unha media hora de espera; cando ninguén vota, nada caduca, e cando o sitio ferve, o radar renóvase igual ca sempre. O tempo mínimo no radar, o ciclo e a caducidade si van en minutos.</p>
+<h2>Dúas portadas e un radar</h2>') WHERE slug = 'algoritmo.gl' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Bi azal eta radar bat</h2>', '<p><b>Ordu erdi bat ez da beti ordu erdi bat.</b> {site} hainbat ordu-eremutatik irakurtzen da eta haietako batean goizaldean ia inork ez du bozkatzen: gauez bidalitakoak gunea lo dagoen bitartean δ-rik gal ez dezan, antzinatasuna jardueran neurtzen da, ez erlojuan (uneko modua: {actmodo}). {site} osoan emandako {actk} botok itxaroteko ordu erdi bat balio dute; inork bozkatzen ez duenean ez da ezer iraungitzen, eta gunea irakiten dagoenean radarra betiko moduan berritzen da. Radarreko gutxieneko denbora, zikloa eta iraungitzea minututan doaz oraindik.</p>
+<h2>Bi azal eta radar bat</h2>') WHERE slug = 'algoritmo.eu' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Deux unes et un radar</h2>', '<p><b>Une demi-heure n''est pas toujours une demi-heure.</b> {site} se lit depuis plusieurs fuseaux horaires et, au petit matin de l''un d''eux, presque personne ne vote : pour que ce qui est envoyé la nuit ne perde pas de δ pendant que le site dort, l''ancienneté se mesure en activité et non à l''horloge (mode actuel : {actmodo}). Chaque {actk} votes émis sur tout {site} comptent comme une demi-heure d''attente ; quand personne ne vote, rien n''expire, et quand le site bouillonne, le radar se renouvelle comme toujours. Le temps minimum dans le radar, le cycle et l''expiration restent en minutes.</p>
+<h2>Deux unes et un radar</h2>') WHERE slug = 'algoritmo.fr' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Zwei Titelseiten und ein Radar</h2>', '<p><b>Eine halbe Stunde ist nicht immer eine halbe Stunde.</b> {site} wird aus mehreren Zeitzonen gelesen, und in den frühen Morgenstunden einer davon stimmt kaum jemand ab: Damit nachts Eingereichtes kein δ verliert, während die Seite schläft, wird das Alter in Aktivität statt nach der Uhr gemessen (aktueller Modus: {actmodo}). Je {actk} auf ganz {site} abgegebene Stimmen zählen als eine halbe Stunde Wartezeit; wenn niemand abstimmt, verfällt nichts, und wenn die Seite brummt, erneuert sich das Radar wie immer. Die Mindestzeit im Radar, der Zyklus und das Verfallen bleiben in Minuten.</p>
+<h2>Zwei Titelseiten und ein Radar</h2>') WHERE slug = 'algoritmo.de' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Due prime pagine e un radar</h2>', '<p><b>Una mezz''ora non è sempre una mezz''ora.</b> {site} si legge da diversi fusi orari e nelle prime ore di uno di essi quasi nessuno vota: perché ciò che viene inviato di notte non perda δ mentre il sito dorme, l''anzianità si misura in attività e non con l''orologio (modalità attuale: {actmodo}). Ogni {actk} voti espressi in tutto {site} contano come una mezz''ora di attesa; quando nessuno vota, nulla scade, e quando il sito ribolle, il radar si rinnova come sempre. Il tempo minimo nel radar, il ciclo e la scadenza restano in minuti.</p>
+<h2>Due prime pagine e un radar</h2>') WHERE slug = 'algoritmo.it' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>Duas capas e um radar</h2>', '<p><b>Uma meia hora nem sempre é meia hora.</b> {site} lê-se a partir de vários fusos horários e de madrugada num deles quase ninguém vota: para que o que se envia de noite não perca δ enquanto o site dorme, a antiguidade mede-se em atividade e não em relógio (modo atual: {actmodo}). Cada {actk} votos emitidos em todo o {site} contam como meia hora de espera; quando ninguém vota, nada caduca, e quando o site ferve, o radar renova-se como sempre. O tempo mínimo no radar, o ciclo e a caducidade continuam em minutos.</p>
+<h2>Duas capas e um radar</h2>') WHERE slug = 'algoritmo.pt' AND body NOT LIKE '%{actk}%';
+UPDATE pages SET body = REPLACE(body, '<h2>İki ön sayfa ve bir Radar</h2>', '<p><b>Yarım saat her zaman yarım saat değildir.</b> {site} birkaç saat diliminden okunuyor ve bunlardan birinin gece saatlerinde neredeyse kimse oy vermiyor: gece gönderilenler site uyurken δ kaybetmesin diye eskilik saatle değil etkinlikle ölçülür (geçerli mod: {actmodo}). Tüm {site} genelinde verilen her {actk} oy yarım saatlik bekleme sayılır; kimse oy vermediğinde hiçbir şey eskimez, site kaynadığında ise Radar her zamanki gibi yenilenir. Radar''daki asgari süre, döngü ve zaman aşımı dakika olarak kalır.</p>
+<h2>İki ön sayfa ve bir Radar</h2>') WHERE slug = 'algoritmo.tr' AND body NOT LIKE '%{actk}%';

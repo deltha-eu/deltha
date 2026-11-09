@@ -1055,4 +1055,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'borrar los leídos' => 'cancella quelli letti',
 'borrar los de %s' => 'cancella quelli di %s',
 'borrar este aviso' => 'cancella questo avviso',
+// edad por actividad (migra-189)
+'por actividad' => 'per attività',
+'actividad' => 'attività',
+'reloj' => 'orologio',
 ];

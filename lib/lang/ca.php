@@ -1054,4 +1054,8 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'borrar los leídos' => 'esborrar els llegits',
 'borrar los de %s' => 'esborrar els de %s',
 'borrar este aviso' => 'esborrar aquest avís',
+// edad por actividad (migra-189)
+'por actividad' => 'per activitat',
+'actividad' => 'activitat',
+'reloj' => 'rellotge',
 ];

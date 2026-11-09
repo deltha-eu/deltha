@@ -51,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $premod = !$u && premod_anon();   // anonimo con premod_anon = 1 (migra-183): el hilo entra oculto (pending_mod) y lo aprueba un moderador en /moderacion
         $status = $premod ? 'pending_mod' : 'nuevas';   // si no, posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
         $pdo->beginTransaction();
-        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status, indexable, forum_id)
-                       VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)")
+        $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status, indexable, forum_id, sent_act)
+                       VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?, (SELECT CAST(cvalue AS UNSIGNED) FROM config WHERE ckey = 'act_counter'))")
             ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], lang_detect($f['title'] . ' ' . $f['content']), $f['content'], $image, $status, $f['indexable'], $foros ? (int)$foros[$f['f']]['forum_id'] : null]);
         $sid = (int)$pdo->lastInsertId();
         // la comunidad se lee de story_communities (como en /enviar); faltaba aqui y los originales no salian en la suya (12/10/2026, migra-141 repone los antiguos)

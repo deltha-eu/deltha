@@ -1055,4 +1055,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'borrar los leídos' => 'gelesene löschen',
 'borrar los de %s' => 'die von %s löschen',
 'borrar este aviso' => 'diese Benachrichtigung löschen',
+// edad por actividad (migra-189)
+'por actividad' => 'für Aktivität',
+'actividad' => 'Aktivität',
+'reloj' => 'Uhr',
 ];
