@@ -17,6 +17,7 @@ require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/chat.php';
 require __DIR__ . '/../lib/moderacion.php';
+require __DIR__ . '/../lib/sigfrid.php';   // Sigfrid, el ayudante del Chat (migra-182)
 if ((string)cfg('chat_enabled', '1') !== '1') redirect('/');
 
 $u = user();
@@ -56,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mid = (int)$pdo->lastInsertId();
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
         avisos_chat($pdo, $mid, $u ? (int)$u['user_id'] : null, $u ? (string)$u['login'] : $anonAlias, $content, $ref);   // @mencionados y autor del #N citado
+        sigfrid_contestar($pdo, $mid, $content, $u, $u ? '' : $anonAlias);   // Sigfrid, el ayudante (migra-182): si le hablan, responde citando este mensaje
         redirect($base . $amp . 'ok=1' . (isset($_POST['js']) ? '' : '#m' . $mid));   // con JS (app/scroll.js) sin ancla: el script restaura el scroll
     }
 }
