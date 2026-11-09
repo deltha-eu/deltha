@@ -23,6 +23,8 @@ declare(strict_types=1);
 /** Acciones que Sigfrid sabe hacer (las mismas para las reglas y para el esquema del modelo). */
 const SIGFRID_ACCIONES = ['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'conectados', 'proximo_ciclo', 'mis_envios', 'ayuda'];
 /** Acciones a las que el periodo (hoy / semana / mes) les cambia la respuesta: una continuacion «¿y este mes?» solo tiene sentido con estas. */
+/** Lo que contesta a cualquier pregunta que no vaya de Deltha (decision de Angel, 09/11/2026; sin traducir: es un chiste). */
+const SIGFRID_FUERA = 'Estimado fistro diodenal, solo atiendo cuestiones relacionadas con deltha. ¡Hasta luego Lucas!';
 const SIGFRID_CON_PERIODO = ['medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'mis_envios'];
 
 function sigfrid_on(): bool { return (string)cfg('sigfrid_enabled', '1') === '1'; }
@@ -437,7 +439,9 @@ ia_handler('sigfrid', function (PDO $pdo, array $job, array $res): void {
     $paquete = (string)($in['user'] ?? '');
     $txt = trim((string)($res['text'] ?? $res['respuesta'] ?? ''));
     $txt = preg_replace('/^#\d+\s+/', '', $txt);   // por si repite la cita
-    if (!sigfrid_respuesta_valida($txt, $paquete)) $txt = t('No he sabido responder a eso.') . ' ' . t('Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
+    // fuera de Deltha (migra-188): el modelo devuelve FUERA_DE_DELTHA y Sigfrid despacha con la frase fija de Ángel, en castellano siempre
+    if (str_contains($txt, 'FUERA_DE_DELTHA')) $txt = SIGFRID_FUERA;
+    elseif (!sigfrid_respuesta_valida($txt, $paquete)) $txt = t('No he sabido responder a eso.') . ' ' . t('Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
     $final = mb_substr("#$mid " . ($quien !== '' ? "$quien " : '') . $txt, 0, 1000);
     $sig = sigfrid_user($pdo);
     $pdo->prepare("UPDATE chat SET content = ? WHERE msg_id = ? AND user_id = ?")->execute([$final, $nid, (int)($sig['user_id'] ?? 0)]);
