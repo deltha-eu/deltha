@@ -1049,4 +1049,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'No he sabido responder a eso.' => 'Ez dut jakin horri erantzuten.',
 'No he podido mirarlo a tiempo.' => 'Ezin izan dut garaiz begiratu.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Idatzi «@%s laguntza» egin dezakedana ikusteko.',
+'borrar del todo' => 'erabat ezabatu',
+'desaparece del todo, sin dejar aviso' => 'erabat desagertzen da, abisurik utzi gabe',
 ];

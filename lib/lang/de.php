@@ -1050,4 +1050,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'No he sabido responder a eso.' => 'Das konnte ich nicht beantworten.',
 'No he podido mirarlo a tiempo.' => 'Ich konnte nicht rechtzeitig nachsehen.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Schreib „@%s hilfe“, um zu sehen, was ich kann.',
+'borrar del todo' => 'ganz löschen',
+'desaparece del todo, sin dejar aviso' => 'verschwindet vollständig, ohne Hinweis',
 ];

@@ -1050,4 +1050,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'No he sabido responder a eso.' => 'Non ho saputo rispondere.',
 'No he podido mirarlo a tiempo.' => 'Non sono riuscito a controllare in tempo.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Scrivi «@%s aiuto» per vedere cosa so fare.',
+'borrar del todo' => 'cancella del tutto',
+'desaparece del todo, sin dejar aviso' => 'sparisce del tutto, senza lasciare avviso',
 ];
