@@ -160,8 +160,12 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
     $system = "Clasifica la frase del usuario de un agregador de noticias en una accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; "
             . "concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; medio_leido=medio o periodico mas leido; noticia_top=noticia mas votada o leida; "
             . "comunidad_activa=comunidad con mas movimiento; top_enviador=usuario que mas envia; conectados=cuanta gente hay; proximo_ciclo=cuando sube la siguiente; "
-            . "mis_envios=los envios o aura de quien pregunta; ayuda=lo demas. Periodo: hoy, semana (defecto) o mes. Solo JSON.";
-    $schema = ['type' => 'object', 'properties' => ['accion' => ['type' => 'string', 'enum' => SIGFRID_ACCIONES], 'periodo' => ['type' => 'string', 'enum' => ['hoy', 'semana', 'mes']]], 'required' => ['accion', 'periodo'], 'additionalProperties' => false];
+            . "mis_envios=los envios o aura de quien pregunta; ayuda=lo demas. Periodo: hoy, semana (defecto) o mes. "
+            . "deltha: true si la pregunta trata de este agregador (sus noticias, portada, radar, comunidades, foros, concurso, medios, usuarios, aura); "
+            . "false si va de otra cosa (resultados deportivos, el tiempo, cultura general, chistes, otras webs), aunque mencione noticias. Solo JSON.";
+    // «deltha»: false si la pregunta no va de este sitio (un resultado deportivo, el tiempo, cultura general…); asi el esquema cerrado no le obliga a
+    // encajarla a la fuerza en una accion (09/11/2026: «¿cómo quedó el Depor?» salia como radar). Con false, Sigfrid despacha con SIGFRID_FUERA.
+    $schema = ['type' => 'object', 'properties' => ['deltha' => ['type' => 'boolean'], 'accion' => ['type' => 'string', 'enum' => SIGFRID_ACCIONES], 'periodo' => ['type' => 'string', 'enum' => ['hoy', 'semana', 'mes']]], 'required' => ['deltha', 'accion', 'periodo'], 'additionalProperties' => false];
     $body = ['model' => (string)cfg('sigfrid_ia_model', 'sigfrid'), 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $texto]],
              'temperature' => 0, 'max_tokens' => 60, 'stream' => false,
              'response_format' => ['type' => 'json_schema', 'json_schema' => ['name' => 'sigfrid', 'strict' => true, 'schema' => $schema]],
@@ -181,6 +185,7 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
     if ($txt === '' || !preg_match('/\{.*\}/su', $txt, $m)) return null;   // por si el modelo envuelve el JSON en texto
     $r = json_decode($m[0], true);
     if (!is_array($r) || !in_array($r['accion'] ?? '', SIGFRID_ACCIONES, true)) return null;
+    if (array_key_exists('deltha', $r) && $r['deltha'] === false) return ['accion' => 'fuera', 'periodo' => 'semana'];   // no va de Deltha
     return ['accion' => (string)$r['accion'], 'periodo' => in_array($r['periodo'] ?? '', ['hoy', 'semana', 'mes'], true) ? (string)$r['periodo'] : 'semana'];
 }
 
@@ -344,6 +349,7 @@ function sigfrid_enlace(string $texto, string $url): string {
 function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = null): string {
     switch ($accion) {
         case 'radar':            return sigfrid_radar($pdo);
+        case 'fuera':            return SIGFRID_FUERA;   // la pregunta no va de Deltha (lo dice el clasificador)
         case 'portada':          return sigfrid_portada($pdo);
         case 'comunidad_activa': return sigfrid_comunidad_activa($pdo, $periodo);
         case 'top_enviador':     return sigfrid_top_enviador($pdo, $periodo);
@@ -500,7 +506,7 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
         if ($in === null) {
             $in = sigfrid_ia($content, $login);
             // capa 3 (migra-187): ni las reglas ni el clasificador lo encajan en una accion → lo redacta el PC con todos los datos a la vista
-            if (($in === null || $in['accion'] === 'ayuda') && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
+            if (($in === null || $in['accion'] === 'ayuda') && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;   // 'fuera' no pasa por aqui: se despacha con la frase
             $in = $in ?? ['accion' => 'ayuda', 'periodo' => 'semana'];
         }
         $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . sigfrid_accion($pdo, $in['accion'], $in['periodo'], $u);
