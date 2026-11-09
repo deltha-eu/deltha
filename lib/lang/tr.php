@@ -1058,4 +1058,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Sin conexión' => 'Bağlantı yok',
 'Reintentar' => 'Tekrar dene',
 '%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s telefonunda hiçbir şey saklamaz: haberler, oylar ve yorumlar sunucuda yaşar. Ağ geri gelince kaldığın yerden devam et.',
+'Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.' => 'Burada Sohbet yardımcısı <b>%s</b> yaşıyor. Bir bottur: <b>@%s</b> ile etiketle ve radarda ya da manşette ne olduğunu, öykü yarışmasını kimin kazanmakta olduğunu, en çok okunan yayının hangisi olduğunu ya da gönderilerinin nasıl gittiğini sor. Mesajının altına yanıt verir ve yalnızca herkese açık verileri okur: moderasyon yapmaz, görüş bildirmez. Yapabildiği her şeyi görmek için «@%s yardım» yaz.',
 ];

@@ -142,6 +142,8 @@ $refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta ref
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
 echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a><a class=\"ayuda\" href=\"/empezar\">" . icon('help') . "<span>" . t('Cómo empezar') . "</span></a></nav>";   // la FAQ de arranque (migra-122), a la derecha
 echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refrescoJs ? " data-refresh=\"$refrescoJs\" data-refresh-url=\"" . h(refresh_url()) . "\"" : '') . ">";
+// quien es Sigfrid (09/11/2026): aviso de ayuda cerrable (migra-181), solo si esta encendido; con su nombre en vigor
+if (sigfrid_on()) { $sl = h((string)cfg('sigfrid_login', 'Sigfrid')); echo "<p class=\"notice ayuda\" data-k=\"chat-sigfrid\">" . t('Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.', $sl, $sl, $sl) . "</p>"; }
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
 $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
     echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\">";
