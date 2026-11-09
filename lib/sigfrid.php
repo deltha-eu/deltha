@@ -10,7 +10,7 @@
  *      concurso de relatos, medio mas leido, noticia mas votada o leida, ayuda— se resuelve al instante y sin modelo.
  *   2. Si las reglas no entienden la frase y hay sigfrid_ia_url, se le pregunta de forma SINCRONA a un servidor OpenAI-compatible
  *      (/v1/chat/completions: llama-server, Strata, vLLM...) con un esquema JSON cerrado: el modelo solo elige la accion y el
- *      periodo, nunca redacta la respuesta ni ve datos. Tope sigfrid_ia_timeout_ms; si no llega, la ayuda. Pensado para un modelo
+ *      periodo, nunca redacta la respuesta ni ve datos. Tope sigfrid_ia_timeout_ms (8 s); si no llega, la ayuda. Pensado para un modelo
  *      pequeño en el propio droplet (LFM3-1.7B con llama-server), no para la capa asincrona de lib/ia.php: el Chat no puede esperar
  *      a que el PC de la redaccion pida trabajo.
  *
@@ -153,19 +153,18 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
     $texto = sigfrid_normaliza($content, $login);
     if ($texto === '') return null;
     $acciones = implode(' | ', SIGFRID_ACCIONES);
-    $system = "Eres el clasificador de Sigfrid, el ayudante del chat de Deltha (un agregador de noticias en español con un concurso semanal de relatos en el foro Originales). "
-            . "Lee la frase del usuario y elige UNA accion: radar (que hay en el radar, lo que espera para llegar a portada); concurso_ganador (quien gana o va ganando el concurso de relatos); "
-            . "concurso_tema (el tema o consigna del concurso de esta semana); medio_leido (que medio, periodico, substack o fuente es el mas leido o con mas clics); "
-            . "noticia_top (la noticia o envio mas votado o mas leido); portada (que hay ahora en portada); comunidad_activa (que comunidad tiene mas movimiento); "
-            . "top_enviador (que usuario envia o comenta mas); conectados (cuanta gente hay ahora); proximo_ciclo (cuando sube la siguiente noticia); "
-            . "mis_envios (los envios, comentarios o aura de quien pregunta); ayuda (cualquier otra cosa, saludos, o si no esta claro). "
-            . "El periodo es hoy, semana o mes (semana si no se dice). Responde SOLO con JSON: {\"accion\": \"$acciones\", \"periodo\": \"hoy|semana|mes\"}.";
+    // Corto a proposito (09/11/2026): el droplet lee el prompt a ~90 tokens/s y el mensaje largo (330 tokens) se pasaba del tope.
+    // El esquema JSON cerrado ya limita las acciones; aqui solo la pista de cada una. ~120 tokens.
+    $system = "Clasifica la frase del usuario de un agregador de noticias en una accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; "
+            . "concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; medio_leido=medio o periodico mas leido; noticia_top=noticia mas votada o leida; "
+            . "comunidad_activa=comunidad con mas movimiento; top_enviador=usuario que mas envia; conectados=cuanta gente hay; proximo_ciclo=cuando sube la siguiente; "
+            . "mis_envios=los envios o aura de quien pregunta; ayuda=lo demas. Periodo: hoy, semana (defecto) o mes. Solo JSON.";
     $schema = ['type' => 'object', 'properties' => ['accion' => ['type' => 'string', 'enum' => SIGFRID_ACCIONES], 'periodo' => ['type' => 'string', 'enum' => ['hoy', 'semana', 'mes']]], 'required' => ['accion', 'periodo'], 'additionalProperties' => false];
     $body = ['model' => (string)cfg('sigfrid_ia_model', 'sigfrid'), 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $texto]],
              'temperature' => 0, 'max_tokens' => 60, 'stream' => false,
              'response_format' => ['type' => 'json_schema', 'json_schema' => ['name' => 'sigfrid', 'strict' => true, 'schema' => $schema]],
              'chat_template_kwargs' => ['enable_thinking' => false], 'reasoning_effort' => 'none'];
-    $ms = max(500, (int)cfg('sigfrid_ia_timeout_ms', 4000));
+    $ms = max(500, (int)cfg('sigfrid_ia_timeout_ms', 8000));
     $hdr = ['Content-Type: application/json'];
     if (($k = trim((string)cfg('sigfrid_ia_key', ''))) !== '') $hdr[] = "Authorization: Bearer $k";
     $ch = curl_init(rtrim($url, '/') . (str_contains($url, '/chat/completions') ? '' : '/v1/chat/completions'));

@@ -82,7 +82,7 @@ echo "Esperando al modelo..."
 for i in $(seq 1 60); do
     if curl -s "http://127.0.0.1:$PORT/health" | grep -q '"ok"'; then
         echo "listo. Prueba:"
-        curl -s "http://127.0.0.1:$PORT/v1/chat/completions" -H 'Content-Type: application/json' -d '{"messages":[{"role":"system","content":"Responde solo con JSON: {\"accion\":\"radar|ayuda\"}"},{"role":"user","content":"muestrame el radar"}],"max_tokens":30,"temperature":0}' | head -c 600; echo
+        curl -s "http://127.0.0.1:$PORT/v1/chat/completions" -H 'Content-Type: application/json' -d '{"messages":[{"role":"system","content":"Responde solo con JSON: {\"accion\":\"radar|ayuda\"}"},{"role":"user","content":"muestrame el radar"}],"max_tokens":40,"temperature":0,"chat_template_kwargs":{"enable_thinking":false},"reasoning_effort":"none"}' | head -c 600; echo
         echo "Ahora en admin → Config: sigfrid_ia_url = http://127.0.0.1:$PORT"
         exit 0
     fi
