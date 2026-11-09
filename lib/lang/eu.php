@@ -1051,4 +1051,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Idatzi «@%s laguntza» egin dezakedana ikusteko.',
 'borrar del todo' => 'erabat ezabatu',
 'desaparece del todo, sin dejar aviso' => 'erabat desagertzen da, abisurik utzi gabe',
+'borrar los leídos' => 'irakurritakoak ezabatu',
+'borrar los de %s' => '%s-renak ezabatu',
+'borrar este aviso' => 'abisu hau ezabatu',
 ];

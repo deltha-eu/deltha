@@ -1051,4 +1051,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Escriu «@%s ajuda» per veure el que sé fer.',
 'borrar del todo' => 'esborrar del tot',
 'desaparece del todo, sin dejar aviso' => 'desapareix del tot, sense deixar avís',
+'borrar los leídos' => 'esborrar els llegits',
+'borrar los de %s' => 'esborrar els de %s',
+'borrar este aviso' => 'esborrar aquest avís',
 ];

@@ -570,6 +570,14 @@ header.top .bell > span { display: none; }
 .fz.aviso .fzt .t b { font-weight: 700; }
 .fz.aviso .prev { color: var(--muted); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fz.aviso.nueva { background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
+/* borrar avisos (09/11/2026): cada fila es un enlace + la × aparte; arriba, «borrar los leídos · borrar los de Sigfrid» */
+.avisos .avrow { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); }
+.avisos .avrow > a.fz { flex: 1 1 auto; min-width: 0; border-bottom: 0; }
+.avisos .avrow form.quitar { display: flex; align-items: center; margin: 0; padding: 0 8px; }
+.avisos .avrow form.quitar button.x { font: inherit; font-size: 20px; line-height: 1; background: none; border: 0; color: var(--muted); cursor: pointer; width: 28px; height: 28px; border-radius: 50%; }
+.avisos .avrow form.quitar button.x:hover { background: color-mix(in srgb, var(--accent) 15%, var(--bg)); color: var(--fg); }
+.avisos .avacts { display: flex; flex-wrap: wrap; gap: 4px; }
+.avisos .avacts form.inline { display: inline; margin: 0; }
 .fz.aviso.nueva .fzt .t { font-weight: 600; }
 .fz.aviso.nueva .prev { color: var(--fg); }
 .fz.aviso.leida { color: var(--muted); }

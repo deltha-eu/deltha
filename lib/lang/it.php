@@ -1052,4 +1052,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Scrivi «@%s aiuto» per vedere cosa so fare.',
 'borrar del todo' => 'cancella del tutto',
 'desaparece del todo, sin dejar aviso' => 'sparisce del tutto, senza lasciare avviso',
+'borrar los leídos' => 'cancella quelli letti',
+'borrar los de %s' => 'cancella quelli di %s',
+'borrar este aviso' => 'cancella questo avviso',
 ];
