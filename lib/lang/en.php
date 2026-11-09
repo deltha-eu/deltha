@@ -1099,4 +1099,9 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => 'Mark message #%d by %s as a message to the community? It will be highlighted and shown in the strip at the top.',
 'Sí, marcar' => 'Yes, mark it',
 'No' => 'No',
+// Sigfrid conversacional (migra-187)
+'Un momento, que lo miro…' => 'One moment, let me check…',
+'No he sabido responder a eso.' => 'I could not answer that.',
+'No he podido mirarlo a tiempo.' => 'I could not look into it in time.',
+'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Type “@%s help” to see what I can do.',
 ];

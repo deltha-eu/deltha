@@ -76,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $per = max(10, (int)cfg('chat_per_page', 50));
 $page = page_num();
 $goto = (int)($_GET['m'] ?? $_GET['anun'] ?? 0);   // ?anun=N (migra-186): confirmar la marca de aviso sobre el mensaje N, en su pagina
+sigfrid_caducar($pdo);   // esperas vencidas del Sigfrid conversacional (migra-187), antes de leer los mensajes
 $sel = "SELECT c.*, u.login, cv.value AS my_vote FROM chat c LEFT JOIN users u ON u.user_id = c.user_id
         LEFT JOIN chat_votes cv ON cv.msg_id = c.msg_id AND cv.user_id = ?";   // my_vote: sol (1) o lagrima (-1) del usuario actual (NULL si ninguno o anonimo); migra-074
 $uid = (int)($u['user_id'] ?? 0);
@@ -147,6 +148,8 @@ $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || isset($_GET['premod']) || isset($_GET['anun']) || $err;
 
 $refrescoJs = max(0, (int)cfg('chat_refresh_sec', 60));   // con JS (fetch, sin recargar): siempre; 0 = nunca
+// Sigfrid conversacional (migra-187): si en esta pagina hay un «un momento, que lo miro» esperando al PC, se refresca cada 6 s hasta que llegue
+if (sigfrid_pendientes($pdo, array_keys($ids))) $refrescoJs = $refrescoJs > 0 ? min($refrescoJs, 6) : 6;
 $refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta refresh): no mientras se escribe
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
 echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a><a class=\"ayuda\" href=\"/empezar\">" . icon('help') . "<span>" . t('Cómo empezar') . "</span></a></nav>";   // la FAQ de arranque (migra-122), a la derecha

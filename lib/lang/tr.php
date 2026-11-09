@@ -1065,4 +1065,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => '%2$s kullanıcısının #%1$d numaralı mesajı topluluğa mesaj olarak işaretlensin mi? Vurgulanacak ve üstteki şeritte görünecek.',
 'Sí, marcar' => 'Evet, işaretle',
 'No' => 'Hayır',
+// Sigfrid conversacional (migra-187)
+'Un momento, que lo miro…' => 'Bir dakika, bakıyorum…',
+'No he sabido responder a eso.' => 'Buna yanıt veremedim.',
+'No he podido mirarlo a tiempo.' => 'Zamanında bakamadım.',
+'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Yapabildiklerimi görmek için «@%s yardım» yaz.',
 ];

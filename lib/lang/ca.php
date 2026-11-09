@@ -1044,4 +1044,9 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => 'Marcar el missatge #%d de %s com a missatge a la comunitat? Sortirà ressaltat i a la franja de dalt.',
 'Sí, marcar' => 'Sí, marcar',
 'No' => 'No',
+// Sigfrid conversacional (migra-187)
+'Un momento, que lo miro…' => 'Un moment, que ho miro…',
+'No he sabido responder a eso.' => 'No he sabut respondre a això.',
+'No he podido mirarlo a tiempo.' => 'No he pogut mirar-ho a temps.',
+'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Escriu «@%s ajuda» per veure el que sé fer.',
 ];

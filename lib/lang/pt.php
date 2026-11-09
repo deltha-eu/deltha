@@ -1081,4 +1081,9 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => 'Marcar a mensagem #%d de %s como mensagem à comunidade? Ficará destacada e na faixa de cima.',
 'Sí, marcar' => 'Sim, marcar',
 'No' => 'Não',
+// Sigfrid conversacional (migra-187)
+'Un momento, que lo miro…' => 'Um momento, vou ver…',
+'No he sabido responder a eso.' => 'Não soube responder a isso.',
+'No he podido mirarlo a tiempo.' => 'Não consegui ver a tempo.',
+'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Escreve «@%s ajuda» para ver o que sei fazer.',
 ];

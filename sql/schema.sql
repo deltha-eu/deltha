@@ -976,6 +976,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('sources_og_per_run',   '10',   'Fuentes: og:image maximas que se descargan en cada pasada del cron'),
 ('mod_max_retries',     '3',    'Fallos del modelo con un mismo elemento antes de pasarlo a revision humana'),
 ('chat_anuncio_dias',   '7',    'Dias que un mensaje a la comunidad sigue saliendo en la franja de arriba del Chat (0 = siempre); la marca y el resaltado no caducan'),
+('sigfrid_espera_seg',  '120',  'Segundos que Sigfrid espera la respuesta redactada por el worker de IA antes de rendirse (sustituye el «un momento» por una disculpa)'),
 ('premod_anon',         '1',    '1 = lo que escriben los anonimos (comentarios, chat, hilos en los foros) queda pendiente de que lo apruebe un moderador; 0 = se publica al momento'),
 ('mod_auto_hide',       '0',    '1 = la IA oculta provisionalmente lo muy claro (confianza >= mod_hide_score) hasta que lo vea un moderador; 0 = solo señala'),
 ('mod_hide_score',      '0.90', 'Confianza minima para ocultar provisionalmente (con mod_auto_hide = 1)'),
