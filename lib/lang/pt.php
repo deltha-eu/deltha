@@ -1074,4 +1074,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Sin conexión' => 'Sem ligação',
 'Reintentar' => 'Tentar de novo',
 '%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s não guarda nada no teu telemóvel: as notícias, os votos e os comentários vivem no servidor. Quando a rede voltar, continua por onde ias.',
+'Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.' => 'Aqui vive <b>%s</b>, o ajudante do Chat. É um bot: menciona-o com <b>@%s</b> e pergunta-lhe o que há no radar ou na capa, quem vai ganhando o concurso de contos, qual é o meio mais lido ou como vão os teus envios. Responde por baixo da tua mensagem e só lê dados públicos: não modera nem opina. Escreve «@%s ajuda» para ver tudo o que sabe fazer.',
 ];

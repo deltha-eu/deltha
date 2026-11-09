@@ -1037,4 +1037,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Sin conexión' => 'Sense connexió',
 'Reintentar' => 'Torna-ho a provar',
 '%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s no guarda res al teu mòbil: les notícies, els vots i els comentaris viuen al servidor. Quan torni la xarxa, continua per on anaves.',
+'Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.' => 'Aquí viu <b>%s</b>, l\'ajudant del Xat. És un bot: menciona\'l amb <b>@%s</b> i pregunta-li què hi ha al radar o a portada, qui va guanyant el concurs de relats, quin és el mitjà més llegit o com van els teus enviaments. Respon sota el teu missatge i només llegeix dades públiques: no modera ni opina. Escriu «@%s ajuda» per veure tot el que sap fer.',
 ];

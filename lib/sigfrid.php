@@ -74,7 +74,7 @@ function sigfrid_intencion(string $content, string $login = ''): ?array {
     $n = sigfrid_normaliza($content, $login);
     if ($n === '') return ['accion' => 'ayuda', 'periodo' => 'semana'];
     $p = sigfrid_periodo($n);
-    if (preg_match('/\b(ayuda|help|comandos|que sabes|que puedes|que haces|quien eres|hola|aide|aiuto|hilfe|ajuda|laguntza|yardim)\b/u', $n)) return ['accion' => 'ayuda', 'periodo' => $p];
+    if (preg_match('/\b(ayuda|help|comandos|que sabes|que puedes|que haces|quien eres|hola|aide|aiuto|hilfe|ajuda|laguntza|yardim|yardım)\b/u', $n)) return ['accion' => 'ayuda', 'periodo' => $p];
     if (preg_match('/\bradar\b|\b(cola|pendientes?)\b.*\bportada\b/u', $n)) return ['accion' => 'radar', 'periodo' => $p];
     $super = '/\bm[aá]s\s+(leid|visit|clic|lectur|vist|popular|votad|comentad|seguid|activ|movid)|\b(top|mejor|ranking|mas votos|mas lecturas|most|plus|piu|meist|gehien|en cok)\b/u';
     $superIn = '(?:' . substr($super, 1, -2) . ')';   // el mismo patron, agrupado, para meterlo dentro de otra expresion

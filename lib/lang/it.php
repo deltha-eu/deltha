@@ -1038,4 +1038,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Sin conexión' => 'Senza connessione',
 'Reintentar' => 'Riprova',
 '%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s non conserva nulla sul tuo telefono: notizie, voti e commenti vivono sul server. Quando torna la rete, riprendi da dove eri.',
+'Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.' => 'Qui vive <b>%s</b>, l\'assistente della Chat. È un bot: menzionalo con <b>@%s</b> e chiedigli cosa c\'è nel radar o in prima pagina, chi sta vincendo il concorso di racconti, qual è la testata più letta o come vanno i tuoi invii. Risponde sotto il tuo messaggio e legge solo dati pubblici: non modera né dà opinioni. Scrivi «@%s aiuto» per vedere tutto ciò che sa fare.',
 ];
