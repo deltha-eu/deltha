@@ -1103,4 +1103,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'No he sabido responder a eso.' => 'Je n\'ai pas su répondre à cela.',
 'No he podido mirarlo a tiempo.' => 'Je n\'ai pas pu regarder à temps.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Écrivez « @%s aide » pour voir ce que je sais faire.',
+'borrar del todo' => 'supprimer complètement',
+'desaparece del todo, sin dejar aviso' => 'disparaît entièrement, sans laisser d\'avis',
 ];

@@ -1070,4 +1070,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'No he sabido responder a eso.' => 'Buna yanıt veremedim.',
 'No he podido mirarlo a tiempo.' => 'Zamanında bakamadım.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Yapabildiklerimi görmek için «@%s yardım» yaz.',
+'borrar del todo' => 'tamamen sil',
+'desaparece del todo, sin dejar aviso' => 'iz bırakmadan tamamen kaybolur',
 ];

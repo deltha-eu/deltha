@@ -1086,4 +1086,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'No he sabido responder a eso.' => 'Não soube responder a isso.',
 'No he podido mirarlo a tiempo.' => 'Não consegui ver a tempo.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Escreve «@%s ajuda» para ver o que sei fazer.',
+'borrar del todo' => 'apagar de vez',
+'desaparece del todo, sin dejar aviso' => 'desaparece de vez, sem deixar aviso',
 ];

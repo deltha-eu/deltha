@@ -1104,4 +1104,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'No he sabido responder a eso.' => 'I could not answer that.',
 'No he podido mirarlo a tiempo.' => 'I could not look into it in time.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Type “@%s help” to see what I can do.',
+'borrar del todo' => 'delete completely',
+'desaparece del todo, sin dejar aviso' => 'disappears entirely, leaving no notice',
 ];

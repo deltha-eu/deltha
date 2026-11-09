@@ -30,6 +30,13 @@ $base = '/chat' . ($hilos ? '' : '?v=tiempo');   // la vista elegida va en todos
 $amp = $hilos ? '?' : '&';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (post('act') === 'borrar_total' && is_admin()) {   // admin: desaparece sin dejar aviso (status gone, como el borrado propio); queda en el registro y se puede deshacer desde moderacion (migra-176)
+        $id = (int)post('id');
+        mod_log_post($pdo, 'chat');
+        if (function_exists('mod_undo_chat')) mod_undo_chat($pdo, $id);
+        $pdo->prepare("UPDATE chat SET status = 'gone' WHERE msg_id = ?")->execute([$id]);
+        redirect($base . $amp . 'ok=1');
+    }
     if (post('act') === 'borrar') {
         $id = (int)post('id');
         $st = $pdo->prepare("SELECT * FROM chat WHERE msg_id = ?"); $st->execute([$id]);
@@ -210,6 +217,7 @@ foreach ($rows as $m) {
     if (is_admin() && !$del) $acts[] = "<a class=\"modlink\" href=\"/editar-chat?id=$id\">" . t('editar') . "</a>";   // solo administradores (migra-094); los moderadores, solo eliminar
     if (is_mod() && !$del) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"anuncio\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link anunbtn" . ($anun ? ' on' : '') . "\" title=\"" . h($anun ? t('quitar la marca de mensaje a la comunidad') : t('marcar como mensaje a la comunidad')) . "\" aria-label=\"" . h(t('Mensaje a la comunidad')) . "\">" . icon('mega') . "</button></form>";   // megafono: mensaje a la comunidad (migra-121)
     if (is_mod() && !$del) $acts[] = "<form method=\"post\" action=\"/moderacion\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"$id\"><input type=\"hidden\" name=\"back\" value=\"1\"><button class=\"link modlink\">" . t('eliminar') . "</button></form>";
+    if (is_admin()) $acts[] = "<form method=\"post\" class=\"inline\"><input type=\"hidden\" name=\"act\" value=\"borrar_total\"><input type=\"hidden\" name=\"id\" value=\"$id\"><button class=\"link modlink\" title=\"" . h(t('desaparece del todo, sin dejar aviso')) . "\">" . t('borrar del todo') . "</button></form>";   // solo admin (09/11/2026)
     if ($acts || !$del) {
         echo "<div class=\"actions\">" . implode('', $acts);
         // sol / lagrima: registrados sobre mensajes ajenos; el resto (y el autor) ve solo los contadores

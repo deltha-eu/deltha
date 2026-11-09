@@ -1049,4 +1049,6 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'No he sabido responder a eso.' => 'Non souben responder a iso.',
 'No he podido mirarlo a tiempo.' => 'Non puiden miralo a tempo.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Escribe «@%s axuda» para ver o que sei facer.',
+'borrar del todo' => 'borrar de todo',
+'desaparece del todo, sin dejar aviso' => 'desaparece de todo, sen deixar aviso',
 ];

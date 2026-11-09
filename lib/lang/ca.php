@@ -1049,4 +1049,6 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'No he sabido responder a eso.' => 'No he sabut respondre a això.',
 'No he podido mirarlo a tiempo.' => 'No he pogut mirar-ho a temps.',
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Escriu «@%s ajuda» per veure el que sé fer.',
+'borrar del todo' => 'esborrar del tot',
+'desaparece del todo, sin dejar aviso' => 'desapareix del tot, sense deixar avís',
 ];
