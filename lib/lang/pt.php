@@ -1012,4 +1012,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'medio' => 'meio',
 'substack' => 'substack',
 'canal' => 'canal',
+'%d noticias en portada' => '%d notícias na capa',
 ];

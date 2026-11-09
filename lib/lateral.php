@@ -339,12 +339,28 @@ function side_seguidos(PDO $pdo): void {
     $st->execute(array_keys($vis));
     $rows = $st->fetchAll();
     if (!$rows) return;
+    // numero grande: noticias de ese medio que han llegado a portada (stories.source = dominio de sources.home; destacadas + archived),
+    // en vez de repetir los seguidores que ya dice la linea de abajo (Ángel, 09/11/2026). Una consulta sobre idx_source para los 8
+    // dominios, en Redis 5 min. Los canales de YouTube comparten dominio, asi que no se les pone cifra.
+    $dom = [];
+    foreach ($rows as $r) { $f = $vis[(int)$r['source_id']]; if ($f['kind'] !== 'youtube' && ($d = (string)source_of((string)$f['home'])) !== '') $dom[(int)$r['source_id']] = $d; }
+    $portada = [];
+    if ($dom) {
+        try {
+            $portada = cache_remember('side:seguidos:portada:' . md5(implode(',', $dom)), 300, function () use ($pdo, $dom) {
+                $q = $pdo->prepare("SELECT source, COUNT(*) FROM stories WHERE status IN ('destacadas','archived') AND content_type = 'link' AND source IN (" . implode(',', array_fill(0, count($dom), '?')) . ") GROUP BY source");
+                $q->execute(array_values($dom));
+                return $q->fetchAll(PDO::FETCH_KEY_PAIR);
+            });
+        } catch (Throwable $e) { $portada = []; }
+    }
     $kinds = ['medio' => t('medio'), 'newsletter' => t('substack'), 'youtube' => t('canal')];
     echo "<section class=\"mod seguidos\"><h3>" . t('Medios más seguidos') . "<span><a href=\"/fuentes\">" . t('todos') . "</a></span></h3>";
     $i = 0;
     foreach ($rows as $r) {
         $f = $vis[(int)$r['source_id']]; $i++;
-        echo "<a class=\"row\" href=\"" . h(fuente_url($f)) . "\"><b><i>$i</i>" . (int)$r['n'] . "</b><span class=\"t\">" . h($f['name']) . "</span><small>" . h($kinds[$f['kind']] ?? $f['kind']) . " · " . h(t('%d siguen', (int)$r['n'])) . "</small></a>";
+        $np = isset($dom[(int)$r['source_id']]) ? (int)($portada[$dom[(int)$r['source_id']]] ?? 0) : null;
+        echo "<a class=\"row\" href=\"" . h(fuente_url($f)) . "\"><b" . ($np !== null ? " title=\"" . h(t('%d noticias en portada', $np)) . "\"" : '') . "><i>$i</i>" . ($np !== null ? $np : '') . "</b><span class=\"t\">" . h($f['name']) . "</span><small>" . h($kinds[$f['kind']] ?? $f['kind']) . " · " . h(t('%d siguen', (int)$r['n'])) . "</small></a>";
     }
     echo "</section>";
 }

@@ -996,4 +996,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'medio' => 'medya',
 'substack' => 'substack',
 'canal' => 'kanal',
+'%d noticias en portada' => '%d haber ana sayfada',
 ];

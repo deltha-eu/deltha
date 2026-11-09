@@ -975,4 +975,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'medio' => 'medio',
 'substack' => 'substack',
 'canal' => 'canle',
+'%d noticias en portada' => '%d noticias en portada',
 ];

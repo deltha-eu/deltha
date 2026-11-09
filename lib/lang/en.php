@@ -1030,4 +1030,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'medio' => 'media',
 'substack' => 'substack',
 'canal' => 'channel',
+'%d noticias en portada' => '%d stories on the front page',
 ];

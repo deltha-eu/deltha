@@ -975,4 +975,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'medio' => 'mitjà',
 'substack' => 'substack',
 'canal' => 'canal',
+'%d noticias en portada' => '%d notícies en portada',
 ];

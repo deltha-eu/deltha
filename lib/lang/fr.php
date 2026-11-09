@@ -1029,4 +1029,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'medio' => 'média',
 'substack' => 'substack',
 'canal' => 'chaîne',
+'%d noticias en portada' => '%d articles en une',
 ];

@@ -976,4 +976,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'medio' => 'Medium',
 'substack' => 'Substack',
 'canal' => 'Kanal',
+'%d noticias en portada' => '%d Beiträge auf der Titelseite',
 ];

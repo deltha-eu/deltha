@@ -976,4 +976,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'medio' => 'media',
 'substack' => 'substack',
 'canal' => 'canale',
+'%d noticias en portada' => '%d notizie in prima pagina',
 ];

@@ -975,4 +975,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'medio' => 'hedabidea',
 'substack' => 'substack',
 'canal' => 'kanala',
+'%d noticias en portada' => '%d albiste azalean',
 ];
