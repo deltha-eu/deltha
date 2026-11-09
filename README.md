@@ -1,4 +1,4 @@
-# Deltha
+Con `false`, si el PC está disponible la pregunta va igualmente a la capa 3 y es Qwen quien confirma (FUERA_DE_DELTHA → frase) o contesta (LFM3 se equivocaba en las dos direcciones: «¿cuál es el comentario más reciente?» salía como fuera); sin PC, la frase directamente.# Deltha
 
 **Deltha** ([deltha.eu](https://deltha.eu)) es un agregador de noticias y foro de debate en español, pequeño y sin algoritmo opaco: la gente envía enlaces, los vota y los comenta, y las portadas salen de un ciclo público (el δ) que cualquiera puede leer en [/algoritmo](https://deltha.eu/algoritmo). Sin cookies de terceros, sin rastreo, con medición propia; moderación asistida por un modelo local; veintitantas plantillas visuales. Nace del ensayo [*Contralgoritmia*](https://contralgoritmia.com/) y lo mantiene Ángel L. Fernández Recuero (Jot Down).
 
