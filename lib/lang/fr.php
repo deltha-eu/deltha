@@ -1087,4 +1087,8 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s vous avez envoyé %d articles (%d sont arrivés à la une, %d votes au total) et écrit %d commentaires.',
 'Tu aura es %s.' => 'Votre aura est de %s.',
 'Tu perfil' => 'Votre profil',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Hors connexion',
+'Reintentar' => 'Réessayer',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s ne garde rien sur votre téléphone : les articles, les votes et les commentaires vivent sur le serveur. Quand le réseau reviendra, reprenez là où vous en étiez.',
 ];

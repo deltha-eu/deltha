@@ -1034,4 +1034,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s hast du %d Meldungen eingereicht (%d kamen auf die Titelseite, %d Stimmen insgesamt) und %d Kommentare geschrieben.',
 'Tu aura es %s.' => 'Deine Aura ist %s.',
 'Tu perfil' => 'Dein Profil',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Offline',
+'Reintentar' => 'Erneut versuchen',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s speichert nichts auf deinem Handy: Meldungen, Stimmen und Kommentare liegen auf dem Server. Wenn das Netz zurück ist, mach da weiter, wo du warst.',
 ];

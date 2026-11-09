@@ -1054,4 +1054,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s %d haber gönderdin (%d tanesi manşete çıktı, toplam %d oy) ve %d yorum yazdın.',
 'Tu aura es %s.' => 'Auran %s.',
 'Tu perfil' => 'Profilin',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Bağlantı yok',
+'Reintentar' => 'Tekrar dene',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s telefonunda hiçbir şey saklamaz: haberler, oylar ve yorumlar sunucuda yaşar. Ağ geri gelince kaldığın yerden devam et.',
 ];
