@@ -1092,4 +1092,10 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Reintentar' => 'Réessayer',
 '%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s ne garde rien sur votre téléphone : les articles, les votes et les commentaires vivent sur le serveur. Quand le réseau reviendra, reprenez là où vous en étiez.',
 'Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.' => 'Ici vit <b>%s</b>, l\'assistant du Chat. C\'est un bot : mentionnez-le avec <b>@%s</b> et demandez-lui ce qu\'il y a dans le radar ou à la une, qui gagne le concours de nouvelles, quel média est le plus lu ou comment vont vos envois. Il répond sous votre message et ne lit que des données publiques : il ne modère pas et ne donne pas d\'avis. Écrivez « @%s aide » pour voir tout ce qu\'il sait faire.',
+// Chat: avisos a la comunidad con caducidad y confirmacion (migra-186)
+'marcado por %s' => 'marqué par %s',
+'¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba durante %d días.' => 'Marquer le message n° %d de %s comme message à la communauté ? Il sera mis en avant et affiché dans le bandeau du haut pendant %d jours.',
+'¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => 'Marquer le message n° %d de %s comme message à la communauté ? Il sera mis en avant et affiché dans le bandeau du haut.',
+'Sí, marcar' => 'Oui, marquer',
+'No' => 'Non',
 ];

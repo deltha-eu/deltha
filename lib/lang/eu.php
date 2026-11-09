@@ -1038,4 +1038,10 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Reintentar' => 'Saiatu berriro',
 '%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s(e)k ez du ezer gordetzen zure mugikorrean: albisteak, botoak eta iruzkinak zerbitzarian bizi dira. Sarea itzultzean, jarraitu zeunden tokitik.',
 'Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.' => 'Hemen bizi da <b>%s</b>, Txataren laguntzailea. Bot bat da: aipatu <b>@%s</b> idatziz eta galdetu zer dagoen radarrean edo azalean, nork irabazten duen ipuin lehiaketa, zein den hedabide irakurriena edo nola doazen zure bidalketak. Zure mezuaren azpian erantzuten du eta datu publikoak bakarrik irakurtzen ditu: ez du moderatzen, ez du iritzirik ematen. Idatzi «@%s laguntza» egin dezakeen guztia ikusteko.',
+// Chat: avisos a la comunidad con caducidad y confirmacion (migra-186)
+'marcado por %s' => '%s(e)k markatua',
+'¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba durante %d días.' => '#%d mezua (%s) komunitateari mezu gisa markatu? Nabarmenduta eta goiko zerrendan agertuko da %d egunez.',
+'¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => '#%d mezua (%s) komunitateari mezu gisa markatu? Nabarmenduta eta goiko zerrendan agertuko da.',
+'Sí, marcar' => 'Bai, markatu',
+'No' => 'Ez',
 ];

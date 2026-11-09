@@ -1039,4 +1039,10 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Reintentar' => 'Erneut versuchen',
 '%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s speichert nichts auf deinem Handy: Meldungen, Stimmen und Kommentare liegen auf dem Server. Wenn das Netz zurück ist, mach da weiter, wo du warst.',
 'Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.' => 'Hier lebt <b>%s</b>, der Chat-Assistent. Er ist ein Bot: erwähne ihn mit <b>@%s</b> und frag, was im Radar oder auf der Titelseite ist, wer den Geschichtenwettbewerb anführt, welches Medium am meisten gelesen wird oder wie deine Beiträge laufen. Er antwortet unter deiner Nachricht und liest nur öffentliche Daten: er moderiert nicht und gibt keine Meinung ab. Schreib „@%s hilfe“, um alles zu sehen, was er kann.',
+// Chat: avisos a la comunidad con caducidad y confirmacion (migra-186)
+'marcado por %s' => 'markiert von %s',
+'¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba durante %d días.' => 'Nachricht #%d von %s als Nachricht an die Gemeinschaft markieren? Sie wird hervorgehoben und %d Tage lang in der Leiste oben angezeigt.',
+'¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => 'Nachricht #%d von %s als Nachricht an die Gemeinschaft markieren? Sie wird hervorgehoben und in der Leiste oben angezeigt.',
+'Sí, marcar' => 'Ja, markieren',
+'No' => 'Nein',
 ];
