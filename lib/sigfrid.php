@@ -157,15 +157,19 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
     $acciones = implode(' | ', SIGFRID_ACCIONES);
     // Corto a proposito (09/11/2026): el droplet lee el prompt a ~90 tokens/s y el mensaje largo (330 tokens) se pasaba del tope.
     // El esquema JSON cerrado ya limita las acciones; aqui solo la pista de cada una. ~120 tokens.
-    $system = "Clasifica la frase del usuario de un agregador de noticias en una accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; "
-            . "concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; medio_leido=medio o periodico mas leido; noticia_top=noticia mas votada o leida; "
-            . "comunidad_activa=comunidad con mas movimiento; top_enviador=usuario que mas envia; conectados=cuanta gente hay; proximo_ciclo=cuando sube la siguiente; "
-            . "mis_envios=los envios o aura de quien pregunta; conversar=va de Deltha pero no pide exactamente ninguna de las anteriores (pregunta vaga, abierta, de ambiente, que compara o mezcla varias cosas); "
-            . "ayuda=saludos o pide ayuda. Elige una accion concreta solo si la frase la pide claramente; en la duda, conversar. Periodo: hoy, semana (defecto) o mes. "
-            . "deltha: true si la pregunta trata de este agregador (sus noticias, portada, radar, comunidades, foros, concurso, medios, usuarios, aura); "
-            . "false si va de otra cosa (resultados deportivos, el tiempo, cultura general, chistes, otras webs), aunque mencione noticias. Solo JSON.";
-    // «deltha»: false si la pregunta no va de este sitio (un resultado deportivo, el tiempo, cultura general…); asi el esquema cerrado no le obliga a
-    // encajarla a la fuerza en una accion (09/11/2026: «¿cómo quedó el Depor?» salia como radar). Con false, Sigfrid despacha con SIGFRID_FUERA.
+    // Primero decide si la frase va de este sitio (deltha), luego la accion. Con ejemplos: un modelo de 1,7B sin ellos encajaba «¿cómo quedó el
+    // Depor?» en radar o conectados (09/11/2026). ~230 tokens; el prompt se cachea entre peticiones.
+    $system = "Clasificas frases que la gente escribe a Sigfrid, el ayudante de Deltha, un agregador de noticias. Devuelve JSON. "
+            . "1) deltha: true solo si la frase pregunta por Deltha mismo (sus noticias, portada, radar, comunidades, foros, concurso de relatos, medios, usuarios, aura, conectados, ciclo). "
+            . "false si pregunta por el mundo exterior: resultados deportivos, equipos, el tiempo, cultura general, chistes, programacion, otras webs, aunque sea una noticia. "
+            . "2) accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; "
+            . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; top_enviador=usuario que mas envia; "
+            . "conectados=cuanta gente hay conectada; proximo_ciclo=cuando sube la siguiente; mis_envios=los envios o aura de quien pregunta; "
+            . "conversar=va de Deltha pero no pide exactamente ninguna de las anteriores (vaga, de ambiente, compara o mezcla); ayuda=saludo o pide ayuda. "
+            . "Elige una accion concreta solo si la frase la pide claramente; en la duda, conversar. Si deltha es false, accion=ayuda. 3) periodo: hoy, semana (defecto) o mes. "
+            . "Ejemplos: «¿cómo quedó el Depor?» → {\"deltha\":false,\"accion\":\"ayuda\",\"periodo\":\"semana\"}; «¿qué tiempo hace?» → deltha false; "
+            . "«muéstrame el radar» → {\"deltha\":true,\"accion\":\"radar\",\"periodo\":\"semana\"}; «¿cuántos estamos conectados?» → conectados; "
+            . "«¿hay ambiente por aquí?» → {\"deltha\":true,\"accion\":\"conversar\",\"periodo\":\"semana\"}; «¿cuál fue el medio más leído este mes?» → medio_leido, mes.";
     $schema = ['type' => 'object', 'properties' => ['deltha' => ['type' => 'boolean'], 'accion' => ['type' => 'string', 'enum' => array_merge(SIGFRID_ACCIONES, ['conversar'])], 'periodo' => ['type' => 'string', 'enum' => ['hoy', 'semana', 'mes']]], 'required' => ['deltha', 'accion', 'periodo'], 'additionalProperties' => false];
     $body = ['model' => (string)cfg('sigfrid_ia_model', 'sigfrid'), 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $texto]],
              'temperature' => 0, 'max_tokens' => 60, 'stream' => false,
