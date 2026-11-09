@@ -23,8 +23,32 @@ declare(strict_types=1);
 /** Acciones que Sigfrid sabe hacer (las mismas para las reglas y para el esquema del modelo). */
 const SIGFRID_ACCIONES = ['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'conectados', 'proximo_ciclo', 'mis_envios', 'ayuda'];
 /** Acciones a las que el periodo (hoy / semana / mes) les cambia la respuesta: una continuacion «¿y este mes?» solo tiene sentido con estas. */
-/** Lo que contesta a cualquier pregunta que no vaya de Deltha (decision de Angel, 09/11/2026; sin traducir: es un chiste). */
-const SIGFRID_FUERA = 'Estimado fistro diodenal, solo atiendo cuestiones relacionadas con deltha. ¡Hasta luego Lucas!';
+/** Lo que contesta a cualquier pregunta que no vaya de Deltha (decision de Angel, 09/11/2026; sin traducir: es un chiste). Veinte variantes
+ *  al estilo de Chiquito de la Calzada, una al azar cada vez (sigfrid_fuera()); todas dicen lo mismo: que solo atiende cosas de Deltha. */
+const SIGFRID_FUERAS = [
+    'Estimado fistro diodenal, solo atiendo cuestiones relacionadas con Deltha. ¡Hasta luego Lucas!',
+    '¡No puedor, no puedor! Eso no va de Deltha, pecador de la pradera. Pregúntame por el radar o la portada y hablamos.',
+    'Te das cuen, torpedo: aquí solo se habla de Deltha. Lo demás, por la gloria de mi madre, no me lo sé.',
+    '¡Jarl! Eso es del mundo exterior. Yo soy un fistro de Deltha y de Deltha no me muevo. ¡Condemor!',
+    'Pecadorrr de la praderaaa, que eso no es de Deltha. Pregúntame cosas de aquí dentro, que es donde sé ir.',
+    'Siéntate ahí, criaturita, que te lo explico: solo atiendo cuestiones de Deltha. Lo tuyo no lo veo, ¡hasta luego Lucas!',
+    'Eso no me lo sé, cobarde. Que yo soy el ayudante de Deltha, no el teletexto. ¡Al ataquerrr… pero con el radar!',
+    '¡Fistro diodenal! Eso se sale de Deltha por la tangente. Vuelve con una pregunta de la casa y te la miro.',
+    'Por la gloria de mi madre que eso no va de Deltha. ¿Te da cuen? Pregúntame por las comunidades, que ahí me duelen prendas.',
+    'No puedorrr. Mi cabeza está en el radar y en la portada de Deltha; lo de fuera, que lo mire otro fistro.',
+    '¡Gromenauer! Eso no es de Deltha ni con ganas. Si quieres saber quién va ganando el concurso, eso sí, pecador.',
+    'Jarl, qué pregunta más sexy, pero no va de Deltha. Yo solo sé de lo que pasa aquí dentro. ¡Hasta luego Lucas!',
+    'Te lo digo con cariño, torpedo: eso no es de Deltha. Pregúntame por el medio más leído y te caerás de espaldas.',
+    'Eso es del grupo Toro, pecador, no de Deltha. Yo atiendo lo de aquí: radar, portada, foros y poco más.',
+    'Condemor, condemor… eso se escapa de Deltha. Tráeme una pregunta de la casa y verás qué finura.',
+    '¡Ay, mi fistro! Eso no va de Deltha. Yo soy un bot de barrio: solo sé lo que pasa en esta web.',
+    'Caballo blanco, caballo negro, pero de Deltha. Lo demás no lo atiendo, pecador de la pradera.',
+    'No te digo trigo por no llamarte Rodrigor, pero eso no va de Deltha. Pregunta por aquí dentro y te lo miro.',
+    'Ese tema me pilla fuera de Deltha, diodenal. Lo que sí: quién ha enviado más, qué hay en portada y cuántos estamos. ¡Jarl!',
+    'Hasta luego Lucas, que eso no es de Deltha. Cuando quieras saber del radar o del concurso, aquí me tienes, fistro.',
+];
+const SIGFRID_FUERA = SIGFRID_FUERAS[0];   // la de siempre, por si alguien la referencia
+function sigfrid_fuera(): string { return SIGFRID_FUERAS[random_int(0, count(SIGFRID_FUERAS) - 1)]; }
 const SIGFRID_CON_PERIODO = ['medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'mis_envios'];
 
 function sigfrid_on(): bool { return (string)cfg('sigfrid_enabled', '1') === '1'; }
@@ -355,7 +379,7 @@ function sigfrid_enlace(string $texto, string $url): string {
 function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = null): string {
     switch ($accion) {
         case 'radar':            return sigfrid_radar($pdo);
-        case 'fuera':            return SIGFRID_FUERA;   // la pregunta no va de Deltha (lo dice el clasificador)
+        case 'fuera':            return sigfrid_fuera();   // la pregunta no va de Deltha (lo dice el clasificador)
         case 'portada':          return sigfrid_portada($pdo);
         case 'comunidad_activa': return sigfrid_comunidad_activa($pdo, $periodo);
         case 'top_enviador':     return sigfrid_top_enviador($pdo, $periodo);
@@ -452,7 +476,7 @@ ia_handler('sigfrid', function (PDO $pdo, array $job, array $res): void {
     $txt = trim((string)($res['text'] ?? $res['respuesta'] ?? ''));
     $txt = preg_replace('/^#\d+\s+/', '', $txt);   // por si repite la cita
     // fuera de Deltha (migra-188): el modelo devuelve FUERA_DE_DELTHA y Sigfrid despacha con la frase fija de Ángel, en castellano siempre
-    if (str_contains($txt, 'FUERA_DE_DELTHA')) $txt = SIGFRID_FUERA;
+    if (str_contains($txt, 'FUERA_DE_DELTHA')) $txt = sigfrid_fuera();
     elseif (!sigfrid_respuesta_valida($txt, $paquete)) $txt = t('No he sabido responder a eso.') . ' ' . t('Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
     $final = mb_substr("#$mid " . ($quien !== '' ? "$quien " : '') . $txt, 0, 1000);
     $sig = sigfrid_user($pdo);
