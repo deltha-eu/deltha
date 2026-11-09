@@ -454,7 +454,7 @@ function agent_submit_item(PDO $pdo, array $a, array $i): int {
     $lead = mb_substr(trim((string)$i['content']), 0, 2000) ?: null;
     $pdo->beginTransaction();
     $lang = (string)($i['src_lang'] ?? '') ?: lang_detect($title . ' ' . (string)$lead);
-    $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, url_key, source, lang, content, image, status) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'nuevas')")
+    $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, url_key, source, lang, content, image, status, sent_act) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'nuevas', (SELECT CAST(cvalue AS UNSIGNED) FROM config WHERE ckey = 'act_counter'))")
         ->execute([$uid, $topic, $title, $i['url'], url_key((string)$i['url']), source_of((string)$i['url']), $lang, $lead, $image]);
     $sid = (int)$pdo->lastInsertId();
     $pdo->prepare("UPDATE stories SET portada = ?, author_alias = ? WHERE story_id = ?")

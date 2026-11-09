@@ -1091,4 +1091,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'borrar los leídos' => 'apagar os lidos',
 'borrar los de %s' => 'apagar os de %s',
 'borrar este aviso' => 'apagar este aviso',
+// edad por actividad (migra-189)
+'por actividad' => 'por atividade',
+'actividad' => 'atividade',
+'reloj' => 'relógio',
 ];

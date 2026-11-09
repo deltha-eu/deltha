@@ -1054,4 +1054,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'borrar los leídos' => 'irakurritakoak ezabatu',
 'borrar los de %s' => '%s-renak ezabatu',
 'borrar este aviso' => 'abisu hau ezabatu',
+// edad por actividad (migra-189)
+'por actividad' => 'jarduerarengatik',
+'actividad' => 'jarduera',
+'reloj' => 'erlojua',
 ];

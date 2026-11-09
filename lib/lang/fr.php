@@ -1108,4 +1108,8 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'borrar los leídos' => 'supprimer les lus',
 'borrar los de %s' => 'supprimer ceux de %s',
 'borrar este aviso' => 'supprimer cet avis',
+// edad por actividad (migra-189)
+'por actividad' => 'pour l\'activité',
+'actividad' => 'activité',
+'reloj' => 'horloge',
 ];
