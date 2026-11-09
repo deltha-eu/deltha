@@ -1033,4 +1033,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s %d albiste bidali dituzu (%d azalera iritsi ziren, %d boto guztira) eta %d iruzkin idatzi dituzu.',
 'Tu aura es %s.' => 'Zure aura %s da.',
 'Tu perfil' => 'Zure profila',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Konexiorik gabe',
+'Reintentar' => 'Saiatu berriro',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s(e)k ez du ezer gordetzen zure mugikorrean: albisteak, botoak eta iruzkinak zerbitzarian bizi dira. Sarea itzultzean, jarraitu zeunden tokitik.',
 ];

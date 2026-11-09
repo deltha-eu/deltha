@@ -1070,4 +1070,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s enviaste %d notícias (%d chegaram à capa, %d votos no total) e escreveste %d comentários.',
 'Tu aura es %s.' => 'A tua aura é %s.',
 'Tu perfil' => 'O teu perfil',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Sem ligação',
+'Reintentar' => 'Tentar de novo',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s não guarda nada no teu telemóvel: as notícias, os votos e os comentários vivem no servidor. Quando a rede voltar, continua por onde ias.',
 ];

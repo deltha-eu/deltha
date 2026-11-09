@@ -1034,4 +1034,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s hai inviato %d notizie (%d sono arrivate in prima pagina, %d voti in totale) e hai scritto %d commenti.',
 'Tu aura es %s.' => 'La tua aura è %s.',
 'Tu perfil' => 'Il tuo profilo',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Senza connessione',
+'Reintentar' => 'Riprova',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s non conserva nulla sul tuo telefono: notizie, voti e commenti vivono sul server. Quando torna la rete, riprendi da dove eri.',
 ];

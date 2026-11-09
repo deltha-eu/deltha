@@ -1033,4 +1033,8 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s enviaches %d noticias (%d chegaron a portada, %d votos en total) e escribiches %d comentarios.',
 'Tu aura es %s.' => 'A túa aura é %s.',
 'Tu perfil' => 'O teu perfil',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Sen conexión',
+'Reintentar' => 'Tentar de novo',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s non garda nada no teu móbil: as noticias, os votos e os comentarios viven no servidor. Cando volva a rede, segue por onde ías.',
 ];

@@ -1088,4 +1088,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '%s has enviado %d noticias (%d llegaron a portada, %d votos en total) y has escrito %d comentarios.' => '%s you have posted %d stories (%d reached the front page, %d votes in total) and written %d comments.',
 'Tu aura es %s.' => 'Your aura is %s.',
 'Tu perfil' => 'Your profile',
+// PWA: pagina sin conexion dinamica (09/11/2026)
+'Sin conexión' => 'Offline',
+'Reintentar' => 'Retry',
+'%s no guarda nada en tu móvil: las noticias, los votos y los comentarios viven en el servidor. Cuando vuelva la red, sigue por donde ibas.' => '%s keeps nothing on your phone: stories, votes and comments live on the server. When the network is back, carry on where you were.',
 ];
