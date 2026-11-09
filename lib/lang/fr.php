@@ -1098,4 +1098,9 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 '¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => 'Marquer le message n° %d de %s comme message à la communauté ? Il sera mis en avant et affiché dans le bandeau du haut.',
 'Sí, marcar' => 'Oui, marquer',
 'No' => 'Non',
+// Sigfrid conversacional (migra-187)
+'Un momento, que lo miro…' => 'Un instant, je regarde…',
+'No he sabido responder a eso.' => 'Je n\'ai pas su répondre à cela.',
+'No he podido mirarlo a tiempo.' => 'Je n\'ai pas pu regarder à temps.',
+'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Écrivez « @%s aide » pour voir ce que je sais faire.',
 ];

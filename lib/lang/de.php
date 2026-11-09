@@ -1045,4 +1045,9 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => 'Nachricht #%d von %s als Nachricht an die Gemeinschaft markieren? Sie wird hervorgehoben und in der Leiste oben angezeigt.',
 'Sí, marcar' => 'Ja, markieren',
 'No' => 'Nein',
+// Sigfrid conversacional (migra-187)
+'Un momento, que lo miro…' => 'Einen Moment, ich schaue nach…',
+'No he sabido responder a eso.' => 'Das konnte ich nicht beantworten.',
+'No he podido mirarlo a tiempo.' => 'Ich konnte nicht rechtzeitig nachsehen.',
+'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Schreib „@%s hilfe“, um zu sehen, was ich kann.',
 ];

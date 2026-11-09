@@ -356,6 +356,122 @@ function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = n
     }
 }
 
+/* ---- capa 3: Sigfrid conversacional (migra-187, 09/11/2026) -----------------------------------------------------------------------
+ * Cuando la pregunta no encaja en ninguna accion, Sigfrid contesta al momento «un momento, que lo miro», encola una tarea «sigfrid»
+ * en lib/ia.php (la sirve el worker del PC de la redaccion, con un modelo grande) con la pregunta, los mensajes anteriores del hilo
+ * y un PAQUETE con todo lo que Sigfrid sabe sacar, y cuando llega el texto redactado sustituye el mensaje de espera. El modelo no
+ * consulta nada ni ejecuta nada: solo redacta con el paquete. Si mete una cifra o un enlace que no estan en el paquete, se descarta.
+ * Si el worker lleva mas de 3 min sin conectarse, o la tarea esta apagada, no se promete nada y Sigfrid cae en la ayuda de siempre. */
+
+/** Todo lo que Sigfrid sabe ahora mismo, ya redactado por las acciones (en el idioma de quien pregunta, con sus enlaces). */
+function sigfrid_paquete(PDO $pdo, ?array $u): string {
+    $partes = [];
+    foreach (['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'conectados', 'proximo_ciclo'] as $a) {
+        try { $partes[] = "[$a] " . sigfrid_accion($pdo, $a, 'semana', $u); } catch (Throwable $e) {}
+    }
+    if ($u) { try { $partes[] = "[mis_envios] " . sigfrid_accion($pdo, 'mis_envios', 'semana', $u); } catch (Throwable $e) {} }
+    return implode("\n", $partes);
+}
+
+/** Los mensajes anteriores del hilo (lo que cita #N, hasta tres hacia atras), para que el modelo sepa de que se hablaba. */
+function sigfrid_hilo(PDO $pdo, int $mid): string {
+    $out = []; $id = $mid;
+    for ($i = 0; $i < 3 && $id > 0; $i++) {
+        $q = $pdo->prepare("SELECT c.reply_to, c.content, c.alias, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.msg_id = ?"); $q->execute([$id]);
+        if (!($m = $q->fetch()) || !$m['reply_to']) break;
+        $id = (int)$m['reply_to'];
+        $q->execute([$id]);
+        if ($p = $q->fetch()) array_unshift($out, '#' . $id . ' ' . chat_who($p) . ': ' . mb_substr(preg_replace('/\s+/u', ' ', (string)$p['content']), 0, 300));
+    }
+    return implode("\n", $out);
+}
+
+/** ¿Puede Sigfrid prometer una respuesta redactada? Tarea encendida y worker visto hace poco. */
+function sigfrid_conversar_posible(PDO $pdo): bool {
+    if (!function_exists('ia_tarea_activa') || !ia_tarea_activa($pdo, 'sigfrid')) return false;
+    $seen = (string)cfg('ia_worker_seen', '');
+    return $seen !== '' && time() - strtotime($seen) < 180;
+}
+
+/** Publica el «un momento» citando la pregunta y encola el trabajo. Devuelve false si no se puede (y Sigfrid sigue con la ayuda). */
+function sigfrid_conversar(PDO $pdo, int $mid, string $content, ?array $u, string $quien, array $sig): bool {
+    if (!sigfrid_conversar_posible($pdo)) return false;
+    $login = (string)$sig['login'];
+    $pregunta = trim(sigfrid_normaliza_mencion($content, $login));
+    if ($pregunta === '') return false;
+    $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . t('Un momento, que lo miro…');
+    $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,0)")->execute([(int)$sig['user_id'], '', null, $mid, $txt]);
+    $nid = (int)$pdo->lastInsertId();
+    $hilo = sigfrid_hilo($pdo, $mid);
+    $user = "Idioma de la respuesta: " . lang() . ". Quien pregunta: " . ($u ? $u['login'] : 'una persona sin cuenta') . ".\n"
+          . ($hilo !== '' ? "<datos>\nMensajes anteriores del hilo:\n$hilo\n</datos>\n" : '')
+          . "<datos>\nPREGUNTA: $pregunta\n</datos>\n"
+          . "<datos>\nPAQUETE DE DATOS (lo que Sigfrid sabe ahora mismo; cada linea empieza por el nombre de la accion):\n" . sigfrid_paquete($pdo, $u) . "\n</datos>";
+    $job = ia_pedir($pdo, 'sigfrid', ['user' => $user, 'mid' => $mid, 'quien' => $quien, 'login' => $login, 'lang' => lang()], 'chat', $nid);
+    if ($job === null) {   // no se pudo encolar (tope diario, tarea apagada entre medias): se retira el «un momento» y que siga la ayuda
+        $pdo->prepare("DELETE FROM chat WHERE msg_id = ?")->execute([$nid]);
+        return false;
+    }
+    return true;
+}
+
+/** El texto sin la mencion a Sigfrid pero con mayusculas y acentos (para el modelo, no para las reglas). */
+function sigfrid_normaliza_mencion(string $t, string $login): string {
+    $l = preg_quote($login, '~');
+    return trim(preg_replace('/\s+/u', ' ', preg_replace("~(?<![\\w@])@$l\\b|^\\s*$l\\s*[,:]?~iu", ' ', $t)));
+}
+
+/** La respuesta del modelo solo vale si todas sus cifras (de 2+ digitos) y todos sus enlaces estan en el paquete que se le dio. */
+function sigfrid_respuesta_valida(string $txt, string $paquete): bool {
+    if (trim($txt) === '' || mb_strlen($txt) > 900) return false;
+    preg_match_all('/\d[\d.,]*\d/u', $txt, $nums);
+    foreach ($nums[0] as $n) if (mb_strlen(preg_replace('/\D/', '', $n)) >= 2 && !str_contains($paquete, $n)) return false;
+    preg_match_all('~https?://\S+?(?=[)\s]|$)~u', $txt, $urls);
+    foreach ($urls[0] as $url) if (!str_contains($paquete, $url)) return false;
+    return !preg_match('/<\/?(script|iframe|img)/i', $txt);
+}
+
+ia_handler('sigfrid', function (PDO $pdo, array $job, array $res): void {
+    $nid = (int)$job['ref_id']; $in = $job['input'];
+    $mid = (int)($in['mid'] ?? 0); $quien = (string)($in['quien'] ?? '');
+    $paquete = (string)($in['user'] ?? '');
+    $txt = trim((string)($res['text'] ?? $res['respuesta'] ?? ''));
+    $txt = preg_replace('/^#\d+\s+/', '', $txt);   // por si repite la cita
+    if (!sigfrid_respuesta_valida($txt, $paquete)) $txt = t('No he sabido responder a eso.') . ' ' . t('Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
+    $final = mb_substr("#$mid " . ($quien !== '' ? "$quien " : '') . $txt, 0, 1000);
+    $sig = sigfrid_user($pdo);
+    $pdo->prepare("UPDATE chat SET content = ? WHERE msg_id = ? AND user_id = ?")->execute([$final, $nid, (int)($sig['user_id'] ?? 0)]);
+    if ($sig && function_exists('avisos_chat')) avisos_chat($pdo, $nid, (int)$sig['user_id'], (string)$sig['login'], $final, $mid);   // «te ha respondido Sigfrid», ahora que hay respuesta
+});
+
+/** Mensajes de Sigfrid que esperan al PC en esta pagina (ids de chat) → el Chat se refresca mas deprisa mientras tanto. */
+function sigfrid_pendientes(PDO $pdo, array $ids): array {
+    $ids = array_values(array_filter(array_map('intval', $ids)));
+    if (!$ids) return [];
+    try {
+        $in = implode(',', $ids);
+        return array_map('intval', $pdo->query("SELECT ref_id FROM ia_jobs WHERE task_key = 'sigfrid' AND ref_type = 'chat' AND ref_id IN ($in) AND status IN ('queued','processing')")->fetchAll(PDO::FETCH_COLUMN));
+    } catch (Throwable $e) { return []; }
+}
+
+/** Esperas vencidas (sigfrid_espera_seg) o trabajos fallidos: el «un momento» pasa a ser una disculpa. La llama /chat antes de pintar.
+ *  Se marca el trabajo (result._caducado) para no repetirlo; el texto de espera puede estar en cualquier idioma, asi que no se busca. */
+function sigfrid_caducar(PDO $pdo): void {
+    $seg = max(30, (int)cfg('sigfrid_espera_seg', 120));
+    try {
+        $q = $pdo->query("SELECT job_id, ref_id, input, status FROM ia_jobs WHERE task_key = 'sigfrid' AND ref_type = 'chat'
+                           AND ((status IN ('queued','processing') AND created < NOW() - INTERVAL $seg SECOND) OR status IN ('failed','needs_human'))
+                           AND (result IS NULL OR result NOT LIKE '%_caducado%')");
+        foreach ($q->fetchAll() as $j) {
+            $in = json_decode((string)$j['input'], true) ?: [];
+            $txt = "#" . (int)($in['mid'] ?? 0) . ' ' . (($in['quien'] ?? '') !== '' ? $in['quien'] . ' ' : '') . t('No he podido mirarlo a tiempo.') . ' ' . t('Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
+            $pdo->prepare("UPDATE chat SET content = ? WHERE msg_id = ?")->execute([mb_substr($txt, 0, 1000), (int)$j['ref_id']]);
+            $pdo->prepare("UPDATE ia_jobs SET status = IF(status IN ('queued','processing'), 'needs_human', status), result = ? WHERE job_id = ?")
+                ->execute([json_encode(['_caducado' => 1, '_error' => 'sin respuesta en ' . $seg . ' s'], JSON_UNESCAPED_UNICODE), (int)$j['job_id']]);
+        }
+    } catch (Throwable $e) { /* sin la migracion 173 no hay cola */ }
+}
+
 /**
  * Punto de entrada desde /chat tras guardar el mensaje $mid con texto $content de $u (null = anonimo con alias $alias).
  * Si el mensaje va para Sigfrid, publica su respuesta como mensaje del Chat citando #$mid y avisa a quien pregunto.
@@ -376,8 +492,13 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
                 if ($pe !== null && !in_array($in['accion'], SIGFRID_CON_PERIODO, true)) $in = null;   // «¿y hoy?» tras el radar no significa nada: que lo decida el modelo o la ayuda
             }
         }
-        $in = $in ?? sigfrid_ia($content, $login) ?? ['accion' => 'ayuda', 'periodo' => 'semana'];
         $quien = $u ? '@' . $u['login'] : ($alias !== '' ? $alias : '');
+        if ($in === null) {
+            $in = sigfrid_ia($content, $login);
+            // capa 3 (migra-187): ni las reglas ni el clasificador lo encajan en una accion → lo redacta el PC con todos los datos a la vista
+            if (($in === null || $in['accion'] === 'ayuda') && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
+            $in = $in ?? ['accion' => 'ayuda', 'periodo' => 'semana'];
+        }
         $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . sigfrid_accion($pdo, $in['accion'], $in['periodo'], $u);
         $txt = mb_substr($txt, 0, 1000);   // chat.content es VARCHAR(1000); Sigfrid no pasa por chat_max_len
         $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,0)")->execute([(int)$sig['user_id'], '', null, $mid, $txt]);

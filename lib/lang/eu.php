@@ -1044,4 +1044,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.' => '#%d mezua (%s) komunitateari mezu gisa markatu? Nabarmenduta eta goiko zerrendan agertuko da.',
 'Sí, marcar' => 'Bai, markatu',
 'No' => 'Ez',
+// Sigfrid conversacional (migra-187)
+'Un momento, que lo miro…' => 'Momentu bat, begiratuko dut…',
+'No he sabido responder a eso.' => 'Ez dut jakin horri erantzuten.',
+'No he podido mirarlo a tiempo.' => 'Ezin izan dut garaiz begiratu.',
+'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Idatzi «@%s laguntza» egin dezakedana ikusteko.',
 ];

@@ -17,6 +17,7 @@
 define('DDD_PUBLIC', 1);   // sin la puerta de la clave de acceso: la protege el token
 require __DIR__ . '/../../lib/app.php';
 require_once __DIR__ . '/../../lib/moderacion.php';   // lib/ia.php ya lo carga app.php
+require_once __DIR__ . '/../../lib/sigfrid.php';      // handler de la tarea «sigfrid» (Sigfrid conversacional, migra-187)
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
