@@ -1004,4 +1004,13 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'La noticia más votada %s es %s' => 'Die Nachricht mit den meisten Stimmen %s ist %s',
 'la más leída, %s' => 'die meistgelesene: %s',
 'y también la más leída (%d lecturas)' => 'und zugleich die meistgelesene (%d Aufrufe)',
+'Con aura mayor que %s, hasta %d.' => 'Mit Aura über %s bis zu %d.',
+'Cerrar comentarios' => 'Kommentare schließen',
+'Abrir comentarios' => 'Kommentare öffnen',
+'Cerrados: nadie puede comentar hasta que se abran.' => 'Geschlossen: niemand kann kommentieren, bis sie wieder geöffnet werden.',
+'Comentarios cerrados.' => 'Kommentare geschlossen.',
+'Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.' => 'Da du nicht registriert bist, muss dein Kommentar von einem Moderator freigegeben werden, bevor er veröffentlicht wird.',
+'Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.' => 'Da du nicht registriert bist, muss deine Nachricht von einem Moderator freigegeben werden, bevor sie veröffentlicht wird.',
+'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Da du nicht registriert bist, muss dein Forumsbeitrag von einem Moderator freigegeben werden, bevor er veröffentlicht wird.',
+'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Thread wartet auf Freigabe: nur Moderatoren und Admin sehen ihn. Freigegeben oder entfernt wird er unter <a href="/moderacion">Moderation</a>.',
 ];

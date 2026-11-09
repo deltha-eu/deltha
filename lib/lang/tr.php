@@ -1024,4 +1024,13 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'La noticia más votada %s es %s' => '%s en çok oy alan haber %s',
 'la más leída, %s' => 'en çok okunan, %s',
 'y también la más leída (%d lecturas)' => 've aynı zamanda en çok okunan (%d okuma)',
+'Con aura mayor que %s, hasta %d.' => 'Aurası %s üzerinde olanlar için %d adede kadar.',
+'Cerrar comentarios' => 'Yorumları kapat',
+'Abrir comentarios' => 'Yorumları aç',
+'Cerrados: nadie puede comentar hasta que se abran.' => 'Kapalı: yeniden açılana kadar kimse yorum yapamaz.',
+'Comentarios cerrados.' => 'Yorumlar kapalı.',
+'Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.' => 'Kayıtlı olmadığınız için yorumunuzun yayımlanmadan önce bir moderatör tarafından onaylanması gerekiyor.',
+'Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.' => 'Kayıtlı olmadığınız için mesajınızın yayımlanmadan önce bir moderatör tarafından onaylanması gerekiyor.',
+'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Kayıtlı olmadığınız için foruma gönderinizin yayımlanmadan önce bir moderatör tarafından onaylanması gerekiyor.',
+'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Konu onay bekliyor: yalnızca moderatörler ve admin görebilir. <a href="/moderacion">Moderasyon</a> bölümünde onaylanır ya da kaldırılır.',
 ];

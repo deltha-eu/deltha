@@ -48,7 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!$err) {
         $u = user();
-        $status = 'nuevas';   // posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
+        $premod = !$u && premod_anon();   // anonimo con premod_anon = 1 (migra-183): el hilo entra oculto (pending_mod) y lo aprueba un moderador en /moderacion
+        $status = $premod ? 'pending_mod' : 'nuevas';   // si no, posmoderacion: la IA local lo revisa despues (lib/moderacion.php)
         $pdo->beginTransaction();
         $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, source, lang, content, image, status, indexable, forum_id)
                        VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)")
@@ -58,10 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
         $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
         $pdo->prepare("UPDATE stories SET author_alias = ? WHERE story_id = ?")->execute([$alias, $sid]);
-        mod_enqueue($pdo, 'story', $sid);
+        if ($premod) mod_premod($pdo, 'story', $sid, 'nuevas'); else mod_enqueue($pdo, 'story', $sid);
         if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
         $pdo->commit();
         story_touch($pdo, $sid);   // last_activity = fecha del hilo (migra-170)
+        if ($premod) redirect(($foros && isset($foros[$f['f']]) ? foro_url($foros[$f['f']]) . '&' : '/foros?') . 'premod=1');   // el aviso de que espera aprobacion; el hilo aun no se ve
         avisos_story($pdo, $sid, $u['user_id'] ?? null, $alias, $f['content']);   // @mencionados en el texto (migra-169, 25/10/2026)
         redirect("/hilo/$sid");
     }

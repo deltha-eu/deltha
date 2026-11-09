@@ -1003,4 +1003,13 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'La noticia más votada %s es %s' => 'La notícia més votada %s és %s',
 'la más leída, %s' => 'la més llegida, %s',
 'y también la más leída (%d lecturas)' => 'i també la més llegida (%d lectures)',
+'Con aura mayor que %s, hasta %d.' => 'Amb aura superior a %s, fins a %d.',
+'Cerrar comentarios' => 'Tancar comentaris',
+'Abrir comentarios' => 'Obrir comentaris',
+'Cerrados: nadie puede comentar hasta que se abran.' => 'Tancats: ningú no pot comentar fins que s\'obrin.',
+'Comentarios cerrados.' => 'Comentaris tancats.',
+'Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.' => 'Com que no estàs registrat, el teu comentari ha de ser aprovat per un moderador abans de publicar-se.',
+'Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.' => 'Com que no estàs registrat, el teu missatge ha de ser aprovat per un moderador abans de publicar-se.',
+'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Com que no estàs registrat, el teu enviament al fòrum ha de ser aprovat per un moderador abans de publicar-se.',
+'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Fil pendent d\'aprovació: només el veieu moderadors i admin. S\'aprova o es retira a <a href="/moderacion">Moderació</a>.',
 ];

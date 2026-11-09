@@ -68,6 +68,7 @@ foreach ($visibles as $x) echo "<a href=\"" . h(foro_url($x)) . "\"" . ((int)$x[
     . (!empty($nl[(int)$x['forum_id']]) ? "<i class=\"badge\" title=\"" . h(t('%d hilos sin leer', $nl[(int)$x['forum_id']])) . "\">" . ($nl[(int)$x['forum_id']] > 99 ? '99+' : $nl[(int)$x['forum_id']]) . "</i>" : '') . "</a>";
 echo "<span class=\"acts\">" . foro_seguir_form($f) . "<a class=\"ayuda\" href=\"/articulo?f=" . h($f['slug']) . "\">" . icon('plus') . t('Nuevo hilo') . "</a></span>";
 echo "</nav>";
+if (isset($_GET['premod'])) echo "<p class=\"notice\">" . t('Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.') . "</p>";   // premoderacion de anonimos (migra-183)
 if ($f['status'] !== 'on') echo "<p class=\"notice keep\">" . t('Este foro está apagado: solo lo ves tú (admin). Se enciende en admin → Foros.') . "</p>";
 if ((string)$f['descr'] !== '') echo "<p class=\"notice keep\">" . h($f['descr']) . ' <a href="/articulo?f=' . h($f['slug']) . '">' . t('Abre un hilo') . '</a>.</p>';
 echo "<div class=\"hilos\">";

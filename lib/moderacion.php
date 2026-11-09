@@ -19,6 +19,24 @@ const MOD_OPEN = ['flag', 'hidden', 'needs_human'];   // esperan a un moderador
 
 function mod_on(): bool { return cfg('mod_enabled') === '1'; }
 
+/* ---- premoderacion de anonimos (migra-183, 09/11/2026) ------------------------------------------------------------------
+ * Con premod_anon = 1, lo que escribe quien no tiene cuenta (comentarios, mensajes del chat, hilos abiertos en los foros) no se
+ * publica al momento: entra como pending_mod y queda en la pestaña IA de /moderacion como un elemento «oculto», con el motivo
+ * «premoderación: anónimo». El moderador lo aprueba («se queda»: mod_unhide lo publica) o lo retira, igual que lo que oculta la IA.
+ * No depende de mod_enabled: es moderacion humana, la IA no interviene. */
+function premod_anon(): bool { return cfg('premod_anon', '1') === '1'; }
+
+/** Deja constancia en mod_queue de un elemento que ha entrado ya oculto (pending_mod) a la espera de un moderador.
+ *  $prev = estado al que vuelve si se aprueba ('ok' para comentario y chat, 'nuevas' para un hilo). */
+function mod_premod(PDO $pdo, string $type, int $id, string $prev): void {
+    if (!in_array($type, ['story', 'comment', 'chat'], true) || $id <= 0) return;
+    $verdict = json_encode(['motivo' => 'premoderación: escrito sin cuenta, pendiente de que lo apruebe un moderador'], JSON_UNESCAPED_UNICODE);
+    try {
+        $pdo->prepare("INSERT INTO mod_queue (item_type, ref_id, priority, status, prev_status, verdict, reason, processed) VALUES (?,?,1,'hidden',?,?,'premod',NOW())")
+            ->execute([$type, $id, $prev, $verdict]);
+    } catch (Throwable $e) { /* sin la migracion 062 no hay cola: el elemento queda pending_mod y solo lo ve el admin */ }
+}
+
 /** Encola un elemento para la IA. $prio = 1 para lo reportado (pasa delante). No duplica: si ya esta en cola, como mucho sube la prioridad. */
 function mod_enqueue(PDO $pdo, string $type, int $id, int $prio = 0): void {
     if (!mod_on() || !in_array($type, ['story', 'comment', 'chat'], true) || $id <= 0) return;
@@ -259,6 +277,7 @@ function mod_notes(PDO $pdo, string $type, array $ids): array {
 /** Una linea legible con la opinion de la IA. */
 function mod_note_line(?array $m): string {
     if (!$m) return mod_on() ? 'IA: sin revisar' : '';
+    if (($m['reason'] ?? '') === 'premod') return 'Premoderación: escrito sin cuenta, pendiente de aprobar' . (in_array($m['status'], ['human_ok', 'human_removed'], true) ? ' (ya decidido)' : '');   // migra-183
     if (in_array($m['status'], ['queued', 'processing'], true)) return 'IA: en cola';
     if ($m['status'] === 'needs_human') return 'IA: no ha podido decidir';
     if ($m['category'] === null) return 'IA: sin problemas' . ($m['score'] !== null ? ' (' . num_es(round((float)$m['score'], 2)) . ')' : '');

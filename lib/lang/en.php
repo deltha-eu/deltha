@@ -1058,4 +1058,13 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'La noticia más votada %s es %s' => 'The most voted story %s is %s',
 'la más leída, %s' => 'the most read, %s',
 'y también la más leída (%d lecturas)' => 'and also the most read (%d reads)',
+'Con aura mayor que %s, hasta %d.' => 'With aura above %s, up to %d.',
+'Cerrar comentarios' => 'Close comments',
+'Abrir comentarios' => 'Open comments',
+'Cerrados: nadie puede comentar hasta que se abran.' => 'Closed: nobody can comment until they are reopened.',
+'Comentarios cerrados.' => 'Comments closed.',
+'Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.' => 'As you are not registered, your comment has to be approved by a moderator before it is published.',
+'Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.' => 'As you are not registered, your message has to be approved by a moderator before it is published.',
+'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'As you are not registered, your forum post has to be approved by a moderator before it is published.',
+'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Thread awaiting approval: only moderators and admin can see it. It is approved or removed in <a href="/moderacion">Moderation</a>.',
 ];

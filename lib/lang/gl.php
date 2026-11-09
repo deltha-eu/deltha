@@ -1003,4 +1003,13 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'La noticia más votada %s es %s' => 'A noticia máis votada %s é %s',
 'la más leída, %s' => 'a máis lida, %s',
 'y también la más leída (%d lecturas)' => 'e tamén a máis lida (%d lecturas)',
+'Con aura mayor que %s, hasta %d.' => 'Con aura maior que %s, ata %d.',
+'Cerrar comentarios' => 'Pechar comentarios',
+'Abrir comentarios' => 'Abrir comentarios',
+'Cerrados: nadie puede comentar hasta que se abran.' => 'Pechados: ninguén pode comentar ata que se abran.',
+'Comentarios cerrados.' => 'Comentarios pechados.',
+'Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.' => 'Como non estás rexistrado, o teu comentario ten que ser aprobado por un moderador antes de publicarse.',
+'Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.' => 'Como non estás rexistrado, a túa mensaxe ten que ser aprobada por un moderador antes de publicarse.',
+'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Como non estás rexistrado, o teu envío ao foro ten que ser aprobado por un moderador antes de publicarse.',
+'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Fío pendente de aprobación: só o vedes moderadores e admin. Apróbase ou retírase en <a href="/moderacion">Moderación</a>.',
 ];

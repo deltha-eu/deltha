@@ -6,7 +6,7 @@ $id = (int)($_GET['id'] ?? 0);
 $st = $pdo->prepare(story_query_base() . " WHERE s.story_id = ?");
 $st->execute([$id]);
 $s = $st->fetch();
-if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true) && !is_admin())) {
+if (!$s || (in_array($s['status'], ['pending_mod', 'rejected', 'discard'], true) && !is_mod())) {   // los mods tambien lo abren: han de leer lo que esta pendiente de aprobar (migra-183)
     http_response_code(404);
     page_header(t('No existe'));
     echo "<p class=\"end\">" . t('Ese hilo no existe.') . "</p>";
@@ -22,7 +22,8 @@ $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
 $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
 $aura = $s['user_id'] ? (float)($s['author_aura'] ?? 5) : (float)cfg('aura_anon', 5);
 $open = in_array($s['status'], ['nuevas', 'destacadas'], true);
-$can_comment = $open && (user() || cfg('anon_can_comment') === '1');
+$cerrados = !empty($s['comments_closed']);   // comentarios cerrados por moderacion (migra-183): se lee y se vota, no se comenta
+$can_comment = $open && !$cerrados && (user() || cfg('anon_can_comment') === '1');
 $tab = $s['content_type'] === 'article' ? 'foros' : (['destacadas' => (string)$s['portada'], 'nuevas' => 'radar'][$s['status']] ?? '');
 
 // my_vote: sol (1) o lagrima (-1) que el usuario actual ya puso a cada comentario (NULL si ninguno o anonimo)
@@ -77,6 +78,7 @@ robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
 page_header(t('Hilo'), $tab, og_tags($s['title'], md_plano((string)$s['content']), $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo/' . $id)), $s['title']);
 echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
+if ($s['status'] === 'pending_mod') echo "<p class=\"notice keep\">" . t('Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.') . "</p>";   // premoderacion u oculto por la IA (migra-183)
 echo "<article class=\"post main\" id=\"s$id\">" . who_avatar($s, $rev, $aura, $author) . "<div class=\"pc\">";
 echo "<div class=\"l1\"><b>" . h($author) . "</b>" . mod_real(['login' => $s['login'], 'user_id' => $s['user_id']], $rev) . "<span class=\"meta\"><span class=\"sep\"> · </span>" . topic_link($s) . community_links($s) . ($s['content_type'] === 'article' ? ' · ' . t('artículo') : ($s['source'] ? ' · ' . source_link($s) : '')) . lang_tag($s) . " · " . h(hace($s['sent_date'])) . (!empty($s['edited_at']) ? " · " . t('editado') : "") . "</span>" . (($el = mod_edit_link($s) . own_edit_link($s)) !== '' ? " · " . $el : '') . "</div>";
 story_cuenta($pdo, $s, 'views');   // una lectura por persona y dia (lib/contadores.php)
@@ -121,6 +123,9 @@ if (is_mod()) {
     foreach ($pdo->query("SELECT community_id, name FROM communities WHERE status = 'ok' ORDER BY name") as $co) $f .= "<option value=\"{$co['community_id']}\"" . ((int)$co['community_id'] === (int)$s['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
     $f .= "</select><button class=\"btn\">" . t('Guardar') . "</button></form>";
     $rows[] = [t('Tema'), $f];
+    // cerrar o abrir los comentarios del hilo (migra-183)
+    $rows[] = [t('Comentarios'), "<form class=\"inl\" method=\"post\" action=\"/cerrar-comentarios\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($cerrados ? 'abrir' : 'cerrar') . "\"><button class=\"btn\">" . ($cerrados ? t('Abrir comentarios') : t('Cerrar comentarios')) . "</button></form>"
+        . ($cerrados ? " <small>" . t('Cerrados: nadie puede comentar hasta que se abran.') . "</small>" : '')];
 }
 // comunidades del envio: cualquier dueño de comunidad puede añadir aqui un envio publico (radar, portada o archivado)
 // a la suya y quitarlo; los moderadores arbitran (añaden y quitan en cualquiera). El autor no interviene.
@@ -161,6 +166,7 @@ if ($rows) {
 if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice' : 'error') . "\">" . h((string)$_GET['comm'] === 'ok' ? t('Guardado.') : (string)$_GET['comm']) . "</p>";
 
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
+if (isset($_GET['premod'])) echo "<p class=\"notice\">" . t('Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.') . "</p>";   // premoderacion de anonimos (migra-183)
 
 if (count($all) > 1) echo "<nav class=\"sub cvista\"><a href=\"/hilo/$id#comentarios\"" . ($porTiempo ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo/$id?v=tiempo#comentarios\"" . ($vista === 'tiempo' ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a><a href=\"/hilo/$id?v=votos#comentarios\"" . ($vista === 'votos' ? ' class="on"' : '') . ">" . t('Por votos') . "</a></nav>";
 foreach ($threads as $list) {
@@ -179,6 +185,7 @@ foreach ($threads as $list) {
 // la caja de comentar va al final, debajo de los comentarios (al responder a uno, sale bajo ese comentario)
 if ($can_comment && !$replyTo) composer($id);
 elseif (!$open) echo "<p class=\"end\">" . t('Hilo cerrado.') . "</p>";
+elseif ($cerrados) echo "<p class=\"end\">" . t('Comentarios cerrados.') . "</p>";
 elseif (!$can_comment) echo "<p class=\"end\">" . t('<a href="/login">Entra</a> para comentar.') . "</p>";
 echo "</div>";
 page_footer();

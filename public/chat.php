@@ -52,9 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ref = chat_first_ref($content);
         if ($ref) { $q = $pdo->prepare("SELECT 1 FROM chat WHERE msg_id = ? AND status = 'ok'"); $q->execute([$ref]); if (!$q->fetchColumn()) $ref = null; }
         $anuncio = is_mod() && post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad: solo admin/mod (migra-121)
-        $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,?)")
-            ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content, $anuncio]);
+        $premod = !$u && premod_anon();   // anonimo con premod_anon = 1 (migra-183): entra oculto y lo aprueba un moderador en /moderacion
+        $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio, status) VALUES (?,?,?,?,?,?,?)")
+            ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content, $anuncio, $premod ? 'pending_mod' : 'ok']);
         $mid = (int)$pdo->lastInsertId();
+        if ($premod) { mod_premod($pdo, 'chat', $mid, 'ok'); redirect($base . $amp . 'premod=1'); }
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
         avisos_chat($pdo, $mid, $u ? (int)$u['user_id'] : null, $u ? (string)$u['login'] : $anonAlias, $content, $ref);   // @mencionados y autor del #N citado
         sigfrid_contestar($pdo, $mid, $content, $u, $u ? '' : $anonAlias);   // Sigfrid, el ayudante (migra-182): si le hablan, responde citando este mensaje
@@ -133,7 +135,7 @@ if ($mentions) {
 $previews = [];
 foreach ($rows as $m) $previews[(int)$m['msg_id']] = chat_preview($m, $logins, $ids);
 $replyTo = (int)($_GET['r'] ?? 0);
-$writing = $replyTo > 0 || isset($_GET['ok']) || $err;
+$writing = $replyTo > 0 || isset($_GET['ok']) || isset($_GET['premod']) || $err;
 
 $refrescoJs = max(0, (int)cfg('chat_refresh_sec', 60));   // con JS (fetch, sin recargar): siempre; 0 = nunca
 $refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta refresh): no mientras se escribe
@@ -157,6 +159,7 @@ if ($canWrite) {
     echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login\">" . t('entrar') . "</a></p>";
 }
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
+if (isset($_GET['premod'])) echo "<p class=\"notice\">" . t('Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.') . "</p>";   // migra-183
 if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra-121): los tres ultimos, arriba del flujo, enlazados a su sitio
     $an = $pdo->query("SELECT c.msg_id, c.content, c.user_id, c.alias, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.anuncio = 1 AND c.deleted = 0 AND " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT 3")->fetchAll();
     $an = array_filter($an, fn($a) => !isset($ids[(int)$a['msg_id']]));   // los que ya se ven en esta pagina no se repiten: la franja es para los que han quedado atras
