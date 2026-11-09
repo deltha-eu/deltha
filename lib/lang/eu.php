@@ -1003,4 +1003,13 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'La noticia más votada %s es %s' => '%s boto gehien dituen albistea %s da',
 'la más leída, %s' => 'gehien irakurria, %s',
 'y también la más leída (%d lecturas)' => 'eta baita gehien irakurria ere (%d irakurketa)',
+'Con aura mayor que %s, hasta %d.' => '%s baino aura handiagoarekin, %d arte.',
+'Cerrar comentarios' => 'Iruzkinak itxi',
+'Abrir comentarios' => 'Iruzkinak ireki',
+'Cerrados: nadie puede comentar hasta que se abran.' => 'Itxita: inork ezin du iruzkinik egin ireki arte.',
+'Comentarios cerrados.' => 'Iruzkinak itxita.',
+'Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.' => 'Erregistratuta ez zaudenez, zure iruzkina moderatzaile batek onartu behar du argitaratu aurretik.',
+'Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.' => 'Erregistratuta ez zaudenez, zure mezua moderatzaile batek onartu behar du argitaratu aurretik.',
+'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Erregistratuta ez zaudenez, foroko zure bidalketa moderatzaile batek onartu behar du argitaratu aurretik.',
+'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Haria onartzeko zain: moderatzaileek eta adminak bakarrik ikusten duzue. <a href="/moderacion">Moderazioan</a> onartzen edo kentzen da.',
 ];

@@ -615,7 +615,7 @@ function ghost_over_comment(string $dt): bool { return true; }
 /* ---- comunidades ----------------------------------------------------
  * Segunda clasificacion de los envios, ortogonal a los temas: cada envio tiene un
  * tema y, opcionalmente, una comunidad. Las crean los usuarios con aura > comm_min_aura,
- * hasta comm_max_per_user cada uno. El creador (y los mods) editan nombre, descripcion y color. */
+ * hasta comm_max_per_user cada uno (comm_max_per_user_more con aura > comm_more_min_aura, migra-183). El creador (y los mods) editan nombre, descripcion y color. */
 function community_slug(string $name): string {
     $s = mb_strtolower(trim($name));
     $s = strtr($s, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n','à'=>'a','è'=>'e','ì'=>'i','ò'=>'o','ù'=>'u','ç'=>'c']);
@@ -628,9 +628,17 @@ function community_by_slug(PDO $pdo, string $slug): ?array {
     return $st->fetch() ?: null;
 }
 /** Cuantas comunidades mas puede crear este usuario (0 = ninguna) */
+/** Tope de comunidades que puede crear este usuario: comm_max_per_user (3) o, con aura > comm_more_min_aura (20; 0 = desactivado)
+ *  y para los moderadores, comm_max_per_user_more (6). migra-183. */
+function community_max(?array $u): int {
+    if (!$u) return 0;
+    $more = (float)cfg('comm_more_min_aura', 20);
+    if (is_mod() || ($more > 0 && (float)$u['aura'] > $more)) return max(0, (int)cfg('comm_max_per_user_more', 6));
+    return max(0, (int)cfg('comm_max_per_user', 3));
+}
 function community_quota(PDO $pdo, ?array $u): int {
     if (!$u) return 0;
-    $max = max(0, (int)cfg('comm_max_per_user', 3));
+    $max = community_max($u);
     if (!is_mod() && (float)$u['aura'] <= (float)cfg('comm_min_aura', 6)) return 0;   // mods y admin: sin requisito de aura
     $st = $pdo->prepare("SELECT COUNT(*) FROM communities WHERE owner_id = ?"); $st->execute([$u['user_id']]);
     return is_admin() ? 99 : max(0, $max - (int)$st->fetchColumn());

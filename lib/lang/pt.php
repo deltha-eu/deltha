@@ -1040,4 +1040,13 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'La noticia más votada %s es %s' => 'A notícia mais votada %s é %s',
 'la más leída, %s' => 'a mais lida, %s',
 'y también la más leída (%d lecturas)' => 'e também a mais lida (%d leituras)',
+'Con aura mayor que %s, hasta %d.' => 'Com aura superior a %s, até %d.',
+'Cerrar comentarios' => 'Fechar comentários',
+'Abrir comentarios' => 'Abrir comentários',
+'Cerrados: nadie puede comentar hasta que se abran.' => 'Fechados: ninguém pode comentar até que se abram.',
+'Comentarios cerrados.' => 'Comentários fechados.',
+'Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.' => 'Como não estás registado, o teu comentário tem de ser aprovado por um moderador antes de ser publicado.',
+'Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.' => 'Como não estás registado, a tua mensagem tem de ser aprovada por um moderador antes de ser publicada.',
+'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Como não estás registado, o teu envio ao fórum tem de ser aprovado por um moderador antes de ser publicado.',
+'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Conversa pendente de aprovação: só a veem moderadores e admin. Aprova-se ou retira-se em <a href="/moderacion">Moderação</a>.',
 ];

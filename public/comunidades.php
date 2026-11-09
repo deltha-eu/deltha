@@ -53,10 +53,11 @@ page_header(t('Comunidades'), 'comunidades');
 echo "<nav class=\"sub tipos\">" . ($u ? "<a href=\"/comunidades?v=mias\"" . ($v === 'mias' ? ' class="on"' : '') . ">" . t('Mis comunidades') . (count($mias) ? " <small>" . count($mias) . "</small>" : '') . "</a>" : '')
    . "<a href=\"/comunidades?v=todas\"" . ($v === 'todas' ? ' class="on"' : '') . ">" . t('Todas') . " <small>" . count($todas) . "</small></a></nav>";
 echo "<p class=\"notice ayuda\" data-k=\"comunidades\">" . t('Los <b>temas</b> los pone %s; las <b>comunidades</b> las crea la gente. Un envío tiene siempre un tema y, si quiere, una comunidad; además, quien creó una comunidad puede añadir a ella cualquier envío ya publicado desde su hilo (hasta %d comunidades por envío). Puede crear comunidades quien tenga aura mayor que %s (los moderadores, sin requisito de aura), hasta %d cada uno. Puedes elegir una como página de entrada en <a href="/perfil">tu perfil</a>.', h(cfg('site_name')), (int)cfg('comm_max_per_story', 3), h(num_es(cfg('comm_min_aura', 10))), (int)cfg('comm_max_per_user', 3))
+   . ((float)cfg('comm_more_min_aura', 20) > 0 && (int)cfg('comm_max_per_user_more', 6) > (int)cfg('comm_max_per_user', 3) ? ' ' . t('Con aura mayor que %s, hasta %d.', h(num_es(cfg('comm_more_min_aura', 20))), (int)cfg('comm_max_per_user_more', 6)) : '')
    . ((float)cfg('comm_add_min_aura', 20) > 0 ? ' ' . t('Con aura mayor que %s se pueden añadir envíos a cualquier comunidad.', h(num_es(cfg('comm_add_min_aura', 20)))) : '') . "</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if ($u && $quota > 0) {
-    echo "<h3 id=\"crear\" style=\"padding:12px 16px 0\"" . t('>Crear una comunidad</h3>') . "<p class=\"meta\" style=\"padding:4px 16px 0\">" . ($quota > 3 ? t('Puedes crear las que quieras.') : t('Puedes crear %d más.', $quota)) . "</p>";
+    echo "<h3 id=\"crear\" style=\"padding:12px 16px 0\"" . t('>Crear una comunidad</h3>') . "<p class=\"meta\" style=\"padding:4px 16px 0\">" . (is_admin() ? t('Puedes crear las que quieras.') : t('Puedes crear %d más.', $quota)) . "</p>";
     echo "<form class=\"plain\" method=\"post\" enctype=\"multipart/form-data\">" . t('<label>Nombre</label>') . "<input type=\"text\" name=\"name\" maxlength=\"48\" required placeholder=\"" . t('p. ej. Cine clásico') . "\" value=\"" . h(post('name')) . "\">";
     echo "" . t('<label>De qué va (hasta 200 caracteres)</label>') . "<input type=\"text\" name=\"descr\" maxlength=\"200\" value=\"" . h(post('descr')) . "\">";
     echo "" . t('<label>Color</label>') . "<input type=\"color\" name=\"color\" value=\"" . h(post('color') ?: '#534AB7') . "\">";
@@ -65,7 +66,7 @@ if ($u && $quota > 0) {
     echo "<label>" . t('Imagen de fondo') . " <small>" . t('apaisada, se recorta a 4:1; va detrás de la cabecera') . "</small></label><input type=\"file\" name=\"cover\" accept=\"image/*\">";
     echo "" . t('<button>Crear</button>') . "</form>";
 } elseif ($u) {
-    echo "<p class=\"end\">" . ((float)$u['aura'] <= (float)cfg('comm_min_aura', 10) ? t('Para crear comunidades hace falta aura mayor que %s (tienes %s).', h(num_es(cfg('comm_min_aura', 10))), number_format((float)$u['aura'], 1, ',', '')) : t('Ya has creado tus %d comunidades.', (int)cfg('comm_max_per_user', 3))) . "</p>";
+    echo "<p class=\"end\">" . ((float)$u['aura'] <= (float)cfg('comm_min_aura', 10) ? t('Para crear comunidades hace falta aura mayor que %s (tienes %s).', h(num_es(cfg('comm_min_aura', 10))), number_format((float)$u['aura'], 1, ',', '')) : t('Ya has creado tus %d comunidades.', community_max($u))) . "</p>";
 }
 echo "<h3 style=\"padding:20px 16px 0\">" . ($v === 'mias' ? t('Mis comunidades') : t('Todas las comunidades')) . "</h3>";
 if (!$rows) echo "<p class=\"end\">" . ($v === 'mias' ? t('Todavía no sigues ninguna comunidad: pulsa «Seguir» en las que te interesen de <a href="/comunidades?v=todas">Todas</a>.') : t('Todavía no hay comunidades.')) . "</p>";

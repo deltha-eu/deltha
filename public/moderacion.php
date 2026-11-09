@@ -299,7 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
 
 try {
     $q = $pdo->query("SELECT m.*, u.login AS decider,
-                             CASE m.item_type WHEN 'story' THEN s.title WHEN 'comment' THEN c.content ELSE ch.content END AS txt,
+                             CASE m.item_type WHEN 'story' THEN CONCAT(s.title, IF(s.content IS NULL OR s.content = '', '', CONCAT('\n\n', s.content))) WHEN 'comment' THEN c.content ELSE ch.content END AS txt,
                              CASE m.item_type WHEN 'story' THEN s.story_id WHEN 'comment' THEN c.story_id ELSE NULL END AS sid,
                              cs.title AS stitle, cs.status AS sstatus, COALESCE(au.login, c.alias, ch.alias) AS autor,
                              pc.comment_id AS pid, COALESCE(pu.login, pc.alias) AS pautor, pc.content AS ptxt, pc.status AS pstatus,
@@ -334,7 +334,8 @@ echo "<div class=\"admin\"><h1>Moderación</h1>";
 echo "<nav class=\"tabs\">";
 foreach ($TABS as $k => $v) echo "<a href=\"/moderacion?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v" . (!empty($pend[$k]) ? " <small>{$pend[$k]}</small>" : '') . "</a>";
 echo "</nav>";
-if ($tab === 'ia') { if (!mod_on()) echo "<p class=\"notice\">La IA moderadora está apagada (<code>mod_enabled = 0</code>): todo se publica y nada pasa por ella. Los reportes siguen llegando aquí.</p>";
+if ($tab === 'ia') { if (premod_anon()) echo "<p class=\"notice\">Lo que escriben los <b>anónimos</b> (comentarios, chat, hilos en los foros) no se publica hasta que lo apruebe aquí un moderador (<code>premod_anon = 1</code>, migra-183).</p>";
+if (!mod_on()) echo "<p class=\"notice\">La IA moderadora está apagada (<code>mod_enabled = 0</code>): todo se publica y nada pasa por ella. Los reportes siguen llegando aquí.</p>";
 else echo "<p class=\"notice\">Todo se publica al momento. La IA local (en el PC de la redacción) lo revisa después con el criterio de las <a href=\"/normas\">normas de uso</a> y señala aquí lo dudoso" . (cfg('mod_auto_hide') === '1' ? "; lo muy claro" . (($hc = trim((string)cfg('mod_hide_cats', 'spam'))) !== '' ? " (" . h($hc) . ")" : "") . (($ht = trim((string)cfg('mod_hide_types', 'comment'))) !== '' ? " en " . h(str_replace(['comment', 'story', 'chat'], ['comentarios', 'envíos', 'chat'], $ht)) : "") . (cfg('mod_hide_links_only', '1') === '1' ? ", y solo con enlace," : "") . " lo oculta hasta que lo veáis" : "; no oculta nada (<code>mod_auto_hide = 0</code>)") . ". Decidís vosotros. " . h(mod_worker_line()) . "</p>";
 }
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
@@ -348,8 +349,9 @@ if (!$q) echo "<p>Nada pendiente.</p>";
 foreach ($q as $m) {
     $link = $m['item_type'] === 'chat' ? "/chat?m={$m['ref_id']}#m{$m['ref_id']}" : ($m['item_type'] === 'comment' ? "/hilo/{$m['sid']}#c{$m['ref_id']}" : "/hilo/{$m['ref_id']}");
     $v = json_decode((string)$m['verdict'], true) ?: [];
-    $estado = ['hidden' => '<b>oculto provisionalmente</b>', 'flag' => 'visible, señalado', 'needs_human' => 'la IA no ha podido decidir'][$m['status']];
-    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . $TY[$m['item_type']] . " #{$m['ref_id']}</b> " . ($m['status'] !== 'hidden' ? "<a href=\"$link\">ver</a>" : "") . "<span class=\"meta\"> · $estado · " . h(hace($m['created'])) . ($m['priority'] ? " · reportado" : "") . "</span></div>";
+    $premod = ($m['reason'] ?? '') === 'premod';   // escrito sin cuenta, pendiente de aprobar (migra-183): nunca ha estado a la vista
+    $estado = $premod ? '<b>pendiente de aprobar</b> (premoderación)' : ['hidden' => '<b>oculto provisionalmente</b>', 'flag' => 'visible, señalado', 'needs_human' => 'la IA no ha podido decidir'][$m['status']];
+    echo "<div class=\"repitem\"><div class=\"rephead\"><b>" . $TY[$m['item_type']] . " #{$m['ref_id']}</b> " . ($m['status'] !== 'hidden' || $m['item_type'] === 'story' ? "<a href=\"$link\">ver</a>" : "") . "<span class=\"meta\"> · $estado · " . h(hace($m['created'])) . ($m['priority'] && !$premod ? " · reportado" : "") . "</span></div>";
     echo "<p class=\"meta\">" . h(mod_note_line($m)) . "</p>";
     // donde esta (28/10/2026): hilo al que pertenece el comentario y de que cuelga; en el chat, a que mensaje responde
     if ($m['item_type'] === 'comment') {
@@ -361,11 +363,11 @@ foreach ($q as $m) {
     } elseif ($m['item_type'] === 'chat') {
         echo "<p class=\"meta\">Por <b>" . h((string)$m['autor']) . "</b>" . ($m['rid'] ? " · responde a <a href=\"/chat?m={$m['rid']}#m{$m['rid']}\">#{$m['rid']}</a> de <b>" . h((string)$m['rautor']) . "</b>: «" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$m['rtxt']), 0, 120, '…')) . "»" : "") . "</p>";
     }
-    echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth((string)$m['txt'], 0, 600, '…'))) . "</blockquote>";
+    echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth((string)$m['txt'], 0, $premod && $m['item_type'] === 'story' ? 6000 : 600, '…'))) . "</blockquote>";   // un hilo premoderado se lee entero aqui
     if (!empty($v['cita'])) echo "<p class=\"meta\">Fragmento: «" . h($v['cita']) . "»</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"ia\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
     echo "<button class=\"btn danger\" name=\"dec\" value=\"remove\" title=\"" . ($m['item_type'] === 'story' ? 'el envío se rechaza' : ($m['status'] === 'hidden' ? 'desaparece sin dejar rastro (estaba oculto)' : 'se queda con el texto sustituido por el aviso')) . "\">" . ($m['status'] === 'hidden' && $m['item_type'] !== 'story' ? 'Eliminar' : 'Retirar') . "</button> ";
-    echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está') . "\">" . ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda') . "</button></form></div></div>";
+    echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($premod ? 'se publica' : ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está')) . "\">" . ($premod ? 'Aprobar' : ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda')) . "</button></form></div></div>";
 }
 
 } elseif ($tab === 'reportes') {
