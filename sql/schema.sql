@@ -985,7 +985,7 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('sigfrid_login',      'Sigfrid', 'Nombre de la cuenta con la que escribe Sigfrid (tiene que existir en users)'),
 ('sigfrid_ia_url',     '',        'URL de un servidor OpenAI-compatible (/v1/chat/completions) para entender lo que las reglas no entienden; vacio = solo reglas. P. ej. http://127.0.0.1:8091 (llama-server con LFM3-1.7B en el droplet)'),
 ('sigfrid_ia_key',     '',        'Clave Bearer del servidor de sigfrid_ia_url, si la pide'),
-('sigfrid_ia_timeout_ms', '4000', 'Tope de espera al modelo de Sigfrid, en ms; si no llega, Sigfrid contesta con la ayuda'),
+('sigfrid_ia_timeout_ms', '8000', 'Tope de espera al modelo de Sigfrid, en ms; si no llega, Sigfrid contesta con la ayuda'),
 ('sigfrid_concurso_regex', 'concurso|microrrelato|relato', 'Expresion regular (MySQL REGEXP, sin distinguir mayusculas) que identifica en el titulo los hilos de concurso del foro Originales'),
 ('ia_worker_seen',   '',   'Ultima conexion del worker generico de IA (lo escribe /api/ia.php)'),
 ('ia_keep_days',     '30', 'Dias que se conservan los trabajos terminados en ia_jobs (los borra el ciclo)'),
