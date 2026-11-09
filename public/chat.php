@@ -38,7 +38,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (post('act') === 'anuncio') {   // admin/mod: marcar o quitar «mensaje a la comunidad» (migra-121)
         $id = (int)post('id');
-        if (is_mod()) { mod_log_post($pdo, 'chat'); $pdo->prepare("UPDATE chat SET anuncio = 1 - anuncio WHERE msg_id = ? AND status = 'ok' AND deleted = 0")->execute([$id]); }   // registro (migra-134)
+        if (is_mod()) {
+            $q = $pdo->prepare("SELECT anuncio, user_id FROM chat WHERE msg_id = ? AND status = 'ok' AND deleted = 0"); $q->execute([$id]);
+            if ($row = $q->fetch()) {
+                // marcar un mensaje AJENO pide confirmacion (migra-186): el megafono esta al lado de editar/eliminar y se pulsaba sin querer;
+                // el propio, y quitar la marca, siguen siendo un clic. Se guarda quien marca (anuncio_by) para enseñarlo en la franja.
+                if (!(int)$row['anuncio'] && (int)$row['user_id'] !== (int)$u['user_id'] && post('seguro') !== '1') redirect($base . $amp . "anun=$id#m$id");
+                mod_log_post($pdo, 'chat');   // registro (migra-134)
+                $pdo->prepare("UPDATE chat SET anuncio_by = IF(anuncio = 1, NULL, ?), anuncio = 1 - anuncio WHERE msg_id = ?")->execute([(int)$u["user_id"], $id]);   // anuncio_by antes: MySQL evalua el SET de izquierda a derecha con el valor ya cambiado
+            }
+        }
         if (post('back') === 'franja') redirect($base);   // quitado desde la franja de arriba (10/10/2026): se vuelve al chat, no al mensaje
         redirect($base . $amp . "m=$id" . (isset($_POST['js']) ? '' : "#m$id"));
     }
@@ -66,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $per = max(10, (int)cfg('chat_per_page', 50));
 $page = page_num();
-$goto = (int)($_GET['m'] ?? 0);
+$goto = (int)($_GET['m'] ?? $_GET['anun'] ?? 0);   // ?anun=N (migra-186): confirmar la marca de aviso sobre el mensaje N, en su pagina
 $sel = "SELECT c.*, u.login, cv.value AS my_vote FROM chat c LEFT JOIN users u ON u.user_id = c.user_id
         LEFT JOIN chat_votes cv ON cv.msg_id = c.msg_id AND cv.user_id = ?";   // my_vote: sol (1) o lagrima (-1) del usuario actual (NULL si ninguno o anonimo); migra-074
 $uid = (int)($u['user_id'] ?? 0);
@@ -135,7 +144,7 @@ if ($mentions) {
 $previews = [];
 foreach ($rows as $m) $previews[(int)$m['msg_id']] = chat_preview($m, $logins, $ids);
 $replyTo = (int)($_GET['r'] ?? 0);
-$writing = $replyTo > 0 || isset($_GET['ok']) || isset($_GET['premod']) || $err;
+$writing = $replyTo > 0 || isset($_GET['ok']) || isset($_GET['premod']) || isset($_GET['anun']) || $err;
 
 $refrescoJs = max(0, (int)cfg('chat_refresh_sec', 60));   // con JS (fetch, sin recargar): siempre; 0 = nunca
 $refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta refresh): no mientras se escribe
@@ -163,12 +172,16 @@ if ($canWrite) {
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 if (isset($_GET['premod'])) echo "<p class=\"notice\">" . t('Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.') . "</p>";   // migra-183
 if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra-121): los tres ultimos, arriba del flujo, enlazados a su sitio
-    $an = $pdo->query("SELECT c.msg_id, c.content, c.user_id, c.alias, u.login FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.anuncio = 1 AND c.deleted = 0 AND " . chat_visible_sql('c') . " ORDER BY c.msg_id DESC LIMIT 3")->fetchAll();
+    // caducan en la franja a los chat_anuncio_dias (migra-186; 0 = nunca): la marca y el resaltado en su sitio se quedan
+    $dias = max(0, (int)cfg('chat_anuncio_dias', 7));
+    $an = $pdo->query("SELECT c.msg_id, c.content, c.user_id, c.alias, u.login, ub.login AS marcado_por FROM chat c LEFT JOIN users u ON u.user_id = c.user_id LEFT JOIN users ub ON ub.user_id = c.anuncio_by
+                        WHERE c.anuncio = 1 AND c.deleted = 0 AND " . chat_visible_sql('c') . ($dias > 0 ? " AND c.created >= NOW() - INTERVAL $dias DAY" : '') . " ORDER BY c.msg_id DESC LIMIT 3")->fetchAll();
     $an = array_filter($an, fn($a) => !isset($ids[(int)$a['msg_id']]));   // los que ya se ven en esta pagina no se repiten: la franja es para los que han quedado atras
     if ($an) {
         echo "<div class=\"anuncios\"><div class=\"ch\"><span class=\"anun\">" . icon('mega') . t('Mensajes a la comunidad') . "</span></div>";
         // moderadores: una x al final para quitar la marca sin ir al mensaje (10/10/2026); los demas solo ven el enlace
         foreach ($an as $a) echo "<p><a class=\"num\" href=\"/chat?m={$a['msg_id']}#m{$a['msg_id']}\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> <span>" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</span>"
+            . (is_mod() && !empty($a['marcado_por']) && $a['marcado_por'] !== ($a['login'] ?? null) ? " <small class=\"meta\">" . h(t('marcado por %s', (string)$a['marcado_por'])) . "</small>" : '')   // quien lo marco, si no es el autor (migra-186)
             . (is_mod() ? "<form method=\"post\" class=\"inline quitar\"><input type=\"hidden\" name=\"act\" value=\"anuncio\"><input type=\"hidden\" name=\"id\" value=\"{$a['msg_id']}\"><input type=\"hidden\" name=\"back\" value=\"franja\"><button class=\"link\" title=\"" . h(t('quitar la marca de mensaje a la comunidad')) . "\" aria-label=\"" . h(t('quitar la marca de mensaje a la comunidad')) . "\">×</button></form>" : '') . "</p>";
         echo "</div>";
     }
@@ -201,6 +214,10 @@ foreach ($rows as $m) {
         echo "</div>";
     }
     echo "</article>";
+    // confirmacion para marcar como mensaje a la comunidad un mensaje ajeno (migra-186): ?anun=N tras el primer clic en el megafono
+    if (is_mod() && !$del && (int)($_GET['anun'] ?? 0) === $id && !(int)($m['anuncio'] ?? 0))
+        echo "<form method=\"post\" class=\"notice confirm-anun\"><input type=\"hidden\" name=\"act\" value=\"anuncio\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"seguro\" value=\"1\">"
+           . h(($d = max(0, (int)cfg('chat_anuncio_dias', 7))) > 0 ? t('¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba durante %d días.', $id, chat_who($m), $d) : t('¿Marcar el mensaje #%d de %s como mensaje a la comunidad? Saldrá resaltado y en la franja de arriba.', $id, chat_who($m))) . " <button class=\"btn sm\">" . t('Sí, marcar') . "</button> <a href=\"" . h($base . $amp) . "m=$id#m$id\">" . t('No') . "</a></form>";
     if ($canWrite && $replyHere && $id === $replyTo) $box(true);
 }
 echo "</div>";
