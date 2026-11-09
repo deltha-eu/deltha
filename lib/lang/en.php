@@ -1024,4 +1024,10 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Avisos de ayuda' => 'Help notices',
 'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'The grey boxes that explain each page. Each one can be closed with its ×; untick this so none of them show.',
 'Volver a mostrar los %d que cerré' => 'Show again the %d I closed',
+// caja «Medios más seguidos» (09/11/2026)
+'Medios más seguidos' => 'Most followed media',
+'Los medios, substacks y canales del catálogo con más gente siguiéndolos.' => 'The media outlets, substacks and channels in the catalogue with the most followers.',
+'medio' => 'media',
+'substack' => 'substack',
+'canal' => 'channel',
 ];

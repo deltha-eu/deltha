@@ -990,4 +990,10 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Avisos de ayuda' => 'Yardım uyarıları',
 'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Her sayfayı açıklayan gri kutular. Her biri × ile kapatılabilir; hiçbiri görünmesin istiyorsan işareti kaldır.',
 'Volver a mostrar los %d que cerré' => 'Kapattığım %d uyarıyı yeniden göster',
+// caja «Medios más seguidos» (09/11/2026)
+'Medios más seguidos' => 'En çok takip edilen medya',
+'Los medios, substacks y canales del catálogo con más gente siguiéndolos.' => 'Katalogdaki en çok takipçisi olan medya, substack ve kanallar.',
+'medio' => 'medya',
+'substack' => 'substack',
+'canal' => 'kanal',
 ];

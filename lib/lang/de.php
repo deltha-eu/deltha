@@ -970,4 +970,10 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Avisos de ayuda' => 'Hilfehinweise',
 'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Die grauen Kästen, die jede Seite erklären. Jeder lässt sich mit seinem × schließen; abwählen, damit keiner erscheint.',
 'Volver a mostrar los %d que cerré' => 'Die %d, die ich geschlossen habe, wieder zeigen',
+// caja «Medios más seguidos» (09/11/2026)
+'Medios más seguidos' => 'Meistgefolgte Medien',
+'Los medios, substacks y canales del catálogo con más gente siguiéndolos.' => 'Die Medien, Substacks und Kanäle des Katalogs mit den meisten Followern.',
+'medio' => 'Medium',
+'substack' => 'Substack',
+'canal' => 'Kanal',
 ];

@@ -106,6 +106,7 @@ function side_modules(): array {
             'medios_deltha' => [t('Medios en Deltha'), 'side_medios_deltha'],
             'comentarios_foros'    => [t('Últimos comentarios en Foros'), 'side_comentarios_foros'],
             'comentarios_noticias' => [t('Últimos comentarios en noticias'), 'side_comentarios_noticias'],
+            'seguidos'    => [t('Medios más seguidos'), 'side_seguidos'],
             'agregadores' => [t('Último en agregadores'), 'side_agregadores'],
             'medios'      => [t('Último en medios'), 'side_medios'],
             'substacks'   => [t('Último en substacks'), 'side_substacks'],
@@ -122,6 +123,7 @@ function side_modules_descr(): array {
             'medios_deltha' => t('Las últimas noticias ya en Deltha cuya fuente es un medio o substack del catálogo.'),
             'comentarios_foros'    => t('Los últimos comentarios en los hilos de los foros.'),
             'comentarios_noticias' => t('Los últimos comentarios en los hilos de noticias.'),
+            'seguidos'    => t('Los medios, substacks y canales del catálogo con más gente siguiéndolos.'),
             'agregadores' => t('Lo último publicado en los agregadores del catálogo, todavía fuera de Deltha.'),
             'medios'      => t('Lo último publicado por los medios del catálogo, todavía fuera de Deltha: puedes enviarlo tú.'),
             'substacks'   => t('Lo último publicado en los substacks del catálogo, todavía fuera de Deltha: puedes enviarlo tú.'),
@@ -324,6 +326,28 @@ function side_comentarios(PDO $pdo, bool $foros, string $cls, string $title): vo
 }
 function side_comentarios_foros(PDO $pdo): void { side_comentarios($pdo, true, 'comentarios foros', t('Últimos comentarios en Foros')); }
 function side_comentarios_noticias(PDO $pdo): void { side_comentarios($pdo, false, 'comentarios noticias', t('Últimos comentarios en noticias')); }
+
+/** Medios, substacks y canales con mas seguidores (user_media), hasta 8; solo los visibles (listados y en el idioma del que mira).
+ *  Pedido por Ángel el 09/11/2026. */
+function side_seguidos(PDO $pdo): void {
+    require_once __DIR__ . '/fuentes.php';
+    if (!fuentes_on()) return;
+    $vis = [];
+    foreach (['medio', 'newsletter', 'youtube'] as $k) foreach (fuentes_visibles($pdo, $k) as $f) $vis[(int)$f['source_id']] = $f;
+    if (!$vis) return;
+    $st = $pdo->prepare("SELECT source_id, COUNT(*) n FROM user_media WHERE source_id IN (" . implode(',', array_fill(0, count($vis), '?')) . ") GROUP BY source_id ORDER BY n DESC, source_id LIMIT 8");
+    $st->execute(array_keys($vis));
+    $rows = $st->fetchAll();
+    if (!$rows) return;
+    $kinds = ['medio' => t('medio'), 'newsletter' => t('substack'), 'youtube' => t('canal')];
+    echo "<section class=\"mod seguidos\"><h3>" . t('Medios más seguidos') . "<span><a href=\"/fuentes\">" . t('todos') . "</a></span></h3>";
+    $i = 0;
+    foreach ($rows as $r) {
+        $f = $vis[(int)$r['source_id']]; $i++;
+        echo "<a class=\"row\" href=\"" . h(fuente_url($f)) . "\"><b><i>$i</i>" . (int)$r['n'] . "</b><span class=\"t\">" . h($f['name']) . "</span><small>" . h($kinds[$f['kind']] ?? $f['kind']) . " · " . h(t('%d siguen', (int)$r['n'])) . "</small></a>";
+    }
+    echo "</section>";
+}
 
 /** Fuentes externas en la columna derecha: un modulo por grupo («Ultimo en agregadores», «Ultimo en medios», «Ultimo en substacks»)
  *  con las cinco ultimas noticias de portada de TODO el catalogo del grupo (no solo las elegidas por el usuario), sin repetir

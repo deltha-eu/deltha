@@ -969,4 +969,10 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Avisos de ayuda' => 'Laguntza-oharrak',
 'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Orrialde bakoitza azaltzen duten lauki grisak. Bakoitza bere × bidez itxi daiteke; kendu marka hau bat ere ez agertzeko.',
 'Volver a mostrar los %d que cerré' => 'Berriro erakutsi itxi nituen %d-ak',
+// caja «Medios más seguidos» (09/11/2026)
+'Medios más seguidos' => 'Hedabide jarraituenak',
+'Los medios, substacks y canales del catálogo con más gente siguiéndolos.' => 'Katalogoko hedabide, substack eta kanal jarraitzaile gehien dituztenak.',
+'medio' => 'hedabidea',
+'substack' => 'substack',
+'canal' => 'kanala',
 ];

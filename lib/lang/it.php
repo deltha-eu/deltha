@@ -970,4 +970,10 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Avisos de ayuda' => 'Avvisi di aiuto',
 'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'I riquadri grigi che spiegano ogni pagina. Ognuno si chiude con la sua ×; togli la spunta perché non ne compaia nessuno.',
 'Volver a mostrar los %d que cerré' => 'Mostra di nuovo i %d che ho chiuso',
+// caja «Medios más seguidos» (09/11/2026)
+'Medios más seguidos' => 'Media più seguiti',
+'Los medios, substacks y canales del catálogo con más gente siguiéndolos.' => 'I media, substack e canali del catalogo con più persone che li seguono.',
+'medio' => 'media',
+'substack' => 'substack',
+'canal' => 'canale',
 ];
