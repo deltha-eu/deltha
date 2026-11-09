@@ -1106,4 +1106,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Type “@%s help” to see what I can do.',
 'borrar del todo' => 'delete completely',
 'desaparece del todo, sin dejar aviso' => 'disappears entirely, leaving no notice',
+'borrar los leídos' => 'delete the read ones',
+'borrar los de %s' => 'delete those from %s',
+'borrar este aviso' => 'delete this notification',
 ];

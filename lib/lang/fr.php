@@ -1105,4 +1105,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Écrivez « @%s aide » pour voir ce que je sais faire.',
 'borrar del todo' => 'supprimer complètement',
 'desaparece del todo, sin dejar aviso' => 'disparaît entièrement, sans laisser d\'avis',
+'borrar los leídos' => 'supprimer les lus',
+'borrar los de %s' => 'supprimer ceux de %s',
+'borrar este aviso' => 'supprimer cet avis',
 ];

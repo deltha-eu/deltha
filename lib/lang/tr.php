@@ -1072,4 +1072,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Escribe «@%s ayuda» para ver lo que sé hacer.' => 'Yapabildiklerimi görmek için «@%s yardım» yaz.',
 'borrar del todo' => 'tamamen sil',
 'desaparece del todo, sin dejar aviso' => 'iz bırakmadan tamamen kaybolur',
+'borrar los leídos' => 'okunanları sil',
+'borrar los de %s' => '%s bildirimlerini sil',
+'borrar este aviso' => 'bu bildirimi sil',
 ];
