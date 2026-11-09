@@ -536,7 +536,9 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
         if ($in === null) {
             $in = sigfrid_ia($content, $login);
             // capa 3 (migra-187): ni las reglas ni el clasificador lo encajan en una accion → lo redacta el PC con todos los datos a la vista
-            if (($in === null || $in['accion'] === 'ayuda') && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;   // 'fuera' no pasa por aqui: se despacha con la frase
+            // 'fuera' del clasificador tambien pasa por aqui (09/11/2026, 22:50): LFM3 se equivocaba en las dos direcciones («el comentario mas
+            // reciente» → fuera), asi que la ultima palabra sobre si va de Deltha la tiene Qwen (FUERA_DE_DELTHA); sin PC, se queda la frase.
+            if (($in === null || in_array($in['accion'], ['ayuda', 'fuera'], true)) && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
             $in = $in ?? ['accion' => 'ayuda', 'periodo' => 'semana'];
         }
         $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . sigfrid_accion($pdo, $in['accion'], $in['periodo'], $u);
