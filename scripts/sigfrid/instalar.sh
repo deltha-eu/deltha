@@ -6,6 +6,7 @@
 # Deja: /opt/deltha-sigfrid/llama (binarios de llama.cpp), /var/lib/deltha-sigfrid/modelo.gguf. Registro: journalctl -u deltha-sigfrid -f
 # Memoria: ~1,3-1,5 GB residentes con contexto 2048 (el modelo va con mmap: el sistema puede soltar paginas si aprieta). CPU: 2 hilos.
 # LFM3 necesita llama.cpp b11960 (v0.8.0) o posterior; se fija una version concreta para que una actualizacion no lo rompa.
+# Para forzar que vuelva a compilar (p. ej. tras un fallo de librerias): rm -rf /opt/deltha-sigfrid/llama && bash instalar.sh
 set -e
 LLAMA_TAG=${LLAMA_TAG:-b11960}
 GGUF_URL=${GGUF_URL:-https://huggingface.co/LiquidAI/LFM3-1.7B-GGUF/resolve/main/LFM3-1.7B-Q4_K_M.gguf}
@@ -37,9 +38,11 @@ if [ ! -x "$BASE/llama/llama-server" ] || [ "$(cat "$BASE/llama/VERSION" 2>/dev/
         echo "No hay binario precompilado; compilando llama-server $LLAMA_TAG..."
         apt-get install -y -q build-essential cmake git libcurl4-openssl-dev > /dev/null
         rm -rf "$BASE/src" && git clone -q --branch "$LLAMA_TAG" --depth 1 https://github.com/ggml-org/llama.cpp.git "$BASE/src"
-        cmake -S "$BASE/src" -B "$BASE/src/build" -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=OFF > /dev/null
-        cmake --build "$BASE/src/build" --config Release -t llama-server -j2 > /dev/null
-        find "$BASE/src/build/bin" -type f \( -name 'llama-server' -o -name '*.so*' \) -exec cp -t "$BASE/llama/" {} +
+        # BUILD_SHARED_LIBS=OFF (09/11/2026): un solo binario sin .so. Con librerias compartidas, libllama-common.so quedaba en
+        # build/common/ (no en build/bin/), no se copiaba y el servicio moria con «cannot open shared object file».
+        cmake -S "$BASE/src" -B "$BASE/src/build" -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=OFF -DBUILD_SHARED_LIBS=OFF > /dev/null
+        cmake --build "$BASE/src/build" --config Release -t llama-server -j"$(nproc)" > /dev/null
+        find "$BASE/src/build" \( -type f -o -type l \) \( -name 'llama-server' -o -name '*.so*' \) -exec cp -a -t "$BASE/llama/" {} +   # por si alguna version vuelve a sacar .so
         rm -rf "$BASE/src"
     fi
     chmod +x "$BASE/llama/llama-server"
