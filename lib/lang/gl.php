@@ -969,4 +969,10 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Avisos de ayuda' => 'Avisos de axuda',
 'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'Os recadros grises que explican cada páxina. Cada un pódese pechar coa súa ×; desmarca isto para que non saia ningún.',
 'Volver a mostrar los %d que cerré' => 'Volver amosar os %d que pechei',
+// caja «Medios más seguidos» (09/11/2026)
+'Medios más seguidos' => 'Medios máis seguidos',
+'Los medios, substacks y canales del catálogo con más gente siguiéndolos.' => 'Os medios, substacks e canles do catálogo con máis xente seguíndoos.',
+'medio' => 'medio',
+'substack' => 'substack',
+'canal' => 'canle',
 ];

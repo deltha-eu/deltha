@@ -1006,4 +1006,10 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Avisos de ayuda' => 'Avisos de ajuda',
 'Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.' => 'As caixas cinzentas que explicam cada página. Cada uma fecha-se com o seu ×; desmarca isto para que não apareça nenhuma.',
 'Volver a mostrar los %d que cerré' => 'Voltar a mostrar os %d que fechei',
+// caja «Medios más seguidos» (09/11/2026)
+'Medios más seguidos' => 'Media mais seguidos',
+'Los medios, substacks y canales del catálogo con más gente siguiéndolos.' => 'Os meios, substacks e canais do catálogo com mais gente a segui-los.',
+'medio' => 'meio',
+'substack' => 'substack',
+'canal' => 'canal',
 ];
