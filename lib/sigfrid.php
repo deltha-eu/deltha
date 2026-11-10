@@ -48,7 +48,12 @@ const SIGFRID_FUERAS = [
     'Hasta luego Lucas, que eso no es de Deltha. Cuando quieras saber del radar o del concurso, aquí me tienes, fistro.',
 ];
 const SIGFRID_FUERA = SIGFRID_FUERAS[0];   // la de siempre, por si alguien la referencia
-function sigfrid_fuera(): string { return SIGFRID_FUERAS[random_int(0, count(SIGFRID_FUERAS) - 1)]; }
+/** Las de Chiquito solo en castellano; en los demas idiomas, una frase neutra en el idioma de quien pregunta (10/11/2026). */
+function sigfrid_fuera(?string $lang = null): string {
+    $lang = $lang ?? lang();
+    if ($lang !== 'es') return t_in($lang, 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.');
+    return SIGFRID_FUERAS[random_int(0, count(SIGFRID_FUERAS) - 1)];
+}
 const SIGFRID_CON_PERIODO = ['medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'mis_envios'];
 
 function sigfrid_on(): bool { return (string)cfg('sigfrid_enabled', '1') === '1'; }
@@ -475,9 +480,10 @@ ia_handler('sigfrid', function (PDO $pdo, array $job, array $res): void {
     $paquete = (string)($in['user'] ?? '');
     $txt = trim((string)($res['text'] ?? $res['respuesta'] ?? ''));
     $txt = preg_replace('/^#\d+\s+/', '', $txt);   // por si repite la cita
-    // fuera de Deltha (migra-188): el modelo devuelve FUERA_DE_DELTHA y Sigfrid despacha con la frase fija de Ángel, en castellano siempre
-    if (str_contains($txt, 'FUERA_DE_DELTHA')) $txt = sigfrid_fuera();
-    elseif (!sigfrid_respuesta_valida($txt, $paquete)) $txt = t('No he sabido responder a eso.') . ' ' . t('Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
+    // fuera de Deltha (migra-188): el modelo devuelve FUERA_DE_DELTHA y Sigfrid despacha con una de Chiquito (castellano) o la neutra en el idioma de quien pregunta
+    $lg = (string)($in['lang'] ?? 'es');   // idioma de quien pregunto (el handler corre en /api/ia.php, donde lang() es el del worker)
+    if (str_contains($txt, 'FUERA_DE_DELTHA')) $txt = sigfrid_fuera($lg);
+    elseif (!sigfrid_respuesta_valida($txt, $paquete)) $txt = t_in($lg, 'No he sabido responder a eso.') . ' ' . t_in($lg, 'Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
     $final = mb_substr("#$mid " . ($quien !== '' ? "$quien " : '') . $txt, 0, 1000);
     $sig = sigfrid_user($pdo);
     $pdo->prepare("UPDATE chat SET content = ? WHERE msg_id = ? AND user_id = ?")->execute([$final, $nid, (int)($sig['user_id'] ?? 0)]);

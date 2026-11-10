@@ -1113,4 +1113,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'por actividad' => 'for activity',
 'actividad' => 'activity',
 'reloj' => 'clock',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'I only answer questions about Deltha: ask me about the radar, the front page, the media or the communities.',
 ];

@@ -1059,4 +1059,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'por actividad' => 'für Aktivität',
 'actividad' => 'Aktivität',
 'reloj' => 'Uhr',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Ich beantworte nur Fragen zu Deltha: frag mich nach dem Radar, der Titelseite, den Medien oder den Communitys.',
 ];

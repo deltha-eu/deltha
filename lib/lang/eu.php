@@ -1058,4 +1058,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'por actividad' => 'jarduerarengatik',
 'actividad' => 'jarduera',
 'reloj' => 'erlojua',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Deltharekin lotutako kontuak bakarrik erantzuten ditut: galdetu radarraz, azalaz, hedabideez edo komunitateez.',
 ];
