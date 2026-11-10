@@ -1068,7 +1068,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'As you are not registered, your forum post has to be approved by a moderator before it is published.',
 'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Thread awaiting approval: only moderators and admin can see it. It is approved or removed in <a href="/moderacion">Moderation</a>.',
 // Sigfrid: memoria del hilo y acciones nuevas (09/11/2026, tarde)
-'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '“what is on the front page?” · “which is the most active community?” · “who has posted the most?” · “how many of us are online?” · “when is the next cycle?” · “how are my posts doing?”',
+'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '“what is on the front page?” · “which is the most active community?” · “what\'s today\'s topic?” · “who has posted the most?” · “how many of us are online?” · “when is the next cycle?” · “how are my posts doing?”',
 'Y si después me preguntas «¿y este mes?», sé de qué hablabas.' => 'And if you then ask “and this month?”, I know what you were talking about.',
 'Ahora mismo no hay nada en portada.' => 'There is nothing on the front page right now.',
 'en %s' => 'on %s',
@@ -1114,4 +1114,9 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'actividad' => 'activity',
 'reloj' => 'clock',
 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'I only answer questions about Deltha: ask me about the radar, the front page, the media or the communities.',
+// Sigfrid: temas (10/11/2026)
+'%s no se ha enviado nada todavía.' => '%s nothing has been posted yet.',
+'%d envíos, %d votos' => '%d posts, %d votes',
+'%d en portada' => '%d on the front page',
+'El tema con más envíos %s es %s' => 'The topic with the most posts %s is %s',
 ];

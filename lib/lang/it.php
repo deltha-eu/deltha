@@ -1014,7 +1014,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Poiché non sei registrato, il tuo invio al forum deve essere approvato da un moderatore prima di essere pubblicato.',
 'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Discussione in attesa di approvazione: la vedete solo moderatori e admin. Si approva o si ritira in <a href="/moderacion">Moderazione</a>.',
 // Sigfrid: memoria del hilo y acciones nuevas (09/11/2026, tarde)
-'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«cosa c\'è in prima pagina?» · «qual è la comunità più attiva?» · «chi ha inviato di più?» · «quanti siamo online?» · «quando è il prossimo ciclo?» · «come vanno i miei invii?»',
+'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«cosa c\'è in prima pagina?» · «qual è la comunità più attiva?» · «qual è il tema del giorno?» · «chi ha inviato di più?» · «quanti siamo online?» · «quando è il prossimo ciclo?» · «come vanno i miei invii?»',
 'Y si después me preguntas «¿y este mes?», sé de qué hablabas.' => 'E se poi mi chiedi «e questo mese?», so di cosa parlavi.',
 'Ahora mismo no hay nada en portada.' => 'In questo momento non c\'è nulla in prima pagina.',
 'en %s' => 'in %s',
@@ -1060,4 +1060,9 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'actividad' => 'attività',
 'reloj' => 'orologio',
 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Rispondo solo a domande su Deltha: chiedimi del radar, della prima pagina, dei media o delle comunità.',
+// Sigfrid: temas (10/11/2026)
+'%s no se ha enviado nada todavía.' => '%s non è stato ancora inviato nulla.',
+'%d envíos, %d votos' => '%d invii, %d voti',
+'%d en portada' => '%d in prima pagina',
+'El tema con más envíos %s es %s' => 'Il tema con più invii %s è %s',
 ];

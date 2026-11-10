@@ -21,7 +21,7 @@
 declare(strict_types=1);
 
 /** Acciones que Sigfrid sabe hacer (las mismas para las reglas y para el esquema del modelo). */
-const SIGFRID_ACCIONES = ['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'conectados', 'proximo_ciclo', 'mis_envios', 'ayuda'];
+const SIGFRID_ACCIONES = ['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'temas', 'top_enviador', 'conectados', 'proximo_ciclo', 'mis_envios', 'ayuda'];
 /** Acciones a las que el periodo (hoy / semana / mes) les cambia la respuesta: una continuacion «¿y este mes?» solo tiene sentido con estas. */
 /** Lo que contesta a cualquier pregunta que no vaya de Deltha (decision de Angel, 09/11/2026; sin traducir: es un chiste). Veinte variantes
  *  al estilo de Chiquito de la Calzada, una al azar cada vez (sigfrid_fuera()); todas dicen lo mismo: que solo atiende cosas de Deltha. */
@@ -54,7 +54,7 @@ function sigfrid_fuera(?string $lang = null): string {
     if ($lang !== 'es') return t_in($lang, 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.');
     return SIGFRID_FUERAS[random_int(0, count(SIGFRID_FUERAS) - 1)];
 }
-const SIGFRID_CON_PERIODO = ['medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'mis_envios'];
+const SIGFRID_CON_PERIODO = ['medio_leido', 'noticia_top', 'comunidad_activa', 'temas', 'top_enviador', 'mis_envios'];
 
 function sigfrid_on(): bool { return (string)cfg('sigfrid_enabled', '1') === '1'; }
 
@@ -127,6 +127,8 @@ function sigfrid_intencion(string $content, string $login = ''): ?array {
         return ['accion' => 'concurso_ganador', 'periodo' => $p];   // ganador, quien va primero, el mas votado… y por defecto
     }
     if (preg_match('/\b(tema|consigna)\b.*\bsemana\b|\bsemana\b.*\b(tema|consigna)\b/u', $n)) return ['accion' => 'concurso_tema', 'periodo' => $p];
+    // temas (secciones) con mas envios: «¿cuál es la temática del día?», «¿de qué se habla hoy?», «¿qué temas se mueven?» (10/11/2026)
+    if (preg_match('/\btem[aá]tic\w*|\btemas\b|\btema del d[ií]a\b|\bde qu[eé] se (habla|va)\b|\bqu[eé] se (habla|mueve|cuece)\b|\btopics?\b|\bthemes?\b|\bthemen\b|\bargomenti\b|\bgaiak?\b|\bkonular\b|\bsujets\b/u', $n)) return ['accion' => 'temas', 'periodo' => $p];
     if (preg_match('/\b(noticias?|env[ií]os?|enlaces?|articulos?|historias?|hilos?|posts?)\b/u', $n) && preg_match($super, $n)) return ['accion' => 'noticia_top', 'periodo' => $p];
     if (preg_match('/\b(medios?|periodicos?|diarios?|fuentes?|substacks?|newsletters?|cabeceras?|canal(es)?|webs?)\b/u', $n) && preg_match($super, $n)) return ['accion' => 'medio_leido', 'periodo' => $p];
     if (preg_match($super, $n)) return ['accion' => 'noticia_top', 'periodo' => $p];   // «lo mas leido» a secas: las noticias
@@ -192,7 +194,7 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
             . "1) deltha: true solo si la frase pregunta por Deltha mismo (sus noticias, portada, radar, comunidades, foros, concurso de relatos, medios, usuarios, aura, conectados, ciclo). "
             . "false si pregunta por el mundo exterior: resultados deportivos, equipos, el tiempo, cultura general, chistes, programacion, otras webs, aunque sea una noticia. "
             . "2) accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; "
-            . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; top_enviador=usuario que mas envia; "
+            . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; temas=temas o tematica con mas envios (de que se habla); top_enviador=usuario que mas envia; "
             . "conectados=cuanta gente hay conectada; proximo_ciclo=cuando sube la siguiente; mis_envios=los envios o aura de quien pregunta; "
             . "conversar=va de Deltha pero no pide exactamente ninguna de las anteriores (vaga, de ambiente, compara o mezcla); ayuda=saludo o pide ayuda. "
             . "Elige una accion concreta solo si la frase la pide claramente; en la duda, conversar. Si deltha es false, accion=ayuda. 3) periodo: hoy, semana (defecto) o mes. "
@@ -230,7 +232,7 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
 function sigfrid_ayuda(): string {
     return t('Soy Sigfrid, el ayudante del Chat. Pregúntame con @%s delante:', (string)cfg('sigfrid_login', 'Sigfrid')) . ' '
          . t('«muéstrame el radar» · «¿quién va ganando el concurso de relatos?» · «¿cuál es el tema de la semana?» · «¿cuál es el medio más leído?» · «¿cuál es la noticia más votada hoy?»')
-         . ' · ' . t('«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»')
+         . ' · ' . t('«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»')
          . ' ' . t('Entiendo «hoy», «esta semana» (por defecto) y «este mes».') . ' ' . t('Y si después me preguntas «¿y este mes?», sé de qué hablabas.');
 }
 
@@ -332,6 +334,18 @@ function sigfrid_comunidad_activa(PDO $pdo, string $periodo): string {
     return t('La comunidad más activa %s es %s', sigfrid_periodo_txt($periodo), $fmt($primero)) . ($rows ? '; ' . t('le siguen %s', implode(' ' . t('y') . ' ', array_map($fmt, $rows))) : '') . '.';
 }
 
+/** Los temas (secciones) con mas envios en el periodo, con sus votos: «¿cuál es la temática del día?» (10/11/2026). */
+function sigfrid_temas(PDO $pdo, string $periodo): string {
+    $rows = $pdo->query("SELECT t.topic_id, t.name, COUNT(*) n, COALESCE(SUM(s.votes_pos - s.votes_neg), 0) v, SUM(s.status = 'destacadas') port
+                           FROM stories s JOIN topics t ON t.topic_id = s.topic_id
+                          WHERE s.status IN ('nuevas','destacadas','archived') AND s.content_type = 'link' AND " . sigfrid_desde($periodo, 's.sent_date') . "
+                          GROUP BY t.topic_id ORDER BY n DESC, v DESC, t.name ASC LIMIT 4")->fetchAll();
+    if (!$rows) return t('%s no se ha enviado nada todavía.', ucfirst(sigfrid_periodo_txt($periodo))) . ' ' . sigfrid_enlace(t('Radar'), '/radar');
+    $fmt = fn($r) => sigfrid_enlace((string)$r['name'], '/tema/' . (int)$r['topic_id']) . ' (' . t('%d envíos, %d votos', (int)$r['n'], (int)$r['v']) . ((int)$r['port'] > 0 ? ', ' . t('%d en portada', (int)$r['port']) : '') . ')';
+    $primero = array_shift($rows);
+    return t('El tema con más envíos %s es %s', sigfrid_periodo_txt($periodo), $fmt($primero)) . ($rows ? '; ' . t('le siguen %s', implode(', ', array_map($fmt, $rows))) : '') . '.';
+}
+
 /** Quien mas ha enviado (y quien mas ha comentado) en el periodo. Solo cuentas con nombre: los anonimos no se suman a nadie. */
 function sigfrid_top_enviador(PDO $pdo, string $periodo): string {
     $env = $pdo->query("SELECT u.login, COUNT(*) n FROM stories s JOIN users u ON u.user_id = s.user_id WHERE s.status IN ('nuevas','destacadas','archived') AND " . sigfrid_desde($periodo, 's.sent_date') . " GROUP BY u.user_id ORDER BY n DESC, u.login ASC LIMIT 3")->fetchAll();
@@ -387,6 +401,7 @@ function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = n
         case 'fuera':            return sigfrid_fuera();   // la pregunta no va de Deltha (lo dice el clasificador)
         case 'portada':          return sigfrid_portada($pdo);
         case 'comunidad_activa': return sigfrid_comunidad_activa($pdo, $periodo);
+        case 'temas':            return sigfrid_temas($pdo, $periodo);
         case 'top_enviador':     return sigfrid_top_enviador($pdo, $periodo);
         case 'conectados':       return sigfrid_conectados($pdo);
         case 'proximo_ciclo':    return sigfrid_proximo_ciclo($pdo);
@@ -409,7 +424,7 @@ function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = n
 /** Todo lo que Sigfrid sabe ahora mismo, ya redactado por las acciones (en el idioma de quien pregunta, con sus enlaces). */
 function sigfrid_paquete(PDO $pdo, ?array $u): string {
     $partes = [];
-    foreach (['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'top_enviador', 'conectados', 'proximo_ciclo'] as $a) {
+    foreach (['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'temas', 'top_enviador', 'conectados', 'proximo_ciclo'] as $a) {
         try { $partes[] = "[$a] " . sigfrid_accion($pdo, $a, 'semana', $u); } catch (Throwable $e) {}
     }
     if ($u) { try { $partes[] = "[mis_envios] " . sigfrid_accion($pdo, 'mis_envios', 'semana', $u); } catch (Throwable $e) {} }

@@ -1013,7 +1013,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Como non estás rexistrado, o teu envío ao foro ten que ser aprobado por un moderador antes de publicarse.',
 'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Fío pendente de aprobación: só o vedes moderadores e admin. Apróbase ou retírase en <a href="/moderacion">Moderación</a>.',
 // Sigfrid: memoria del hilo y acciones nuevas (09/11/2026, tarde)
-'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«que hai en portada?» · «cal é a comunidade máis activa?» · «quen enviou máis?» · «cantos estamos conectados?» · «cando é o próximo ciclo?» · «como van os meus envíos?»',
+'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«que hai en portada?» · «cal é a comunidade máis activa?» · «cal é a temática do día?» · «quen enviou máis?» · «cantos estamos conectados?» · «cando é o próximo ciclo?» · «como van os meus envíos?»',
 'Y si después me preguntas «¿y este mes?», sé de qué hablabas.' => 'E se despois me preguntas «e este mes?», sei do que falabas.',
 'Ahora mismo no hay nada en portada.' => 'Agora mesmo non hai nada en portada.',
 'en %s' => 'en %s',
@@ -1059,4 +1059,9 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'actividad' => 'actividade',
 'reloj' => 'reloxo',
 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Só atendo cuestións relacionadas con Deltha: pregúntame polo radar, a portada, os medios ou as comunidades.',
+// Sigfrid: temas (10/11/2026)
+'%s no se ha enviado nada todavía.' => '%s non se enviou nada aínda.',
+'%d envíos, %d votos' => '%d envíos, %d votos',
+'%d en portada' => '%d en portada',
+'El tema con más envíos %s es %s' => 'O tema con máis envíos %s é %s',
 ];

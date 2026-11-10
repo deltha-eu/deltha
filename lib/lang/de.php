@@ -1014,7 +1014,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Da du nicht registriert bist, muss dein Forumsbeitrag von einem Moderator freigegeben werden, bevor er veröffentlicht wird.',
 'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Thread wartet auf Freigabe: nur Moderatoren und Admin sehen ihn. Freigegeben oder entfernt wird er unter <a href="/moderacion">Moderation</a>.',
 // Sigfrid: memoria del hilo y acciones nuevas (09/11/2026, tarde)
-'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '„was ist auf der Titelseite?“ · „welche Gemeinschaft ist am aktivsten?“ · „wer hat am meisten eingereicht?“ · „wie viele sind online?“ · „wann ist der nächste Zyklus?“ · „wie laufen meine Beiträge?“',
+'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '„was ist auf der Titelseite?“ · „welche Gemeinschaft ist am aktivsten?“ · „was ist das Thema des Tages?“ · „wer hat am meisten eingereicht?“ · „wie viele sind online?“ · „wann ist der nächste Zyklus?“ · „wie laufen meine Beiträge?“',
 'Y si después me preguntas «¿y este mes?», sé de qué hablabas.' => 'Und wenn du danach „und diesen Monat?“ fragst, weiß ich, wovon du gesprochen hast.',
 'Ahora mismo no hay nada en portada.' => 'Im Moment ist nichts auf der Titelseite.',
 'en %s' => 'auf %s',
@@ -1060,4 +1060,9 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'actividad' => 'Aktivität',
 'reloj' => 'Uhr',
 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Ich beantworte nur Fragen zu Deltha: frag mich nach dem Radar, der Titelseite, den Medien oder den Communitys.',
+// Sigfrid: temas (10/11/2026)
+'%s no se ha enviado nada todavía.' => '%s wurde noch nichts eingereicht.',
+'%d envíos, %d votos' => '%d Beiträge, %d Stimmen',
+'%d en portada' => '%d auf der Titelseite',
+'El tema con más envíos %s es %s' => 'Das Thema mit den meisten Beiträgen %s ist %s',
 ];
