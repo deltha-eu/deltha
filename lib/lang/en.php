@@ -1119,4 +1119,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '%d envíos, %d votos' => '%d posts, %d votes',
 '%d en portada' => '%d on the front page',
 'El tema con más envíos %s es %s' => 'The topic with the most posts %s is %s',
+'%s ningún asunto se repite entre los envíos.' => '%s no single story is repeated among the posts.',
+'%d envíos, %d votos, %d comentarios' => '%d posts, %d votes, %d comments',
+'El asunto del que más se habla %s es %s' => 'The story everyone is talking about %s is %s',
 ];

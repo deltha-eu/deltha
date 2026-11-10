@@ -1064,4 +1064,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%d envíos, %d votos' => '%d bidalketa, %d boto',
 '%d en portada' => '%d azalean',
 'El tema con más envíos %s es %s' => 'Bidalketa gehien dituen gaia %s %s da',
+'%s ningún asunto se repite entre los envíos.' => '%s ez da gairik errepikatzen bidalketen artean.',
+'%d envíos, %d votos, %d comentarios' => '%d bidalketa, %d boto, %d iruzkin',
+'El asunto del que más se habla %s es %s' => 'Gehien hitz egiten den gaia %s %s da',
 ];

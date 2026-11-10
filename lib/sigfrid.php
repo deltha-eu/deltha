@@ -194,7 +194,7 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
             . "1) deltha: true solo si la frase pregunta por Deltha mismo (sus noticias, portada, radar, comunidades, foros, concurso de relatos, medios, usuarios, aura, conectados, ciclo). "
             . "false si pregunta por el mundo exterior: resultados deportivos, equipos, el tiempo, cultura general, chistes, programacion, otras webs, aunque sea una noticia. "
             . "2) accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; "
-            . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; temas=temas o tematica con mas envios (de que se habla); top_enviador=usuario que mas envia; "
+            . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; temas=el asunto o noticia del que mas se habla (tematica del dia); top_enviador=usuario que mas envia; "
             . "conectados=cuanta gente hay conectada; proximo_ciclo=cuando sube la siguiente; mis_envios=los envios o aura de quien pregunta; "
             . "conversar=va de Deltha pero no pide exactamente ninguna de las anteriores (vaga, de ambiente, compara o mezcla); ayuda=saludo o pide ayuda. "
             . "Elige una accion concreta solo si la frase la pide claramente; en la duda, conversar. Si deltha es false, accion=ayuda. 3) periodo: hoy, semana (defecto) o mes. "
@@ -334,7 +334,37 @@ function sigfrid_comunidad_activa(PDO $pdo, string $periodo): string {
     return t('La comunidad más activa %s es %s', sigfrid_periodo_txt($periodo), $fmt($primero)) . ($rows ? '; ' . t('le siguen %s', implode(' ' . t('y') . ' ', array_map($fmt, $rows))) : '') . '.';
 }
 
-/** Los temas (secciones) con mas envios en el periodo, con sus votos: «¿cuál es la temática del día?» (10/11/2026). */
+/** «¿Cuál es la temática del día?» = el asunto del que mas se habla: grupos de envios relacionados (story_related, vectores de titulares,
+ *  migra-175) dentro del periodo, el mayor primero (y a igual tamaño, el mas votado). Cada grupo se presenta por su envio mas votado. Si
+ *  ningun asunto se repite (o aun no hay vectores), responde con los temas-seccion (sigfrid_temas). Ángel, 10/11/2026: «el tema como la
+ *  noticia más mencionada, no como categoría». */
+function sigfrid_asuntos(PDO $pdo, string $periodo): string {
+    $rows = $pdo->query("SELECT story_id, title, votes_pos - votes_neg v, comments, status FROM stories WHERE status IN ('nuevas','destacadas','archived') AND content_type = 'link' AND " . sigfrid_desde($periodo, 'sent_date'))->fetchAll();
+    if (!$rows) return sigfrid_temas($pdo, $periodo);
+    $S = []; foreach ($rows as $r) $S[(int)$r['story_id']] = $r;
+    $ids = implode(',', array_keys($S));
+    $padre = []; foreach ($S as $id => $_) $padre[$id] = $id;
+    $raiz = function (int $x) use (&$padre, &$raiz): int { while ($padre[$x] !== $x) { $padre[$x] = $padre[$padre[$x]]; $x = $padre[$x]; } return $x; };
+    try {
+        foreach ($pdo->query("SELECT story_id, related_id FROM story_related WHERE story_id IN ($ids) AND related_id IN ($ids)") as $r) {
+            $a = $raiz((int)$r['story_id']); $b = $raiz((int)$r['related_id']); if ($a !== $b) $padre[$b] = $a;
+        }
+    } catch (Throwable $e) { return sigfrid_temas($pdo, $periodo); }
+    $grupos = []; foreach ($S as $id => $r) $grupos[$raiz($id)][] = $r;
+    $grupos = array_filter($grupos, fn($g) => count($g) >= 2);
+    if (!$grupos) return t('%s ningún asunto se repite entre los envíos.', ucfirst(sigfrid_periodo_txt($periodo))) . ' ' . sigfrid_temas($pdo, $periodo);
+    $peso = fn(array $g) => [count($g), array_sum(array_map(fn($r) => (int)$r['v'], $g)), array_sum(array_map(fn($r) => (int)$r['comments'], $g))];
+    usort($grupos, fn($a, $b) => $peso($b) <=> $peso($a));
+    $fmt = function (array $g) use ($peso): string {
+        usort($g, fn($a, $b) => [(int)$b['v'], $b['status'] === 'destacadas'] <=> [(int)$a['v'], $a['status'] === 'destacadas']);
+        [$n, $v, $c] = $peso($g);
+        return sigfrid_enlace((string)$g[0]['title'], '/hilo/' . (int)$g[0]['story_id']) . ' (' . t('%d envíos, %d votos, %d comentarios', $n, $v, $c) . ')';
+    };
+    $primero = array_shift($grupos);
+    return t('El asunto del que más se habla %s es %s', sigfrid_periodo_txt($periodo), $fmt($primero)) . ($grupos ? '; ' . t('le siguen %s', implode(' ' . t('y') . ' ', array_map($fmt, array_slice($grupos, 0, 2)))) : '') . '.';
+}
+
+/** Los temas (secciones) con mas envios en el periodo, con sus votos (lo usa sigfrid_asuntos cuando ningun asunto se repite). */
 function sigfrid_temas(PDO $pdo, string $periodo): string {
     $rows = $pdo->query("SELECT t.topic_id, t.name, COUNT(*) n, COALESCE(SUM(s.votes_pos - s.votes_neg), 0) v, SUM(s.status = 'destacadas') port
                            FROM stories s JOIN topics t ON t.topic_id = s.topic_id
@@ -401,7 +431,7 @@ function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = n
         case 'fuera':            return sigfrid_fuera();   // la pregunta no va de Deltha (lo dice el clasificador)
         case 'portada':          return sigfrid_portada($pdo);
         case 'comunidad_activa': return sigfrid_comunidad_activa($pdo, $periodo);
-        case 'temas':            return sigfrid_temas($pdo, $periodo);
+        case 'temas':            return sigfrid_asuntos($pdo, $periodo);
         case 'top_enviador':     return sigfrid_top_enviador($pdo, $periodo);
         case 'conectados':       return sigfrid_conectados($pdo);
         case 'proximo_ciclo':    return sigfrid_proximo_ciclo($pdo);
