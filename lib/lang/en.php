@@ -1124,4 +1124,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'El asunto del que más se habla %s es %s' => 'The story everyone is talking about %s is %s',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s the story with the most posts is %s: %d posts from different angles (%d votes, %d comments)',
 'Le siguen %s' => 'Next come %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s the topic with the most posts is %s: %d posts from different angles (%d votes, %d comments)',
 ];

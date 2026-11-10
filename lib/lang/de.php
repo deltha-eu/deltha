@@ -1070,4 +1070,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'El asunto del que más se habla %s es %s' => 'Das Thema, über das %s am meisten gesprochen wird, ist %s',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s ist das Thema mit den meisten Beiträgen das von %s: %d Beiträge aus verschiedenen Blickwinkeln (%d Stimmen, %d Kommentare)',
 'Le siguen %s' => 'Es folgen %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s ist das Thema mit den meisten Beiträgen %s: %d Beiträge aus verschiedenen Blickwinkeln (%d Stimmen, %d Kommentare)',
 ];
