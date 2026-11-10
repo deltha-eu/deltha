@@ -1065,4 +1065,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '%d envíos, %d votos' => '%d Beiträge, %d Stimmen',
 '%d en portada' => '%d auf der Titelseite',
 'El tema con más envíos %s es %s' => 'Das Thema mit den meisten Beiträgen %s ist %s',
+'%s ningún asunto se repite entre los envíos.' => '%s wiederholt sich kein Thema unter den Beiträgen.',
+'%d envíos, %d votos, %d comentarios' => '%d Beiträge, %d Stimmen, %d Kommentare',
+'El asunto del que más se habla %s es %s' => 'Das Thema, über das %s am meisten gesprochen wird, ist %s',
 ];

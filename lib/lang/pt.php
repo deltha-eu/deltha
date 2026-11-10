@@ -1101,4 +1101,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '%d envíos, %d votos' => '%d envios, %d votos',
 '%d en portada' => '%d na capa',
 'El tema con más envíos %s es %s' => 'O tema com mais envios %s é %s',
+'%s ningún asunto se repite entre los envíos.' => '%s nenhum assunto se repete entre os envios.',
+'%d envíos, %d votos, %d comentarios' => '%d envios, %d votos, %d comentários',
+'El asunto del que más se habla %s es %s' => 'O assunto de que mais se fala %s é %s',
 ];
