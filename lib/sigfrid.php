@@ -128,7 +128,8 @@ function sigfrid_intencion(string $content, string $login = ''): ?array {
     }
     if (preg_match('/\b(tema|consigna)\b.*\bsemana\b|\bsemana\b.*\b(tema|consigna)\b/u', $n)) return ['accion' => 'concurso_tema', 'periodo' => $p];
     // temas (secciones) con mas envios: «¿cuál es la temática del día?», «¿de qué se habla hoy?», «¿qué temas se mueven?» (10/11/2026)
-    if (preg_match('/\btem[aá]tic\w*|\btemas\b|\btema del d[ií]a\b|\bde qu[eé] se (habla|va)\b|\bqu[eé] se (habla|mueve|cuece)\b|\btopics?\b|\bthemes?\b|\bthemen\b|\bargomenti\b|\bgaiak?\b|\bkonular\b|\bsujets\b/u', $n)) return ['accion' => 'temas', 'periodo' => $p];
+    if (preg_match('/\btem[aá]tic\w*|\btemas\b|\btema (del d[ií]a|del momento|m[aá]s (candente|caliente|hablado|comentado|repetido))\b|\bcandente\b|\bde qu[eé] se (est[aá] )?(habla|hablando|va)\b|\bqu[eé] se (est[aá] )?(habla|hablando|mueve|cuece)\b|\bhot topic\b|\btopics?\b|\bthemes?\b|\bthemen\b|\bargomenti\b|\bgaiak?\b|\bkonular\b|\bsujets\b/u', $n))
+        return ['accion' => 'temas', 'periodo' => sigfrid_periodo_explicito($n) ?? 'hoy'];   // sin periodo dicho, el de hoy: «de qué se habla» es de hoy
     if (preg_match('/\b(noticias?|env[ií]os?|enlaces?|articulos?|historias?|hilos?|posts?)\b/u', $n) && preg_match($super, $n)) return ['accion' => 'noticia_top', 'periodo' => $p];
     if (preg_match('/\b(medios?|periodicos?|diarios?|fuentes?|substacks?|newsletters?|cabeceras?|canal(es)?|webs?)\b/u', $n) && preg_match($super, $n)) return ['accion' => 'medio_leido', 'periodo' => $p];
     if (preg_match($super, $n)) return ['accion' => 'noticia_top', 'periodo' => $p];   // «lo mas leido» a secas: las noticias
@@ -194,7 +195,7 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
             . "1) deltha: true solo si la frase pregunta por Deltha mismo (sus noticias, portada, radar, comunidades, foros, concurso de relatos, medios, usuarios, aura, conectados, ciclo). "
             . "false si pregunta por el mundo exterior: resultados deportivos, equipos, el tiempo, cultura general, chistes, programacion, otras webs, aunque sea una noticia. "
             . "2) accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; "
-            . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; temas=el asunto o noticia del que mas se habla (tematica del dia); top_enviador=usuario que mas envia; "
+            . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; temas=el asunto o noticia del que mas se habla (tematica del dia, tema candente, de que se habla); top_enviador=usuario que mas envia; "
             . "conectados=cuanta gente hay conectada; proximo_ciclo=cuando sube la siguiente; mis_envios=los envios o aura de quien pregunta; "
             . "conversar=va de Deltha pero no pide exactamente ninguna de las anteriores (vaga, de ambiente, compara o mezcla); ayuda=saludo o pide ayuda. "
             . "Elige una accion concreta solo si la frase la pide claramente; en la duda, conversar. Si deltha es false, accion=ayuda. 3) periodo: hoy, semana (defecto) o mes. "
@@ -343,14 +344,23 @@ function sigfrid_asuntos(PDO $pdo, string $periodo): string {
     if (!$rows) return sigfrid_temas($pdo, $periodo);
     $S = []; foreach ($rows as $r) $S[(int)$r['story_id']] = $r;
     $ids = implode(',', array_keys($S));
-    $padre = []; foreach ($S as $id => $_) $padre[$id] = $id;
-    $raiz = function (int $x) use (&$padre, &$raiz): int { while ($padre[$x] !== $x) { $padre[$x] = $padre[$padre[$x]]; $x = $padre[$x]; } return $x; };
+    // grupos en estrella, no en cadena: el envio con mas parecidos directos es el centro de un grupo con todos ellos; se quitan y se
+    // repite. Con la union transitiva, una semana de noticias sobre Trump acababa en un solo bloque de 42 envios («Estados Miller Trump»).
+    $vec = [];
     try {
         foreach ($pdo->query("SELECT story_id, related_id FROM story_related WHERE story_id IN ($ids) AND related_id IN ($ids)") as $r) {
-            $a = $raiz((int)$r['story_id']); $b = $raiz((int)$r['related_id']); if ($a !== $b) $padre[$b] = $a;
+            $vec[(int)$r['story_id']][(int)$r['related_id']] = true; $vec[(int)$r['related_id']][(int)$r['story_id']] = true;
         }
     } catch (Throwable $e) { return sigfrid_temas($pdo, $periodo); }
-    $grupos = []; foreach ($S as $id => $r) $grupos[$raiz($id)][] = $r;
+    $grupos = []; $libre = array_fill_keys(array_keys($S), true);
+    while (true) {
+        $centro = 0; $max = 0;
+        foreach ($libre as $id => $_) { $k = count(array_filter(array_keys($vec[$id] ?? []), fn($o) => isset($libre[$o]))); if ($k > $max || ($k === $max && $k > 0 && (int)$S[$id]['v'] > (int)$S[$centro]['v'])) { $max = $k; $centro = $id; } }
+        if ($max === 0) break;
+        $g = [$S[$centro]]; unset($libre[$centro]);
+        foreach (array_keys($vec[$centro]) as $o) if (isset($libre[$o])) { $g[] = $S[$o]; unset($libre[$o]); }
+        $grupos[] = $g;
+    }
     $grupos = array_filter($grupos, fn($g) => count($g) >= 2);
     if (!$grupos) return t('%s ningún asunto se repite entre los envíos.', ucfirst(sigfrid_periodo_txt($periodo))) . ' ' . sigfrid_temas($pdo, $periodo);
     $peso = fn(array $g) => [count($g), array_sum(array_map(fn($r) => (int)$r['v'], $g)), array_sum(array_map(fn($r) => (int)$r['comments'], $g))];
@@ -506,6 +516,7 @@ function sigfrid_paquete(PDO $pdo, ?array $u): string {
     foreach (['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'temas', 'top_enviador', 'conectados', 'proximo_ciclo'] as $a) {
         try { $partes[] = "[$a] " . sigfrid_accion($pdo, $a, 'semana', $u); } catch (Throwable $e) {}
     }
+    try { $partes[] = "[temas_hoy] " . sigfrid_accion($pdo, 'temas', 'hoy', $u); } catch (Throwable $e) {}   // «de qué se habla» suele ser de hoy; el de arriba es de la semana
     if ($u) { try { $partes[] = "[mis_envios] " . sigfrid_accion($pdo, 'mis_envios', 'semana', $u); } catch (Throwable $e) {} }
     return implode("\n", $partes);
 }
