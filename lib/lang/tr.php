@@ -1088,4 +1088,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s ningún asunto se repite entre los envíos.' => '%s gönderiler arasında tekrar eden bir konu yok.',
 '%d envíos, %d votos, %d comentarios' => '%d gönderi, %d oy, %d yorum',
 'El asunto del que más se habla %s es %s' => '%s en çok konuşulan konu %s',
+'%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s en çok gönderi alan konu %s: farklı açılardan %d gönderi (%d oy, %d yorum)',
+'Le siguen %s' => 'Ardından %s',
 ];

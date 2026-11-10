@@ -1104,4 +1104,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '%s ningún asunto se repite entre los envíos.' => '%s nenhum assunto se repete entre os envios.',
 '%d envíos, %d votos, %d comentarios' => '%d envios, %d votos, %d comentários',
 'El asunto del que más se habla %s es %s' => 'O assunto de que mais se fala %s é %s',
+'%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s o assunto com mais envios é o de %s: %d envios de diferentes ângulos (%d votos, %d comentários)',
+'Le siguen %s' => 'Seguem-se %s',
 ];
