@@ -1121,4 +1121,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 '%s ningún asunto se repite entre los envíos.' => '%s aucun sujet ne se répète parmi les envois.',
 '%d envíos, %d votos, %d comentarios' => '%d envois, %d votes, %d commentaires',
 'El asunto del que más se habla %s es %s' => 'Le sujet dont on parle le plus %s est %s',
+'%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s le sujet avec le plus d\'envois est celui de %s : %d envois sous différents angles (%d votes, %d commentaires)',
+'Le siguen %s' => 'Suivent %s',
 ];

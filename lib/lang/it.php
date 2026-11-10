@@ -1068,4 +1068,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '%s ningún asunto se repite entre los envíos.' => '%s nessun argomento si ripete tra gli invii.',
 '%d envíos, %d votos, %d comentarios' => '%d invii, %d voti, %d commenti',
 'El asunto del que más se habla %s es %s' => 'L\'argomento di cui si parla di più %s è %s',
+'%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s l\'argomento con più invii è quello di %s: %d invii da angolazioni diverse (%d voti, %d commenti)',
+'Le siguen %s' => 'Seguono %s',
 ];

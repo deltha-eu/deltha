@@ -1068,4 +1068,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '%s ningún asunto se repite entre los envíos.' => '%s wiederholt sich kein Thema unter den Beiträgen.',
 '%d envíos, %d votos, %d comentarios' => '%d Beiträge, %d Stimmen, %d Kommentare',
 'El asunto del que más se habla %s es %s' => 'Das Thema, über das %s am meisten gesprochen wird, ist %s',
+'%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s ist das Thema mit den meisten Beiträgen das von %s: %d Beiträge aus verschiedenen Blickwinkeln (%d Stimmen, %d Kommentare)',
+'Le siguen %s' => 'Es folgen %s',
 ];

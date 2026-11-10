@@ -1067,4 +1067,6 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '%s ningún asunto se repite entre los envíos.' => '%s cap assumpte no es repeteix entre els enviaments.',
 '%d envíos, %d votos, %d comentarios' => '%d enviaments, %d vots, %d comentaris',
 'El asunto del que más se habla %s es %s' => 'L\'assumpte del qual més es parla %s és %s',
+'%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s l\'assumpte amb més enviaments és el de %s: %d enviaments des d\'enfocaments diferents (%d vots, %d comentaris)',
+'Le siguen %s' => 'El segueixen %s',
 ];

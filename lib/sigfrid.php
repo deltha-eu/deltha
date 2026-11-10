@@ -355,13 +355,14 @@ function sigfrid_asuntos(PDO $pdo, string $periodo): string {
     if (!$grupos) return t('%s ningún asunto se repite entre los envíos.', ucfirst(sigfrid_periodo_txt($periodo))) . ' ' . sigfrid_temas($pdo, $periodo);
     $peso = fn(array $g) => [count($g), array_sum(array_map(fn($r) => (int)$r['v'], $g)), array_sum(array_map(fn($r) => (int)$r['comments'], $g))];
     usort($grupos, fn($a, $b) => $peso($b) <=> $peso($a));
-    $fmt = function (array $g) use ($peso): string {
-        usort($g, fn($a, $b) => [(int)$b['v'], $b['status'] === 'destacadas'] <=> [(int)$a['v'], $a['status'] === 'destacadas']);
-        [$n, $v, $c] = $peso($g);
-        return sigfrid_enlace((string)$g[0]['title'], '/hilo/' . (int)$g[0]['story_id']) . ' (' . t('%d envíos, %d votos, %d comentarios', $n, $v, $c) . ')';
-    };
-    $primero = array_shift($grupos);
-    return t('El asunto del que más se habla %s es %s', sigfrid_periodo_txt($periodo), $fmt($primero)) . ($grupos ? '; ' . t('le siguen %s', implode(' ' . t('y') . ' ', array_map($fmt, array_slice($grupos, 0, 2)))) : '') . '.';
+    // el grupo mayor, con sus enfoques (hasta cuatro titulares, el mas votado primero); los siguientes, solo por su titular mas votado
+    $orden = function (array $g): array { usort($g, fn($a, $b) => [(int)$b['v'], $b['status'] === 'destacadas'] <=> [(int)$a['v'], $a['status'] === 'destacadas']); return $g; };
+    $enlace = fn(array $r) => sigfrid_enlace((string)$r['title'], '/hilo/' . (int)$r['story_id']);
+    $primero = $orden(array_shift($grupos)); [$n, $v, $c] = $peso($primero);
+    $txt = t('%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)', ucfirst(sigfrid_periodo_txt($periodo)), $enlace($primero[0]), $n, $v, $c)
+         . (count($primero) > 1 ? ' — ' . implode(' · ', array_map($enlace, array_slice($primero, 1, 3))) . (count($primero) > 4 ? ' …' : '') : '') . '.';
+    if ($grupos) $txt .= ' ' . t('Le siguen %s', implode(' ' . t('y') . ' ', array_map(function (array $g) use ($orden, $enlace, $peso) { $g = $orden($g); [$n] = $peso($g); return $enlace($g[0]) . ' (' . t('%d envíos', $n) . ')'; }, array_slice($grupos, 0, 2)))) . '.';
+    return $txt;
 }
 
 /** Los temas (secciones) con mas envios en el periodo, con sus votos (lo usa sigfrid_asuntos cuando ningun asunto se repite). */
