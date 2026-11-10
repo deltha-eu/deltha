@@ -1112,4 +1112,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'por actividad' => 'pour l\'activité',
 'actividad' => 'activité',
 'reloj' => 'horloge',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Je ne réponds qu\'aux questions sur Deltha : demande-moi le radar, la une, les médias ou les communautés.',
 ];

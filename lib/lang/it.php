@@ -1059,4 +1059,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'por actividad' => 'per attività',
 'actividad' => 'attività',
 'reloj' => 'orologio',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Rispondo solo a domande su Deltha: chiedimi del radar, della prima pagina, dei media o delle comunità.',
 ];

@@ -1058,4 +1058,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'por actividad' => 'por actividade',
 'actividad' => 'actividade',
 'reloj' => 'reloxo',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Só atendo cuestións relacionadas con Deltha: pregúntame polo radar, a portada, os medios ou as comunidades.',
 ];

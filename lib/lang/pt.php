@@ -1095,4 +1095,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'por actividad' => 'por atividade',
 'actividad' => 'atividade',
 'reloj' => 'relógio',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Só atendo questões relacionadas com o Deltha: pergunta-me pelo radar, pela capa, pelos meios ou pelas comunidades.',
 ];

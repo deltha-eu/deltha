@@ -1079,4 +1079,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'por actividad' => 'etkinlik nedeniyle',
 'actividad' => 'etkinlik',
 'reloj' => 'saat',
+'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Yalnızca Deltha ile ilgili sorulara cevap veriyorum: bana Radar\'ı, ön sayfayı, medyayı ya da toplulukları sor.',
 ];
