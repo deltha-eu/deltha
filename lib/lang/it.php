@@ -1071,4 +1071,18 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s l\'argomento con più invii è quello di %s: %d invii da angolazioni diverse (%d voti, %d commenti)',
 'Le siguen %s' => 'Seguono %s',
 '%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s il tema con più invii è %s: %d invii da angolazioni diverse (%d voti, %d commenti)',
+// conversación de los moderadores sobre un elemento pendiente (migra-191)
+'Conversación de los moderadores sobre este elemento' => 'Conversazione dei moderatori su questo elemento',
+'Conversación (%d)' => 'Conversazione (%d)',
+'Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.' => 'Ogni elemento ha la sua conversazione: lasciate lì i messaggi per mettervi d\'accordo prima di decidere. Quando la decisione passa al registro, la conversazione si legge lì e non si può più modificare.',
+'Sin mensajes todavía.' => 'Ancora nessun messaggio.',
+'Escribe a los demás moderadores…' => 'Scrivi agli altri moderatori…',
+'Solo lectura: la decisión ya está tomada y la conversación no se puede editar.' => 'Sola lettura: la decisione è già presa e la conversazione non si può più modificare.',
+'Ese elemento ya está decidido: la conversación es de solo lectura.' => 'Questo elemento è già deciso: la conversazione è in sola lettura.',
+'Mensaje guardado.' => 'Messaggio salvato.',
+'No se ha podido guardar el mensaje.' => 'Non è stato possibile salvare il messaggio.',
+'Escribe el mensaje antes de enviarlo.' => 'Scrivi il messaggio prima di inviarlo.',
+'Enviar mensaje' => 'Invia il messaggio',
+'Lo escribió' => 'Scritto da',
+'Escribir en la conversación' => 'Scrivi nella conversazione',
 ];
