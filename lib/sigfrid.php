@@ -123,7 +123,7 @@ function sigfrid_intencion(string $content, string $login = ''): ?array {
     if (preg_match('/\bportadas?\b|\bfront ?page\b|\bprima pagina\b|\btitelseite\b|\bazalean?\b|\bman[sş]et\b|\bla une\b/u', $n) && !preg_match($super, $n)) return ['accion' => 'portada', 'periodo' => $p];
     $concurso = preg_match('/\b(concurso|microrrelatos?|relatos?|certamen|contest|concours|concorso|wettbewerb|lehiaketa|yarisma|ganad\w*|vencedor|winner|gagnant|vincitore|gewinner|irabazle|kazanan)\b/u', $n) === 1;   // «ganador» a secas tambien es el concurso
     if ($concurso) {
-        if (preg_match('/\b(tema|consigna|asunto|de que va|sobre que|theme|thema|gaia|konu)\b/u', $n)) return ['accion' => 'concurso_tema', 'periodo' => $p];
+        if (preg_match('/\b(tema|tem[aá]tica|consigna|asunto|de que va|sobre que|theme|thema|gaia|konu)\b/u', $n)) return ['accion' => 'concurso_tema', 'periodo' => $p];
         return ['accion' => 'concurso_ganador', 'periodo' => $p];   // ganador, quien va primero, el mas votado… y por defecto
     }
     if (preg_match('/\b(tema|consigna)\b.*\bsemana\b|\bsemana\b.*\b(tema|consigna)\b/u', $n)) return ['accion' => 'concurso_tema', 'periodo' => $p];
