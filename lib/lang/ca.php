@@ -1013,7 +1013,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Com que no estàs registrat, el teu enviament al fòrum ha de ser aprovat per un moderador abans de publicar-se.',
 'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Fil pendent d\'aprovació: només el veieu moderadors i admin. S\'aprova o es retira a <a href="/moderacion">Moderació</a>.',
 // Sigfrid: memoria del hilo y acciones nuevas (09/11/2026, tarde)
-'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«què hi ha a portada?» · «quina és la comunitat més activa?» · «qui ha enviat més?» · «quants estem connectats?» · «quan és el proper cicle?» · «com van els meus enviaments?»',
+'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«què hi ha a portada?» · «quina és la comunitat més activa?» · «quin és el tema del dia?» · «qui ha enviat més?» · «quants estem connectats?» · «quan és el proper cicle?» · «com van els meus enviaments?»',
 'Y si después me preguntas «¿y este mes?», sé de qué hablabas.' => 'I si després em preguntes «i aquest mes?», sé de què parlaves.',
 'Ahora mismo no hay nada en portada.' => 'Ara mateix no hi ha res a portada.',
 'en %s' => 'a %s',
@@ -1059,4 +1059,9 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'actividad' => 'activitat',
 'reloj' => 'rellotge',
 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Només atenc qüestions relacionades amb Deltha: pregunta\'m pel radar, la portada, els mitjans o les comunitats.',
+// Sigfrid: temas (10/11/2026)
+'%s no se ha enviado nada todavía.' => '%s no s\'ha enviat res encara.',
+'%d envíos, %d votos' => '%d enviaments, %d vots',
+'%d en portada' => '%d a portada',
+'El tema con más envíos %s es %s' => 'El tema amb més enviaments %s és %s',
 ];

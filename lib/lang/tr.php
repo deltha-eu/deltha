@@ -1034,7 +1034,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Kayıtlı olmadığınız için foruma gönderinizin yayımlanmadan önce bir moderatör tarafından onaylanması gerekiyor.',
 'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Konu onay bekliyor: yalnızca moderatörler ve admin görebilir. <a href="/moderacion">Moderasyon</a> bölümünde onaylanır ya da kaldırılır.',
 // Sigfrid: memoria del hilo y acciones nuevas (09/11/2026, tarde)
-'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«manşette ne var?» · «en aktif topluluk hangisi?» · «en çok kim gönderdi?» · «kaç kişi çevrimiçiyiz?» · «bir sonraki döngü ne zaman?» · «gönderilerim nasıl gidiyor?»',
+'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«manşette ne var?» · «en aktif topluluk hangisi?» · «günün konusu ne?» · «en çok kim gönderdi?» · «kaç kişi çevrimiçiyiz?» · «bir sonraki döngü ne zaman?» · «gönderilerim nasıl gidiyor?»',
 'Y si después me preguntas «¿y este mes?», sé de qué hablabas.' => 'Sonra «peki bu ay?» diye sorarsan neden bahsettiğini bilirim.',
 'Ahora mismo no hay nada en portada.' => 'Şu anda manşette hiçbir şey yok.',
 'en %s' => '%s bölümünde',
@@ -1080,4 +1080,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'actividad' => 'etkinlik',
 'reloj' => 'saat',
 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Yalnızca Deltha ile ilgili sorulara cevap veriyorum: bana Radar\'ı, ön sayfayı, medyayı ya da toplulukları sor.',
+// Sigfrid: temas (10/11/2026)
+'%s no se ha enviado nada todavía.' => '%s henüz hiçbir şey gönderilmedi.',
+'%d envíos, %d votos' => '%d gönderi, %d oy',
+'%d en portada' => '%d manşette',
+'El tema con más envíos %s es %s' => '%s en çok gönderi alan konu %s',
 ];

@@ -1013,7 +1013,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.' => 'Erregistratuta ez zaudenez, foroko zure bidalketa moderatzaile batek onartu behar du argitaratu aurretik.',
 'Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.' => 'Haria onartzeko zain: moderatzaileek eta adminak bakarrik ikusten duzue. <a href="/moderacion">Moderazioan</a> onartzen edo kentzen da.',
 // Sigfrid: memoria del hilo y acciones nuevas (09/11/2026, tarde)
-'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«zer dago azalean?» · «zein da komunitaterik aktiboena?» · «nork bidali du gehien?» · «zenbat gaude konektatuta?» · «noiz da hurrengo zikloa?» · «nola doaz nire bidalketak?»',
+'«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»' => '«zer dago azalean?» · «zein da komunitaterik aktiboena?» · «zein da eguneko gaia?» · «nork bidali du gehien?» · «zenbat gaude konektatuta?» · «noiz da hurrengo zikloa?» · «nola doaz nire bidalketak?»',
 'Y si después me preguntas «¿y este mes?», sé de qué hablabas.' => 'Eta gero «eta hilabete honetan?» galdetzen badidazu, badakit zertaz ari zinen.',
 'Ahora mismo no hay nada en portada.' => 'Oraintxe ez dago ezer azalean.',
 'en %s' => '%s atalean',
@@ -1059,4 +1059,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'actividad' => 'jarduera',
 'reloj' => 'erlojua',
 'Solo atiendo cuestiones relacionadas con Deltha: pregúntame por el radar, la portada, los medios o las comunidades.' => 'Deltharekin lotutako kontuak bakarrik erantzuten ditut: galdetu radarraz, azalaz, hedabideez edo komunitateez.',
+// Sigfrid: temas (10/11/2026)
+'%s no se ha enviado nada todavía.' => '%s ez da ezer bidali oraindik.',
+'%d envíos, %d votos' => '%d bidalketa, %d boto',
+'%d en portada' => '%d azalean',
+'El tema con más envíos %s es %s' => 'Bidalketa gehien dituen gaia %s %s da',
 ];
