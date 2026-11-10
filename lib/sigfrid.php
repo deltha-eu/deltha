@@ -358,11 +358,59 @@ function sigfrid_asuntos(PDO $pdo, string $periodo): string {
     // el grupo mayor, con sus enfoques (hasta cuatro titulares, el mas votado primero); los siguientes, solo por su titular mas votado
     $orden = function (array $g): array { usort($g, fn($a, $b) => [(int)$b['v'], $b['status'] === 'destacadas'] <=> [(int)$a['v'], $a['status'] === 'destacadas']); return $g; };
     $enlace = fn(array $r) => sigfrid_enlace((string)$r['title'], '/hilo/' . (int)$r['story_id']);
+    $lang = lang();
+    $nombre = fn(array $g) => '**' . sigfrid_etiqueta(array_column($g, 'title'), $lang) . '**';
     $primero = $orden(array_shift($grupos)); [$n, $v, $c] = $peso($primero);
-    $txt = t('%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)', ucfirst(sigfrid_periodo_txt($periodo)), $enlace($primero[0]), $n, $v, $c)
-         . (count($primero) > 1 ? ' — ' . implode(' · ', array_map($enlace, array_slice($primero, 1, 3))) . (count($primero) > 4 ? ' …' : '') : '') . '.';
-    if ($grupos) $txt .= ' ' . t('Le siguen %s', implode(' ' . t('y') . ' ', array_map(function (array $g) use ($orden, $enlace, $peso) { $g = $orden($g); [$n] = $peso($g); return $enlace($g[0]) . ' (' . t('%d envíos', $n) . ')'; }, array_slice($grupos, 0, 2)))) . '.';
+    $txt = t('%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)', ucfirst(sigfrid_periodo_txt($periodo)), $nombre($primero), $n, $v, $c)
+         . ' — ' . implode(' · ', array_map($enlace, array_slice($primero, 0, 3))) . (count($primero) > 3 ? ' …' : '') . '.';
+    if ($grupos) $txt .= ' ' . t('Le siguen %s', implode(' ' . t('y') . ' ', array_map(function (array $g) use ($orden, $enlace, $peso, $nombre) { $g = $orden($g); [$n] = $peso($g); return $nombre($g) . ' (' . t('%d envíos', $n) . ', ' . $enlace($g[0]) . ')'; }, array_slice($grupos, 0, 2)))) . '.';
     return $txt;
+}
+
+/** Nombre corto de un asunto a partir de los titulares de su grupo («Abascal en La Revuelta», «los Javis»): se lo pide al modelo pequeño
+ *  del droplet (el clasificador, ~1 s) y, si no hay o falla, lo saca de las palabras con mayuscula que se repiten en los titulares. */
+function sigfrid_etiqueta(array $titulos, string $lang): string {
+    $titulos = array_values(array_filter(array_map(fn($t) => trim((string)$t), $titulos)));
+    $url = trim((string)cfg('sigfrid_ia_url', ''));
+    if ($url !== '' && function_exists('curl_init') && count($titulos) >= 2) {
+        $idioma = DDD_LANGS[$lang] ?? 'español';
+        $system = "Te dan titulares de noticias que tratan el mismo asunto. Devuelve JSON con \"tema\": el nombre del asunto en $idioma, de dos a seis palabras, "
+                . "con los nombres propios tal cual (personas, programas, obras, lugares), sin verbo, sin punto final y sin comillas. Ejemplo: titulares sobre la visita de un político a un programa → {\"tema\":\"Abascal en La Revuelta\"}.";
+        $body = ['model' => (string)cfg('sigfrid_ia_model', 'sigfrid'), 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => implode("\n", array_map(fn($t) => "- $t", array_slice($titulos, 0, 8)))]],
+                 'temperature' => 0, 'max_tokens' => 40, 'stream' => false,
+                 'response_format' => ['type' => 'json_schema', 'json_schema' => ['name' => 'tema', 'strict' => true, 'schema' => ['type' => 'object', 'properties' => ['tema' => ['type' => 'string']], 'required' => ['tema'], 'additionalProperties' => false]]],
+                 'chat_template_kwargs' => ['enable_thinking' => false], 'reasoning_effort' => 'none'];
+        $ms = max(500, (int)cfg('sigfrid_ia_timeout_ms', 8000));
+        $hdr = ['Content-Type: application/json'];
+        if (($k = trim((string)cfg('sigfrid_ia_key', ''))) !== '') $hdr[] = "Authorization: Bearer $k";
+        $ch = curl_init(rtrim($url, '/') . (str_contains($url, '/chat/completions') ? '' : '/v1/chat/completions'));
+        curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($body, JSON_UNESCAPED_UNICODE), CURLOPT_HTTPHEADER => $hdr,
+                                CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT_MS => min(500, $ms), CURLOPT_TIMEOUT_MS => $ms, CURLOPT_NOSIGNAL => true]);
+        $out = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
+        if ($out !== false && $code === 200) {
+            $j = json_decode((string)$out, true);
+            if (preg_match('/\{.*\}/su', (string)($j['choices'][0]['message']['content'] ?? ''), $m)) {
+                $tema = trim((string)(json_decode($m[0], true)['tema'] ?? ''), " \t\n.«»\"'");
+                if ($tema !== '' && mb_strlen($tema) <= 60 && !preg_match('/<|https?:/u', $tema)) return $tema;
+            }
+        }
+    }
+    // sin modelo: palabras que se repiten en al menos dos titulares; primero las de mayuscula (nombres propios, no al principio del
+    // titular), luego las largas en minuscula; hasta tres, en el orden en que salen en el titular que mas tiene
+    $may = []; $min = [];
+    foreach ($titulos as $t) {
+        preg_match_all('/(?<!^)(?<![.:!?¿¡]\s)\b\p{Lu}[\p{L}\-]{2,}\b/u', $t, $m);
+        foreach (array_unique($m[0]) as $w) $may[$w] = ($may[$w] ?? 0) + 1;
+        preg_match_all('/\b\p{Ll}[\p{Ll}\-]{3,}\b/u', $t, $m);
+        foreach (array_unique($m[0]) as $w) if (!in_array($w, ['contra', 'sobre', 'entre', 'para', 'como', 'cuando', 'donde', 'porque', 'pero', 'desde', 'hasta', 'tras', 'este', 'esta', 'estos', 'estas', 'with', 'from', 'that', 'this', 'about', 'after', 'avec', 'dans', 'pour', 'nach', 'über', 'eine', 'einer', 'della', 'dello', 'nella', 'sono'], true)) $min[$w] = ($min[$w] ?? 0) + 1;
+    }
+    $rep = array_merge(array_keys(array_filter($may, fn($n) => $n >= 2)), array_keys(array_filter($min, fn($n) => $n >= 2)));
+    $rep = array_slice($rep, 0, 3);
+    if (!$rep) return mb_strimwidth($titulos[0] ?? '', 0, 60, '…');
+    $mejor = ''; $max = -1;
+    foreach ($titulos as $t) { $k = count(array_filter($rep, fn($w) => mb_stripos($t, $w) !== false)); if ($k > $max) { $max = $k; $mejor = $t; } }
+    usort($rep, fn($a, $b) => mb_stripos($mejor, $a) <=> mb_stripos($mejor, $b));
+    return implode(' ', $rep);
 }
 
 /** Los temas (secciones) con mas envios en el periodo, con sus votos (lo usa sigfrid_asuntos cuando ningun asunto se repite). */

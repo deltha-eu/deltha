@@ -1123,4 +1123,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'El asunto del que más se habla %s es %s' => 'Le sujet dont on parle le plus %s est %s',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s le sujet avec le plus d\'envois est celui de %s : %d envois sous différents angles (%d votes, %d commentaires)',
 'Le siguen %s' => 'Suivent %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s le thème avec le plus d\'envois est %s : %d envois sous différents angles (%d votes, %d commentaires)',
 ];

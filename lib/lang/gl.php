@@ -1069,4 +1069,5 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'El asunto del que más se habla %s es %s' => 'O asunto do que máis se fala %s é %s',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s o asunto con máis envíos é o de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)',
 'Le siguen %s' => 'Séguenlle %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s o tema con máis envíos é %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)',
 ];

@@ -1069,4 +1069,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El asunto del que más se habla %s es %s' => 'Gehien hitz egiten den gaia %s %s da',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s bidalketa gehien dituen gaia %s da: %d bidalketa ikuspegi desberdinetatik (%d boto, %d iruzkin)',
 'Le siguen %s' => 'Ondoren %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s bidalketa gehien dituen gaia %s da: %d bidalketa ikuspegi desberdinetatik (%d boto, %d iruzkin)',
 ];

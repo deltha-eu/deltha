@@ -1070,4 +1070,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'El asunto del que más se habla %s es %s' => 'L\'argomento di cui si parla di più %s è %s',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s l\'argomento con più invii è quello di %s: %d invii da angolazioni diverse (%d voti, %d commenti)',
 'Le siguen %s' => 'Seguono %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s il tema con più invii è %s: %d invii da angolazioni diverse (%d voti, %d commenti)',
 ];

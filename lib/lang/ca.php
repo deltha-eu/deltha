@@ -1069,4 +1069,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'El asunto del que más se habla %s es %s' => 'L\'assumpte del qual més es parla %s és %s',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s l\'assumpte amb més enviaments és el de %s: %d enviaments des d\'enfocaments diferents (%d vots, %d comentaris)',
 'Le siguen %s' => 'El segueixen %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s el tema amb més enviaments és %s: %d enviaments des d\'enfocaments diferents (%d vots, %d comentaris)',
 ];

@@ -1106,4 +1106,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'El asunto del que más se habla %s es %s' => 'O assunto de que mais se fala %s é %s',
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s o assunto com mais envios é o de %s: %d envios de diferentes ângulos (%d votos, %d comentários)',
 'Le siguen %s' => 'Seguem-se %s',
+'%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s o tema com mais envios é %s: %d envios de diferentes ângulos (%d votos, %d comentários)',
 ];
