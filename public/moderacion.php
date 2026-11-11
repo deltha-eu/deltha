@@ -34,7 +34,7 @@ if ((string)($_GET['t'] ?? '') === 'charla') {
     } catch (Throwable $e) { $el = null; }
     $abierto = mod_pendiente($pdo, $ctype, $cref) !== null;
     page_header(t('Conversación de los moderadores sobre este elemento'));
-    echo "<div class=\"admin\"><h1>💬 " . h(t('Conversación (%d)', count($cmsgs))) . " · " . h($TY[$ctype]) . " #$cref</h1>";
+    echo "<div class=\"admin\"><h1>" . icon('chat') . " " . h(t('Conversación (%d)', count($cmsgs))) . " · " . h($TY[$ctype]) . " #$cref</h1>";
     if ($el) {
         echo "<p class=\"meta\">" . h(t('Lo escribió')) . " <b>" . h((string)$el['autor']) . "</b> · <a href=\"" . h($clink) . "\">" . h(t('ver')) . "</a>"
            . (in_array((string)$el['status'], ['ok', 'nuevas'], true) ? '' : " · <i>" . h((string)$el['status']) . "</i>") . "</p>";
@@ -417,7 +417,7 @@ foreach ($q as $m) {
     if (!empty($v['cita'])) echo "<p class=\"meta\">Fragmento: «" . h($v['cita']) . "»</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"ia\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
     echo "<button class=\"btn danger\" name=\"dec\" value=\"remove\" title=\"" . ($m['item_type'] === 'story' ? 'el envío se rechaza' : ($m['status'] === 'hidden' ? 'desaparece sin dejar rastro (estaba oculto)' : 'se queda con el texto sustituido por el aviso')) . "\">" . ($m['status'] === 'hidden' && $m['item_type'] !== 'story' ? 'Eliminar' : 'Retirar') . "</button> ";
-    echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($premod ? 'se publica' : ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está')) . "\">" . ($premod ? 'Aprobar' : ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda')) . "</button></form>";
+    echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($premod ? 'se publica' : ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está')) . "\">" . ($premod ? 'Aprobar' : ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda')) . "</button></form></div>";   // la conversación va debajo de los botones, no en su misma fila
     $kk = $m['item_type'] . ':' . (int)$m['ref_id'];
     echo mod_talk_html($m['item_type'], (int)$m['ref_id'], $talk[$kk] ?? [], ($GLOBALS['DDD_TALK_OPEN'] ?? '') === $kk) . "</div>";
 }
@@ -736,7 +736,7 @@ try {
             echo "<td><code>" . h($r['action']) . "</code></td><td><small>" . h((string)$r['detail']) . "</small></td><td><small>" . h((string)$r['result']) . "</small></td>";
             $kk = (string)($r['item_type'] ?? '') . ':' . (int)($r['ref_id'] ?? 0);
             echo "<td>" . (!empty($rtalk[$kk])
-                ? "<a class=\"modtalk-icon\" href=\"/moderacion?t=charla&amp;type=" . h((string)$r['item_type']) . "&amp;ref=" . (int)$r['ref_id'] . "\" target=\"_blank\" rel=\"noopener\" title=\"" . h(t('Conversación de los moderadores sobre este elemento')) . "\">💬 " . count($rtalk[$kk]) . "</a>"
+                ? "<a class=\"modtalk-icon\" href=\"/moderacion?t=charla&amp;type=" . h((string)$r['item_type']) . "&amp;ref=" . (int)$r['ref_id'] . "\" target=\"_blank\" rel=\"noopener\" title=\"" . h(t('Conversación de los moderadores sobre este elemento')) . "\">" . icon('chat') . " " . count($rtalk[$kk]) . "</a>"
                 : '<small class="meta">—</small>') . "</td>";   // icono: abre la charla en una ventana aparte, en solo lectura
             echo "<td style=\"white-space:nowrap\">";
             if (!empty($r['undone'])) echo "<small class=\"meta\">deshecho" . ($r['undone_login'] ? " por <a href=\"/u/" . rawurlencode($r['undone_login']) . "\">" . h($r['undone_login']) . "</a>" : '') . " " . h(hace($r['undone'])) . "</small>";

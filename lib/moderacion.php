@@ -357,7 +357,7 @@ function mod_talk_msgs_html(array $msgs): string {
 
 /** La conversación en la cola: bloque desplegable con los mensajes y el formulario para escribir. */
 function mod_talk_html(string $type, int $id, array $msgs, bool $open = false): string {
-    return '<details class="modtalk"' . ($open ? ' open' : '') . '><summary title="' . h(t('Conversación de los moderadores sobre este elemento')) . '">💬 '
+    return '<details class="modtalk"' . ($open ? ' open' : '') . '><summary title="' . h(t('Conversación de los moderadores sobre este elemento')) . '">' . icon('chat') . ' '
          . h(t('Conversación (%d)', count($msgs))) . '</summary><div class="modtalk-body">' . mod_talk_msgs_html($msgs)
          . '<form method="post" class="modtalk-form"><input type="hidden" name="act" value="talk"><input type="hidden" name="type" value="' . h($type) . '"><input type="hidden" name="ref" value="' . (int)$id . '">'
          . '<textarea name="talk" rows="2" maxlength="' . MOD_TALK_MAX . '" placeholder="' . h(t('Escribe a los demás moderadores…')) . '" required></textarea>'
