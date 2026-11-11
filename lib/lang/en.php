@@ -693,7 +693,6 @@ return [
 'Siguiendo' => 'Following',
 'Seguir %s' => 'Follow %s',
 'dejar de seguir %s' => 'unfollow %s',
-'Seguir hilo' => 'Follow thread',
 'Seguir hilos propios' => 'Follow your own threads',
 'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Threads you start are followed automatically: we will notify you of every new comment they get.',
 'seguir este hilo' => 'follow this thread',

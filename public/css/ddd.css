@@ -836,8 +836,8 @@ form.plain.skinform { gap: 6px; }
 [data-fam="comunidad"] .hilo .stats b, [data-fam="comunidad"] .hilo .stats .share, [data-fam="comunidad"] .hilo .stats .vote > span, [data-fam="comunidad"] .hilo .stats .vote button { color: #fff; }
 /* (07/10/2026) la barra es azul con letra blanca, pero lo añadido despues (lecturas y clics .cnt, comentarios .cmt, guardar, Seguir, Destacar) traia su gris --muted y no se veia */
 [data-fam="comunidad"] .hilo .stats :is(span, a, b, button, .cnt, .cmt, .share, form.fav button) { color: #fff; }
-[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir button) { color: #fff; background: transparent; border-color: rgba(255,255,255,.7); }
-[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir button):hover { background: rgba(255,255,255,.15); }
+[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir:not(.thread-follow) button) { color: #fff; background: transparent; border-color: rgba(255,255,255,.7); }
+[data-fam="comunidad"] .hilo .stats :is(form.pin button, form.seguir:not(.thread-follow) button):hover { background: rgba(255,255,255,.15); }
 [data-fam="comunidad"] .hilo .modbar { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
 [data-fam="comunidad"] .hilo .modtools { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; font-size: 12px; }
 [data-fam="comunidad"] .hilo .thread { margin: 0 8px; background: var(--card); border: 1px solid var(--line2); border-top: 0; padding: 0; }
@@ -3614,6 +3614,13 @@ form.seguir button:hover { background: var(--accent); color: var(--bg); }
 form.seguir.on button { border-color: var(--line2); color: var(--muted); font-weight: 600; }
 form.seguir.on button::before { content: "✓ "; }
 form.seguir.on button:hover { background: var(--hover); color: var(--fg); }
+/* Seguir el hilo se ofrece como una accion compacta, junto a guardar y compartir. */
+.hilo .stats form.thread-follow button { font: inherit; font-size: 14px; line-height: 1; padding: 0; border: 0; border-radius: 0; background: none; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; max-width: none; overflow: visible; text-overflow: clip; }
+.hilo .stats form.thread-follow button::before { content: none; }
+.hilo .stats form.thread-follow button:hover { background: none; color: var(--fg); }
+.hilo .stats form.thread-follow.on button { color: var(--accent); font-weight: 400; }
+.hilo .stats form.thread-follow.on button:hover { background: none; color: var(--fg); }
+.hilo .stats form.thread-follow .i { width: 19px; height: 19px; flex: none; }
 .fz > a.fzl { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; color: inherit; text-decoration: none; }
 .srcfav { margin: 12px 16px 16px; }   /* 01/10: el boton «Seguir» iba pegado al aviso gris */
 /* 01/10: el boton arranca en la misma vertical que el aviso gris, cuyo margen cambia segun la skin */
@@ -4012,8 +4019,8 @@ p.fz-add.on a::before { content: "× "; }
 
 /* ---- movil (v159): dos descuadres del hilo.
    1) Barra de cifras (.hilo .stats): es una sola linea sin saltos y, desde que lleva «+ Seguir <medio>», no cabia en un movil: ensanchaba
-      la pagina entera (todo el hilo se desplazaba de lado). En pantallas estrechas «guardar» y «compartir» quedan en icono y el boton
-      de seguir baja a una segunda linea.
+      la pagina entera (todo el hilo se desplazaba de lado). En pantallas estrechas «guardar», «compartir» y «Seguir» (hilo) quedan en icono,
+      mientras que el boton para seguir un medio baja a una segunda linea.
    2) Acciones de un comentario (.post.reply .actions): .post .pc lleva overflow-wrap: anywhere (v149, para titulares y enlaces largos) y
       las acciones lo heredaban, de modo que al faltar sitio se partian letra a letra («Resp/onde/r»). Ahora no se parten nunca: si no
       caben, la fila salta de linea entera. ---- */
@@ -4022,9 +4029,9 @@ p.fz-add.on a::before { content: "× "; }
 .post.reply .actions { flex-wrap: wrap; row-gap: 6px; }
 @media (max-width: 600px) {
   .hilo .stats { flex-wrap: wrap; row-gap: 8px; }
-  .hilo .stats .fav span, .hilo .stats .share span { display: none; }
-  .hilo .stats form.seguir { order: 9; flex: 0 0 100%; }
-  .hilo .stats form.seguir button { max-width: 100%; }
+  .hilo .stats .fav span, .hilo .stats .share span, .hilo .stats form.thread-follow span { display: none; }
+  .hilo .stats form.seguir:not(.thread-follow) { order: 9; flex: 0 0 100%; }
+  .hilo .stats form.seguir:not(.thread-follow) button { max-width: 100%; }
   html:not([data-skin="foro"]):not([data-fam="comunidad"]) .post.reply .actions { column-gap: 16px; }
 }
 

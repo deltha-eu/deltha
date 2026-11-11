@@ -690,7 +690,6 @@ return [
 'Siguiendo' => 'A seguir',
 'Seguir %s' => 'Seguir %s',
 'dejar de seguir %s' => 'deixar de seguir %s',
-'Seguir hilo' => 'Seguir o fio',
 'Seguir hilos propios' => 'Seguir os teus fios',
 'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Os fios que abres ficam a ser seguidos automaticamente: avisamos-te de cada comentário novo.',
 'seguir este hilo' => 'seguir este fio',

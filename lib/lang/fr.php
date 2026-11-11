@@ -692,7 +692,6 @@ return [
 'Siguiendo' => 'Suivi',
 'Seguir %s' => 'Suivre %s',
 'dejar de seguir %s' => 'ne plus suivre %s',
-'Seguir hilo' => 'Suivre le fil',
 'Seguir hilos propios' => 'Suivre vos propres fils',
 'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Les fils que vous ouvrez sont suivis automatiquement : nous vous prévenons de chaque nouveau commentaire.',
 'seguir este hilo' => 'suivre ce fil',

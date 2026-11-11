@@ -654,7 +654,6 @@ return [
 'Siguiendo' => 'Folge ich',
 'Seguir %s' => '%s folgen',
 'dejar de seguir %s' => '%s nicht mehr folgen',
-'Seguir hilo' => 'Thread folgen',
 'Seguir hilos propios' => 'Eigenen Threads folgen',
 'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Threads, die du eröffnest, werden automatisch gefolgt: wir melden dir jeden neuen Kommentar.',
 'seguir este hilo' => 'diesem Thread folgen',

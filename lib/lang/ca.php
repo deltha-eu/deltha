@@ -653,7 +653,6 @@ return [
 'Siguiendo' => 'Seguint',
 'Seguir %s' => 'Segueix %s',
 'dejar de seguir %s' => 'deixa de seguir %s',
-'Seguir hilo' => 'Segueix el fil',
 'Seguir hilos propios' => 'Segueix els teus fils',
 'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Els fils que obres es marquen sols per a seguiment: t\'avisem de cada comentari nou que rebin.',
 'seguir este hilo' => 'segueix aquest fil',

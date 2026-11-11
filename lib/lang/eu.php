@@ -653,7 +653,6 @@ return [
 'Siguiendo' => 'Jarraitzen',
 'Seguir %s' => 'Jarraitu %s',
 'dejar de seguir %s' => 'utzi %s jarraitzeari',
-'Seguir hilo' => 'Jarraitu haria',
 'Seguir hilos propios' => 'Jarraitu zeure hariei',
 'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Irekitzen dituzun hariak automatikoki markatzen dira jarraitzeko: jasotzen duten iruzkin berri bakoitzaren berri ematen dizugu.',
 'seguir este hilo' => 'jarraitu haria',

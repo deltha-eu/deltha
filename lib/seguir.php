@@ -58,11 +58,13 @@ function hilo_seguir_limpiar_archivados(PDO $pdo): int {
     }
 }
 
-/** Botón «Seguir hilo» / «Siguiendo» de la barra del hilo, solo para registrados; sin JS: un POST a /seguir que vuelve a la página. */
+/** Opción de seguimiento en las acciones del hilo; solo registrados, sin JS: un POST a /seguir que vuelve a la página. */
 function hilo_seguir_form(array $s): string {
     if (!user() || !in_array($s['status'] ?? '', ['nuevas', 'candidatas', 'destacadas'], true)) return '';
     $id = (int)$s['story_id'];
     $on = hilo_sigo($id);
-    return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/seguir\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'dejar' : 'seguir') . "\">"
-         . "<button title=\"" . h($on ? t('dejar de seguir este hilo') : t('seguir este hilo')) . "\">" . ($on ? t('Siguiendo') : t('Seguir hilo')) . "</button></form>";
+    $accion = h($on ? t('dejar de seguir este hilo') : t('seguir este hilo'));
+    $etiqueta = h($on ? t('Siguiendo') : t('Seguir'));
+    return "<form class=\"seguir thread-follow" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/seguir\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'dejar' : 'seguir') . "\">"
+         . "<button title=\"$accion\" aria-label=\"$accion\">" . icon('bell') . "<span>$etiqueta</span></button></form>";
 }

@@ -680,7 +680,6 @@ return [
 'Siguiendo' => 'Takip ediliyor',
 'Seguir %s' => '%s takip et',
 'dejar de seguir %s' => '%s takibini bırak',
-'Seguir hilo' => 'Başlığı takip et',
 'Seguir hilos propios' => 'Kendi başlıklarını takip et',
 'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Açtığın başlıklar otomatik olarak takip edilir: gelen her yeni yorumu sana bildiririz.',
 'seguir este hilo' => 'bu başlığı takip et',
