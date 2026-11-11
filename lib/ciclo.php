@@ -150,6 +150,10 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
     $sf = hilo_seguir_limpiar_archivados($pdo);
     if ($sf) $log[] = "seguimientos de hilos archivados eliminados: $sf";
 
+    // Registro de IP (migra-193): lo que pasa de config.ip_log_days se borra
+    $ipn = ip_log_purge($pdo);
+    if ($ipn) $log[] = "registro de IP: $ipn filas caducadas borradas";
+
     // 6. decaimiento diario del aura
     $d = aura_daily_decay($pdo);
     if ($d >= 0) $log[] = "decaimiento diario de aura aplicado ($d usuarios)";

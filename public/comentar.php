@@ -50,6 +50,7 @@ else {
 }
 if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_comentario', 0.02), 'comentario', $cid);
 $pdo->commit();
+ip_log_add($pdo, 'comment', $uid ? (int)$uid : null, $cid);   // registro de IP con caducidad (migra-193); también los premoderados
 $v = in_array(post('v'), ['tiempo', 'votos'], true) ? '?v=' . post('v') : '';
 if ($premod) redirect("/hilo/$id" . ($v ? "$v&" : '?') . "premod=1#comentarios");   // el aviso de que espera aprobacion
 // avisos: @mencionados y autor del comentario respondido (lib/avisos.php)

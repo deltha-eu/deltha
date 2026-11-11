@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], lang_detect($f['title'] . ' ' . $f['content']), $f['content'], $image, $status, $f['indexable'], $foros ? (int)$foros[$f['f']]['forum_id'] : null]);
         $sid = (int)$pdo->lastInsertId();
         hilo_seguir_propio($pdo, $u['user_id'] ?? null, $sid);   // «Seguir hilos propios»: el hilo nace seguido (migra-192)
+        ip_log_add($pdo, 'story', isset($u['user_id']) ? (int)$u['user_id'] : null, $sid);   // registro de IP con caducidad (migra-193)
         // la comunidad se lee de story_communities (como en /enviar); faltaba aqui y los originales no salian en la suya (12/10/2026, migra-141 repone los antiguos)
         if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
         $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];
