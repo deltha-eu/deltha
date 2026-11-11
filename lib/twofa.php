@@ -72,6 +72,7 @@ function login_finish(PDO $pdo, int $uid): never {
     session_regenerate_id(true);
     unset($_SESSION['pending_uid'], $_SESSION['pending_at']);
     $_SESSION['uid'] = $uid;
+    ip_log_add($pdo, 'login', $uid);   // registro de IP con caducidad (migra-193)
     if (($sc = (string)($_COOKIE['ddd_srclang'] ?? '')) !== '') {   // idiomas elegidos sin cuenta: pasan a su cuenta
         require_once __DIR__ . '/fuentes.php';
         if ($sc === '1') fuentes_guardar_idiomas($pdo, $uid, [], true);   // cookie antigua: el idioma de la interfaz de la cuenta

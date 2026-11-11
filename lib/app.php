@@ -110,6 +110,7 @@ i18n_load();
 require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
 require_once __DIR__ . '/avisos.php';     // campanita: menciones, respuestas y privados
 require_once __DIR__ . '/seguir.php';     // seguir un hilo: aviso por cada comentario nuevo (migra-192)
+require_once __DIR__ . '/iplog.php';      // registro de IP con caducidad: multicuentas y requerimientos (migra-193)
 require_once __DIR__ . '/ghost.php';      // «Ghostear» a un usuario: velo simetrico, comentarios plegados (user_ghosts)
 require_once __DIR__ . '/destacar.php';   // «Destacar»: envios y noticias RSS los primeros de su lista, con halo (migra-111)
 require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
@@ -400,7 +401,47 @@ function mod_log_revert(PDO $pdo, int $log_id, int $by): ?string {
 }
 // Los navegadores envian los textarea con CRLF: se normaliza a LF, que es lo que esperan los parrafos (\n\n) al pintar.
 function post(string $k, string $d = ''): string { return trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST[$k] ?? $d))); }
-function client_ip(): string { return $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'; }
+/** Rangos desde los que Cloudflare llama al servidor (cloudflare.com/ips, sin cambios desde el 28/09/2023). Solo a una petición que
+ *  llega desde ellos se le cree la cabecera CF-Connecting-IP (migra-193): quien llame al droplet saltándose Cloudflare podría escribir
+ *  en ella la IP que quisiera. Si Cloudflare añade un rango, se pone en config.ip_proxies sin esperar a un despliegue. */
+function ip_cf_ranges(): array {
+    return ['173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18', '108.162.192.0/18',
+            '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+            '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+            '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32'];
+}
+/** ¿Está la IP dentro del rango CIDR? Vale para IPv4 e IPv6; con datos que no son una IP o un rango, false. */
+function ip_in_cidr(string $ip, string $cidr): bool {
+    [$net, $bits] = array_pad(explode('/', trim($cidr), 2), 2, null);
+    $a = @inet_pton($ip); $b = @inet_pton((string)$net);
+    if ($a === false || $b === false || strlen($a) !== strlen($b)) return false;
+    $max = strlen($a) * 8;
+    $bits = $bits === null ? $max : (int)$bits;
+    if ($bits < 0 || $bits > $max) return false;
+    $full = intdiv($bits, 8); $rest = $bits % 8;
+    if ($full && strncmp($a, $b, $full) !== 0) return false;
+    if (!$rest) return true;
+    $mask = 0xFF << (8 - $rest) & 0xFF;
+    return (ord($a[$full]) & $mask) === (ord($b[$full]) & $mask);
+}
+/** ¿Viene la petición de un proxy de confianza? Cloudflare, lo que se añada en config.ip_proxies (rangos separados por comas o
+ *  espacios) o el propio servidor (un proxy local: desde fuera nadie llega con una dirección de bucle). */
+function ip_de_proxy(string $remote): bool {
+    if ($remote === '127.0.0.1' || $remote === '::1') return true;
+    $extra = preg_split('/[\s,]+/', (string)cfg('ip_proxies', ''), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    foreach (array_merge(ip_cf_ranges(), $extra) as $r) if (ip_in_cidr($remote, $r)) return true;
+    return false;
+}
+/** IP de quien hace la petición. Detrás de Cloudflare es la de CF-Connecting-IP, pero solo si la petición llega de Cloudflare
+ *  (ip_de_proxy) y la cabecera trae una IP de verdad; si no, la de la conexión. */
+function client_ip(): string {
+    static $ip = null;
+    if ($ip !== null) return $ip;
+    $remote = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    $cf = trim((string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+    if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP) && ip_de_proxy($remote)) return $ip = $cf;
+    return $ip = ($remote !== '' ? $remote : '0.0.0.0');
+}
 
 function hace(string $dt): string {
     $s = time() - strtotime($dt);

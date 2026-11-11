@@ -72,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio, status) VALUES (?,?,?,?,?,?,?)")
             ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content, $anuncio, $premod ? 'pending_mod' : 'ok']);
         $mid = (int)$pdo->lastInsertId();
+        ip_log_add($pdo, 'chat', $u ? (int)$u['user_id'] : null, $mid);   // registro de IP con caducidad (migra-193)
         if ($premod) { mod_premod($pdo, 'chat', $mid, 'ok'); redirect($base . $amp . 'premod=1'); }
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
         avisos_chat($pdo, $mid, $u ? (int)$u['user_id'] : null, $u ? (string)$u['login'] : $anonAlias, $content, $ref);   // @mencionados y autor del #N citado

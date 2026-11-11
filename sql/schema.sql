@@ -441,6 +441,21 @@ CREATE TABLE `image_seen` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ip_log` (
+  `log_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned DEFAULT NULL COMMENT 'NULL = anónimo',
+  `kind` enum('registro','login','story','comment','chat') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ref_id` int unsigned NOT NULL DEFAULT '0' COMMENT 'id del envío, comentario o mensaje; 0 en registro y login',
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  KEY `idx_ipl_user` (`user_id`,`created`),
+  KEY `idx_ipl_ip` (`ip`,`created`),
+  KEY `idx_ipl_item` (`kind`,`ref_id`),
+  KEY `idx_ipl_created` (`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `login_codes` (
   `user_id` int unsigned NOT NULL,
   `code_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1008,6 +1023,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('chat_anuncio_dias',   '7',    'Dias que un mensaje a la comunidad sigue saliendo en la franja de arriba del Chat (0 = siempre); la marca y el resaltado no caducan'),
 ('sigfrid_espera_seg',  '120',  'Segundos que Sigfrid espera la respuesta redactada por el worker de IA antes de rendirse (sustituye el «un momento» por una disculpa)'),
 ('premod_anon',         '1',    '1 = lo que escriben los anonimos (comentarios, chat, hilos en los foros) queda pendiente de que lo apruebe un moderador; 0 = se publica al momento'),
+('ip_log_days',         '365',  'Registro de IP (multicuentas y requerimientos judiciales o policiales): dias que se conserva cada fila; 0 = no se guarda nada. Solo lo ve el admin en /ips'),
+('ip_proxies',          '',     'Rangos CIDR extra, separados por comas, a los que se les cree la cabecera CF-Connecting-IP (los de Cloudflare ya van en el codigo)'),
 ('mod_auto_hide',       '0',    '1 = la IA oculta provisionalmente lo muy claro (confianza >= mod_hide_score) hasta que lo vea un moderador; 0 = solo señala'),
 ('mod_hide_score',      '0.90', 'Confianza minima para ocultar provisionalmente (con mod_auto_hide = 1)'),
 ('mod_hide_links_only', '1',    '1 = la IA solo oculta provisionalmente (mod_auto_hide) lo que lleva algun enlace; sin enlace se limita a señalar. 0 = oculta por confianza, lleve enlace o no'),

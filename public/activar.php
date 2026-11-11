@@ -20,4 +20,5 @@ try { $pdo->prepare("UPDATE reg_log SET estado = 'activada', activated = NOW() W
 session_arranca();   // misma duracion que en login.php (session_days), no hasta cerrar el navegador
 session_regenerate_id(true);
 $_SESSION['uid'] = $uid;
+ip_log_add($pdo, 'login', $uid);   // activar abre sesión: cuenta como inicio (migra-193)
 redirect('/?bienvenida=1');

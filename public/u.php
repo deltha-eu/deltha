@@ -35,6 +35,7 @@ if ($own) echo " · " . t('<a href="/perfil">editar</a>') . "";
 if (!$own && user() && (string)cfg('msg_enabled', '1') === '1') echo " · <a href=\"/mensajes?u=" . rawurlencode($p['login']) . "\">" . t('enviar mensaje') . "</a>";
 $canMod = modedit_puede($p);   // moderadores: usuarios normales; admin: cualquiera (lib/usuarios.php)
 if ($canMod) echo " · <a href=\"#modedit\" onclick=\"document.getElementById('modedit').open = true\">" . t('editar perfil') . "</a>";
+if (is_admin() && ip_log_days() > 0) echo " · <a href=\"/ips?u=" . rawurlencode($p['login']) . "\" title=\"registro de IP: desde dónde actúa y qué otras cuentas comparten conexión (solo admin; la consulta queda apuntada)\">IP y multicuentas</a>";   // migra-193
 echo "</p></div></div>";
 // moderadores y admin: edicion del perfil aqui mismo, sin pasar por moderacion ni admin
 if ($canMod) {
