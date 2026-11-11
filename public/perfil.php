@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fuentes_guardar_idiomas($pdo, (int)$u['user_id'], $mlangs, $mylang);
         try { $pdo->prepare("UPDATE users SET twofa = ? WHERE user_id = ?")->execute([post('twofa') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-095 sin aplicar */ }
         try { $pdo->prepare("UPDATE users SET show_follows = ? WHERE user_id = ?")->execute([post('show_follows') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-116 sin aplicar */ }
+        try { $pdo->prepare("UPDATE users SET follow_own = ? WHERE user_id = ?")->execute([post('follow_own') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-192 sin aplicar */ }
         // avisos de ayuda (migra-181): desmarcada = apagados todos ('*'); marcada = encendidos, y de paso vuelven los cerrados uno a uno
         if (post('help_on') === '1') { if (ayuda_apagada() || !empty($_POST['help_reset'])) ayuda_guardar([]); } else ayuda_guardar(['*']);
         try { $pdo->prepare("UPDATE users SET skin_propio = ? WHERE user_id = ?")->execute([post('skin_propio') === '1' ? 1 : 0, $u['user_id']]); } catch (Throwable $e) { /* migra-143 sin aplicar */ }
@@ -82,6 +83,8 @@ if (fuentes_on()) {
 // medios y substacks que sigo, visibles en mi ficha publica (migra-116): por defecto si
 echo "<label id=\"avisos\"><input type=\"checkbox\" name=\"help_on\" value=\"1\"" . (ayuda_apagada() ? '' : ' checked') . "> " . t('Avisos de ayuda') . "</label><small class=\"hint\">" . t('Los recuadros grises que explican cada página. Cada uno se puede cerrar con su ×; desmarca esto para que no salga ninguno.') . (count(ayuda_ocultos()) && !ayuda_apagada() ? " <label class=\"inl\"><input type=\"checkbox\" name=\"help_reset\" value=\"1\"> " . t('Volver a mostrar los %d que cerré', count(ayuda_ocultos())) . "</label>" : '') . "</small>";
 if (fuentes_on()) echo "<label id=\"ficha-fuentes\"><input type=\"checkbox\" name=\"show_follows\" value=\"1\"" . (show_follows($pdo, (int)$u['user_id']) ? ' checked' : '') . "> " . t('Mostrar en mi ficha los medios y substacks que sigo') . "</label><small class=\"hint\">" . t('Cualquiera que abra tu perfil público verá la lista, como quien mira a quién sigues, y podrá seguirlos también. Si la desmarcas, solo la ves tú.') . "</small>";
+// seguir hilos propios (migra-192): los que abro se marcan solos para seguimiento y me avisan de cada comentario nuevo
+echo "<label id=\"seguir-propios\"><input type=\"checkbox\" name=\"follow_own\" value=\"1\"" . (seguir_propios($pdo, (int)$u['user_id']) ? ' checked' : '') . "> " . t('Seguir hilos propios') . "</label><small class=\"hint\">" . t('Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.') . "</small>";
 // verificacion en dos pasos por correo (lib/twofa.php): casilla; a los administradores se les puede exigir desde admin -> Config (twofa_admin)
 try {
     require_once __DIR__ . '/../lib/twofa.php';

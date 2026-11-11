@@ -133,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            VALUES ('link', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT CAST(cvalue AS UNSIGNED) FROM config WHERE ckey = 'act_counter'))")
                 ->execute([$u['user_id'] ?? null, $u ? null : $anonKey, $f['topic'], $f['community'] ?: null, $f['title'], $f['url'] ?: null, $f['url'] !== '' ? url_key($f['url']) : null, source_of($f['url']), $f['pub'], $f['lang'] ?: lang_for_story($pdo, $f['url'], $f['title'], $f['content']), $f['content'] ?: null, $f['image'], $status]);
             $sid = (int)$pdo->lastInsertId();
+            hilo_seguir_propio($pdo, $u['user_id'] ?? null, $sid);   // «Seguir hilos propios»: el hilo nace seguido (migra-192)
             $pdo->prepare("UPDATE stories SET portada = ? WHERE story_id = ?")->execute([portada_de($pdo, ['url' => $f['url'], 'source' => source_of($f['url'])]), $sid]);   // Medios o Substacks (el ciclo lo recalcula)
             if ($f['community']) $pdo->prepare("INSERT IGNORE INTO story_communities (story_id, community_id, added_by) VALUES (?,?,?)")->execute([$sid, $f['community'], $u['user_id'] ?? null]);
             $alias = $u ? alias_user($pdo, $sid, (int)$u['user_id']) : alias_anon($sid)[0];

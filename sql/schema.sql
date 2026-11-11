@@ -515,7 +515,7 @@ CREATE TABLE `notifications` (
   `user_id` int unsigned NOT NULL,
   `from_id` int unsigned DEFAULT NULL,
   `from_name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `kind` enum('mention_comment','reply_comment','mention_chat','reply_chat','dm','mention_story') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `kind` enum('mention_comment','reply_comment','mention_chat','reply_chat','dm','mention_story','thread_comment') COLLATE utf8mb4_unicode_ci NOT NULL,
   `ref_id` int unsigned NOT NULL DEFAULT '0',
   `story_id` int unsigned DEFAULT NULL,
   `snippet` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
@@ -794,6 +794,17 @@ CREATE TABLE `thread_aliases` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `thread_follows` (
+  `user_id` int unsigned NOT NULL,
+  `story_id` int unsigned NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`story_id`),
+  KEY `idx_tf_story` (`story_id`),
+  CONSTRAINT `fk_tf_story` FOREIGN KEY (`story_id`) REFERENCES `stories` (`story_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_tf_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `topics` (
   `topic_id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -858,6 +869,7 @@ CREATE TABLE `users` (
   `src_mylang` tinyint(1) NOT NULL DEFAULT '0',
   `src_langs` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'idiomas elegidos («es,en»); vacio = el de la interfaz',
   `show_follows` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 = los medios y substacks que sigue se ven en su ficha',
+  `follow_own` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = los hilos que abre se marcan solos para seguimiento (migra-192)',
   `side_order` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'cajas de la columna derecha elegidas por el usuario, en orden (migra-179); NULL = las de config.side_order',
   `help_hidden` varchar(1500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'avisos de ayuda cerrados (migra-181): claves separadas por comas; * = todos apagados',
   `aura` decimal(6,3) NOT NULL DEFAULT '5.000',

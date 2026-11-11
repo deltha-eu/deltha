@@ -109,6 +109,7 @@ require_once __DIR__ . '/i18n.php';
 i18n_load();
 require_once __DIR__ . '/bloqueos.php';   // medios bloqueados (source_blocked)
 require_once __DIR__ . '/avisos.php';     // campanita: menciones, respuestas y privados
+require_once __DIR__ . '/seguir.php';     // seguir un hilo: aviso por cada comentario nuevo (migra-192)
 require_once __DIR__ . '/ghost.php';      // «Ghostear» a un usuario: velo simetrico, comentarios plegados (user_ghosts)
 require_once __DIR__ . '/destacar.php';   // «Destacar»: envios y noticias RSS los primeros de su lista, con halo (migra-111)
 require_once __DIR__ . '/analitica.php';  // analitica propia sin cookies (hits, ana_daily)
@@ -873,7 +874,7 @@ function comment_purge(PDO $pdo, int $id): bool {
     $pdo->beginTransaction();
     try {
         foreach (["DELETE FROM comment_reports WHERE comment_id = ?", "DELETE FROM comment_votes WHERE comment_id = ?",
-                  "DELETE FROM notifications WHERE kind IN ('mention_comment','reply_comment') AND ref_id = ?",
+                  "DELETE FROM notifications WHERE kind IN ('mention_comment','reply_comment','thread_comment') AND ref_id = ?",
                   "DELETE FROM mod_queue WHERE item_type = 'comment' AND ref_id = ?", "DELETE FROM comments WHERE comment_id = ?"] as $sql) {
             try { $pdo->prepare($sql)->execute([$id]); } catch (Throwable $e) { if (str_contains($sql, 'FROM comments ')) throw $e; }   // tablas opcionales: si no estan, se sigue
         }

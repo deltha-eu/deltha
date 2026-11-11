@@ -4,6 +4,7 @@
  *    mention_comment  alguien escribe @tunick en un comentario      → /hilo/S#cN
  *    mention_story    alguien escribe @tunick en un hilo de foro     → /hilo/S          (migra-169, 25/10/2026)
  *    reply_comment    alguien responde a un comentario tuyo         → /hilo/S#cN
+ *    thread_comment   alguien comenta en un hilo que sigues          → /hilo/S#cN       (migra-192, 11/11/2026)
  *    mention_chat     alguien escribe @tunick en el Chat            → /chat?m=N#mN
  *    reply_chat       alguien cita (#N) un mensaje tuyo del Chat    → /chat?m=N#mN
  *    dm               alguien te manda un privado                   → /mensajes?u=nick
@@ -52,10 +53,11 @@ function aviso_insert(PDO $pdo, int $to, ?int $from, string $fromName, string $k
     } catch (Throwable $e) { error_log('aviso: ' . $e->getMessage()); }
 }
 
-/** Comentario nuevo: avisa a los @mencionados y, si responde a un comentario de un registrado, a su autor (una vez, aunque tambien lo mencione).
+/** Comentario nuevo: avisa a los @mencionados, si responde a un comentario de un registrado a su autor (una vez, aunque tambien lo mencione)
+ *  y a quienes siguen el hilo (migra-192), salvo los que ya se llevaron la mencion o la respuesta por este mismo comentario.
  *  $c = fila del comentario (comment_id, story_id, user_id, alias, content, parent_id); $parent = fila del comentario padre o null;
- *  $skip = nicks (minusculas) ya avisados en una version anterior del texto (edicion). */
-function avisos_comment(PDO $pdo, array $c, ?array $parent = null, array $skip = []): void {
+ *  $skip = nicks (minusculas) ya avisados en una version anterior del texto (edicion); $followers = false al editar (no es un comentario nuevo). */
+function avisos_comment(PDO $pdo, array $c, ?array $parent = null, array $skip = [], bool $followers = true): void {
     if (!avisos_on()) return;
     $from = !empty($c['user_id']) ? (int)$c['user_id'] : null;
     $name = (string)$c['alias'];   // el alias del hilo: el nick solo se enseña cuando el hilo tambien lo revela
@@ -66,6 +68,17 @@ function avisos_comment(PDO $pdo, array $c, ?array $parent = null, array $skip =
     }
     if ($parent && !empty($parent['user_id']) && !isset($done[(int)$parent['user_id']])) {
         aviso_insert($pdo, (int)$parent['user_id'], $from, $name, 'reply_comment', (int)$c['comment_id'], (int)$c['story_id'], (string)$c['content']);
+        $done[(int)$parent['user_id']] = true;
+    }
+    if ($followers) avisos_thread($pdo, (int)$c['story_id'], $from, $name, (int)$c['comment_id'], (string)$c['content'], $done);
+}
+/** Hilo seguido (migra-192): un aviso por cada persona que lo sigue, sin repetir a quien ya se avisó por mención o respuesta.
+ *  Se llama solo al publicar un comentario nuevo (no al editarlo). */
+function avisos_thread(PDO $pdo, int $sid, ?int $from, string $name, int $cid, string $content, array $skip = []): void {
+    if (!avisos_on() || $sid <= 0 || !function_exists('hilo_seguidores')) return;
+    foreach (hilo_seguidores($pdo, $sid) as $uid) {
+        if (isset($skip[$uid])) continue;
+        aviso_insert($pdo, $uid, $from, $name, 'thread_comment', $cid, $sid, $content);
     }
 }
 /** Hilo de foro nuevo o editado (migra-169): avisa a los @mencionados en el texto. $who = alias del autor en el hilo;
@@ -127,7 +140,7 @@ function avisos_bell(string $cls = ''): string {
 /** Adonde lleva un aviso. */
 function aviso_href(array $n): string {
     switch ($n['kind']) {
-        case 'mention_comment': case 'reply_comment': return "/hilo/" . (int)$n['story_id'] . "#c" . (int)$n['ref_id'];
+        case 'mention_comment': case 'reply_comment': case 'thread_comment': return "/hilo/" . (int)$n['story_id'] . "#c" . (int)$n['ref_id'];
         case 'mention_story': return "/hilo/" . (int)$n['story_id'];
         case 'mention_chat':    case 'reply_chat':    return "/chat?m=" . (int)$n['ref_id'] . "#m" . (int)$n['ref_id'];
         case 'dm': return !empty($n['login']) ? "/mensajes?u=" . rawurlencode($n['login']) : "/mensajes";
@@ -137,9 +150,9 @@ function aviso_href(array $n): string {
 /** Como se llama quien avisa, ahora: en comentarios el alias hasta que el hilo revela el nick; en el Chat y privados, el nick (o el alias anonimo). */
 function aviso_who(array $n): string {
     if (!empty($n['login']) && ghost_veiled($n['from_id'] ?? 0)) {   // velado por ghosteo (avisos anteriores al ghosteo): nunca el nick
-        return in_array($n['kind'], ['mention_comment', 'reply_comment'], true) && $n['from_name'] !== '' ? $n['from_name'] : ghost_alias((int)$n['from_id']);
+        return in_array($n['kind'], ['mention_comment', 'reply_comment', 'thread_comment'], true) && $n['from_name'] !== '' ? $n['from_name'] : ghost_alias((int)$n['from_id']);
     }
-    if (in_array($n['kind'], ['mention_comment', 'reply_comment'], true)) return (!empty($n['login']) && ghost_over_comment($n['created'])) ? $n['login'] : ($n['from_name'] ?: t('anónimo'));
+    if (in_array($n['kind'], ['mention_comment', 'reply_comment', 'thread_comment'], true)) return (!empty($n['login']) && ghost_over_comment($n['created'])) ? $n['login'] : ($n['from_name'] ?: t('anónimo'));
     return $n['login'] ?: ($n['from_name'] ?: t('anónimo'));
 }
 /** Texto corto de la linea («Fulano te ha mencionado en un comentario»). $who ya escapado. */
@@ -148,6 +161,7 @@ function aviso_text(array $n, string $who): string {
         'mention_comment' => t('<b>%s</b> te ha mencionado en un comentario', $who),
         'mention_story'   => t('<b>%s</b> te ha mencionado en un hilo', $who),
         'reply_comment'   => t('<b>%s</b> ha respondido a tu comentario', $who),
+        'thread_comment'  => t('<b>%s</b> ha comentado en un hilo que sigues', $who),
         'mention_chat'    => t('<b>%s</b> te ha mencionado en el Chat', $who),
         'reply_chat'      => t('<b>%s</b> ha citado tu mensaje del Chat', $who),
         'dm'              => t('<b>%s</b> te ha enviado un mensaje', $who),
