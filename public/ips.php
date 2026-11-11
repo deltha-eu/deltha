@@ -35,7 +35,7 @@ $tabla = function (array $rows) use ($pdo, $fecha, $ipa, $ua) {
 };
 
 page_header('Registro de IP');
-echo "<div class=\"admin\"><h1>Registro de IP</h1>";
+echo "<div class=\"admin\"><nav class=\"tabs\"><a href=\"/admin\">← Admin</a><a href=\"/admin?t=registro\">Registro</a><a href=\"/ips\" class=\"on\">IP</a></nav><h1>Registro de IP</h1>";
 echo "<p><small>Desde qué IP se registra, entra y publica cada cual (los votos no se apuntan). Se guarda para dos cosas: detectar multicuentas y responder a un requerimiento formal, por escrito, de un juzgado o de la policía. "
    . ($days > 0 ? "Cada fila se borra sola a los <b>$days días</b> (<code>ip_log_days</code> en Config)." : "<b>Ahora está apagado</b> (<code>ip_log_days</code> = 0): no se guarda nada.")
    . " Solo lo ve el administrador y <b>cada consulta queda apuntada</b> en el <a href=\"/moderacion?t=registro\">registro de moderación</a>.</small></p>";

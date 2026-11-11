@@ -507,6 +507,7 @@ page_header('Admin', '', $tab === 'analitica' ? '<meta http-equiv="refresh" cont
 echo "<div class=\"admin\">";
 echo "<nav class=\"tabs\">";
 foreach ($TABS as $k => $v) echo "<a href=\"/admin?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v</a>";
+echo "<a href=\"/ips\" title=\"registro de IP: multicuentas y requerimientos (migra-193)\">IP</a>";   // página aparte (/ips), solo administradores
 echo "</nav>";
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
 if (!empty($pedir_confirmacion)) {
