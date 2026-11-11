@@ -473,6 +473,8 @@ CREATE TABLE `mod_log` (
   `log_id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
   `action` varchar(60) NOT NULL,
+  `item_type` enum('story','comment','chat') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'elemento del que trata la acción (migra-191)',
+  `ref_id` int unsigned DEFAULT NULL COMMENT 'id del elemento (migra-191)',
   `detail` varchar(800) DEFAULT NULL,
   `result` varchar(600) DEFAULT NULL,
   `ip` varchar(45) DEFAULT NULL,
@@ -484,6 +486,18 @@ CREATE TABLE `mod_log` (
   KEY `user_id` (`user_id`,`log_id`),
   KEY `created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mod_comments` (
+  `comment_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `item_type` enum('story','comment','chat') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'story',
+  `ref_id` int unsigned NOT NULL,
+  `user_id` int unsigned NOT NULL,
+  `body` varchar(1000) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`comment_id`),
+  KEY `idx_item` (`item_type`,`ref_id`,`comment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `mod_queue` (

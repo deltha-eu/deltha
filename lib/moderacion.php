@@ -287,6 +287,83 @@ function mod_note_line(?array $m): string {
          . (!empty($v['motivo']) ? ' — ' . $v['motivo'] : '');
 }
 
+/* ---- conversación de los moderadores (migra-191, 10/11/2026) ----------------------------------------------
+ * Antes de decidir, varios moderadores dejan mensajes en el propio elemento de la cola para ponerse de acuerdo. Se guarda
+ * por elemento (item_type + ref_id), así que sigue disponible en el registro cuando la decisión ya está tomada; allí se
+ * lee en solo lectura y no se puede editar. La cola manda: solo se escribe mientras el elemento espera decisión. */
+const MOD_TALK_MAX = 1000;
+
+/** Fila de la cola que sigue esperando decisión para ese elemento, o null. */
+function mod_pendiente(PDO $pdo, string $type, int $id): ?array {
+    if (!in_array($type, ['story', 'comment', 'chat'], true) || $id <= 0) return null;
+    try {
+        $q = $pdo->prepare("SELECT item_id, status FROM mod_queue WHERE item_type = ? AND ref_id = ? AND status IN ('flag','hidden','needs_human') ORDER BY item_id DESC LIMIT 1");
+        $q->execute([$type, $id]);
+        return $q->fetch() ?: null;
+    } catch (Throwable $e) { return null; }
+}
+
+/** Elemento (tipo e id) de un item de la cola, para enlazar el registro con su conversación. */
+function mod_item_of(PDO $pdo, int $itemId): ?array {
+    try {
+        $q = $pdo->prepare("SELECT item_type, ref_id FROM mod_queue WHERE item_id = ?");
+        $q->execute([$itemId]);
+        return $q->fetch() ?: null;
+    } catch (Throwable $e) { return null; }
+}
+
+/** Conversaciones de varios elementos a la vez: ['comment:13' => [mensajes…], …]. */
+function mod_talk_map(PDO $pdo, array $refs): array {
+    $cond = []; $args = [];
+    foreach ($refs as $r) {
+        $t = (string)($r[0] ?? ''); $i = (int)($r[1] ?? 0);
+        if (!in_array($t, ['story', 'comment', 'chat'], true) || $i <= 0) continue;
+        $cond[] = '(mc.item_type = ? AND mc.ref_id = ?)'; $args[] = $t; $args[] = $i;
+    }
+    if (!$cond) return [];
+    try {
+        $q = $pdo->prepare("SELECT mc.comment_id, mc.item_type, mc.ref_id, mc.user_id, mc.body, mc.created, COALESCE(u.login, '—') AS login
+                              FROM mod_comments mc LEFT JOIN users u ON u.user_id = mc.user_id
+                             WHERE " . implode(' OR ', $cond) . " ORDER BY mc.comment_id");
+        $q->execute($args);
+        $out = [];
+        foreach ($q as $r) $out[$r['item_type'] . ':' . (int)$r['ref_id']][] = $r;
+        return $out;
+    } catch (Throwable $e) { return []; }   // sin la migración 191 no hay conversación que enseñar
+}
+
+/** Añade un mensaje a la conversación. Devuelve el aviso para el moderador, o null si se ha guardado. */
+function mod_talk_add(PDO $pdo, string $type, int $id, int $uid, string $body): ?string {
+    if (!mod_pendiente($pdo, $type, $id)) return t('Ese elemento ya está decidido: la conversación es de solo lectura.');
+    $body = trim((string)$body);
+    if (mb_strlen($body) < 2) return t('Escribe el mensaje antes de enviarlo.');
+    try {
+        $pdo->prepare("INSERT INTO mod_comments (item_type, ref_id, user_id, body) VALUES (?,?,?,?)")
+            ->execute([$type, $id, $uid, mb_substr($body, 0, MOD_TALK_MAX)]);
+    } catch (Throwable $e) { return t('No se ha podido guardar el mensaje.'); }
+    return null;
+}
+
+/** Los mensajes de la conversación en HTML (sin el bloque desplegable). */
+function mod_talk_msgs_html(array $msgs): string {
+    if (!$msgs) return '<p class="meta">' . h(t('Sin mensajes todavía.')) . '</p>';
+    $out = '';
+    foreach ($msgs as $m) {
+        $out .= '<div class="modtalk-msg"><b>' . h((string)$m['login']) . '</b> <span class="meta">· ' . h(hace((string)$m['created'])) . '</span>'
+              . '<p>' . saltos(h((string)$m['body'])) . '</p></div>';
+    }
+    return $out;
+}
+
+/** La conversación en la cola: bloque desplegable con los mensajes y el formulario para escribir. */
+function mod_talk_html(string $type, int $id, array $msgs, bool $open = false): string {
+    return '<details class="modtalk"' . ($open ? ' open' : '') . '><summary title="' . h(t('Conversación de los moderadores sobre este elemento')) . '">💬 '
+         . h(t('Conversación (%d)', count($msgs))) . '</summary><div class="modtalk-body">' . mod_talk_msgs_html($msgs)
+         . '<form method="post" class="modtalk-form"><input type="hidden" name="act" value="talk"><input type="hidden" name="type" value="' . h($type) . '"><input type="hidden" name="ref" value="' . (int)$id . '">'
+         . '<textarea name="talk" rows="2" maxlength="' . MOD_TALK_MAX . '" placeholder="' . h(t('Escribe a los demás moderadores…')) . '" required></textarea>'
+         . '<button class="btn sm">' . h(t('Enviar mensaje')) . '</button></form></div></details>';
+}
+
 /** Estado del worker para la cabecera de moderacion. */
 function mod_worker_line(): string {
     $seen = (string)cfg('mod_worker_seen', '');

@@ -1070,4 +1070,18 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s o asunto con máis envíos é o de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)',
 'Le siguen %s' => 'Séguenlle %s',
 '%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s o tema con máis envíos é %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)',
+// conversación de los moderadores sobre un elemento pendiente (migra-191)
+'Conversación de los moderadores sobre este elemento' => 'Conversa dos moderadores sobre este elemento',
+'Conversación (%d)' => 'Conversa (%d)',
+'Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.' => 'Cada elemento ten a súa conversa: deixade alí as mensaxes para poñervos de acordo antes de decidir. Cando a decisión pase ao rexistro, a conversa lerase alí e xa non se poderá editar.',
+'Sin mensajes todavía.' => 'Aínda non hai mensaxes.',
+'Escribe a los demás moderadores…' => 'Escribe ao resto de moderadores…',
+'Solo lectura: la decisión ya está tomada y la conversación no se puede editar.' => 'Só lectura: a decisión xa está tomada e a conversa non se pode editar.',
+'Ese elemento ya está decidido: la conversación es de solo lectura.' => 'Ese elemento xa está decidido: a conversa é de só lectura.',
+'Mensaje guardado.' => 'Mensaxe gardada.',
+'No se ha podido guardar el mensaje.' => 'Non se puido gardar a mensaxe.',
+'Escribe el mensaje antes de enviarlo.' => 'Escribe a mensaxe antes de enviala.',
+'Enviar mensaje' => 'Envía a mensaxe',
+'Lo escribió' => 'Escribiuno',
+'Escribir en la conversación' => 'Escribir na conversa',
 ];

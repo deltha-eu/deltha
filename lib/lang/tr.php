@@ -1091,4 +1091,18 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s en çok gönderi alan konu %s: farklı açılardan %d gönderi (%d oy, %d yorum)',
 'Le siguen %s' => 'Ardından %s',
 '%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s en çok gönderi alan konu %s: farklı açılardan %d gönderi (%d oy, %d yorum)',
+// conversación de los moderadores sobre un elemento pendiente (migra-191)
+'Conversación de los moderadores sobre este elemento' => 'Moderatörlerin bu öğe hakkındaki konuşması',
+'Conversación (%d)' => 'Konuşma (%d)',
+'Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.' => 'Her öğenin kendi konuşması var: karar vermeden önce anlaşmak için mesajları oraya bırakın. Karar kayda geçtiğinde konuşma orada okunur ve artık düzenlenemez.',
+'Sin mensajes todavía.' => 'Henüz mesaj yok.',
+'Escribe a los demás moderadores…' => 'Diğer moderatörlere yaz…',
+'Solo lectura: la decisión ya está tomada y la conversación no se puede editar.' => 'Salt okunur: karar verildi, konuşma artık düzenlenemez.',
+'Ese elemento ya está decidido: la conversación es de solo lectura.' => 'Bu öğe için karar verildi: konuşma salt okunur.',
+'Mensaje guardado.' => 'Mesaj kaydedildi.',
+'No se ha podido guardar el mensaje.' => 'Mesaj kaydedilemedi.',
+'Escribe el mensaje antes de enviarlo.' => 'Göndermeden önce mesajı yaz.',
+'Enviar mensaje' => 'Mesajı gönder',
+'Lo escribió' => 'Yazan',
+'Escribir en la conversación' => 'Konuşmaya yaz',
 ];

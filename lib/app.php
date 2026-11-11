@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 254);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 256);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -212,10 +212,13 @@ function md_ayuda(bool $breve = false): string {   // $breve: solo lo que admite
 function redirect(string $to): never { header("Location: $to"); exit; }
 /** Registro de acciones de moderadores y admin (migra-134, 09/10/2026): tabla mod_log, se ve en admin -> Registro.
  *  Se llama al entrar en el POST de cada pagina de moderacion/administracion; apunta al terminar el script (tambien si hubo redirect),
- *  asi que recoge la accion (pagina:act), los campos enviados (sin contraseñas, recortados) y, si se le pasa $out, el resultado. */
-function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = ''): void {   // $out: array de mensajes, texto de error o nada (por referencia: se lee al final)
+ *  asi que recoge la accion (pagina:act), los campos enviados (sin contraseñas, recortados) y, si se le pasa $out, el resultado.
+ *  $no_log: acciones de la pagina que no se apuntan (migra-191: escribir en la conversación no es una acción de moderación).
+ *  $GLOBALS['DDD_LOG_ITEM'] = [tipo, id] enlaza la acción con su elemento y, a través de él, con su conversación. */
+function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = '', array $no_log = []): void {   // $out: array de mensajes, texto de error o nada (por referencia: se lee al final)
     $u = user();
     if (!$u || !user_is_mod($u) || $_SERVER['REQUEST_METHOD'] !== 'POST') return;
+    if (in_array((string)($_POST['act'] ?? ''), $no_log, true)) return;
     $campos = [];
     foreach ($_POST as $k => $v) {
         if (in_array($k, ['act', 't', 'js'], true) || preg_match('/pass|clave|pw|token/i', (string)$k)) continue;
@@ -229,14 +232,22 @@ function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = ''):
     $detalle = mb_strimwidth(implode(' · ', $campos), 0, 700, '…');
     $uid = (int)$u['user_id']; $ip = client_ip();
     register_shutdown_function(function () use ($pdo, $uid, $accion, $detalle, $extra, &$out, $ip) {
+        // migra-191: el manejador decide de qué elemento trata la acción ya avanzada la petición
+        $item = $GLOBALS['DDD_LOG_ITEM'] ?? null;
+        $itType = in_array((string)($item[0] ?? ''), ['story', 'comment', 'chat'], true) ? (string)$item[0] : null;
+        $itId = $itType !== null && (int)($item[1] ?? 0) > 0 ? (int)$item[1] : null;
         $res = $out ? mb_strimwidth(implode(' | ', array_map('strval', (array)$out)), 0, 500, '…') : null;
         if ($extra !== '') $res = trim($extra . ($res !== null ? " | $res" : ''));
         // migra-176: lo que haga falta para deshacer la acción, sellado con el estado en que quedó (mod_undo_seal)
         $ops = mod_undo_seal($pdo, mod_undo_ops());
         $undo = $ops ? json_encode(['ops' => $ops], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) : null;
-        try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip, undo_ops) VALUES (?,?,?,?,?,?)")->execute([$uid, mb_substr($accion, 0, 60), $detalle ?: null, $res, $ip, $undo]); }
-        catch (Throwable $e) {   // sin la migración 173: se apunta la acción igualmente, sin poder deshacerla
-            try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip) VALUES (?,?,?,?,?)")->execute([$uid, mb_substr($accion, 0, 60), $detalle ?: null, $res, $ip]); } catch (Throwable $e2) {}
+        $act = mb_substr($accion, 0, 60);
+        try { $pdo->prepare("INSERT INTO mod_log (user_id, action, item_type, ref_id, detail, result, ip, undo_ops) VALUES (?,?,?,?,?,?,?,?)")->execute([$uid, $act, $itType, $itId, $detalle ?: null, $res, $ip, $undo]); }
+        catch (Throwable $e) {   // sin la migración 191: la acción se apunta sin elemento
+            try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip, undo_ops) VALUES (?,?,?,?,?,?)")->execute([$uid, $act, $detalle ?: null, $res, $ip, $undo]); }
+            catch (Throwable $e2) {   // sin la migración 173: se apunta la acción igualmente, sin poder deshacerla
+                try { $pdo->prepare("INSERT INTO mod_log (user_id, action, detail, result, ip) VALUES (?,?,?,?,?)")->execute([$uid, $act, $detalle ?: null, $res, $ip]); } catch (Throwable $e3) {}
+            }
         }
     });
 }
@@ -343,6 +354,7 @@ function mod_log_revert(PDO $pdo, int $log_id, int $by): ?string {
     try { $q = $pdo->prepare("SELECT * FROM mod_log WHERE log_id = ?"); $q->execute([$log_id]); $row = $q->fetch(); }
     catch (Throwable $e) { return 'falta la migración 176 (mod_log.undo_ops).'; }
     if (!$row) return 'esa acción no está en el registro.';
+    if (!empty($row['item_type']) && (int)($row['ref_id'] ?? 0) > 0) $GLOBALS['DDD_LOG_ITEM'] = [(string)$row['item_type'], (int)$row['ref_id']];   // el deshacer se apunta con su elemento (migra-191)
     if (!empty($row['undone'])) return 'esa acción ya se deshizo el ' . date('d/m/Y H:i', strtotime((string)$row['undone'])) . '.';
     if (empty($row['undo_ops'])) return 'esa acción no se puede deshacer desde aquí.';
     if (!user_is_mod(user())) return 'no tienes permiso.';

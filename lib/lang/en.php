@@ -1125,4 +1125,18 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s the story with the most posts is %s: %d posts from different angles (%d votes, %d comments)',
 'Le siguen %s' => 'Next come %s',
 '%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s the topic with the most posts is %s: %d posts from different angles (%d votes, %d comments)',
+// conversación de los moderadores sobre un elemento pendiente (migra-191)
+'Conversación de los moderadores sobre este elemento' => 'Discussion between moderators about this item',
+'Conversación (%d)' => 'Discussion (%d)',
+'Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.' => 'Each item has its own conversation: leave messages there to agree before deciding. Once the decision is in the log, the conversation can be read there and no longer edited.',
+'Sin mensajes todavía.' => 'No messages yet.',
+'Escribe a los demás moderadores…' => 'Write to the other moderators…',
+'Solo lectura: la decisión ya está tomada y la conversación no se puede editar.' => 'Read only: the decision has been made and the conversation can no longer be edited.',
+'Ese elemento ya está decidido: la conversación es de solo lectura.' => 'That item has already been decided: the conversation is read only.',
+'Mensaje guardado.' => 'Message saved.',
+'No se ha podido guardar el mensaje.' => 'The message could not be saved.',
+'Escribe el mensaje antes de enviarlo.' => 'Write the message before sending it.',
+'Enviar mensaje' => 'Send message',
+'Lo escribió' => 'Written by',
+'Escribir en la conversación' => 'Write in the conversation',
 ];
