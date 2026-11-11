@@ -1029,6 +1029,7 @@ function page_body(array $pg): string {
         '{site}' => h(cfg('site_name', 'Deltha')),
         '{ttl}'  => (string)(int)cfg('thread_ttl_hours', 48),
         '{gm}'   => (string)(int)cfg('ghost_minutes', 30),
+        '{ipdays}' => (string)ip_log_days(),   // dias que se conserva el registro de IP (migra-193/194; pagina de privacidad)
         // parametros del algoritmo (pagina «Como funciona el δ»)
         '{cycle}'    => (string)(int)cfg('cycle_minutes', 5),
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),
