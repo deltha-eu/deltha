@@ -1075,4 +1075,18 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s bidalketa gehien dituen gaia %s da: %d bidalketa ikuspegi desberdinetatik (%d boto, %d iruzkin)',
 'Le siguen %s' => 'Ondoren %s',
 '%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s bidalketa gehien dituen gaia %s da: %d bidalketa ikuspegi desberdinetatik (%d boto, %d iruzkin)',
+// conversación de los moderadores sobre un elemento pendiente (migra-191)
+'Conversación de los moderadores sobre este elemento' => 'Elementu honi buruzko moderatzaileen elkarrizketa',
+'Conversación (%d)' => 'Elkarrizketa (%d)',
+'Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.' => 'Elementu bakoitzak bere elkarrizketa du: utzi han mezuak erabaki aurretik ados jartzeko. Erabakia erregistrora pasatzean, elkarrizketa han irakurri ahal izango da eta ezingo da editatu.',
+'Sin mensajes todavía.' => 'Oraindik ez dago mezurik.',
+'Escribe a los demás moderadores…' => 'Idatzi beste moderatzaileei…',
+'Solo lectura: la decisión ya está tomada y la conversación no se puede editar.' => 'Irakurtzeko soilik: erabakia hartuta dago eta elkarrizketa ezin da editatu.',
+'Ese elemento ya está decidido: la conversación es de solo lectura.' => 'Elementu hori erabakita dago: elkarrizketa irakurtzeko soilik da.',
+'Mensaje guardado.' => 'Mezua gordeta.',
+'No se ha podido guardar el mensaje.' => 'Ezin izan da mezua gorde.',
+'Escribe el mensaje antes de enviarlo.' => 'Idatzi mezua bidali aurretik.',
+'Enviar mensaje' => 'Bidali mezua',
+'Lo escribió' => 'Honek idatzia',
+'Escribir en la conversación' => 'Idatzi elkarrizketan',
 ];

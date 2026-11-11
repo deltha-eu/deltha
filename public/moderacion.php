@@ -10,8 +10,47 @@ require_once __DIR__ . '/../lib/mail.php';   // listas de dominios de correo (em
 if (!user()) redirect('/login');
 if (!is_mod()) { http_response_code(403); page_header('Moderación'); echo "<p class=\"end\">Solo moderadores.</p>"; page_footer(); exit; }
 
+/* ---- la conversación de un elemento en una ventana aparte (migra-191): se abre desde el registro, en solo lectura ---- */
+if ((string)($_GET['t'] ?? '') === 'charla') {
+    $ctype = (string)($_GET['type'] ?? ''); $cref = (int)($_GET['ref'] ?? 0);
+    if (!in_array($ctype, ['story', 'comment', 'chat'], true) || $cref <= 0) redirect('/moderacion');
+    $cmsgs = mod_talk_map($pdo, [[$ctype, $cref]])[$ctype . ':' . $cref] ?? [];
+    $TY = ['story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat'];
+    $el = null; $clink = '';
+    try {
+        if ($ctype === 'comment') {
+            $cq = $pdo->prepare("SELECT c.story_id, c.content, c.status, COALESCE(u.login, c.alias) AS autor FROM comments c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.comment_id = ?");
+            $cq->execute([$cref]);
+            if ($el = $cq->fetch()) $clink = "/hilo/" . (int)$el['story_id'] . "#c$cref";
+        } elseif ($ctype === 'chat') {
+            $cq = $pdo->prepare("SELECT c.content, c.status, COALESCE(u.login, c.alias) AS autor FROM chat c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.msg_id = ?");
+            $cq->execute([$cref]);
+            if ($el = $cq->fetch()) $clink = "/chat?m=$cref#m$cref";
+        } else {
+            $cq = $pdo->prepare("SELECT s.title AS content, s.status, COALESCE(u.login, s.author_alias) AS autor FROM stories s LEFT JOIN users u ON u.user_id = s.user_id WHERE s.story_id = ?");
+            $cq->execute([$cref]);
+            if ($el = $cq->fetch()) $clink = "/hilo/$cref";
+        }
+    } catch (Throwable $e) { $el = null; }
+    $abierto = mod_pendiente($pdo, $ctype, $cref) !== null;
+    page_header(t('Conversación de los moderadores sobre este elemento'));
+    echo "<div class=\"admin\"><h1>💬 " . h(t('Conversación (%d)', count($cmsgs))) . " · " . h($TY[$ctype]) . " #$cref</h1>";
+    if ($el) {
+        echo "<p class=\"meta\">" . h(t('Lo escribió')) . " <b>" . h((string)$el['autor']) . "</b> · <a href=\"" . h($clink) . "\">" . h(t('ver')) . "</a>"
+           . (in_array((string)$el['status'], ['ok', 'nuevas'], true) ? '' : " · <i>" . h((string)$el['status']) . "</i>") . "</p>";
+        echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth((string)$el['content'], 0, 500, '…'))) . "</blockquote>";
+    }
+    echo "<div class=\"modtalk-thread\">" . mod_talk_msgs_html($cmsgs) . "</div>";
+    echo "<p class=\"meta\">" . ($abierto
+        ? "<a href=\"/moderacion?t=ia\">" . h(t('Escribir en la conversación')) . "</a>"
+        : h(t('Solo lectura: la decisión ya está tomada y la conversación no se puede editar.'))) . "</p>";
+    echo "</div>";
+    page_footer();
+    exit;
+}
+
 $out = [];
-mod_log_post($pdo, 'moderacion', $out);   // registro de acciones (migra-134): apunta accion, campos y resultado al terminar
+mod_log_post($pdo, 'moderacion', $out, '', ['talk']);   // registro de acciones (migra-134): apunta accion, campos y resultado al terminar. Escribir en la conversación no se apunta (migra-191)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'registro_deshacer') {   // deshacer una acción del registro (migra-176)
     $e = mod_log_revert($pdo, (int)post('log_id'), (int)user()['user_id']);
     $out[] = $e === null ? 'Hecho: la acción se ha deshecho.' : 'No se ha podido deshacer: ' . $e;
@@ -96,19 +135,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'medio_quitar') {
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['rep_borrar', 'rep_descartar'], true)) {
     $cid = (int)post('cid');
+    $GLOBALS['DDD_LOG_ITEM'] = ['comment', $cid];   // enlaza la acción con la conversación de ese comentario (migra-191)
     mod_undo_comment($pdo, $cid);   // texto, estado y reportes, para poder deshacerlo (migra-176)
     if (post('act') === 'rep_borrar') { comment_delete($pdo, $cid); $out[] = "Comentario #$cid eliminado (texto sustituido por el aviso)."; }
     else { $pdo->prepare("UPDATE comment_reports SET status = 'dismissed', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([user()['user_id'], $cid]); $out[] = "Reportes del comentario #$cid descartados."; }
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['chat_borrar', 'chat_descartar'], true)) {
     $mid = (int)post('mid');
+    $GLOBALS['DDD_LOG_ITEM'] = ['chat', $mid];   // enlaza la acción con la conversación de ese mensaje (migra-191)
     mod_undo_chat($pdo, $mid);   // texto, estado y reportes (migra-176)
     if (post('act') === 'chat_borrar') { chat_delete_mod($pdo, $mid); $out[] = "Mensaje #$mid del chat eliminado (texto sustituido por el aviso)."; }
     else { $pdo->prepare("UPDATE chat_reports SET status = 'dismissed', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([user()['user_id'], $mid]); $out[] = "Reportes del mensaje #$mid descartados."; }
     if (post('back') === '1') redirect("/chat?m=$mid#m$mid");   // «eliminar» desde el propio chat
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'talk') {   // conversación de moderadores sobre un elemento pendiente (migra-191)
+    $type = (string)post('type'); $ref = (int)post('ref');
+    $e = mod_talk_add($pdo, $type, $ref, (int)user()['user_id'], post('talk'));
+    if ($e) $out[] = $e;
+    else { $out[] = t('Mensaje guardado.'); $GLOBALS['DDD_TALK_OPEN'] = $type . ':' . $ref; }   // se deja abierta la conversación que se acaba de escribir
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'ia') {   // decision humana sobre lo que ha señalado u ocultado la IA
     $item = (int)post('item');
+    if ($it = mod_item_of($pdo, $item)) $GLOBALS['DDD_LOG_ITEM'] = [$it['item_type'], (int)$it['ref_id']];   // el registro podrá enseñar la conversación (migra-191)
     mod_undo_human($pdo, $item);   // cola, elemento, reportes y contador del hilo (migra-176)
     $r = mod_human($pdo, $item, post('dec') === 'remove' ? 'remove' : 'keep', (int)user()['user_id']);
     $out[] = $r ? "#$item: $r." : "#$item ya estaba resuelto.";
@@ -343,7 +391,9 @@ if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
 if ($tab === 'ia') {
 /* ---- revision de la IA local ---- */
 $TY = ['story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat'];
+$talk = mod_talk_map($pdo, array_map(fn($m) => [$m['item_type'], (int)$m['ref_id']], $q));   // conversación de cada elemento (migra-191)
 echo "<h3 id=\"ia\">Señalado por la IA (" . count($q) . ")</h3>";
+echo "<p class=\"meta\">" . h(t('Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.')) . "</p>";
 if ($qstats) echo "<p><small>En cola: " . (int)$qstats['cola'] . " · últimas 24 h: " . (int)$qstats['ok24'] . " sin problemas, " . (int)$qstats['sen24'] . " señalados.</small></p>";
 if (!$q) echo "<p>Nada pendiente.</p>";
 foreach ($q as $m) {
@@ -367,7 +417,9 @@ foreach ($q as $m) {
     if (!empty($v['cita'])) echo "<p class=\"meta\">Fragmento: «" . h($v['cita']) . "»</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"ia\"><input type=\"hidden\" name=\"item\" value=\"{$m['item_id']}\">";
     echo "<button class=\"btn danger\" name=\"dec\" value=\"remove\" title=\"" . ($m['item_type'] === 'story' ? 'el envío se rechaza' : ($m['status'] === 'hidden' ? 'desaparece sin dejar rastro (estaba oculto)' : 'se queda con el texto sustituido por el aviso')) . "\">" . ($m['status'] === 'hidden' && $m['item_type'] !== 'story' ? 'Eliminar' : 'Retirar') . "</button> ";
-    echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($premod ? 'se publica' : ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está')) . "\">" . ($premod ? 'Aprobar' : ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda')) . "</button></form></div></div>";
+    echo "<button class=\"btn\" name=\"dec\" value=\"keep\" title=\"" . ($premod ? 'se publica' : ($m['status'] === 'hidden' ? 'vuelve a verse' : 'se queda como está')) . "\">" . ($premod ? 'Aprobar' : ($m['status'] === 'hidden' ? 'Restaurar' : 'Se queda')) . "</button></form>";
+    $kk = $m['item_type'] . ':' . (int)$m['ref_id'];
+    echo mod_talk_html($m['item_type'], (int)$m['ref_id'], $talk[$kk] ?? [], ($GLOBALS['DDD_TALK_OPEN'] ?? '') === $kk) . "</div>";
 }
 
 } elseif ($tab === 'reportes') {
@@ -659,7 +711,7 @@ $rq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64));
 $ru = trim(mb_substr((string)($_GET['u'] ?? ''), 0, 32));
 $rp = max(1, (int)($_GET['p'] ?? 1)); $rper = 60;
 echo "<h3 id=\"registro\">Registro de moderación</h3>";
-echo "<p><small>Qué se ha hecho, cuándo y quién: /moderacion, /admin, la ficha de usuario, el chat, los destacados y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta la acción, los campos enviados (sin contraseñas) y el resultado que se vio en pantalla. <b>Deshacer</b> devuelve el dato a como estaba justo antes (texto, estado y reportes); si algo ha cambiado después, no se toca nada y se dice por qué. Lo que hizo un administrador solo lo deshace un administrador. Las acciones sin vuelta atrás (borrar o releer una fuente, borrar un tema, avisar a quien propuso una fuente) salen sin botón.</small></p>";
+echo "<p><small>Qué se ha hecho, cuándo y quién: /moderacion, /admin, la ficha de usuario, el chat, los destacados y las ediciones de envíos, comentarios, mensajes y comunidades ajenos hechas por un moderador. Se apunta la acción, los campos enviados (sin contraseñas) y el resultado que se vio en pantalla. Cuando varios moderadores han hablado de un elemento antes de decidir, la <b>conversación</b> se lee aquí y ya no se puede editar. <b>Deshacer</b> devuelve el dato a como estaba justo antes (texto, estado y reportes); si algo ha cambiado después, no se toca nada y se dice por qué. Lo que hizo un administrador solo lo deshace un administrador. Las acciones sin vuelta atrás (borrar o releer una fuente, borrar un tema, avisar a quien propuso una fuente) salen sin botón.</small></p>";
 try {
     $quien = $pdo->query("SELECT DISTINCT u.login FROM mod_log l JOIN users u ON u.user_id = l.user_id ORDER BY u.login")->fetchAll(PDO::FETCH_COLUMN);
     echo "<form method=\"get\" action=\"/moderacion\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"registro\"><select name=\"u\"><option value=\"\">— todos —</option>";
@@ -674,13 +726,18 @@ try {
     echo "<p><small>$rtotal " . ($rtotal === 1 ? 'acción' : 'acciones') . ($rq !== '' || $ru !== '' ? ' que coinciden' : '') . ".</small></p>";
     if (!$rl) echo "<p class=\"end\">Nada registrado todavía.</p>";
     else {
-        echo "<table class=\"modlog\"><tr><th>fecha y hora</th><th>quién</th><th>acción</th><th>detalle</th><th>resultado</th><th></th></tr>";
+        echo "<table class=\"modlog\"><tr><th>fecha y hora</th><th>quién</th><th>acción</th><th>detalle</th><th>resultado</th><th>conversación</th><th></th></tr>";
         $yo = user();
+        $rtalk = mod_talk_map($pdo, array_map(fn($r) => [(string)($r['item_type'] ?? ''), (int)($r['ref_id'] ?? 0)], $rl));   // charla previa de cada elemento (migra-191)
         foreach ($rl as $r) {
             $puede = mod_revert_puede($pdo, $r, $yo);
             echo "<tr><td style=\"white-space:nowrap\">" . h(date('d/m/Y H:i', strtotime($r['created']))) . "<br><small class=\"meta\">" . h(hace($r['created'])) . "</small></td>";
             echo "<td><a href=\"/u/" . rawurlencode($r['login']) . "\">" . h($r['login']) . "</a></td>";
             echo "<td><code>" . h($r['action']) . "</code></td><td><small>" . h((string)$r['detail']) . "</small></td><td><small>" . h((string)$r['result']) . "</small></td>";
+            $kk = (string)($r['item_type'] ?? '') . ':' . (int)($r['ref_id'] ?? 0);
+            echo "<td>" . (!empty($rtalk[$kk])
+                ? "<a class=\"modtalk-icon\" href=\"/moderacion?t=charla&amp;type=" . h((string)$r['item_type']) . "&amp;ref=" . (int)$r['ref_id'] . "\" target=\"_blank\" rel=\"noopener\" title=\"" . h(t('Conversación de los moderadores sobre este elemento')) . "\">💬 " . count($rtalk[$kk]) . "</a>"
+                : '<small class="meta">—</small>') . "</td>";   // icono: abre la charla en una ventana aparte, en solo lectura
             echo "<td style=\"white-space:nowrap\">";
             if (!empty($r['undone'])) echo "<small class=\"meta\">deshecho" . ($r['undone_login'] ? " por <a href=\"/u/" . rawurlencode($r['undone_login']) . "\">" . h($r['undone_login']) . "</a>" : '') . " " . h(hace($r['undone'])) . "</small>";
             elseif ($puede) echo "<form method=\"post\" style=\"display:inline\"><input type=\"hidden\" name=\"act\" value=\"registro_deshacer\"><input type=\"hidden\" name=\"t\" value=\"registro\"><input type=\"hidden\" name=\"log_id\" value=\"{$r['log_id']}\"><button class=\"btn sm\" title=\"devolver el dato a como estaba antes de esta acción\">Deshacer</button></form>";

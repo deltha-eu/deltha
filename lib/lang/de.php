@@ -1076,4 +1076,18 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s ist das Thema mit den meisten Beiträgen das von %s: %d Beiträge aus verschiedenen Blickwinkeln (%d Stimmen, %d Kommentare)',
 'Le siguen %s' => 'Es folgen %s',
 '%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s ist das Thema mit den meisten Beiträgen %s: %d Beiträge aus verschiedenen Blickwinkeln (%d Stimmen, %d Kommentare)',
+// conversación de los moderadores sobre un elemento pendiente (migra-191)
+'Conversación de los moderadores sobre este elemento' => 'Gespräch der Moderatoren über dieses Element',
+'Conversación (%d)' => 'Gespräch (%d)',
+'Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.' => 'Jedes Element hat sein eigenes Gespräch: Hinterlasst dort Nachrichten, um euch vor der Entscheidung abzustimmen. Sobald die Entscheidung im Register steht, ist das Gespräch dort lesbar und nicht mehr bearbeitbar.',
+'Sin mensajes todavía.' => 'Noch keine Nachrichten.',
+'Escribe a los demás moderadores…' => 'Schreib den anderen Moderatoren…',
+'Solo lectura: la decisión ya está tomada y la conversación no se puede editar.' => 'Nur Lesen: Die Entscheidung ist gefallen, das Gespräch lässt sich nicht mehr bearbeiten.',
+'Ese elemento ya está decidido: la conversación es de solo lectura.' => 'Dieses Element ist bereits entschieden: Das Gespräch ist nur noch lesbar.',
+'Mensaje guardado.' => 'Nachricht gespeichert.',
+'No se ha podido guardar el mensaje.' => 'Die Nachricht konnte nicht gespeichert werden.',
+'Escribe el mensaje antes de enviarlo.' => 'Schreib die Nachricht, bevor du sie sendest.',
+'Enviar mensaje' => 'Nachricht senden',
+'Lo escribió' => 'Geschrieben von',
+'Escribir en la conversación' => 'Im Gespräch schreiben',
 ];

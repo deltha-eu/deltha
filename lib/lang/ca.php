@@ -1075,4 +1075,18 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '%s el asunto con más envíos es el de %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s l\'assumpte amb més enviaments és el de %s: %d enviaments des d\'enfocaments diferents (%d vots, %d comentaris)',
 'Le siguen %s' => 'El segueixen %s',
 '%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)' => '%s el tema amb més enviaments és %s: %d enviaments des d\'enfocaments diferents (%d vots, %d comentaris)',
+// conversación de los moderadores sobre un elemento pendiente (migra-191)
+'Conversación de los moderadores sobre este elemento' => 'Conversa dels moderadors sobre aquest element',
+'Conversación (%d)' => 'Conversa (%d)',
+'Cada elemento tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir. Cuando la decisión pase al registro, la conversación se leerá allí y ya no se podrá editar.' => 'Cada element té la seva conversa: deixeu-hi els missatges per posar-vos d\'acord abans de decidir. Quan la decisió passi al registre, la conversa s\'hi podrà llegir i ja no es podrà editar.',
+'Sin mensajes todavía.' => 'Encara no hi ha missatges.',
+'Escribe a los demás moderadores…' => 'Escriu a la resta de moderadors…',
+'Solo lectura: la decisión ya está tomada y la conversación no se puede editar.' => 'Només lectura: la decisió ja està presa i la conversa no es pot editar.',
+'Ese elemento ya está decidido: la conversación es de solo lectura.' => 'Aquest element ja està decidit: la conversa és de només lectura.',
+'Mensaje guardado.' => 'Missatge desat.',
+'No se ha podido guardar el mensaje.' => 'No s\'ha pogut desar el missatge.',
+'Escribe el mensaje antes de enviarlo.' => 'Escriu el missatge abans d\'enviar-lo.',
+'Enviar mensaje' => 'Envia el missatge',
+'Lo escribió' => 'Ho va escriure',
+'Escribir en la conversación' => 'Escriure a la conversa',
 ];

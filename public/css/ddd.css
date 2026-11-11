@@ -988,6 +988,21 @@ form.plain label.radio { display: flex; gap: 8px; align-items: center; font-size
 .admin .rephead .meta { color: var(--muted); }
 .admin .repitem .quote { margin: 8px 0; }
 .admin .repacts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+/* conversación de los moderadores sobre un elemento (migra-191): pestaña IA y registro */
+.admin .modtalk { margin: 8px 0 2px; }
+.admin .modtalk summary { cursor: pointer; font-size: 14px; color: var(--muted); }
+.admin .modtalk summary:hover { color: var(--fg); }
+.admin .modtalk-body { margin: 6px 0 4px 10px; padding-left: 10px; border-left: 2px solid var(--line2); }
+.admin .modtalk-msg { margin: 6px 0; font-size: 14px; }
+.admin .modtalk-msg p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.admin .modtalk-form { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
+.admin .modtalk-form textarea { flex: 1; min-height: 44px; font: inherit; }
+table.modlog .modtalk summary { white-space: normal; }
+/* el registro enseña solo el icono; la charla se abre en una ventana aparte (migra-191) */
+a.modtalk-icon { text-decoration: none; white-space: nowrap; }
+a.modtalk-icon:hover { text-decoration: underline; }
+.modtalk-thread { margin: 10px 0 4px; }
+.modtalk-thread .modtalk-msg { margin: 10px 0; font-size: 15px; }
 .admin .repacts form { display: inline; }
 .admin .btn.danger, form.plain button.danger { border-color: var(--neg); color: var(--neg); }
 
