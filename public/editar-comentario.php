@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (post('quitar_img') === '1' && !empty($c['image'])) { require_once __DIR__ . '/../lib/imagen.php'; imagen_comentario_borrar((string)$c['image']); $pdo->prepare("UPDATE comments SET image = NULL WHERE comment_id = ?")->execute([$id]); }   // migra-166
             if ($own && $st->rowCount()) {
                 mod_requeue($pdo, 'comment', $id);   // lo edita su autor: la IA lo vuelve a mirar
-                avisos_comment($pdo, array_merge($c, ['content' => $txt]), null, avisos_nicks((string)$c['content']));   // solo los @nick nuevos
+                avisos_comment($pdo, array_merge($c, ['content' => $txt]), null, avisos_nicks((string)$c['content']), false);   // solo los @nick nuevos; editar no avisa a los seguidores del hilo
             }
             redirect($back);
         }

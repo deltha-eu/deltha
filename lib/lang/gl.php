@@ -573,6 +573,7 @@ return [
 'sin leer' => 'sen ler',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b> citou a túa mensaxe do Chat',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b> envioute unha mensaxe',
+'<b>%s</b> ha comentado en un hilo que sigues' => '<b>%s</b> comentou nun fío que segues',
 // paginas sin <h1> repetido
 'Escribir un artículo' => 'Escribir un artigo',
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Ao entrar créase unha única cookie técnica de sesión. Sen conta, ningunha.</p>',
@@ -652,6 +653,10 @@ return [
 'Siguiendo' => 'Seguindo',
 'Seguir %s' => 'Seguir %s',
 'dejar de seguir %s' => 'deixar de seguir %s',
+'Seguir hilos propios' => 'Seguir os teus fíos',
+'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Os fíos que abres márcanse sos para seguimento: avisámosche de cada comentario novo que reciban.',
+'seguir este hilo' => 'seguir este fío',
+'dejar de seguir este hilo' => 'deixar de seguir este fío',
 'Son los que sigues: <a href="%s">verlos todos</a>.' => 'Son os que segues: <a href="%s">velos todos</a>.',
 'Son los que han publicado más recientemente: pulsa «Seguir» en los que quieras tener aquí.' => 'Son os que publicaron máis recentemente: preme «Seguir» nos que queiras ter aquí.',
 'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'Medios e Substacks con RSS que podes ler co aspecto de Deltha. Cada noticia leva un botón para propoñela no radar. Preme «Seguir» nos que queiras, sen límite: teralos en «Os meus medios» e «Os meus Substacks».',

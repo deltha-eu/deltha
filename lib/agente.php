@@ -457,6 +457,7 @@ function agent_submit_item(PDO $pdo, array $a, array $i): int {
     $pdo->prepare("INSERT INTO stories (content_type, user_id, topic_id, community_id, title, url, url_key, source, lang, content, image, status, sent_act) VALUES ('link', ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'nuevas', (SELECT CAST(cvalue AS UNSIGNED) FROM config WHERE ckey = 'act_counter'))")
         ->execute([$uid, $topic, $title, $i['url'], url_key((string)$i['url']), source_of((string)$i['url']), $lang, $lead, $image]);
     $sid = (int)$pdo->lastInsertId();
+    hilo_seguir_propio($pdo, $uid, $sid);   // «Seguir hilos propios» del agente (migra-192; por defecto está apagada)
     $pdo->prepare("UPDATE stories SET portada = ?, author_alias = ? WHERE story_id = ?")
         ->execute([portada_de($pdo, ['url' => $i['url'], 'source' => source_of((string)$i['url'])]), alias_user($pdo, $sid, $uid), $sid]);
     mod_enqueue($pdo, 'story', $sid);

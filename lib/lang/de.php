@@ -574,6 +574,7 @@ return [
 'sin leer' => 'ungelesen',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b> hat deine Chat-Nachricht zitiert',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b> hat dir eine Nachricht geschickt',
+'<b>%s</b> ha comentado en un hilo que sigues' => '<b>%s</b> hat in einem Thread kommentiert, dem du folgst',
 // paginas sin <h1> repetido
 'Escribir un artículo' => 'Einen Artikel schreiben',
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Beim Anmelden wird ein einziges technisches Sitzungs-Cookie gesetzt. Ohne Konto keines.</p>',
@@ -653,6 +654,10 @@ return [
 'Siguiendo' => 'Folge ich',
 'Seguir %s' => '%s folgen',
 'dejar de seguir %s' => '%s nicht mehr folgen',
+'Seguir hilos propios' => 'Eigenen Threads folgen',
+'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Threads, die du eröffnest, werden automatisch gefolgt: wir melden dir jeden neuen Kommentar.',
+'seguir este hilo' => 'diesem Thread folgen',
+'dejar de seguir este hilo' => 'diesem Thread nicht mehr folgen',
 'Son los que sigues: <a href="%s">verlos todos</a>.' => 'Das sind die, denen du folgst: <a href="%s">alle ansehen</a>.',
 'Son los que han publicado más recientemente: pulsa «Seguir» en los que quieras tener aquí.' => 'Das sind die mit den neuesten Beiträgen: Klicke auf „Folgen“ bei denen, die du hier haben willst.',
 'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'Medien und Substacks mit RSS, die du im Deltha-Look lesen kannst. Jede Meldung hat einen Button, um sie im Radar vorzuschlagen. Klicke auf „Folgen“ bei so vielen, wie du willst, ohne Limit: Du findest sie unter „Meine Medien“ und „Meine Substacks“.',

@@ -573,6 +573,7 @@ return [
 'sin leer' => 'irakurri gabe',
 '<b>%s</b> ha citado tu mensaje del Chat' => '<b>%s</b>(e)k zure Txateko mezua aipatu du',
 '<b>%s</b> te ha enviado un mensaje' => '<b>%s</b>(e)k mezu bat bidali dizu',
+'<b>%s</b> ha comentado en un hilo que sigues' => '<b>%s</b>(e)k jarraitzen duzun harian iruzkin bat idatzi du',
 // paginas sin <h1> repetido
 'Escribir un artículo' => 'Artikulu bat idatzi',
 '<p class="notice">Al entrar se crea una única cookie técnica de sesión. Sin cuenta, ninguna.</p>' => '<p class="notice">Sartzean saioko cookie tekniko bakarra sortzen da. Konturik gabe, bat ere ez.</p>',
@@ -652,6 +653,10 @@ return [
 'Siguiendo' => 'Jarraitzen',
 'Seguir %s' => 'Jarraitu %s',
 'dejar de seguir %s' => 'utzi %s jarraitzeari',
+'Seguir hilos propios' => 'Jarraitu zeure hariei',
+'Los hilos que abres se marcan solos para seguimiento: te avisamos de cada comentario nuevo que reciban.' => 'Irekitzen dituzun hariak automatikoki markatzen dira jarraitzeko: jasotzen duten iruzkin berri bakoitzaren berri ematen dizugu.',
+'seguir este hilo' => 'jarraitu haria',
+'dejar de seguir este hilo' => 'utzi haria jarraitzeari',
 'Son los que sigues: <a href="%s">verlos todos</a>.' => 'Jarraitzen dituzunak dira: <a href="%s">ikusi denak</a>.',
 'Son los que han publicado más recientemente: pulsa «Seguir» en los que quieras tener aquí.' => 'Azkenaldian argitaratu dutenak dira: sakatu «Jarraitu» hemen izan nahi dituzunetan.',
 'Medios y substacks con RSS que puedes leer con el aspecto de Deltha. Cada noticia lleva un botón para proponerla en el radar. Pulsa «Seguir» en los que quieras, sin límite: los tendrás en «Mis medios» y «Mis substacks».' => 'RSSa duten hedabideak eta Substackak, Delthako itxurarekin irakurtzeko. Albiste bakoitzak radarrera proposatzeko botoia du. Sakatu «Jarraitu» nahi dituzunetan, mugarik gabe: «Nire hedabideak» eta «Nire Substackak» ataletan izango dituzu.',
