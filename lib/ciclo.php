@@ -146,6 +146,10 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
     $a->execute([$ttlHours]);
     if ($a->rowCount()) $log[] = "archivadas: {$a->rowCount()}";
 
+    // Archivado = hilo cerrado a comentarios; sus suscripciones ya no sirven. El histórico de avisos se conserva.
+    $sf = hilo_seguir_limpiar_archivados($pdo);
+    if ($sf) $log[] = "seguimientos de hilos archivados eliminados: $sf";
+
     // 6. decaimiento diario del aura
     $d = aura_daily_decay($pdo);
     if ($d >= 0) $log[] = "decaimiento diario de aura aplicado ($d usuarios)";

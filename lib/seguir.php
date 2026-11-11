@@ -47,9 +47,20 @@ function hilo_seguidores(PDO $pdo, int $sid): array {
     catch (Throwable $e) { return []; }
 }
 
+/** Al archivarse un hilo deja de aceptar comentarios: se eliminan sus suscripciones, pero se conserva el histórico de avisos. */
+function hilo_seguir_limpiar_archivados(PDO $pdo): int {
+    try {
+        $st = $pdo->query("DELETE tf FROM thread_follows tf JOIN stories s ON s.story_id = tf.story_id WHERE s.status = 'archived'");
+        return $st->rowCount();
+    } catch (Throwable $e) {
+        error_log('limpiar seguimientos de hilos archivados: ' . $e->getMessage());
+        return 0;
+    }
+}
+
 /** Botón «Seguir hilo» / «Siguiendo» de la barra del hilo, solo para registrados; sin JS: un POST a /seguir que vuelve a la página. */
 function hilo_seguir_form(array $s): string {
-    if (!user()) return '';
+    if (!user() || !in_array($s['status'] ?? '', ['nuevas', 'candidatas', 'destacadas'], true)) return '';
     $id = (int)$s['story_id'];
     $on = hilo_sigo($id);
     return "<form class=\"seguir" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/seguir\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'dejar' : 'seguir') . "\">"

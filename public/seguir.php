@@ -12,7 +12,8 @@ try {
     $st = $pdo->prepare("SELECT status FROM stories WHERE story_id = ?");
     $st->execute([$id]);
     $status = $st->fetchColumn();
-    if ($status !== false && (!in_array($status, ['pending_mod', 'rejected', 'discard'], true) || is_admin())) {
+    $canFollow = in_array($status, ['nuevas', 'candidatas', 'destacadas'], true);
+    if ($status !== false && ($act === 'dejar' || $canFollow)) {
         hilo_seguir($pdo, (int)$u['user_id'], $id, $act === 'seguir');
     }
 } catch (Throwable $e) { /* tabla aún sin crear: no romper la navegación */ }
