@@ -216,6 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($act === 'fuente_nueva') {
                     $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
                         ->execute([$slug, $kind, $name, $home, $descr, $slang, $skin, $topic, $fp, $fn, $iv, $status, $featured]);
+                    fuente_alta_marca($pdo, $slug);   // fecha de alta en el catálogo (migra-196)
                     $out[] = "Fuente «" . h($name) . "» creada, idioma: " . ($slang !== '' ? $slang : 'sin detectar (el feed no lo dice: elígelo a mano)') . ". Se leerá en el próximo minuto del cron (o ahora con «leer»).";
                 } else {
                     $pdo->prepare("UPDATE sources SET slug = ?, kind = ?, name = ?, home = ?, descr = ?, lang = ?, skin = ?, topic_id = ?, feed_portada = ?, feed_nuevas = ?, interval_min = ?, status = ?, featured = ? WHERE source_id = ?")

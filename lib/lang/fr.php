@@ -1144,4 +1144,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Lo escribió' => 'Écrit par',
 'Escribir en la conversación' => 'Écrire dans la conversation',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> a écrit dans la conversation de modération',
+'Últimos medios añadidos' => 'Derniers médias ajoutés',
+'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Les dix derniers médias, substacks et chaînes entrés dans le catalogue.',
 ];

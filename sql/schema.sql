@@ -721,6 +721,7 @@ CREATE TABLE `sources` (
   `last_error` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `listed` tinyint(1) NOT NULL DEFAULT '1',
   `added_by` int unsigned DEFAULT NULL,
+  `listed_at` datetime DEFAULT NULL COMMENT 'cuando entro en el catalogo publico (migra-196); NULL = anterior a la migracion',
   PRIMARY KEY (`source_id`),
   UNIQUE KEY `uq_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

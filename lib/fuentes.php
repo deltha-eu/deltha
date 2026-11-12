@@ -128,6 +128,13 @@ function fuente_en_mi_idioma(array $src): bool {
 /** ¿Esta en el catalogo publico? Las que se añade un usuario pegando su direccion (migra-108) entran con listed = 0: se leen y las ve
  *  quien las sigue, pero no salen en menus, catalogo, lateral ni buscador hasta que un moderador las aprueba. */
 function fuente_listada(array $src): bool { return !isset($src['listed']) || (int)$src['listed'] === 1; }
+/** Apunta cuándo entra una fuente en el catálogo público (sources.listed_at, migra-196): al crearla desde admin o moderación y al
+ *  publicar la que un usuario se había añadido para sí. Solo la primera vez; sin la migración no hace nada. Lo lee la caja
+ *  «Últimos medios añadidos» (side_medios_nuevos). */
+function fuente_alta_marca(PDO $pdo, string $slug): void {
+    try { $pdo->prepare("UPDATE sources SET listed_at = NOW() WHERE slug = ? AND listed = 1 AND listed_at IS NULL")->execute([$slug]); }
+    catch (Throwable $e) { /* migra-196 sin aplicar */ }
+}
 /** El catalogo publico: fuentes_activas() sin las no listadas y, si el usuario lo ha pedido, sin las de otro idioma. */
 function fuentes_visibles(PDO $pdo, string $kind = ''): array {
     return array_values(array_filter(fuentes_activas($pdo, $kind), fn($s) => fuente_listada($s) && fuente_en_mi_idioma($s)));

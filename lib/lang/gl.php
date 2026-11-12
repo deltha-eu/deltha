@@ -1090,4 +1090,6 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Lo escribió' => 'Escribiuno',
 'Escribir en la conversación' => 'Escribir na conversa',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> escribiu na conversa de moderación',
+'Últimos medios añadidos' => 'Últimos medios engadidos',
+'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Os dez últimos medios, substacks e canles que entraron no catálogo.',
 ];

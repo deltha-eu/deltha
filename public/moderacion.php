@@ -195,6 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_alta') {
             try {
                 $pdo->prepare("INSERT INTO sources (slug, kind, name, home, descr, lang, skin, topic_id, feed_portada, feed_nuevas, interval_min, status, featured) VALUES (?,?,?,?,?,?,'',NULL,?,'',?,'ok',0)")
                     ->execute([$slug, $kind, $name, mb_substr($home, 0, 200), mb_substr($altaF['descr'], 0, 200) ?: null, $slang, mb_substr($feed, 0, 300), $iv]);
+                fuente_alta_marca($pdo, $slug);   // fecha de alta en el catálogo (migra-196)
                 $out[] = "«{$name}» añadida al catálogo (/fuente/{$slug})" . ($r['items'] ? ", RSS leído: {$r['items']} noticias" : '') . "; el lector la leerá en los próximos minutos. Los detalles (tema, destacada, skin) se afinan en admin → Fuentes.";
                 $altaF = ['name' => '', 'kind' => 'medio', 'home' => '', 'feed' => '', 'descr' => '', 'lang' => '', 'interval_min' => ''];
             } catch (PDOException $e) { $out[] = 'No se ha podido crear la fuente: ' . $e->getMessage(); }
@@ -337,6 +338,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fprop_proba
                         ->execute([$slug, $kind, $name, $home, $descr, $slang, $topic, $feed, $iv]);
                     $sid = (int)$pdo->lastInsertId();
                 }
+                require_once __DIR__ . '/../lib/fuentes.php';
+                fuente_alta_marca($pdo, $slug);   // fecha de alta en el catálogo: nueva o recién publicada (migra-196)
                 $pdo->prepare("UPDATE source_proposals SET status = 'ok', source_id = ?, reviewed_by = ?, reviewed = NOW() WHERE prop_id = ?")->execute([$sid, user()['user_id'], $p['prop_id']]);
                 fprop_avisar($pdo, (int)user()['user_id'], (int)$p['user_id'], "Hola. Tu propuesta «{$name}» ya está en el catálogo: /fuente/{$slug} — puedes elegirla en tu perfil, en «" . ($kind === 'newsletter' ? 'Mis substacks' : ($kind === 'youtube' ? 'Mis canales' : 'Mis medios')) . "». Gracias por proponerla.");
                 $out[] = "«{$name}» añadida al catálogo (/fuente/{$slug}); el lector la leerá en los próximos minutos. Se le ha avisado por mensaje.";

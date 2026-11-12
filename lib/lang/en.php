@@ -1145,4 +1145,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Lo escribió' => 'Written by',
 'Escribir en la conversación' => 'Write in the conversation',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> has written in the moderation conversation',
+'Últimos medios añadidos' => 'Latest media added',
+'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'The ten most recent media outlets, substacks and channels added to the catalogue.',
 ];
