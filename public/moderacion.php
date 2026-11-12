@@ -225,6 +225,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'fuente_editar') {
     }
 }
 
+/* ---- reclasificar envios de portada (12/11/2026): lo ya enviado desde un dominio que despues entro en el catalogo como substack
+ *      (o cambio de tipo) pasa a la portada que le toca hoy. lib/moderacion.php, mod_portada_reclasifica(). ---- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') === 'portada_reclasificar') {
+    $dom = strtolower(trim(mb_substr(post('dominio'), 0, 120)));
+    if ($dom === '' && post('todos') !== '1') $out[] = 'Falta el dominio.';
+    else {
+        $n = mod_portada_reclasifica($pdo, $dom);
+        $out[] = $n ? "$n envíos reclasificados" . ($dom !== '' ? " de $dom" : '') . '.' : 'No había nada que reclasificar' . ($dom !== '' ? " en $dom" : '') . '.';
+    }
+}
+
 /* ---- fuentes con error (11/10/2026, /moderacion -> Errores): apagar, volver a encender o releer ahora ---- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(post('act'), ['fuente_apagar', 'fuente_encender', 'fuente_releer', 'fuente_resuelto', 'fuente_feed', 'fuente_pegar', 'fuente_borrar'], true)) {
     require_once __DIR__ . '/../lib/fuentes.php';
@@ -509,6 +520,24 @@ if ($fq !== '') {
         echo "<tr><td>estado</td><td><select name=\"status\"><option value=\"ok\">activa</option><option value=\"off\"" . ($f['status'] === 'off' ? ' selected' : '') . ">apagada</option></select></td></tr>";
         echo "<tr><td></td><td><button class=\"btn\">Guardar</button> <small>slug, tema, skin, destacada y lector local: admin → Fuentes</small></td></tr></table></form></details>";
     }
+}
+echo "</details>";
+// reclasificar envios (12/11/2026): lo que llego a portada o al archivo desde un dominio antes de que su fuente estuviera en el catalogo
+try { $desf = mod_portada_desfases($pdo); } catch (Throwable $e) { $desf = []; }
+$ndesf = array_sum(array_column($desf, 'n'));
+echo "<details class=\"editbox\" id=\"reclasificar\"" . ($desf && post('act') === 'portada_reclasificar' ? ' open' : '') . "><summary><b>Reclasificar envíos</b> · " . ($ndesf ? "$ndesf envíos de " . count($desf) . " dominios están en una portada que ya no les toca" : 'todo está en su portada') . "</summary>";
+echo "<p><small>La portada de un envío (Medios, Substacks o Canales) se decide al enviarlo, con el catálogo de ese momento, y el ciclo solo la revisa mientras está en el radar. Si un substack o newsletter se dio de alta después, lo que ya había llegado a portada o al archivo desde su dominio se quedó en Medios. Aquí salen esos envíos, por dominio, con la portada que les tocaría hoy. No cambia votos, δ ni fechas: solo en qué portada y archivo aparecen.</small></p>";
+if (!$desf) echo "<p class=\"end\">Nada que reclasificar.</p>";
+else {
+    $pn = fn(string $k): string => h(t(DDD_PORTADAS[$k] ?? $k));
+    echo "<table class=\"modlog\"><tr><th>dominio</th><th>fuente del catálogo</th><th>envíos</th><th>está en</th><th>le toca</th><th></th></tr>";
+    foreach (array_slice($desf, 0, 200) as $d) {
+        echo "<tr><td><code>" . h($d['source']) . "</code></td><td>" . ($d['fuente'] !== '' ? h($d['fuente']) : '<small class="meta">—</small>') . "</td><td>" . (int)$d['n'] . "</td><td>" . $pn($d['de']) . "</td><td><b>" . $pn($d['a']) . "</b></td>"
+           . "<td><form method=\"post\" action=\"/moderacion?t=fuentes#reclasificar\"><input type=\"hidden\" name=\"act\" value=\"portada_reclasificar\"><input type=\"hidden\" name=\"dominio\" value=\"" . h($d['source']) . "\"><button class=\"btn sm\">Reclasificar</button></form></td></tr>";
+    }
+    echo "</table>";
+    if (count($desf) > 200) echo "<p class=\"meta\">Se enseñan 200 dominios de " . count($desf) . ".</p>";
+    echo "<form method=\"post\" action=\"/moderacion?t=fuentes#reclasificar\"><input type=\"hidden\" name=\"act\" value=\"portada_reclasificar\"><input type=\"hidden\" name=\"todos\" value=\"1\"><button class=\"btn\">Reclasificar los $ndesf envíos</button></form>";
 }
 echo "</details>";
 if (!$props) echo "<p>No hay propuestas pendientes.</p>";
