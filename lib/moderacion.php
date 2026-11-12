@@ -443,3 +443,37 @@ function votos_coordinados(PDO $pdo, int $dias = 7, int $ventanaMin = 10, int $m
     $mismaConexion->execute([$dias]);
     return ['pares' => $pares->fetchAll(), 'conexion' => $mismaConexion->fetchAll()];
 }
+
+/* ---- reclasificar envios de portada (12/11/2026, /moderacion -> Fuentes) ----
+ * stories.portada se fija al enviar con el catalogo de ese momento (portada_de()) y el ciclo solo la recalcula mientras el envio esta
+ * en el radar. Si un substack se da de alta como fuente despues, lo que ya habia llegado a portada o al archivo desde su dominio se
+ * queda en «Medios». Esto compara lo guardado con lo que diria hoy el catalogo y deja corregirlo, dominio a dominio o todo de una vez. */
+/** Dominios con envios (enlaces en portada o archivados) cuya portada guardada no es la que les daria hoy el catalogo:
+ *  [['source' => dominio, 'de' => portada guardada, 'a' => la que toca, 'n' => envios, 'fuente' => nombre en el catalogo o '']]. */
+function mod_portada_desfases(PDO $pdo): array {
+    $rows = $pdo->query("SELECT LOWER(source) AS source, portada, COUNT(*) AS n FROM stories
+                          WHERE content_type = 'link' AND status IN ('destacadas','archived') AND source IS NOT NULL AND source <> '' AND portada IS NOT NULL
+                          GROUP BY LOWER(source), portada")->fetchAll();
+    $nombres = [];
+    try { foreach ($pdo->query("SELECT name, home FROM sources") as $f) if (($d = (string)source_of((string)$f['home'])) !== '' && !isset($nombres[$d])) $nombres[$d] = (string)$f['name']; }
+    catch (Throwable $e) { /* sin catalogo */ }
+    $out = [];
+    foreach ($rows as $r) {
+        $a = portada_de($pdo, ['content_type' => 'link', 'source' => (string)$r['source']]);
+        if ($a === null || $a === $r['portada']) continue;
+        $out[] = ['source' => (string)$r['source'], 'de' => (string)$r['portada'], 'a' => $a, 'n' => (int)$r['n'], 'fuente' => $nombres[(string)$r['source']] ?? ''];
+    }
+    usort($out, fn($x, $y) => [$y['n'], $x['source']] <=> [$x['n'], $y['source']]);
+    return $out;
+}
+/** Pasa a su portada de hoy los envios desfasados de un dominio ('' = todos los dominios). Devuelve cuantos envios ha movido. */
+function mod_portada_reclasifica(PDO $pdo, string $dom = ''): int {
+    $n = 0;
+    $up = $pdo->prepare("UPDATE stories SET portada = ? WHERE content_type = 'link' AND status IN ('destacadas','archived') AND LOWER(source) = ? AND portada = ?");
+    foreach (mod_portada_desfases($pdo) as $d) {
+        if ($dom !== '' && $d['source'] !== $dom) continue;
+        $up->execute([$d['a'], $d['source'], $d['de']]);
+        $n += $up->rowCount();
+    }
+    return $n;
+}
