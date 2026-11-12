@@ -1112,5 +1112,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Escribir en la conversación' => 'Konuşmaya yaz',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> moderasyon konuşmasına yazdı',
 'Últimos medios añadidos' => 'Son eklenen medya',
-'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Kataloğa en son giren on medya, substack ve kanal.',
+'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Kataloğa en son giren medya, substack ve kanal.',
 ];

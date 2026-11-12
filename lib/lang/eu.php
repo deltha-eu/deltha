@@ -1091,5 +1091,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Escribir en la conversación' => 'Idatzi elkarrizketan',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> moderazio elkarrizketan idatzi du',
 'Últimos medios añadidos' => 'Gehitutako azken hedabideak',
-'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Katalogoan sartu diren azken hamar hedabide, substack eta kanalak.',
+'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Katalogoan sartu diren azken hedabide, substack eta kanalak.',
 ];

@@ -1091,5 +1091,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Escribir en la conversación' => 'Escriure a la conversa',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> ha escrit a la conversa de moderació',
 'Últimos medios añadidos' => 'Últims mitjans afegits',
-'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Els deu últims mitjans, substacks i canals que han entrat al catàleg.',
+'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Els últims mitjans, substacks i canals que han entrat al catàleg.',
 ];
