@@ -176,7 +176,8 @@ Cualquier registrado marca un hilo para seguimiento con la opción **«Seguir» 
 ## Reclasificar envíos de portada (12/11/2026)
 `stories.portada` (Medios, Substacks o Canales) se decide al enviar, con el catálogo de ese momento (`portada_de()`), y el ciclo solo la recalcula mientras el envío está en el radar. Si un substack o newsletter se da de alta **después**, lo que ya había llegado a portada o al archivo desde su dominio se queda en Medios.
 - **Moderación → Fuentes → «Reclasificar envíos»**: lista, por dominio, los enlaces en portada o archivados cuya portada guardada no es la que les daría hoy el catálogo (`mod_portada_desfases()`), con la fuente del catálogo si la hay, cuántos son, dónde están y dónde les toca. Botón **Reclasificar** por dominio y otro para todos (`mod_portada_reclasifica()`, acción `portada_reclasificar`, que queda en el registro de moderación).
-- Vale en los dos sentidos (una fuente que pasa de newsletter a medio) y para `*.substack.com` sin fuente en el catálogo. Solo cambia `stories.portada`: ni votos, ni δ, ni fechas, ni `promo_log`. Los envíos del radar no salen: los corrige el ciclo solo.
+- Vale en los dos sentidos (una fuente que pasa de newsletter a medio) y para `*.substack.com` sin fuente en el catálogo.
+- **Blogspot cuenta como Substacks** (12/11/2026, `host_de_blogs()`): cualquier `*.blogspot.com` (y sus variantes por país: `blogspot.com.es`, `blogspot.co.uk`…) va a la portada de Substacks, esté o no el blog en el catálogo, igual que `*.substack.com`; y al proponerlo o añadirlo como fuente nace como newsletter. Los envíos de Blogspot anteriores salen en esta lista para pasarlos. Solo cambia `stories.portada`: ni votos, ni δ, ni fechas, ni `promo_log`. Los envíos del radar no salen: los corrige el ciclo solo.
 - Sin migración ni CSS.
 
 ## Caja «Últimos medios añadidos» (12/11/2026, migra-196)
