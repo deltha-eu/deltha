@@ -177,7 +177,7 @@ Cualquier registrado marca un hilo para seguimiento con la opción **«Seguir» 
 Caja nueva de la columna derecha (`side_medios_nuevos()`, clave `medios_nuevos`): los **diez últimos medios, substacks y canales** dados de alta en el catálogo público, cada uno con su tipo y hace cuánto entró, enlazados a su página (`/fuente/slug`); «todos» lleva a `/fuentes`.
 - **Fecha de alta**: `sources.listed_at`, que pone `fuente_alta_marca()` al crear la fuente desde admin → Fuentes o desde moderación (alta directa y propuesta aceptada) y al publicar la que un usuario se había añadido para sí (`listed` 0 → 1). Solo la primera vez. Las fuentes anteriores a la migración no la tienen: salen detrás, por orden de creación (`source_id`), y sin «hace…».
 - **Visibilidad**: la del catálogo (`fuentes_visibles()`): encendidas, listadas y del idioma elegido; los canales de YouTube, solo desde `fuentes_nivel_aura`. Los agregadores no entran.
-- **No entra sola en la columna**: se marca en admin → Lateral (orden por defecto) o cada usuario en «Mi barra lateral». Sin CSS nuevo (usa `.mod.lista`).
+- **No entra sola en la columna**: se marca en admin → Lateral (orden por defecto) o cada usuario en «Mi barra lateral». Una línea por medio: el nombre cortado con puntos suspensivos y el tipo a la derecha (`.mod.medios-nuevos`, CSS v257).
 
 ## Registro de IP con caducidad (11/11/2026, migra-193)
 Deltha guarda la IP **solo aquí** y solo para dos cosas: detectar **multicuentas** y poder responder a un **requerimiento formal** (por escrito) de un juzgado o de la policía. No se usa para estadísticas, perfiles ni publicidad.

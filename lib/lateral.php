@@ -378,9 +378,9 @@ function side_medios_nuevos(PDO $pdo): void {
     if (!$rows) return;
     usort($rows, fn($a, $b) => [(string)($b['listed_at'] ?? ''), (int)$b['source_id']] <=> [(string)($a['listed_at'] ?? ''), (int)$a['source_id']]);
     $kinds = ['medio' => t('medio'), 'newsletter' => t('substack'), 'youtube' => t('canal')];
-    echo "<section class=\"mod lista medios-nuevos\"><h3>" . t('Últimos medios añadidos') . "<span><a href=\"/fuentes\">" . t('todos') . "</a></span></h3>";
+    echo "<section class=\"mod medios-nuevos\"><h3>" . t('Últimos medios añadidos') . "<span><a href=\"/fuentes\">" . t('todos') . "</a></span></h3>";
     foreach (array_slice($rows, 0, 10) as $f) {
-        echo "<a class=\"row\" href=\"" . h(fuente_url($f)) . "\"><span class=\"t\"><b>" . h($f['name']) . "</b></span><small>" . h($kinds[$f['kind']] ?? $f['kind'])
+        echo "<a class=\"row\" href=\"" . h(fuente_url($f)) . "\" title=\"" . h($f['name']) . "\"><span class=\"t\">" . h($f['name']) . "</span><small>" . h($kinds[$f['kind']] ?? $f['kind'])
            . (!empty($f['listed_at']) ? ' · ' . h(hace((string)$f['listed_at'])) : '') . "</small></a>";
     }
     echo "</section>";

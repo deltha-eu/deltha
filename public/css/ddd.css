@@ -3404,6 +3404,10 @@ html:not([data-foco])[data-fam="orange"] .hilo .post.main .pc > :is(.source, .li
   .side .mod.lista .row { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
   .side .mod.lista .row small { grid-column: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .side .mod.lista .row .t b { font-weight: 700; }
+  /* «Últimos medios añadidos» (12/11/2026): una linea por medio, el nombre cortado con puntos suspensivos y el tipo a la derecha */
+  .side .mod.medios-nuevos .row { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; }
+  .side .mod.medios-nuevos .row .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side .mod.medios-nuevos .row small { flex: none; margin-top: 0; white-space: nowrap; }
   .side .mod.comentarios .row .t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .side .mod.votadas .row b, .side .mod.seguidos .row b { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; padding-top: 1px; }
   .side .mod.votadas .row b i { font-style: normal; color: var(--muted); font-weight: 600; width: 14px; text-align: right; margin-right: 2px; }
