@@ -1127,4 +1127,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Lo escribió' => 'Escrito por',
 'Escribir en la conversación' => 'Escrever na conversa',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> escreveu na conversa de moderação',
+'Últimos medios añadidos' => 'Últimos meios adicionados',
+'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Os dez últimos meios, substacks e canais que entraram no catálogo.',
 ];

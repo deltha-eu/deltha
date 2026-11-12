@@ -1091,4 +1091,6 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Lo escribió' => 'Scritto da',
 'Escribir en la conversación' => 'Scrivi nella conversazione',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> ha scritto nella conversazione di moderazione',
+'Últimos medios añadidos' => 'Ultimi media aggiunti',
+'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Gli ultimi dieci media, substack e canali entrati nel catalogo.',
 ];
