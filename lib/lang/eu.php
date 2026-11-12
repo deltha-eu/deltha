@@ -1089,4 +1089,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Enviar mensaje' => 'Bidali mezua',
 'Lo escribió' => 'Honek idatzia',
 'Escribir en la conversación' => 'Idatzi elkarrizketan',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> moderazio elkarrizketan idatzi du',
 ];

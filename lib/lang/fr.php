@@ -1143,4 +1143,5 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Enviar mensaje' => 'Envoyer le message',
 'Lo escribió' => 'Écrit par',
 'Escribir en la conversación' => 'Écrire dans la conversation',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> a écrit dans la conversation de modération',
 ];

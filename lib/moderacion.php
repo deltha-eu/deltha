@@ -341,7 +341,55 @@ function mod_talk_add(PDO $pdo, string $type, int $id, int $uid, string $body): 
         $pdo->prepare("INSERT INTO mod_comments (item_type, ref_id, user_id, body) VALUES (?,?,?,?)")
             ->execute([$type, $id, $uid, mb_substr($body, 0, MOD_TALK_MAX)]);
     } catch (Throwable $e) { return t('No se ha podido guardar el mensaje.'); }
+    mod_talk_notify($pdo, (int)$pdo->lastInsertId(), $uid, mb_substr($body, 0, MOD_TALK_MAX));   // fuera del try: un fallo al avisar no invalida el mensaje
     return null;
+}
+
+/** Quiénes moderan ahora mismo: nivel mod/admin o aura >= mod_aura, la misma regla que user_is_mod(). Fuera los agentes
+ *  (bots): sus avisos no los lee nadie. */
+function mod_staff_ids(PDO $pdo): array {
+    $min = (float)cfg('mod_aura', 20);
+    $base = "SELECT u.user_id FROM users u WHERE (u.level IN ('mod','admin')" . ($min > 0 ? " OR u.aura >= ?" : '') . ")";
+    $args = $min > 0 ? [$min] : [];
+    try {
+        $q = $pdo->prepare($base . " AND NOT EXISTS (SELECT 1 FROM agents a WHERE a.user_id = u.user_id)");
+        $q->execute($args);
+        return array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+    } catch (Throwable $e) {   // sin la tabla agents (migra-089) se avisa a todos los que moderan
+        try {
+            $q = $pdo->prepare($base);
+            $q->execute($args);
+            return array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+        } catch (Throwable $e2) { return []; }
+    }
+}
+
+/** Avisa del mensaje nuevo a todos los que moderan menos a quien lo escribió (migra-195). No lanza nunca: si los avisos
+ *  están apagados o falta la migración, el mensaje se guarda igual. */
+function mod_talk_notify(PDO $pdo, int $msgId, int $from, string $body): void {
+    if (!function_exists('aviso_insert') || $msgId <= 0) return;
+    try {
+        $q = $pdo->prepare("SELECT login FROM users WHERE user_id = ?"); $q->execute([$from]);
+        $login = (string)($q->fetchColumn() ?: '');
+        foreach (mod_staff_ids($pdo) as $uid) {
+            if ($uid !== $from) aviso_insert($pdo, $uid, $from, $login, 'mod_message', $msgId, null, $body);
+        }
+    } catch (Throwable $e) { error_log('aviso mod_message: ' . $e->getMessage()); }
+}
+
+/** Elemento (tipo y id) de un mensaje de la conversación, para que el aviso abra la ventana correcta. Cachea: si algún
+ *  día lo piden varios avisos de la misma fila, se consulta una sola vez. */
+function mod_talk_target(PDO $pdo, int $msgId): ?array {
+    static $cache = [];
+    if ($msgId <= 0) return null;
+    if (array_key_exists($msgId, $cache)) return $cache[$msgId];
+    try {
+        $q = $pdo->prepare("SELECT item_type, ref_id FROM mod_comments WHERE comment_id = ?");
+        $q->execute([$msgId]);
+        $r = $q->fetch();
+        $cache[$msgId] = $r ? ['item_type' => (string)$r['item_type'], 'ref_id' => (int)$r['ref_id']] : null;
+    } catch (Throwable $e) { $cache[$msgId] = null; }
+    return $cache[$msgId];
 }
 
 /** Los mensajes de la conversación en HTML (sin el bloque desplegable). */

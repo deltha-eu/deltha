@@ -1144,4 +1144,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Enviar mensaje' => 'Send message',
 'Lo escribió' => 'Written by',
 'Escribir en la conversación' => 'Write in the conversation',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> has written in the moderation conversation',
 ];

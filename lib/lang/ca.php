@@ -1089,4 +1089,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Enviar mensaje' => 'Envia el missatge',
 'Lo escribió' => 'Ho va escriure',
 'Escribir en la conversación' => 'Escriure a la conversa',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> ha escrit a la conversa de moderació',
 ];

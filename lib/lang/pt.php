@@ -1126,4 +1126,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Enviar mensaje' => 'Enviar mensagem',
 'Lo escribió' => 'Escrito por',
 'Escribir en la conversación' => 'Escrever na conversa',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> escreveu na conversa de moderação',
 ];

@@ -5,6 +5,8 @@
  *    mention_story    alguien escribe @tunick en un hilo de foro     → /hilo/S          (migra-169, 25/10/2026)
  *    reply_comment    alguien responde a un comentario tuyo         → /hilo/S#cN
  *    thread_comment   alguien comenta en un hilo que sigues          → /hilo/S#cN       (migra-192, 11/11/2026)
+ *    mod_message      otro moderador escribe en la conversación de un
+ *                     elemento pendiente de /moderacion               → ventana de la charla (migra-195, 12/11/2026)
  *    mention_chat     alguien escribe @tunick en el Chat            → /chat?m=N#mN
  *    reply_chat       alguien cita (#N) un mensaje tuyo del Chat    → /chat?m=N#mN
  *    dm               alguien te manda un privado                   → /mensajes?u=nick
@@ -144,6 +146,11 @@ function aviso_href(array $n): string {
         case 'mention_story': return "/hilo/" . (int)$n['story_id'];
         case 'mention_chat':    case 'reply_chat':    return "/chat?m=" . (int)$n['ref_id'] . "#m" . (int)$n['ref_id'];
         case 'dm': return !empty($n['login']) ? "/mensajes?u=" . rawurlencode($n['login']) : "/mensajes";
+        case 'mod_message':   // el ref_id es el mensaje: lleva a la ventana con la charla de su elemento (migra-195)
+            if (!function_exists('mod_talk_target')) require_once __DIR__ . '/moderacion.php';   // /avisos no la carga siempre
+            $g = $GLOBALS['pdo'] ?? null;
+            $tg = ($g instanceof PDO) ? mod_talk_target($g, (int)$n['ref_id']) : null;
+            return $tg ? "/moderacion?t=charla&type=" . rawurlencode($tg['item_type']) . "&ref=" . (int)$tg['ref_id'] : '/moderacion?t=ia';
     }
     return '/avisos';
 }
@@ -165,12 +172,13 @@ function aviso_text(array $n, string $who): string {
         'mention_chat'    => t('<b>%s</b> te ha mencionado en el Chat', $who),
         'reply_chat'      => t('<b>%s</b> ha citado tu mensaje del Chat', $who),
         'dm'              => t('<b>%s</b> te ha enviado un mensaje', $who),
+        'mod_message'     => t('<b>%s</b> ha escrito en la conversación de moderación', $who),
         default           => $who,
     };
 }
 /** Icono por tipo (el mismo que la pestaña de origen). */
 function aviso_icon(array $n): string {
-    return icon(match ($n['kind']) { 'mention_chat', 'reply_chat' => 'chat', 'dm' => 'msg', default => 'reply' });
+    return icon(match ($n['kind']) { 'mention_chat', 'reply_chat' => 'chat', 'dm' => 'msg', 'mod_message' => 'shield', default => 'reply' });
 }
 
 /* ---- @nick en los comentarios: enlace al perfil si el usuario existe ----------------------------------------------

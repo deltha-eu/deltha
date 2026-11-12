@@ -139,6 +139,22 @@ Todo se publica al momento. Con `config.mod_enabled = 1`, cada comentario, mensa
 - Sin migración no rompe nada: sin la tabla, `mod_talk_map()` devuelve vacío y el bloque enseña «Sin mensajes todavía» sin formulario útil (el `INSERT` falla con aviso).
 - Deshacer una decisión devuelve el elemento a la cola y, con él, la posibilidad de seguir hablando; la conversación nunca se borra.
 
+### Aviso a los moderadores cuando alguien escribe en la conversación (migra-195)
+12/11/2026. Cuando un moderador o administrador escribe en la conversación de un elemento pendiente (migra-191), el resto
+recibe un aviso en la campanita (`notifications.kind = mod_message`): «**Fulano** ha escrito en la conversación de
+moderación», con el texto del mensaje como vista previa. Al pulsarlo lleva a la ventana de la conversación de ese elemento
+(`/moderacion?t=charla&type=…&ref=…`).
+
+- **Quién lo recibe**: todos los que moderan en ese momento con la misma regla que `user_is_mod()` —nivel `mod`/`admin` o
+  aura ≥ `mod_aura`— calculado al escribir, no antes (`mod_staff_ids()`). Los agentes (bots) quedan fuera: sus avisos no
+  los lee nadie.
+- **Quien escribe no se autoavisa** (`aviso_insert()` ya descarta `from_id = user_id`), ni se avisa a quien está velado por
+  el ghosteo con el autor.
+- **Un aviso por mensaje**, no agrupado: se puede borrar con «borrar los leídos» de `/avisos`. Con `config.notif_enabled = 0`
+  no se crea ninguno y el mensaje se guarda igual.
+- El aviso guarda en `ref_id` el id del mensaje (`mod_comments.comment_id`); el elemento se resuelve al pintar con
+  `mod_talk_target()`, que cachea. Si el elemento ya no existe, el aviso lleva a la pestaña IA.
+
 ### Premoderación de los anónimos y comentarios cerrados (migra-183)
 09/11/2026. Con `premod_anon = 1` (por defecto), lo que escribe quien no tiene cuenta —comentarios (`/comentar.php`), mensajes del chat (`/chat.php`) y hilos abiertos en los foros (`/articulo.php`)— no se publica al momento: entra con `status = pending_mod`, no cuenta en el hilo ni avisa a nadie, y `mod_premod()` (lib/moderacion.php) deja una fila en `mod_queue` como `hidden` con `reason = premod`, así que sale en `/moderacion#ia` como «pendiente de aprobar» con los botones **Aprobar** (`mod_unhide`: se publica y suma el contador) y **Retirar**. No depende de `mod_enabled`: la IA no interviene. Quien escribe ve el aviso «Como no estás registrado, … tiene que ser aprobado por un moderador» (`?premod=1` en el hilo, el chat o el foro). Los moderadores pueden abrir un hilo `pending_mod` para leerlo (antes solo el admin). Los envíos de enlaces de los anónimos (`/enviar.php`) siguen igual, posmoderados. Aparte, admin y moderadores pueden **cerrar los comentarios de un hilo** (`stories.comments_closed`, botón en la caja «Editar envío» del hilo, `/cerrar-comentarios.php`): el hilo se sigue viendo y votando pero no admite comentarios nuevos («Comentarios cerrados.»). Se deshace con el mismo botón.
 
