@@ -1710,6 +1710,7 @@ function icon(string $n): string {
         'bell'   => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/>',   // avisos (campanita)
         'help'   => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/>',   // interrogacion: «Como empezar» en el Chat (migra-122)
         'mega'   => '<path d="M3 10v4h3l7 4V6l-7 4z"/><path d="M17 9a4.5 4.5 0 0 1 0 6"/><path d="M6 14v4h2"/>',   // megafono: mensaje a la comunidad en el Chat (migra-121)
+        'shield' => '<path d="M12 3 5 6v5.5c0 4.3 2.9 7.2 7 8.5 4.1-1.3 7-4.2 7-8.5V6z"/><path d="m9 12 2 2 4-4"/>',   // escudo: aviso de la conversación de moderación (migra-195)
         'sun'    => '<circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',   // me gusta (comentarios)
         'tear'   => '<path d="M12 3.5c3.2 4.6 6 7.8 6 11.2a6 6 0 0 1-12 0c0-3.4 2.8-6.6 6-11.2z"/>',   // no me gusta (comentarios): lagrima; relleno via CSS cuando es la tuya
         'eye'    => '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',   // lecturas del hilo (migra-120)

@@ -1110,4 +1110,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Enviar mensaje' => 'Mesajı gönder',
 'Lo escribió' => 'Yazan',
 'Escribir en la conversación' => 'Konuşmaya yaz',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> moderasyon konuşmasına yazdı',
 ];

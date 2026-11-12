@@ -1090,4 +1090,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Enviar mensaje' => 'Invia il messaggio',
 'Lo escribió' => 'Scritto da',
 'Escribir en la conversación' => 'Scrivi nella conversazione',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> ha scritto nella conversazione di moderazione',
 ];

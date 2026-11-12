@@ -1090,4 +1090,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Enviar mensaje' => 'Nachricht senden',
 'Lo escribió' => 'Geschrieben von',
 'Escribir en la conversación' => 'Im Gespräch schreiben',
+'<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> hat im Moderationsgespräch geschrieben',
 ];
