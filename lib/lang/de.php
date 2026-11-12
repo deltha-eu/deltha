@@ -1092,5 +1092,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Escribir en la conversación' => 'Im Gespräch schreiben',
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> hat im Moderationsgespräch geschrieben',
 'Últimos medios añadidos' => 'Zuletzt hinzugefügte Medien',
-'Los diez últimos medios, substacks y canales que han entrado en el catálogo.' => 'Die zehn zuletzt in den Katalog aufgenommenen Medien, Substacks und Kanäle.',
+'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Die zuletzt in den Katalog aufgenommenen Medien, Substacks und Kanäle.',
 ];
