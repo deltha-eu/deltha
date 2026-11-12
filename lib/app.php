@@ -1266,7 +1266,7 @@ function ciclo_pendiente(?int $now = null): int {
 function ciclo_antes_de(int $ventana): int { return $ventana + max(1, (int)cfg('cycle_minutes', 5)) * 60; }
 
 /* ---- las dos portadas: Medios y Substacks -------------------------------
- * Un enlace va a Substacks si su dominio es *.substack.com o el de una fuente del catalogo marcada como newsletter
+ * Un enlace va a Substacks si su dominio es *.substack.com, *.blogspot.com (host_de_blogs()) o el de una fuente del catalogo marcada como newsletter
  * (asi entran los Substacks con dominio propio); todo lo demas va a Medios. Los originales (content_type = article)
  * no van a ninguna portada: se quedan en su pestaña. El ciclo alterna: cada cycle_minutes publica en una portada,
  * y la otra espera al siguiente, asi que cada portada recibe como mucho una cada 2 × cycle_minutes.
@@ -1423,13 +1423,20 @@ function newsletter_hosts(PDO $pdo): array {
     catch (Throwable $e) { /* tabla aun sin crear */ }
     return $h;
 }
+/** ¿Es el dominio de una plataforma de blogs y boletines personales? *.substack.com y, desde el 12/11/2026 (Ángel: «todo blogspot es
+ *  newsletter»), *.blogspot.com con sus variantes por pais (blogspot.com.es, blogspot.co.uk, blogspot.fr...). Lo alojado ahi va a la
+ *  portada de Substacks aunque el blog no este en el catalogo, y al proponerlo o añadirlo como fuente nace como newsletter. */
+function host_de_blogs(string $host): bool {
+    $host = strtolower($host);
+    return $host === 'substack.com' || str_ends_with($host, '.substack.com') || (bool)preg_match('/(^|\.)blogspot\.(com|[a-z]{2}|com?\.[a-z]{2})$/', $host);
+}
 /** Portada a la que va un envio: 'medios' | 'substacks' | 'canales' (YouTube); null para los originales. */
 function portada_de(PDO $pdo, array $s): ?string {
     if (($s['content_type'] ?? 'link') === 'article') return null;
     $d = strtolower((string)($s['source'] ?? '')) ?: (string)source_of((string)($s['url'] ?? ''));
     if ($d === '') return 'medios';
     if (in_array($d, DDD_YOUTUBE_HOSTS, true) && portada_canales_on()) return 'canales';
-    return ($d === 'substack.com' || str_ends_with($d, '.substack.com') || isset(newsletter_hosts($pdo)[$d])) ? 'substacks' : 'medios';
+    return (host_de_blogs($d) || isset(newsletter_hosts($pdo)[$d])) ? 'substacks' : 'medios';
 }
 /** Portada que publica en el ciclo que empieza en $ts (minuto multiplo de cycle_minutes): alternan medios, substacks, medios... */
 function portada_turno(int $ts): string {

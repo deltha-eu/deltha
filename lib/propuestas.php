@@ -113,7 +113,7 @@ function fprop_rellenar(array $f): array {
     if (!preg_match('#^https?://[^\s]+$#i', $home)) { $f['error'] = 'Pon la web (https://…).'; return $f; }
     $host = strtolower((string)parse_url($home, PHP_URL_HOST));
     if (empty($f['kind']) || $f['kind'] === 'medio') {
-        if (str_contains($host, 'substack.com')) $f['kind'] = 'newsletter';
+        if (str_contains($host, 'substack.com') || host_de_blogs((string)$host)) $f['kind'] = 'newsletter';
         elseif (str_contains($host, 'youtube.com') || str_contains($host, 'youtu.be')) $f['kind'] = 'youtube';
     }
     $feed = trim((string)($f['feed'] ?? ''));
@@ -178,7 +178,7 @@ function fadd_anadir(PDO $pdo, array $u, string $k, string $url): array {
     $esYt = (bool)preg_match('/(^|\.)(youtube\.com|youtu\.be)$/', $host);
     if ($esYt) { if (!youtube_on()) return ['url', '']; $kind = 'youtube'; }
     elseif ($k === 'youtube') return ['noyt', ''];
-    else $kind = (str_ends_with($host, '.substack.com') || $k === 'newsletter') ? 'newsletter' : 'medio';
+    else $kind = (host_de_blogs((string)$host) || $k === 'newsletter') ? 'newsletter' : 'medio';
     $dia = $pdo->prepare("SELECT COUNT(*) FROM source_proposals WHERE user_id = ? AND created > NOW() - INTERVAL 1 DAY"); $dia->execute([$uid]);
     if ((int)$dia->fetchColumn() >= max(1, (int)cfg('source_add_per_day', 10)) && !in_array($u['level'] ?? '', ['mod', 'admin'], true)) return ['tope', ''];
 
