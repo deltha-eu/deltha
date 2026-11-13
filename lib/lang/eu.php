@@ -1099,4 +1099,12 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Mezu hori ezin da jada editatu: epea %d minutukoa da.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Bidalitako mezu bat zuzentzen ari zara; editatu gisa markatuta geratuko da.',
 'ver cálculo' => 'ikusi kalkulua',
+'última noticia' => 'azken albistea',
+'seguidores' => 'jarraitzaileak',
+'más nuevas' => 'berrienak',
+'top hoy' => 'top gaur',
+'top semana' => 'top astea',
+'top mes' => 'top hilabetea',
+'%d seguidores' => '%d jarraitzaile',
+'añadida %s' => 'gehitua: %s',
 ];

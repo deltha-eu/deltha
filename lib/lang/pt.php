@@ -1136,4 +1136,12 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Essa mensagem já não pode ser editada: o prazo é de %d minutos.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Estás a corrigir uma mensagem já enviada; ficará marcada como editada.',
 'ver cálculo' => 'ver cálculo',
+'última noticia' => 'última notícia',
+'seguidores' => 'seguidores',
+'más nuevas' => 'mais recentes',
+'top hoy' => 'top hoje',
+'top semana' => 'top semana',
+'top mes' => 'top mês',
+'%d seguidores' => '%d seguidores',
+'añadida %s' => 'adicionada %s',
 ];

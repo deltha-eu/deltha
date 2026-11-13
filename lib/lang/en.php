@@ -1154,4 +1154,12 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'That message can no longer be edited: the time limit is %d minutes.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'You are correcting a message you have already sent; it will be marked as edited.',
 'ver cálculo' => 'see calculation',
+'última noticia' => 'latest news',
+'seguidores' => 'followers',
+'más nuevas' => 'newest',
+'top hoy' => 'top today',
+'top semana' => 'top this week',
+'top mes' => 'top this month',
+'%d seguidores' => '%d followers',
+'añadida %s' => 'added %s',
 ];

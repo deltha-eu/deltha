@@ -3,7 +3,8 @@
  *  agregadores que se pueden ver con el aspecto de Deltha (los tres primeros se siguen con el boton «Seguir», sin limite). Selector de
  *  tipo arriba (Medios · Substacks · Canales · Agregadores · todas), que se abre por el ultimo tipo usado (cookie ddd_fk, la misma que
  *  /mis-fuentes); ?todas=1 enseña los cuatro grupos seguidos. ?il=<idioma> filtra por idioma (fila de idiomas bajo la casilla).
- *  Dentro de cada grupo, la fuente con la noticia mas reciente primero. ?q=texto (09/10/2026): buscador para la gente, por nombre,
+ *  Dentro de cada grupo, la fuente con la noticia mas reciente primero; ?o= cambia el orden (13/11/2026): seguidores (las que mas
+ *  gente sigue), nuevas (las ultimas en entrar en el catalogo), hoy | semana | mes (las que mas envios a Deltha tienen en 1, 7 o 30 dias). ?q=texto (09/10/2026): buscador para la gente, por nombre,
  *  descripcion o dominio, sin distinguir mayusculas ni tildes; con busqueda se miran todos los grupos a la vez (el selector no filtra). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -22,6 +23,11 @@ $kinds = $k && $q === '' ? [$k] : array_keys($GRUPOS);   // buscando, todos los 
 $llano = fn(string $t): string => strtr(mb_strtolower($t), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ã' => 'a', 'õ' => 'o', 'ç' => 'c', 'ä' => 'a', 'ö' => 'o', 'ß' => 'ss']);
 $qn = $llano($q);
 $coincide = fn(array $m): bool => $qn === '' || str_contains($llano($m['name'] . ' ' . (string)$m['descr'] . ' ' . (string)$m['home']), $qn);
+// orden dentro de cada grupo (13/11/2026): '' = ultima noticia (el de siempre)
+$ORDENES = ['' => t('última noticia'), 'seguidores' => t('seguidores'), 'nuevas' => t('más nuevas'), 'hoy' => t('top hoy'), 'semana' => t('top semana'), 'mes' => t('top mes')];
+$o = (string)($_GET['o'] ?? ''); if (!isset($ORDENES[$o])) $o = '';
+$DIAS = ['hoy' => 1, 'semana' => 7, 'mes' => 30];
+$qo = $o !== '' ? "&amp;o=$o" : '';   // para conservar el orden en los demas enlaces
 page_header(t('Todas las fuentes'), 'fuentes');
 echo fuentes_subnav($pdo, '/fuentes', $k, false, "<a class=\"todas" . ($k === '' ? ' on' : '') . "\" href=\"/fuentes?todas=1\">" . t('Todas') . "</a> <a class=\"mias\" href=\"/mis-fuentes" . ($k ? "?k=$k" : '') . "\">" . t('Mis fuentes') . "</a>");
 // sin <h1>: page_header() ya pinta el titulo en la cabecera (salia repetido)
@@ -31,9 +37,9 @@ echo "<p class=\"notice ayuda\" data-k=\"fuentes\">" . t('Medios, substacks y ca
 echo fuentes_casilla_idioma();   // el mismo control de idiomas que en el perfil: cambiarlo aqui lo cambia alli
 // buscador (09/10/2026): nombre, descripcion o dominio; busca en todos los tipos. Conserva el idioma elegido
 $il0 = (string)($_GET['il'] ?? '');
-echo "<form class=\"buscar-u\" method=\"get\" action=\"/fuentes\">" . ($il0 !== '' ? "<input type=\"hidden\" name=\"il\" value=\"" . h($il0) . "\">" : '')
+echo "<form class=\"buscar-u\" method=\"get\" action=\"/fuentes\">" . ($il0 !== '' ? "<input type=\"hidden\" name=\"il\" value=\"" . h($il0) . "\">" : '') . ($o !== '' ? "<input type=\"hidden\" name=\"o\" value=\"$o\">" : '')
    . "<input type=\"search\" name=\"q\" value=\"" . h($q) . "\" maxlength=\"64\" placeholder=\"" . h(t('buscar una fuente por nombre o dirección')) . "\"><button>" . t('Buscar') . "</button>"
-   . ($q !== '' ? " <a href=\"/fuentes?" . ($k ? "k=$k" : 'todas=1') . ($il0 !== '' ? "&amp;il=" . h($il0) : '') . "\">" . t('todos') . "</a>" : '') . "</form>";
+   . ($q !== '' ? " <a href=\"/fuentes?" . ($k ? "k=$k" : 'todas=1') . ($il0 !== '' ? "&amp;il=" . h($il0) : '') . $qo . "\">" . t('todos') . "</a>" : '') . "</form>";
 // filtro por idioma para mirar el catalogo (?il=pt): solo esta vista, no se guarda. Se ofrecen los idiomas que tienen las fuentes
 // visibles de los grupos mostrados; si todas son del mismo idioma (o la casilla de arriba ya deja solo el tuyo), no sale.
 $il = (string)($_GET['il'] ?? '');
@@ -43,11 +49,18 @@ if (!isset($porIdioma[$il])) $il = '';
 $qk = $k ? "k=$k&amp;" : '';
 if (count($porIdioma) > 1) {
     $ord = array_merge(array_intersect(array_keys(DDD_LANGS), array_keys($porIdioma)), array_diff(array_keys($porIdioma), array_keys(DDD_LANGS)));
-    $qq = $q !== '' ? '&amp;q=' . rawurlencode($q) : '';
+    $qq = ($q !== '' ? '&amp;q=' . rawurlencode($q) : '') . $qo;
     echo "<nav class=\"sub langs\" aria-label=\"" . h(t('Idioma')) . "\"><a href=\"/fuentes" . ($k ? "?k=$k" : '?todas=1') . $qq . "\"" . ($il === '' ? ' class="on"' : '') . ">" . t('todos') . "</a>";
     foreach ($ord as $l) echo "<a href=\"/fuentes?" . ($k ? "k=$k&amp;" : "todas=1&amp;") . "il=" . h($l) . $qq . "\"" . ($il === $l ? ' class="on"' : '') . " lang=\"" . h($l) . "\">" . h(DDD_LANGS[$l] ?? strtoupper($l)) . " <small>" . (int)$porIdioma[$l] . "</small></a>";
     echo "</nav>";
 }
+// fila de orden: conserva tipo, idioma y busqueda
+$qb = ($k ? "k=$k" : 'todas=1') . ($il !== '' ? '&amp;il=' . h($il) : '') . ($q !== '' ? '&amp;q=' . rawurlencode($q) : '');
+echo "<nav class=\"sub fecha orden\" aria-label=\"" . h(t('ordenar por')) . "\"><span class=\"meta\">" . t('ordenar por') . "</span>";
+foreach ($ORDENES as $ok => $lbl) echo "<a href=\"/fuentes?$qb" . ($ok !== '' ? "&amp;o=$ok" : '') . "\"" . ($o === $ok ? ' class="on"' : '') . ">" . h($lbl) . "</a>";
+echo "</nav>";
+$segs = $o === 'seguidores' ? fuentes_seguidores($pdo) : [];
+$envs = isset($DIAS[$o]) ? fuentes_envios($pdo, $DIAS[$o]) : [];
 if (fprop_puede($u)) echo "<p class=\"fprop-cta\">" . t('¿Falta alguno? <a href="%s">Propón un medio o un substack</a>.', '/proponer-fuente' . ($k ? "?k=$k" : '')) . "</p>";   // aura >= source_propose_aura
 $hallados = 0; $solo = count($kinds) === 1;
 foreach ($kinds as $kind) {
@@ -62,10 +75,17 @@ foreach ($kinds as $kind) {
     foreach ($lista as &$m) { $n->execute([$m['source_id']]); [$m['cnt'], $m['last']] = $n->fetch(PDO::FETCH_NUM); }
     unset($m);
     usort($lista, fn($a, $b) => strcmp((string)$b['last'], (string)$a['last']));
+    // orden elegido (usort es estable: a igualdad queda el de la ultima noticia)
+    if ($o === 'seguidores') usort($lista, fn($a, $b) => ($segs[$b['source_id']] ?? 0) <=> ($segs[$a['source_id']] ?? 0));
+    elseif (isset($DIAS[$o])) usort($lista, fn($a, $b) => ($envs[$b['source_id']] ?? 0) <=> ($envs[$a['source_id']] ?? 0));
+    elseif ($o === 'nuevas') usort($lista, fn($a, $b) => [(string)($b['listed_at'] ?? ''), (int)$b['source_id']] <=> [(string)($a['listed_at'] ?? ''), (int)$a['source_id']]);   // sin fecha de alta (anteriores a la migra-196): detras, por orden de creacion
     foreach ($lista as $m) {
         $descr = $kind === 'agregador' ? t('portada, populares y nuevas, solo lectura') : h((string)$m['descr'] ?: source_of($m['home']));
         if (($m['lang'] ?? '') !== '' && $m['lang'] !== lang()) $descr = "<b>" . h(strtoupper($m['lang'])) . "</b> · " . $descr;   // otro idioma: se avisa
-        $cuerpo = avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . "</span><br><span class=\"meta\">" . $descr . " · " . t('%d noticias', (int)$m['cnt']) . ($m['last'] ? " · " . h(hace($m['last'])) : '') . "</span></span>";
+        $cuerpo = avatar((float)cfg('aura_anon', 5), $m['name']) . "<span class=\"fzt\"><span class=\"t\">" . h($m['name']) . "</span><br><span class=\"meta\">" . $descr . " · " . t('%d noticias', (int)$m['cnt']) . ($m['last'] ? " · " . h(hace($m['last'])) : '')
+                . ($o === 'seguidores' ? " · <b>" . h(t('%d seguidores', (int)($segs[$m['source_id']] ?? 0))) . "</b>" : '')
+                . (isset($DIAS[$o]) ? " · <b>" . h(t('%d envíos', (int)($envs[$m['source_id']] ?? 0))) . "</b>" : '')
+                . ($o === 'nuevas' && !empty($m['listed_at']) ? " · <b>" . h(t('añadida %s', hace($m['listed_at']))) . "</b>" : '') . "</span></span>";
         // con cuenta, medios y substacks llevan «+ Seguir» / «✓ Siguiendo» al final de la fila (la fila deja de ser un solo enlace: un form no cabe dentro de un <a>)
         if ($fav = fuente_fav_form($m)) echo "<div class=\"fz medio\"><a class=\"fzl\" href=\"" . h(fuente_url($m)) . "\">$cuerpo</a>$fav</div>";
         else echo "<a class=\"fz medio\" href=\"" . h(fuente_url($m)) . "\">$cuerpo" . icon($kind === 'agregador' ? 'agg' : ($kind === 'youtube' ? 'play' : 'news')) . "</a>";

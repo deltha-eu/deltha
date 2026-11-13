@@ -1100,4 +1100,12 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Diese Nachricht kann nicht mehr bearbeitet werden: Die Frist beträgt %d Minuten.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Du korrigierst eine bereits gesendete Nachricht; sie wird als bearbeitet markiert.',
 'ver cálculo' => 'Berechnung anzeigen',
+'última noticia' => 'neueste Meldung',
+'seguidores' => 'Follower',
+'más nuevas' => 'neueste',
+'top hoy' => 'Top heute',
+'top semana' => 'Top der Woche',
+'top mes' => 'Top des Monats',
+'%d seguidores' => '%d Follower',
+'añadida %s' => 'hinzugefügt %s',
 ];
