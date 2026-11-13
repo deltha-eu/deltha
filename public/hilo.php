@@ -76,6 +76,12 @@ $replyTo = ($replyTo && isset($byId[$replyTo]) && $can_comment) ? $byId[$replyTo
 
 robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por su autor; lo demas, noindex
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
+// llegada desde la caja «Relacionadas» de otro hilo (?rel=N, migra-200): se apunta el clic y se sigue a la dirección limpia
+if (isset($_GET['rel'])) {
+    if (($de = (int)$_GET['rel']) > 0 && $de !== $id) rel_cuenta($pdo, 'clicks', $de, $id);
+    header('X-Robots-Tag: noindex, nofollow');
+    redirect("/hilo/$id");
+}
 page_header(t('Hilo'), $tab, og_tags($s['title'], md_plano((string)$s['content']), $s['image'] ? '/media/' . $s['image'] : '', abs_url('/hilo/' . $id)), $s['title']);
 echo "<div class=\"hilo " . ($porTiempo ? 'plana' : 'arbol') . "\">";
 if ($s['status'] === 'pending_mod') echo "<p class=\"notice keep\">" . t('Hilo pendiente de aprobación: solo lo veis moderadores y admin. Se aprueba o se retira en <a href="/moderacion">Moderación</a>.') . "</p>";   // premoderacion u oculto por la IA (migra-183)
@@ -100,8 +106,9 @@ echo "</div></article>";
 
 // noticias relacionadas (story_related): las ponen los vectores al publicar (migra-175) y las afina la IA del PC con su nota (tarea «relacionadas», migra-177)
 if ($rel = story_relacionadas($pdo, $id)) {
+    rel_cuenta($pdo, 'shown', $id);   // cuantas veces se enseña la caja, para saber si se usa (migra-200; /analitica)
     echo "<div class=\"related\"><b>" . t('Relacionadas') . "</b><ul>";
-    foreach ($rel as $r) echo "<li><a href=\"/hilo/{$r['story_id']}\">" . h($r['title']) . "</a><small>" . ($r['source'] ? h($r['source']) . ' · ' : '') . h(hace($r['sent_date'])) . ($r['note'] ? ' · ' . h($r['note']) : '') . "</small></li>";
+    foreach ($rel as $r) echo "<li><a href=\"/hilo/{$r['story_id']}?rel=$id\" rel=\"nofollow\">" . h($r['title']) . "</a><small>" . ($r['source'] ? h($r['source']) . ' · ' : '') . h(hace($r['sent_date'])) . ($r['note'] ? ' · ' . h($r['note']) : '') . "</small></li>";
     echo "</ul></div>";
 }
 

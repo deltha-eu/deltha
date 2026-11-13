@@ -40,3 +40,30 @@ function story_contadores(array $s): string {
     if (!empty($s['url'])) $o .= "<span class=\"cnt\" title=\"" . h(t('clics al medio')) . "\">" . icon('out') . "<span>" . (int)($s['clicks'] ?? 0) . "</span></span>";
     return $o;
 }
+
+/* ---- uso de las «Relacionadas» del hilo (migra-200, 13/11/2026) ------------------------------------------------------------- */
+
+/** ¿Se usan las relacionadas? Apunta en related_daily cuántas veces se ha mostrado la caja ('shown': una por persona, hilo y día) y
+ *  cuántas se ha pulsado uno de sus enlaces ('clicks': una por persona, origen, destino y día). Misma huella y mismos filtros que
+ *  story_cuenta(): sin bots, precargas ni recargas automáticas; sin Redis se cuenta sin deduplicar. Nunca rompe la página. */
+function rel_cuenta(PDO $pdo, string $col, int $de, int $a = 0): void {
+    global $DDD_SECRET;
+    if (!in_array($col, ['shown', 'clicks'], true) || PHP_SAPI === 'cli' || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') return;
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if ($ua === '' || preg_match('~bot|crawl|spider|slurp|fetch|monitor|curl|wget|python|headless|lighthouse|preview~i', $ua)) return;
+    if (($_SERVER['HTTP_SEC_PURPOSE'] ?? $_SERVER['HTTP_PURPOSE'] ?? '') !== '') return;
+    if (($_GET['auto'] ?? '') === '1') return;
+    $fp = substr(hash_hmac('sha256', client_ip() . '|' . $ua . '|' . date('Y-m-d'), $DDD_SECRET), 0, 16);
+    $r = redis_conn();
+    if ($r) {
+        try { if (!$r->set("cnt:rel:$col:$de:$a:$fp", 1, ['nx', 'ex' => 86400])) return; }
+        catch (Throwable $e) { /* Redis caido a medias: se cuenta sin deduplicar */ }
+    }
+    try { $pdo->exec("INSERT INTO related_daily (day, $col) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE $col = $col + 1"); }
+    catch (Throwable $e) { /* tabla aun sin crear (migra-200 pendiente) */ }
+}
+/** Sumas de related_daily entre dos fechas (incluidas): ['shown' => n, 'clicks' => n]. */
+function rel_sum(PDO $pdo, string $from, string $to): array {
+    try { $st = $pdo->prepare("SELECT COALESCE(SUM(shown),0) shown, COALESCE(SUM(clicks),0) clicks FROM related_daily WHERE day BETWEEN ? AND ?"); $st->execute([$from, $to]); return array_map('intval', $st->fetch()); }
+    catch (Throwable $e) { return ['shown' => 0, 'clicks' => 0]; }
+}

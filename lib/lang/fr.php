@@ -1164,4 +1164,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Salidas por visitante' => 'Sorties par visiteur',
 '%s salidas' => '%s sorties',
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clics qui mènent à un média, un Substack ou une chaîne, divisés par les visiteurs de la même période : à quel point on clique au lieu de seulement parcourir les titres.',
+'Uso de las relacionadas' => 'Utilisation des articles liés',
+'%s clics de %s veces mostradas' => '%s clics sur %s affichages',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Sur le nombre de fois où l’encadré « Liés » est affiché sous un envoi, combien de fois on clique sur l’une de ses actualités. Mesuré depuis le 13/11/2026.',
 ];

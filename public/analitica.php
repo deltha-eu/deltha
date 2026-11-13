@@ -45,6 +45,17 @@ echo $tasa($sal($ayer, $ayer), (int)$dAyer['visitors'], t('ayer'));
 echo $tasa($ayer >= $mes  ? $sal($mes, $ayer)  : 0, (int)$dMes['visitors'], t('este mes'));
 echo $tasa($ayer >= $anio ? $sal($anio, $ayer) : 0, (int)$dAnio['visitors'], t('este año'));
 echo "</div>";
+// uso de las «Relacionadas» del hilo (migra-200, 13/11/2026): de cada 100 veces que se enseña la caja, cuantas se pulsa
+$relT = function (string $from, string $to, string $label) use ($pdo, $n): string {
+    if (($since = ana_since()) !== '' && $from < $since) $from = $since;
+    $r = $from <= $to ? rel_sum($pdo, $from, $to) : ['shown' => 0, 'clicks' => 0];
+    return "<div class=\"tile\"><b>" . ($r['shown'] > 0 ? number_format(100 * $r['clicks'] / $r['shown'], 1, ',', '.') . ' %' : '—') . "</b><span>" . h($label) . " · " . h(t('%s clics de %s veces mostradas', $n($r['clicks']), $n($r['shown']))) . "</span></div>";
+};
+echo "<h3 class=\"anah\">" . t('Uso de las relacionadas') . "</h3><p class=\"meta\" style=\"padding:4px 0 0\">" . t('De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.') . "</p><div class=\"grid\">";
+echo $relT($ayer, $ayer, t('ayer'));
+echo $relT($mes, $ayer, t('este mes'));
+echo $relT($anio, $ayer, t('este año'));
+echo "</div>";
 // actividad (19/10/2026, pedido por Angel): envios, portadas, votos y comentarios de ayer, del mes y del año, de las tablas de verdad
 $cnt = function (string $sql, string $from, string $to) use ($pdo): int { $st = $pdo->prepare($sql); $st->execute([$from, $to]); return (int)$st->fetchColumn(); };
 $act = [

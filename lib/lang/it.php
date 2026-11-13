@@ -1111,4 +1111,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Salidas por visitante' => 'Uscite per visitatore',
 '%s salidas' => '%s uscite',
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clic che portano a una testata, un substack o un canale, divisi per i visitatori dello stesso periodo: quanto si clicca oltre a guardare i titoli.',
+'Uso de las relacionadas' => 'Uso delle correlate',
+'%s clics de %s veces mostradas' => '%s clic su %s volte mostrate',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Delle volte in cui il riquadro «Correlate» viene mostrato sotto un invio, in quante si clicca su una delle sue notizie. Si misura dal 13/11/2026.',
 ];
