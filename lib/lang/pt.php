@@ -1144,4 +1144,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'top mes' => 'top mês',
 '%d seguidores' => '%d seguidores',
 'añadida %s' => 'adicionada %s',
+'Salidas por visitante' => 'Saídas por visitante',
+'%s salidas' => '%s saídas',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Cliques que levam a um meio, um substack ou um canal, divididos pelos visitantes do mesmo período: quanto se clica além de olhar para os títulos.',
 ];

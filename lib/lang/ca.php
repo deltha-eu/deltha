@@ -1107,4 +1107,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'top mes' => 'top mes',
 '%d seguidores' => '%d seguidors',
 'añadida %s' => 'afegida %s',
+'Salidas por visitante' => 'Sortides per visitant',
+'%s salidas' => '%s sortides',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clics que porten a un mitjà, un substack o un canal, dividits entre els visitants del mateix període: quant es prem a més de mirar titulars.',
 ];

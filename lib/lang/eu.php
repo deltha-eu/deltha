@@ -1107,4 +1107,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'top mes' => 'top hilabetea',
 '%d seguidores' => '%d jarraitzaile',
 'añadida %s' => 'gehitua: %s',
+'Salidas por visitante' => 'Irteerak bisitari bakoitzeko',
+'%s salidas' => '%s irteera',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Hedabide, substack edo kanal batera daramaten klikak, aldi bereko bisitarien artean zatituta: titularrak begiratzeaz gain zenbat sakatzen den.',
 ];

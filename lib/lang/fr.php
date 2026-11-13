@@ -1161,4 +1161,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'top mes' => 'top du mois',
 '%d seguidores' => '%d abonnés',
 'añadida %s' => 'ajoutée %s',
+'Salidas por visitante' => 'Sorties par visiteur',
+'%s salidas' => '%s sorties',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clics qui mènent à un média, un Substack ou une chaîne, divisés par les visiteurs de la même période : à quel point on clique au lieu de seulement parcourir les titres.',
 ];
