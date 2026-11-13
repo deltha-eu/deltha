@@ -404,6 +404,7 @@ table.modlog td code { overflow-wrap: anywhere; }
 .anaform { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 14px; }
 .anaform input[type=date] { font: inherit; padding: 4px 6px; border: 1px solid var(--line2); border-radius: 6px; background: var(--bg); color: var(--fg); }
 .anaform a { text-decoration: underline; text-underline-offset: 2px; }
+form.plain.anatodo { padding: 0; margin: 28px 0 8px; }   /* «Ver la analítica completa»: con aire sobre las fichas y con el botón de la casa */
 /* (16/10/2026) la analitica completa de admin, tambien en /analitica desde aura analytics_full_aura: fuera de .admin hay que darle sus tablas,
    botones y cifras alineadas a la derecha */
 .anafull { margin-top: 28px; padding-top: 8px; border-top: 1px solid var(--line); }

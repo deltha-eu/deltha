@@ -86,7 +86,7 @@ if ($live) {
 $fmt = fn(string $k, float $d) => rtrim(rtrim(number_format((float)cfg($k, $d), 2, ',', '.'), '0'), ',');
 if (!$live && (float)cfg('analytics_live_aura', 10) > 0) echo "<p class=\"meta\">" . t('Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.', $fmt('analytics_live_aura', 10)) . "</p>";
 elseif ($puedeTodo) echo $full ? "<p class=\"meta\"><a href=\"/analitica\">" . t('Ver menos') . "</a></p>"
-                              : "<form method=\"get\" action=\"/analitica\" class=\"anatodo\"><input type=\"hidden\" name=\"todo\" value=\"1\"><button>" . t('Ver la analítica completa') . "</button></form>";
+                              : "<form method=\"get\" action=\"/analitica\" class=\"plain anatodo\"><input type=\"hidden\" name=\"todo\" value=\"1\"><button>" . t('Ver la analítica completa') . "</button></form>";
 elseif ((float)cfg('analytics_full_aura', 50) > 0) echo "<p class=\"meta\">" . t('Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.', $fmt('analytics_full_aura', 50)) . "</p>";
 echo "</div>";
 page_footer();
