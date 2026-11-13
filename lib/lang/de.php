@@ -1111,4 +1111,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Salidas por visitante' => 'Ausgehende Klicks pro Besucher',
 '%s salidas' => '%s ausgehende Klicks',
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Klicks, die zu einem Medium, einem Substack oder einem Kanal führen, geteilt durch die Besucher im selben Zeitraum: wie viel geklickt wird, statt nur Schlagzeilen zu überfliegen.',
+'Uso de las relacionadas' => 'Nutzung der verwandten Beiträge',
+'%s clics de %s veces mostradas' => '%s Klicks bei %s Einblendungen',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Wie oft bei den Einblendungen des Kastens „Verwandt“ unter einem Beitrag auf eine seiner Meldungen geklickt wird. Gemessen seit dem 13.11.2026.',
 ];

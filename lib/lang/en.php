@@ -1165,4 +1165,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Salidas por visitante' => 'Outbound clicks per visitor',
 '%s salidas' => '%s outbound clicks',
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clicks that lead to a media outlet, a Substack or a channel, divided by the visitors in the same period: how much people click through rather than just scan headlines.',
+'Uso de las relacionadas' => 'Use of related stories',
+'%s clics de %s veces mostradas' => '%s clicks out of %s times shown',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Of the times the “Related” box is shown under a submission, how often one of its stories is clicked. Measured since 13/11/2026.',
 ];

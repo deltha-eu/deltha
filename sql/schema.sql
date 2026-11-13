@@ -232,6 +232,13 @@ CREATE TABLE `chat_votes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `related_daily` (
+  `day` date NOT NULL,
+  `shown` int unsigned NOT NULL DEFAULT '0',
+  `clicks` int unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`day`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `clicks_daily` (
   `day` date NOT NULL,
   `n` int unsigned NOT NULL DEFAULT '0',

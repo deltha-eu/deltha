@@ -1131,4 +1131,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Salidas por visitante' => 'Ziyaretçi başına çıkış',
 '%s salidas' => '%s çıkış',
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Bir yayına, bir Substack’e veya bir kanala götüren tıklamaların aynı dönemdeki ziyaretçilere bölümü: başlıklara bakmanın ötesinde ne kadar tıklandığı.',
+'Uso de las relacionadas' => 'İlgili haberlerin kullanımı',
+'%s clics de %s veces mostradas' => '%2$s gösterimde %1$s tıklama',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Bir gönderinin altında «İlgili» kutusunun gösterildiği seferlerin kaçında haberlerinden birine tıklandığı. 13/11/2026’dan beri ölçülüyor.',
 ];

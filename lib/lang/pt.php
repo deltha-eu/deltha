@@ -1147,4 +1147,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Salidas por visitante' => 'Saídas por visitante',
 '%s salidas' => '%s saídas',
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Cliques que levam a um meio, um substack ou um canal, divididos pelos visitantes do mesmo período: quanto se clica além de olhar para os títulos.',
+'Uso de las relacionadas' => 'Uso das relacionadas',
+'%s clics de %s veces mostradas' => '%s cliques em %s vezes mostradas',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Das vezes que a caixa «Relacionadas» é mostrada por baixo de um envio, em quantas se clica numa das suas notícias. Mede-se desde 13/11/2026.',
 ];
