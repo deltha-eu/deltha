@@ -1113,4 +1113,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> moderasyon konuşmasına yazdı',
 'Últimos medios añadidos' => 'Son eklenen medya',
 'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Kataloğa en son giren medya, substack ve kanal.',
+'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Merhaba. Bir moderatör şu içeriğini düzenledi: %s «%s». Gerekçe: %s. Bunun bir hata olduğunu düşünüyorsan bu mesajı yanıtla.',
+'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Merhaba. Bir moderatör «%s» başlığındaki yorumunu düzenledi. Gerekçe: %s. Bunun bir hata olduğunu düşünüyorsan bu mesajı yanıtla.',
+'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Merhaba. Bir moderatör Sohbet mesajını düzenledi. Gerekçe: %s. Bunun bir hata olduğunu düşünüyorsan bu mesajı yanıtla.',
 ];

@@ -1092,4 +1092,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> ha escrit a la conversa de moderació',
 'Últimos medios añadidos' => 'Últims mitjans afegits',
 'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Els últims mitjans, substacks i canals que han entrat al catàleg.',
+'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha editat el teu %s «%s». Motiu: %s. Si creus que és un error, respon a aquest missatge.',
+'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha editat el teu comentari a «%s». Motiu: %s. Si creus que és un error, respon a aquest missatge.',
+'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha editat el teu missatge del Xat. Motiu: %s. Si creus que és un error, respon a aquest missatge.',
 ];

@@ -1093,4 +1093,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> hat im Moderationsgespräch geschrieben',
 'Últimos medios añadidos' => 'Zuletzt hinzugefügte Medien',
 'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Die zuletzt in den Katalog aufgenommenen Medien, Substacks und Kanäle.',
+'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deinen %s „%s“ bearbeitet. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
+'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deinen Kommentar zu „%s“ bearbeitet. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
+'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deine Chat-Nachricht bearbeitet. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
 ];

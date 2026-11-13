@@ -254,6 +254,25 @@ function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = '', 
     });
 }
 
+/** Motivo de una edición de moderación (13/11/2026, pedido por Ángel): cuando un moderador cambia el texto de algo ajeno
+ *  (envío, artículo, comentario, mensaje del Chat) escribe por qué, y ese motivo se le envía al autor por mensaje privado,
+ *  en su idioma, igual que al eliminar un envío. El campo viaja en el POST, así que mod_log_post() lo deja en el registro. */
+function mod_motivo_post(): string { return mb_substr(trim(preg_replace('/\s+/', ' ', post('motivo'))), 0, 300); }
+function mod_motivo_campo(): string {
+    return "<label>Motivo de la edición <small>(obligatorio si cambias el texto: queda en el registro de moderación y se le envía al autor por mensaje)</small></label>"
+         . "<input type=\"text\" name=\"motivo\" maxlength=\"300\" placeholder=\"p. ej. cambiada la palabra «nazi» por «ultra» para evitar problemas legales\" value=\"" . h(post('motivo')) . "\">";
+}
+/** $k: cadena del aviso (va por t_in() al idioma del autor); $a: sus argumentos, ya con el motivo; $path: enlace a lo editado. */
+function mod_aviso_edicion(PDO $pdo, int $toId, string $path, string $k, ...$a): void {
+    $me = (int)(user()['user_id'] ?? 0);
+    if (!$toId || !$me || $toId === $me) return;
+    try {
+        $ql = $pdo->prepare("SELECT lang FROM users WHERE user_id = ?"); $ql->execute([$toId]);
+        $al = (string)$ql->fetchColumn() ?: 'es';
+        $pdo->prepare("INSERT INTO messages (from_id, to_id, content) VALUES (?,?,?)")->execute([$me, $toId, t_in($al, $k, ...$a) . ($path !== '' ? "\n" . abs_url($path) : '')]);
+    } catch (Throwable $e) { /* el aviso no debe impedir la edición */ }
+}
+
 /* ---- deshacer una acción del registro (migra-176, 30/10/2026) ----------------------------------------
  * Cada manejador de /moderacion copia el estado de la fila ANTES de tocarla con mod_undo_row(); al terminar la petición,
  * mod_log_post() guarda esas operaciones inversas en mod_log.undo_ops, selladas con los valores que quedaron (mod_undo_seal).

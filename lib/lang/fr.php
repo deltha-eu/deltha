@@ -1146,4 +1146,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> a écrit dans la conversation de modération',
 'Últimos medios añadidos' => 'Derniers médias ajoutés',
 'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Les derniers médias, substacks et chaînes entrés dans le catalogue.',
+'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Bonjour. Un modérateur a modifié ton %s « %s ». Motif : %s. Si tu penses que c’est une erreur, réponds à ce message.',
+'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Bonjour. Un modérateur a modifié ton commentaire sur « %s ». Motif : %s. Si tu penses que c’est une erreur, réponds à ce message.',
+'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Bonjour. Un modérateur a modifié ton message du Chat. Motif : %s. Si tu penses que c’est une erreur, réponds à ce message.',
 ];

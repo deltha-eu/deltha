@@ -79,6 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
     elseif (!$err && !$isArt && !$own && $url !== '' && ($bloq = source_blocked($pdo, $url))) $err = "Ese medio está bloqueado ($bloq): no se admiten sus enlaces. Se gestiona en moderación → Medios bloqueados.";
     elseif (!$err && $isArt && mb_strlen(trim($content)) < 20) $err = t('El texto del artículo es demasiado corto.');
 
+    // edición de moderación sobre algo ajeno: si cambia el titular o el texto, motivo obligatorio; se le envía al autor (13/11/2026)
+    $avisar = is_mod() && !empty($s['user_id']) && (int)$s['user_id'] !== (int)user()['user_id'];
+    $motivo = $avisar ? mod_motivo_post() : '';
+    if (!$err && $avisar && ($title !== (string)$s['title'] || $content !== (string)($s['content'] ?? '')) && mb_strlen($motivo) < 3) $err = 'Indica el motivo de la edición: queda en el registro y se le envía al autor.';
+
     if (!$err) {
         $changed = $title !== $s['title'] || $content !== (string)($s['content'] ?? '') || $topic !== (int)$s['topic_id']
                 || (string)$image !== (string)($s['image'] ?? '') || (!$isArt && ($url ?: null) !== $s['url']) || $commChanged;
@@ -90,13 +95,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('act') !== 'eliminar') {
             if ($content !== (string)($s['content'] ?? '')) avisos_story($pdo, $id, (int)user()['user_id'], (string)($s['author_alias'] ?? user()['login']), $content, avisos_nicks((string)$s['content']));   // solo los @nick nuevos (25/10/2026)
             if ($forosSel && ($fid = (int)post('forum')) && $fid !== (int)($s['forum_id'] ?? 0)) {   // cambio de foro: no marca «editado» (el texto no cambia)
                 $okF = false; foreach ($forosSel as $f) if ((int)$f['forum_id'] === $fid) $okF = $f;
-                if ($okF) $pdo->prepare("UPDATE stories SET forum_id = ? WHERE story_id = ?")->execute([$fid, $id]);   // el registro de arriba (editar-envio) ya guarda forum=N
+                if ($okF) { $pdo->prepare("UPDATE stories SET forum_id = ? WHERE story_id = ?")->execute([$fid, $id]); $changed = true; }   // el registro de arriba (editar-envio) ya guarda forum=N
             }
         } else {
             $pdo->prepare("UPDATE stories SET title=?, content=?, topic_id=?, image=?, url=?, source=?, lang=?$mark WHERE story_id=?")
                 ->execute([$title, $content ?: null, $topic, $image, $url ?: null, $url ? source_of($url) : null, $lang, $id]);
         }
         if ($title !== (string)$s['title'] || $content !== (string)($s['content'] ?? '')) story_relacionadas_calcular($pdo, $id);   // vector y relacionadas con el texto nuevo (lib/vectores.php, migra-175)
+        if ($avisar && $changed && mb_strlen($motivo) >= 3) {
+            $al = (string)($pdo->query("SELECT lang FROM users WHERE user_id = " . (int)$s['user_id'])->fetchColumn() ?: 'es');   // el nombre («artículo», «envío») va en el idioma del autor
+            mod_aviso_edicion($pdo, (int)$s['user_id'], "/hilo/$id", 'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.', $isArt ? t_in($al, 'artículo') : t_in($al, 'envío'), mb_strimwidth($title, 0, 120, '…'), $motivo);
+        }
         redirect("/hilo/$id");
     }
     $s = array_merge($s, ['title' => $title, 'content' => $content, 'topic_id' => $topic, 'community_id' => $comm ?: null, 'url' => $url, 'image' => $image, 'indexable' => $idx]);
@@ -110,7 +119,7 @@ if ($retire) {
     $q = (int)cfg('story_edit_minutes', 15) * 60 - (time() - strtotime($s['sent_date']));
     echo "<p class=\"notice\">" . t('Puedes corregir tu envío durante %d minutos tras enviarlo, mientras no llegue a portada (te quedan %d min). Quedará marcado como editado.', (int)cfg('story_edit_minutes', 15), max(1, intdiv($q, 60))) . " <a href=\"/hilo/$id\">" . t('Volver al hilo') . "</a>.</p>";
 } else {
-    echo "<p class=\"notice\">Edición de moderación. Los cambios se ven al momento; el autor, los votos y el delta no cambian. <a href=\"/hilo/$id\">Volver al hilo</a>.</p>";
+    echo "<p class=\"notice\">Edición de moderación. Los cambios se ven al momento; el autor, los votos y el delta no cambian. Si cambias el titular o el texto, el motivo se le envía al autor por mensaje. <a href=\"/hilo/$id\">Volver al hilo</a>.</p>";
 }
 if (!$retire) {
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
@@ -145,6 +154,7 @@ if ($s['image']) {
 echo "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
 if (!$isArt && $s['url']) echo "<label><input type=\"checkbox\" name=\"extraer\" value=\"1\"> " . t('extraer la foto de la página del enlace al guardar (og:image)') . "</label>";
 if ($isArt && cfg('index_articles', '1') === '1' && $s['user_id']) echo "<label><input type=\"checkbox\" name=\"indexable\" value=\"1\"" . ((int)($s['indexable'] ?? 0) === 1 ? ' checked' : '') . "> " . t('Dejar que los buscadores indexen este artículo') . "</label>";
+if (is_mod() && !empty($s['user_id']) && (int)$s['user_id'] !== (int)user()['user_id']) echo mod_motivo_campo();   // motivo para el autor (13/11/2026)
 echo "<button>" . t('Guardar cambios') . "</button></form>";
 }   // fin del formulario de edicion (no sale en modo retirar)
 $own = $own || $retire;   // de aqui abajo, el apartado Retirar es el mismo para el autor en plazo y fuera de el

@@ -32,13 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         $txt = mb_substr(trim(post('content')), 0, 4000);
+        $avisar = is_mod() && !empty($c['user_id']) && (int)$c['user_id'] !== (int)user()['user_id'];   // moderación edita un comentario ajeno: motivo obligatorio si cambia el texto, y se le envía al autor (13/11/2026)
+        $motivo = $avisar ? mod_motivo_post() : '';
         if (mb_strlen($txt) < 1) $err = t('El comentario no puede quedar vacío.');
+        elseif ($avisar && $txt !== (string)$c['content'] && mb_strlen($motivo) < 3) $err = 'Indica el motivo de la edición: queda en el registro y se le envía al autor.';
         else {
             $st = $pdo->prepare("UPDATE comments SET content = ?, edited_at = NOW() WHERE comment_id = ? AND content <> ?"); $st->execute([$txt, $id, $txt]);
             if (post('quitar_img') === '1' && !empty($c['image'])) { require_once __DIR__ . '/../lib/imagen.php'; imagen_comentario_borrar((string)$c['image']); $pdo->prepare("UPDATE comments SET image = NULL WHERE comment_id = ?")->execute([$id]); }   // migra-166
             if ($own && $st->rowCount()) {
                 mod_requeue($pdo, 'comment', $id);   // lo edita su autor: la IA lo vuelve a mirar
                 avisos_comment($pdo, array_merge($c, ['content' => $txt]), null, avisos_nicks((string)$c['content']), false);   // solo los @nick nuevos; editar no avisa a los seguidores del hilo
+            }
+            if ($avisar && mb_strlen($motivo) >= 3 && ($st->rowCount() || (post('quitar_img') === '1' && !empty($c['image'])))) {
+                $qt = $pdo->prepare("SELECT title FROM stories WHERE story_id = ?"); $qt->execute([(int)$c['story_id']]);
+                mod_aviso_edicion($pdo, (int)$c['user_id'], "/hilo/{$c['story_id']}#c$id", 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.', mb_strimwidth((string)$qt->fetchColumn(), 0, 120, '…'), $motivo);
             }
             redirect($back);
         }
@@ -48,11 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 page_header(t('Editar comentario') . " #$id");   // sin <h1>: el titulo ya va en la cabecera
 if ($own) { $q = (int)cfg('comment_edit_minutes', 10) * 60 - (time() - strtotime($c['created'])); echo "<p class=\"notice\">" . t('Puedes corregir tu comentario durante %d minutos tras publicarlo (te quedan %d min). Quedará marcado como editado.', (int)cfg('comment_edit_minutes', 10), max(1, intdiv($q, 60))) . " <a href=\"$back\">" . t('Volver al hilo') . "</a>.</p>"; }
-else echo "<p class=\"notice\">Edición de moderación. <a href=\"$back\">Volver al hilo</a>.</p>";
+else echo "<p class=\"notice\">Edición de moderación. Si cambias el texto, el motivo se le envía al autor por mensaje. <a href=\"$back\">Volver al hilo</a>.</p>";
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
 echo "" . t('<label>Texto</label>') . "<textarea name=\"content\" rows=\"8\" maxlength=\"4000\" required>" . h((string)$c['content']) . "</textarea>" . md_ayuda();
 if (!empty($c['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($c['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($c['image']) . "\" alt=\"\"></a><label><input type=\"checkbox\" name=\"quitar_img\" value=\"1\"> " . t('quitar la imagen') . "</label>";   // migra-166
+if (is_mod() && !empty($c['user_id']) && (int)$c['user_id'] !== (int)user()['user_id']) echo mod_motivo_campo();   // motivo para el autor (13/11/2026)
 echo "" . t('<button>Guardar</button>') . "</form>";
 if (is_mod()) {
 echo "<h3 style=\"padding:16px 16px 0\">Eliminar</h3>";
