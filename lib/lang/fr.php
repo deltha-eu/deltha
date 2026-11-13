@@ -1150,4 +1150,6 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Bonjour. Un modérateur a modifié ton commentaire sur « %s ». Motif : %s. Si tu penses que c’est une erreur, réponds à ce message.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Bonjour. Un modérateur a modifié ton message du Chat. Motif : %s. Si tu penses que c’est une erreur, réponds à ce message.',
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Chaque commentaire signalé a sa conversation : laissez-y des messages pour vous mettre d\'accord avant de décider.',
+'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Ce message ne peut plus être modifié : le délai est de %d minutes.',
+'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Tu corriges un message déjà envoyé ; il sera marqué comme modifié.',
 ];

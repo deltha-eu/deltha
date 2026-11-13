@@ -1133,4 +1133,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou o teu comentário em «%s». Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou a tua mensagem do Chat. Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Cada comentário reportado tem a sua conversa: deixem aí as mensagens para se porem de acordo antes de decidir.',
+'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Essa mensagem já não pode ser editada: o prazo é de %d minutos.',
+'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Estás a corrigir uma mensagem já enviada; ficará marcada como editada.',
 ];

@@ -1151,4 +1151,6 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hello. A moderator has edited your comment on “%s”. Reason: %s. If you think this is a mistake, reply to this message.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hello. A moderator has edited your Chat message. Reason: %s. If you think this is a mistake, reply to this message.',
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Every reported comment has its own conversation: leave messages there to agree before deciding.',
+'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'That message can no longer be edited: the time limit is %d minutes.',
+'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'You are correcting a message you have already sent; it will be marked as edited.',
 ];

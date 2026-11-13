@@ -534,6 +534,7 @@ nav.tabs-bottom .badge { position: absolute; top: 6px; left: calc(50% + 4px); }
 .msg.me .bubble { background: var(--accent); color: var(--bg); border-color: var(--accent); border-bottom-right-radius: 4px; }
 .msg.them .bubble { border-bottom-left-radius: 4px; }
 .msg .meta { font-size: 11px; color: var(--muted); margin: 2px 6px 0; }
+.msg .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }   /* «editar» en los mensajes propios, en plazo (migra-199) */
 main > .composer:last-of-type { border-bottom: 0; border-top: 1px solid var(--line); margin-top: 8px; }
 
 /* ---- avisos (campanita): burbuja con los no leidos delante del avatar; lista en /avisos.php, dos colores (nueva / leida) ---- */

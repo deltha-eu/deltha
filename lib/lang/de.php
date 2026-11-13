@@ -1097,4 +1097,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deinen Kommentar zu „%s“ bearbeitet. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hallo. Ein Moderator hat deine Chat-Nachricht bearbeitet. Grund: %s. Wenn du das für einen Fehler hältst, antworte auf diese Nachricht.',
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Jeder gemeldete Kommentar hat sein eigenes Gespräch: Hinterlasst dort Nachrichten, um euch vor der Entscheidung abzustimmen.',
+'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Diese Nachricht kann nicht mehr bearbeitet werden: Die Frist beträgt %d Minuten.',
+'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Du korrigierst eine bereits gesendete Nachricht; sie wird als bearbeitet markiert.',
 ];
