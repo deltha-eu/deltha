@@ -1129,4 +1129,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> escreveu na conversa de moderação',
 'Últimos medios añadidos' => 'Últimos meios adicionados',
 'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Os últimos meios, substacks e canais que entraram no catálogo.',
+'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou o teu %s «%s». Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
+'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou o teu comentário em «%s». Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
+'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou a tua mensagem do Chat. Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
 ];

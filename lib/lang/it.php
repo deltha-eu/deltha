@@ -1093,4 +1093,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> ha scritto nella conversazione di moderazione',
 'Últimos medios añadidos' => 'Ultimi media aggiunti',
 'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Gli ultimi media, substack e canali entrati nel catalogo.',
+'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ciao. Un moderatore ha modificato il tuo %s «%s». Motivo: %s. Se pensi che sia un errore, rispondi a questo messaggio.',
+'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ciao. Un moderatore ha modificato il tuo commento su «%s». Motivo: %s. Se pensi che sia un errore, rispondi a questo messaggio.',
+'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ciao. Un moderatore ha modificato il tuo messaggio della Chat. Motivo: %s. Se pensi che sia un errore, rispondi a questo messaggio.',
 ];

@@ -22,11 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $txt = mb_substr(trim(preg_replace("/\r\n?/", "\n", post('content'))), 0, $maxLen);
     $anuncio = post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad (migra-121): se cambia sin que cuente como edicion del texto
     if ($anuncio !== (int)$m['anuncio']) $pdo->prepare("UPDATE chat SET anuncio = ? WHERE msg_id = ?")->execute([$anuncio, $id]);
+    $avisar = !empty($m['user_id']) && (int)$m['user_id'] !== (int)user()['user_id'];   // mensaje de otra cuenta: motivo obligatorio, se le envía al autor (13/11/2026); a un anónimo no hay a quién escribir
+    $motivo = $avisar ? mod_motivo_post() : '';
     if (mb_strlen($txt) < 1) $err = 'El mensaje no puede quedar vacío.';
+    elseif ($avisar && $txt !== (string)$m['content'] && mb_strlen($motivo) < 3) $err = 'Indica el motivo de la edición: queda en el registro y se le envía al autor.';
     elseif ($txt !== (string)$m['content']) {
         $ref = chat_first_ref($txt);
         if ($ref) { $q = $pdo->prepare("SELECT 1 FROM chat WHERE msg_id = ? AND status = 'ok' AND msg_id < ?"); $q->execute([$ref, $id]); if (!$q->fetchColumn()) $ref = null; }
         $pdo->prepare("UPDATE chat SET content_orig = COALESCE(content_orig, content), content = ?, reply_to = ?, edited_at = NOW() WHERE msg_id = ?")->execute([$txt, $ref, $id]);
+        if ($avisar) mod_aviso_edicion($pdo, (int)$m['user_id'], "/chat?m=$id#m$id", 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.', $motivo);
         redirect($back);
     } else redirect($back);
     $m['content'] = $txt;
@@ -38,5 +42,6 @@ if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
 echo "<label>Texto</label><textarea name=\"content\" rows=\"5\" maxlength=\"$maxLen\" required>" . h((string)$m['content']) . "</textarea>" . md_ayuda();
 echo "<label class=\"check\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\"" . ((int)$m['anuncio'] === 1 ? ' checked' : '') . "> Mensaje a la comunidad (sale resaltado y arriba del Chat)</label>";
+if (!empty($m['user_id']) && (int)$m['user_id'] !== (int)user()['user_id']) echo mod_motivo_campo();   // motivo para el autor (13/11/2026)
 echo "<button>Guardar</button></form>";
 page_footer();

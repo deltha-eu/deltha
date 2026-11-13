@@ -1092,4 +1092,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 '<b>%s</b> ha escrito en la conversación de moderación' => '<b>%s</b> moderazio elkarrizketan idatzi du',
 'Últimos medios añadidos' => 'Gehitutako azken hedabideak',
 'Los últimos medios, substacks y canales que han entrado en el catálogo.' => 'Katalogoan sartu diren azken hedabide, substack eta kanalak.',
+'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek zure %s editatu du: «%s». Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
+'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek «%s» harian idatzi zenuen iruzkina editatu du. Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
+'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek Txateko zure mezua editatu du. Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
 ];
