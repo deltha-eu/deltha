@@ -95,7 +95,7 @@ if ($s['content_type'] === 'article') {
 }
 if ($s['url']) echo "<a class=\"source\" href=\"" . h($dest) . "\" rel=\"noopener nofollow\">" . icon('link') . h($s['source']) . "</a>";
 if ($s['status'] === 'destacadas') echo "<div class=\"life\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
-if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h(t('en el radar, hacia %s', t(DDD_PORTADAS[portada_de($pdo, $s)]))) . "</div>";
+if ($s['status'] === 'nuevas' && $s['content_type'] !== 'article') echo delta_linea($s, t('en el radar, hacia %s', t(DDD_PORTADAS[portada_de($pdo, $s)])));
 echo "</div></article>";
 
 // noticias relacionadas (story_related): las ponen los vectores al publicar (migra-175) y las afina la IA del PC con su nota (tarea «relacionadas», migra-177)

@@ -1153,4 +1153,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Every reported comment has its own conversation: leave messages there to agree before deciding.',
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'That message can no longer be edited: the time limit is %d minutes.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'You are correcting a message you have already sent; it will be marked as edited.',
+'ver cálculo' => 'see calculation',
 ];

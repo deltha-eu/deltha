@@ -1099,4 +1099,5 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Jeder gemeldete Kommentar hat sein eigenes Gespräch: Hinterlasst dort Nachrichten, um euch vor der Entscheidung abzustimmen.',
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Diese Nachricht kann nicht mehr bearbeitet werden: Die Frist beträgt %d Minuten.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Du korrigierst eine bereits gesendete Nachricht; sie wird als bearbeitet markiert.',
+'ver cálculo' => 'Berechnung anzeigen',
 ];

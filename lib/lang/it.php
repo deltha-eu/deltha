@@ -1099,4 +1099,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Ogni commento segnalato ha la sua conversazione: lasciate lì i messaggi per mettervi d\'accordo prima di decidere.',
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Quel messaggio non si può più modificare: il termine è di %d minuti.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Stai correggendo un messaggio già inviato; resterà segnato come modificato.',
+'ver cálculo' => 'vedi calcolo',
 ];

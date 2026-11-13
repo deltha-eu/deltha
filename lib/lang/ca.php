@@ -1098,4 +1098,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Cada comentari reportat té la seva conversa: deixeu-hi els missatges per posar-vos d\'acord abans de decidir.',
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Aquest missatge ja no es pot editar: el termini és de %d minuts.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Estàs corregint un missatge ja enviat; quedarà marcat com a editat.',
+'ver cálculo' => 'veure càlcul',
 ];
