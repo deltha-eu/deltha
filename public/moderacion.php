@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /** /moderacion — moderadores y admin, por pestañas (?t=, como /admin; 09/10/2026): IA (lo señalado por la IA local, lib/moderacion.php),
  *  Reportes (comentarios y chat), Fuentes (propuestas, alta y edición del catálogo), Votos (cuentas que votan juntas), Temas,
  *  Correos (listas negra y blanca de dominios) y Medios bloqueados. Los formularios sin action vuelven solos a su pestaña (POST a la misma URL). */
