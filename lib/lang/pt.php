@@ -1132,4 +1132,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou o teu %s «%s». Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou o teu comentário em «%s». Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Olá. Um moderador editou a tua mensagem do Chat. Motivo: %s. Se achas que é um erro, responde a esta mensagem.',
+'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Cada comentário reportado tem a sua conversa: deixem aí as mensagens para se porem de acordo antes de decidir.',
 ];

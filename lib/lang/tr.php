@@ -1116,4 +1116,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Merhaba. Bir moderatör şu içeriğini düzenledi: %s «%s». Gerekçe: %s. Bunun bir hata olduğunu düşünüyorsan bu mesajı yanıtla.',
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Merhaba. Bir moderatör «%s» başlığındaki yorumunu düzenledi. Gerekçe: %s. Bunun bir hata olduğunu düşünüyorsan bu mesajı yanıtla.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Merhaba. Bir moderatör Sohbet mesajını düzenledi. Gerekçe: %s. Bunun bir hata olduğunu düşünüyorsan bu mesajı yanıtla.',
+'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Bildirilen her yorumun kendi konuşması var: karar vermeden önce anlaşmak için mesajları oraya bırakın.',
 ];

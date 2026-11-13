@@ -1095,4 +1095,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha editat el teu %s «%s». Motiu: %s. Si creus que és un error, respon a aquest missatge.',
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha editat el teu comentari a «%s». Motiu: %s. Si creus que és un error, respon a aquest missatge.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Hola. Un moderador ha editat el teu missatge del Xat. Motiu: %s. Si creus que és un error, respon a aquest missatge.',
+'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Cada comentari reportat té la seva conversa: deixeu-hi els missatges per posar-vos d\'acord abans de decidir.',
 ];
