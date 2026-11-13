@@ -1096,4 +1096,5 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Hola. Un moderador ha editado tu %s «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ciao. Un moderatore ha modificato il tuo %s «%s». Motivo: %s. Se pensi che sia un errore, rispondi a questo messaggio.',
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ciao. Un moderatore ha modificato il tuo commento su «%s». Motivo: %s. Se pensi che sia un errore, rispondi a questo messaggio.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ciao. Un moderatore ha modificato il tuo messaggio della Chat. Motivo: %s. Se pensi che sia un errore, rispondi a questo messaggio.',
+'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Ogni commento segnalato ha la sua conversazione: lasciate lì i messaggi per mettervi d\'accordo prima di decidere.',
 ];

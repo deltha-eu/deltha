@@ -32,7 +32,7 @@ if ((string)($_GET['t'] ?? '') === 'charla') {
             if ($el = $cq->fetch()) $clink = "/hilo/$cref";
         }
     } catch (Throwable $e) { $el = null; }
-    $abierto = mod_pendiente($pdo, $ctype, $cref) !== null;
+    $abierto = mod_talk_abierta($pdo, $ctype, $cref);
     page_header(t('Conversación de los moderadores sobre este elemento'));
     echo "<div class=\"admin\"><h1>" . icon('chat') . " " . h(t('Conversación (%d)', count($cmsgs))) . " · " . h($TY[$ctype]) . " #$cref</h1>";
     if ($el) {
@@ -446,7 +446,22 @@ $reps = $pdo->query("SELECT c.comment_id, c.story_id, c.content, c.alias, c.crea
                       GROUP BY c.comment_id ORDER BY n DESC, first_rep ASC LIMIT 100")->fetchAll();
 $RZ = report_reasons();
 $notes = mod_notes($pdo, 'comment', array_column($reps, 'comment_id'));
+/* ---- mensajes del chat reportados (se consultan aquí para tener la conversación de los dos tipos de una vez) ---- */
+try {
+    $creps = $pdo->query("SELECT c.msg_id, c.content, c.alias, c.created, c.user_id, u.login,
+                                 COUNT(*) n, MIN(r.created) first_rep, GROUP_CONCAT(DISTINCT r.reason ORDER BY r.reason) reasons
+                            FROM chat_reports r JOIN chat c ON c.msg_id = r.msg_id LEFT JOIN users u ON u.user_id = c.user_id
+                           WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0
+                           GROUP BY c.msg_id ORDER BY n DESC, first_rep ASC LIMIT 100")->fetchAll();
+} catch (Throwable $e) { $creps = []; }
+$cnotes = mod_notes($pdo, 'chat', array_column($creps, 'msg_id'));
+/* conversación de los moderadores sobre lo reportado (13/11/2026): la misma de la pestaña IA, por comentario y por mensaje del chat */
+$talk = mod_talk_map($pdo, array_merge(
+    array_map(fn($r) => ['comment', (int)$r['comment_id']], $reps),
+    array_map(fn($r) => ['chat', (int)$r['msg_id']], $creps)
+));
 echo "<h3 id=\"reportes\">Comentarios reportados (" . count($reps) . ")</h3>";
+echo "<p class=\"meta\">" . h(t('Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.')) . "</p>";
 if (!$reps) echo "<p>No hay reportes pendientes.</p>";
 foreach ($reps as $r) {
     $who = ($r['login'] && ghost_over_comment($r['created'])) ? $r['login'] : $r['alias'];
@@ -457,17 +472,11 @@ foreach ($reps as $r) {
     if ($nl = mod_note_line($notes[(int)$r['comment_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_borrar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar comentario</button></form>";
     echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"rep_descartar\"><input type=\"hidden\" name=\"cid\" value=\"{$r['comment_id']}\"><button class=\"btn\" title=\"el comentario se queda; los reportes se cierran\">Descartar reporte</button></form>";
-    echo "<a class=\"btn\" href=\"/editar-comentario?id={$r['comment_id']}\">editar</a></div></div>";
+    echo "<a class=\"btn\" href=\"/editar-comentario?id={$r['comment_id']}\">editar</a></div>";
+    $kk = 'comment:' . (int)$r['comment_id'];
+    echo mod_talk_html('comment', (int)$r['comment_id'], $talk[$kk] ?? [], ($GLOBALS['DDD_TALK_OPEN'] ?? '') === $kk) . "</div>";   // conversación de los moderadores (13/11/2026)
 }
 /* ---- mensajes del chat reportados ---- */
-try {
-    $creps = $pdo->query("SELECT c.msg_id, c.content, c.alias, c.created, c.user_id, u.login,
-                                 COUNT(*) n, MIN(r.created) first_rep, GROUP_CONCAT(DISTINCT r.reason ORDER BY r.reason) reasons
-                            FROM chat_reports r JOIN chat c ON c.msg_id = r.msg_id LEFT JOIN users u ON u.user_id = c.user_id
-                           WHERE r.status = 'open' AND c.status = 'ok' AND c.deleted = 0
-                           GROUP BY c.msg_id ORDER BY n DESC, first_rep ASC LIMIT 100")->fetchAll();
-} catch (Throwable $e) { $creps = []; }
-$cnotes = mod_notes($pdo, 'chat', array_column($creps, 'msg_id'));
 echo "<h3 id=\"chat\">Mensajes del chat reportados (" . count($creps) . ")</h3>";
 if (!$creps) echo "<p>No hay reportes pendientes.</p>";
 foreach ($creps as $r) {
@@ -477,7 +486,9 @@ foreach ($creps as $r) {
     echo "<blockquote class=\"quote\">" . saltos(h(mb_strimwidth($r['content'], 0, 600, '…'))) . "</blockquote>";
     if ($nl = mod_note_line($cnotes[(int)$r['msg_id']] ?? null)) echo "<p class=\"meta\">" . h($nl) . "</p>";
     echo "<div class=\"repacts\"><form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_borrar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn danger\" title=\"sustituye el texto por el aviso\">Borrar mensaje</button></form>";
-    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_descartar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn\" title=\"el mensaje se queda; los reportes se cierran\">Descartar reporte</button></form></div></div>";
+    echo "<form method=\"post\"><input type=\"hidden\" name=\"act\" value=\"chat_descartar\"><input type=\"hidden\" name=\"mid\" value=\"{$r['msg_id']}\"><button class=\"btn\" title=\"el mensaje se queda; los reportes se cierran\">Descartar reporte</button></form></div>";
+    $kk = 'chat:' . (int)$r['msg_id'];
+    echo mod_talk_html('chat', (int)$r['msg_id'], $talk[$kk] ?? [], ($GLOBALS['DDD_TALK_OPEN'] ?? '') === $kk) . "</div>";   // conversación de los moderadores (13/11/2026)
 }
 } elseif ($tab === 'fuentes') {
 /* ---- fuentes propuestas ---- */

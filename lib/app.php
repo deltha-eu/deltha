@@ -279,7 +279,7 @@ function mod_aviso_edicion(PDO $pdo, int $toId, string $path, string $k, ...$a):
  * mod_log_revert() las aplica al revés y solo si la fila sigue como la dejó la acción: si alguien la ha cambiado después,
  * se niega en vez de pisar el cambio. Las tablas y columnas que se pueden tocar están en MOD_UNDO_COLS y no hay más. */
 const MOD_UNDO_COLS = [   // tabla => [clave primaria, columnas restaurables]
-    'comments'        => ['comment_id', ['status', 'deleted', 'content', 'content_orig']],
+    'comments'        => ['comment_id', ['status', 'deleted', 'content', 'content_orig', 'edited_at']],
     'chat'            => ['msg_id',     ['status', 'deleted', 'deleted_at', 'content', 'content_orig']],
     'comment_reports' => ['report_id',  ['status', 'decided_by', 'decided']],
     'chat_reports'    => ['report_id',  ['status', 'decided_by', 'decided']],
@@ -320,7 +320,7 @@ function mod_undo_created(string $table, $id): void {
 }
 /** Comentario con sus reportes (borrarlo o descartarlos cambia las dos cosas). */
 function mod_undo_comment(PDO $pdo, int $cid, bool $reports = true): void {
-    if (!mod_undo_row($pdo, 'comments', $cid, ['status', 'deleted', 'content', 'content_orig'])) return;
+    if (!mod_undo_row($pdo, 'comments', $cid, ['status', 'deleted', 'content', 'content_orig', 'edited_at'])) return;
     if (!$reports) return;
     try { $q = $pdo->prepare("SELECT report_id FROM comment_reports WHERE comment_id = ?"); $q->execute([$cid]); mod_undo_rows($pdo, 'comment_reports', $q->fetchAll(PDO::FETCH_COLUMN), ['status', 'decided_by', 'decided']); } catch (Throwable $e) {}
 }

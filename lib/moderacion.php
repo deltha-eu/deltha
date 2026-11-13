@@ -303,6 +303,24 @@ function mod_pendiente(PDO $pdo, string $type, int $id): ?array {
     } catch (Throwable $e) { return null; }
 }
 
+/** ¿Tiene algún reporte de usuario abierto? (pestaña Reportes de /moderacion, migra-193 → `mod_reports`). */
+function mod_report_open(PDO $pdo, string $type, int $id): bool {
+    if (!in_array($type, ['comment', 'chat'], true) || $id <= 0) return false;
+    try {
+        $tab = $type === 'comment' ? 'comment_reports' : 'chat_reports';
+        $col = $type === 'comment' ? 'comment_id' : 'msg_id';
+        $q = $pdo->prepare("SELECT 1 FROM $tab WHERE $col = ? AND status = 'open' LIMIT 1");
+        $q->execute([$id]);
+        return (bool)$q->fetchColumn();
+    } catch (Throwable $e) { return false; }
+}
+
+/** ¿Se puede escribir en la conversación de este elemento? Mientras espera algo de un moderador: la decisión de la IA
+ *  (cola) o el reporte de un usuario (pestaña Reportes). Cerrado lo uno y lo otro, la conversación es de solo lectura. */
+function mod_talk_abierta(PDO $pdo, string $type, int $id): bool {
+    return mod_pendiente($pdo, $type, $id) !== null || mod_report_open($pdo, $type, $id);
+}
+
 /** Elemento (tipo e id) de un item de la cola, para enlazar el registro con su conversación. */
 function mod_item_of(PDO $pdo, int $itemId): ?array {
     try {
@@ -334,7 +352,7 @@ function mod_talk_map(PDO $pdo, array $refs): array {
 
 /** Añade un mensaje a la conversación. Devuelve el aviso para el moderador, o null si se ha guardado. */
 function mod_talk_add(PDO $pdo, string $type, int $id, int $uid, string $body): ?string {
-    if (!mod_pendiente($pdo, $type, $id)) return t('Ese elemento ya está decidido: la conversación es de solo lectura.');
+    if (!mod_talk_abierta($pdo, $type, $id)) return t('Ese elemento ya está decidido: la conversación es de solo lectura.');
     $body = trim((string)$body);
     if (mb_strlen($body) < 2) return t('Escribe el mensaje antes de enviarlo.');
     try {
