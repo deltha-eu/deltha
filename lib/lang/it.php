@@ -1108,4 +1108,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'top mes' => 'top mese',
 '%d seguidores' => '%d follower',
 'añadida %s' => 'aggiunta %s',
+'Salidas por visitante' => 'Uscite per visitatore',
+'%s salidas' => '%s uscite',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clic che portano a una testata, un substack o un canale, divisi per i visitatori dello stesso periodo: quanto si clicca oltre a guardare i titoli.',
 ];

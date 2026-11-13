@@ -1128,4 +1128,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'top mes' => 'ayın en iyileri',
 '%d seguidores' => '%d takipçi',
 'añadida %s' => 'eklendi: %s',
+'Salidas por visitante' => 'Ziyaretçi başına çıkış',
+'%s salidas' => '%s çıkış',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Bir yayına, bir Substack’e veya bir kanala götüren tıklamaların aynı dönemdeki ziyaretçilere bölümü: başlıklara bakmanın ötesinde ne kadar tıklandığı.',
 ];

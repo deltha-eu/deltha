@@ -1162,4 +1162,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'top mes' => 'top this month',
 '%d seguidores' => '%d followers',
 'añadida %s' => 'added %s',
+'Salidas por visitante' => 'Outbound clicks per visitor',
+'%s salidas' => '%s outbound clicks',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clicks that lead to a media outlet, a Substack or a channel, divided by the visitors in the same period: how much people click through rather than just scan headlines.',
 ];

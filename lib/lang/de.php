@@ -1108,4 +1108,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'top mes' => 'Top des Monats',
 '%d seguidores' => '%d Follower',
 'añadida %s' => 'hinzugefügt %s',
+'Salidas por visitante' => 'Ausgehende Klicks pro Besucher',
+'%s salidas' => '%s ausgehende Klicks',
+'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Klicks, die zu einem Medium, einem Substack oder einem Kanal führen, geteilt durch die Besucher im selben Zeitraum: wie viel geklickt wird, statt nur Schlagzeilen zu überfliegen.',
 ];

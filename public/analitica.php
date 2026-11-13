@@ -30,6 +30,21 @@ foreach ([['visitors', t('visitantes')], ['sessions', t('sesiones')], ['pageview
     echo $tile($dAnio[$k], t('este año'));
     echo "</div>";
 }
+// salidas por visitante (13/11/2026, pedido por Angel): ¿la gente pulsa o solo mira titulares? Clics que llevan a un medio (clicks_daily,
+// los mismos de /estadisticas) entre los visitantes de esos dias. Mes y año: suma de salidas entre suma de visitantes de cada dia.
+$sal = function (string $from, string $to) use ($pdo): int {
+    if (($since = ana_since()) !== '' && $from < $since) $from = $since;
+    try { $st = $pdo->prepare("SELECT COALESCE(SUM(n),0) FROM clicks_daily WHERE day BETWEEN ? AND ?"); $st->execute([$from, $to]); return (int)$st->fetchColumn(); }
+    catch (Throwable $e) { return 0; }   // tabla aun sin crear (migra-144)
+};
+$tasa = function (int $salidas, int $visitantes, string $label) use ($n): string {
+    return "<div class=\"tile\"><b>" . ($visitantes > 0 ? number_format($salidas / $visitantes, 2, ',', '.') : '—') . "</b><span>" . h($label) . " · " . h(t('%s salidas', $n($salidas))) . "</span></div>";
+};
+echo "<h3 class=\"anah\">" . t('Salidas por visitante') . "</h3><p class=\"meta\" style=\"padding:4px 0 0\">" . t('Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.') . "</p><div class=\"grid\">";
+echo $tasa($sal($ayer, $ayer), (int)$dAyer['visitors'], t('ayer'));
+echo $tasa($ayer >= $mes  ? $sal($mes, $ayer)  : 0, (int)$dMes['visitors'], t('este mes'));
+echo $tasa($ayer >= $anio ? $sal($anio, $ayer) : 0, (int)$dAnio['visitors'], t('este año'));
+echo "</div>";
 // actividad (19/10/2026, pedido por Angel): envios, portadas, votos y comentarios de ayer, del mes y del año, de las tablas de verdad
 $cnt = function (string $sql, string $from, string $to) use ($pdo): int { $st = $pdo->prepare($sql); $st->execute([$from, $to]); return (int)$st->fetchColumn(); };
 $act = [
