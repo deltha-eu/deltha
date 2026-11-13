@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 258);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 259);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1475,16 +1475,28 @@ function portada_actual(): string {
     $c = (string)($_COOKIE[DDD_PORTADA_COOKIE] ?? '');
     return $p = isset(portadas()[$c]) ? $c : 'substacks';   // quien llega por primera vez ve Substacks, lo propio de Deltha
 }
-function delta_explica(array $s): string {
+/** Las piezas del δ de un envío: votos netos que cuentan, su raíz con signo, el bonus del tema y lo que resta la antigüedad. */
+function delta_partes(array $s): array {
     $n = (int)($s['eff_pos'] ?? 0) - (int)($s['eff_neg'] ?? 0);
     $raiz = ($n <=> 0) * sqrt(abs($n));
     $bonus = $n > 0 ? (float)($s['bonus'] ?? 0) : 0.0;
     $dec = delta_decay($s['portada'] ?? null) * delta_hh((string)$s['sent_date'], isset($s['sent_act']) ? (int)$s['sent_act'] : null);
+    return [$n, $raiz, $bonus, $dec];
+}
+function delta_explica(array $s): string {
+    [$n, $raiz, $bonus, $dec] = delta_partes($s);
     $f = fn(float $x) => number_format($x, 2, ',', '');
     $txt = ($n < 0 ? '−' : '') . '√' . abs($n) . ' ' . t('votos') . ' = ' . number_format($raiz, 2, ',', '');
     if ($bonus > 0) $txt .= ' + ' . $f($bonus) . ' ' . h((string)($s['topic'] ?? ''));
     $txt .= ' − ' . $f($dec) . ' ' . (isset($s['sent_act']) && $s['sent_act'] !== null && delta_por_actividad() ? t('por actividad') . ' (' . delta_edad_txt($s) . ')' : t('por antigüedad'));
     return $txt . ' = ' . number_format($raiz + $bonus - $dec, 1, ',', '');
+}
+/** Línea del δ de un envío en el radar (13/11/2026, pedido por los usuarios): a la vista solo el valor y el estado ($estado, texto
+ *  plano); la cuenta entera queda plegada tras «ver cálculo», para quien quiera mirarla. <details>: se abre sin JS. */
+function delta_linea(array $s, string $estado): string {
+    [, $raiz, $bonus, $dec] = delta_partes($s);
+    return "<details class=\"delta\"><summary>δ " . number_format($raiz + $bonus - $dec, 1, ',', '') . " · " . h($estado) . " · <span class=\"dver\">" . t('ver cálculo') . "</span></summary>"
+         . "<span class=\"dcalc\">δ " . h(delta_explica($s)) . "</span></details>";
 }
 /** Duracion en horas, en palabras y en el idioma de la pagina: 48 → «dos días», 168 → «una semana», 36 → «36 horas». */
 function dur_pg(string $lang, int $hours): string {

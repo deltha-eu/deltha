@@ -1119,4 +1119,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Bildirilen her yorumun kendi konuşması var: karar vermeden önce anlaşmak için mesajları oraya bırakın.',
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Bu mesaj artık düzenlenemez: süre %d dakikadır.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Gönderilmiş bir mesajı düzeltiyorsun; düzenlendi olarak işaretlenecek.',
+'ver cálculo' => 'hesabı gör',
 ];

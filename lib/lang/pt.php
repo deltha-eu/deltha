@@ -1135,4 +1135,5 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Cada comentário reportado tem a sua conversa: deixem aí as mensagens para se porem de acordo antes de decidir.',
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Essa mensagem já não pode ser editada: o prazo é de %d minutos.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Estás a corrigir uma mensagem já enviada; ficará marcada como editada.',
+'ver cálculo' => 'ver cálculo',
 ];

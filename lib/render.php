@@ -117,7 +117,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
             global $DDD_ETA;   // la pagina puede dejar calculadas las estimaciones (cola_eta) para no repetirlas por envio
             $p = portada_de($pdo, $s);
             $st = isset($DDD_ETA[(int)$s['story_id']]) ? eta_txt($DDD_ETA[(int)$s['story_id']], $p) : t('hacia %s', t(DDD_PORTADAS[$p])) . ' · ' . radar_falta($s);
-            echo "<div class=\"delta\">δ " . h(delta_explica($s)) . " · " . h($st) . "</div>";
+            echo delta_linea($s, $st);   // valor y estado a la vista; la cuenta, tras «ver cálculo»
         }
     }
     echo "<div class=\"actions\">";

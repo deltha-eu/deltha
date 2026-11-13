@@ -157,6 +157,13 @@ nav.sub.foros form.seguir button { font-size: 12px; padding: 3px 10px; }
 .pk { display: flex; gap: 8px; align-items: flex-start; color: var(--muted); }
 .pk b { color: var(--fg); font-weight: 600; }
 .delta { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); margin: 2px 0 4px; }
+/* la cuenta del δ, plegada tras «ver cálculo» (delta_linea, 13/11/2026) */
+details.delta > summary { list-style: none; cursor: pointer; }
+details.delta > summary::-webkit-details-marker { display: none; }
+details.delta .dver { text-decoration: underline; text-underline-offset: 2px; }
+details.delta .dver::after { content: " ▸"; }
+details.delta[open] .dver::after { content: " ▾"; }
+details.delta .dcalc { display: block; margin-top: 3px; }
 .actions { display: flex; align-items: center; gap: 22px; margin-top: 6px; color: var(--muted); font-size: 13px; }
 .actions a, .actions .vote > span, .actions button { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
 .actions .i { width: 19px; height: 19px; }
