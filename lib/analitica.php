@@ -15,11 +15,19 @@ declare(strict_types=1);
 function ana_on(): bool { return (string)cfg('analytics_enabled', '1') === '1'; }
 /** ¿Ve la analitica completa en /analitica (por fechas, paginas, procedencia, paises…, salidas por visitante y uso de las relacionadas)?
  *  El admin siempre; un registrado, con aura por encima de config.analytics_full_aura (50; 0 = solo el admin). El resto de registrados
- *  ve la version limitada: las cifras cerradas, la actividad, «Ahora» y «Hoy». Decision de Angel del 13/11/2026 (antes: completa desde 10). */
+ *  ve la version limitada. Decision de Angel del 13/11/2026 (antes: completa desde 10). */
 function ana_full(): bool {
     if (is_admin()) return true;
     $u = user(); $min = (float)cfg('analytics_full_aura', 50);
     return $u && $min > 0 && (float)($u['aura'] ?? 0) > $min;
+}
+/** ¿Ve la version limitada (ademas de las cifras cerradas y la actividad, «Ahora» y «Hoy»)? Desde config.analytics_live_aura (10, el
+ *  limite de aura que la analitica tenia de siempre; 0 = nadie salvo quien ve la completa). Por debajo, solo las cifras cerradas:
+ *  para todo el mundo esta /estadisticas. */
+function ana_live(): bool {
+    if (ana_full()) return true;
+    $u = user(); $min = (float)cfg('analytics_live_aura', 10);
+    return $u && $min > 0 && (float)($u['aura'] ?? 0) >= $min;
 }
 
 /** Registrar la pagina actual. Se llama desde page_header(); nunca rompe la pagina. */

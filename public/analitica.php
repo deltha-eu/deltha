@@ -1,9 +1,10 @@
 <?php
-/** /analitica — analitica propia, para registrados: visitantes, sesiones y paginas vistas de ayer, del mes y del año (cifras cerradas
- *  por dias, ana_daily, lib/analitica.php), la actividad y, de lib/analitica-admin.php, «Ahora» y «Hoy». Es la version limitada.
- *  Con aura por encima de analytics_full_aura (50) y para el admin (ana_full()) sale todo: ademas, salidas por visitante, uso de las
- *  relacionadas y la analitica completa de «Por fechas» hacia abajo (paginas, procedencia, paises…). Recarga automatica cada minuto
- *  (auto=1 para que no cuente como pagina vista). 16/10/2026; niveles del 13/11/2026. */
+/** /analitica — analitica propia, para registrados, en tres niveles (13/11/2026; para todo el mundo esta /estadisticas):
+ *   · cualquier registrado: visitantes, sesiones y paginas vistas de ayer, del mes y del año (cifras cerradas por dias, ana_daily) y la actividad;
+ *   · desde aura analytics_live_aura (10; ana_live()), la version limitada: ademas, «Ahora» y «Hoy» de lib/analitica-admin.php;
+ *   · con aura por encima de analytics_full_aura (50) y el admin (ana_full()), todo: ademas, salidas por visitante, uso de las
+ *     relacionadas y de «Por fechas» hacia abajo (paginas, procedencia, paises…).
+ *  Con «Ahora» a la vista, recarga automatica cada minuto (auto=1 para que no cuente como pagina vista). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 if (!user()) redirect('/login');
@@ -19,8 +20,8 @@ $dAnio = $ayer >= $anio ? ana_sum($pdo, $anio, $ayer) : ['visitors' => 0, 'sessi
 $n = fn($v) => number_format((int)$v, 0, ',', '.');
 $tile = fn($num, string $label) => "<div class=\"tile\"><b>" . $n($num) . "</b><span>" . h($label) . "</span></div>";
 
-$full = ana_full();
-page_header(t('Analítica'), 'analitica', refresh_meta(60));   // «Ahora» lo ven todos
+$full = ana_full(); $live = ana_live();
+page_header(t('Analítica'), 'analitica', $live ? refresh_meta(60) : '');
 echo "<div class=\"statspage\">";
 echo "<p class=\"notice ayuda\" data-k=\"analitica\">" . t('Cifras cerradas por días: se actualizan una vez al día, de madrugada. Medición propia, sin cookies ni servicios de terceros: contamos cada página vista con una huella no reversible que cambia cada día, así que «visitantes» son personas distintas por día (el mes y el año suman los días).') . "</p>";
 if ($first && $first > $anio) echo "<p class=\"meta\">" . t('Datos desde el %s.', date('d/m/Y', strtotime($first))) . "</p>";
@@ -74,10 +75,14 @@ foreach ($act as [$lbl, $sql]) {
     echo $tile($ayer >= $anio ? $cnt($sql, $anio, $ayer) : 0, t('este año'));
     echo "</div>";
 }
-require __DIR__ . '/../lib/analitica-admin.php';
-echo "<div class=\"anafull\">" . ($full ? "<h2>" . t('Analítica completa') . "</h2>" : '');
-ana_admin($pdo, '/analitica', !$full);   // limitada: «Ahora» y «Hoy»; de «Por fechas» hacia abajo, solo la completa
-echo "</div>";
-if (!$full && (float)cfg('analytics_full_aura', 50) > 0) echo "<p class=\"meta\">" . t('Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.', rtrim(rtrim(number_format((float)cfg('analytics_full_aura', 50), 2, ',', '.'), '0'), ',')) . "</p>";
+if ($live) {
+    require __DIR__ . '/../lib/analitica-admin.php';
+    echo "<div class=\"anafull\">" . ($full ? "<h2>" . t('Analítica completa') . "</h2>" : '');
+    ana_admin($pdo, '/analitica', !$full);   // limitada: «Ahora» y «Hoy»; de «Por fechas» hacia abajo, solo la completa
+    echo "</div>";
+}
+$fmt = fn(string $k, float $d) => rtrim(rtrim(number_format((float)cfg($k, $d), 2, ',', '.'), '0'), ',');
+if (!$live && (float)cfg('analytics_live_aura', 10) > 0) echo "<p class=\"meta\">" . t('Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.', $fmt('analytics_live_aura', 10)) . "</p>";
+elseif (!$full && (float)cfg('analytics_full_aura', 50) > 0) echo "<p class=\"meta\">" . t('Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.', $fmt('analytics_full_aura', 50)) . "</p>";
 echo "</div>";
 page_footer();

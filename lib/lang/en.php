@@ -1169,4 +1169,5 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 '%s clics de %s veces mostradas' => '%s clicks out of %s times shown',
 'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Of the times the “Related” box is shown under a submission, how often one of its stories is clicked. Measured since 13/11/2026.',
 'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => 'With an aura above %s you will see the full analytics here: any date range with pages, referrers, countries and devices.',
+'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'With an aura of %s or more you will also see what is being read right now and today’s figures.',
 ];
