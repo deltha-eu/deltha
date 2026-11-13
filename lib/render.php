@@ -91,7 +91,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     echo "<span class=\"dval\" title=\"" . t('delta en vivo') . "\">δ " . number_format(delta_live($s), 1, ',', '') . "</span>";   // solo lo pinta la plantilla Delta
     if (foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');   // sin distracciones: la foto va antes del titular para flotar a su derecha
     echo "<h2><a href=\"" . ((int)$s['comments'] > 0 ? $hrefC : $href) . "\">" . h($s['title']) . "</a></h2>";
-    if ($s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth(md_plano((string)$s['content']), 0, $mode === 'full' ? 240 : 140, '…')) . "</p>";   // tambien en el radar (compact), mas corto
+    if ($s['content']) echo "<p class=\"lead\">" . h(mb_strimwidth(md_plano((string)$s['content']), 0, $mode === 'full' ? 240 : 210, '…')) . "</p>";   // tambien en el radar (compact), algo mas corto: unas tres lineas (antes 140, dos; 13/11/2026)
     if (!foco()) media_block($s, $mode === 'full' ? 'media' : 'media sm');
     if ($s['status'] === 'destacadas' && $s['published_date']) {
         echo "<div class=\"life\" title=\"" . h(queda($s['published_date'])) . "\"><span style=\"width:" . vida_pct($s['published_date']) . "%\"></span></div>";
