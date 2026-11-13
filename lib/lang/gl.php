@@ -1096,4 +1096,6 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ola. Un moderador editou o teu comentario en «%s». Motivo: %s. Se cres que é un erro, responde a esta mensaxe.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Ola. Un moderador editou a túa mensaxe do Chat. Motivo: %s. Se cres que é un erro, responde a esta mensaxe.',
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Cada comentario reportado ten a súa conversa: deixade alí as mensaxes para poñervos de acordo antes de decidir.',
+'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Esa mensaxe xa non se pode editar: o prazo é de %d minutos.',
+'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Estás a corrixir unha mensaxe xa enviada; quedará marcada como editada.',
 ];

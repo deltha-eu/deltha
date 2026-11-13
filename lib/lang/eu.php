@@ -1096,4 +1096,6 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Hola. Un moderador ha editado tu comentario en «%s». Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek «%s» harian idatzi zenuen iruzkina editatu du. Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
 'Hola. Un moderador ha editado tu mensaje del Chat. Motivo: %s. Si crees que es un error, responde a este mensaje.' => 'Kaixo. Moderatzaile batek Txateko zure mezua editatu du. Arrazoia: %s. Akatsa dela uste baduzu, erantzun mezu honi.',
 'Cada comentario reportado tiene su conversación: dejad ahí los mensajes para poneros de acuerdo antes de decidir.' => 'Salatutako iruzkin bakoitzak bere elkarrizketa du: utzi han mezuak erabaki aurretik ados jartzeko.',
+'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Mezu hori ezin da jada editatu: epea %d minutukoa da.',
+'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Bidalitako mezu bat zuzentzen ari zara; editatu gisa markatuta geratuko da.',
 ];
