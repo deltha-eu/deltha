@@ -1150,4 +1150,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Uso de las relacionadas' => 'Uso das relacionadas',
 '%s clics de %s veces mostradas' => '%s cliques em %s vezes mostradas',
 'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Das vezes que a caixa «Relacionadas» é mostrada por baixo de um envio, em quantas se clica numa das suas notícias. Mede-se desde 13/11/2026.',
+'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => 'Com mais de %s de aura verás aqui a analítica completa: qualquer intervalo de datas com páginas, proveniência, países e dispositivos.',
+'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Com aura %s ou mais verás também o que se está a ler agora e o dia de hoje.',
+'Ver la analítica completa' => 'Ver a analítica completa',
+'Ver menos' => 'Ver menos',
 ];

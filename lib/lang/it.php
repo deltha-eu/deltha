@@ -1114,4 +1114,8 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Uso de las relacionadas' => 'Uso delle correlate',
 '%s clics de %s veces mostradas' => '%s clic su %s volte mostrate',
 'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Delle volte in cui il riquadro «Correlate» viene mostrato sotto un invio, in quante si clicca su una delle sue notizie. Si misura dal 13/11/2026.',
+'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => 'Con più di %s di aura vedrai qui l’analitica completa: qualsiasi intervallo di date con pagine, provenienza, paesi e dispositivi.',
+'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Con aura %s o più vedrai anche che cosa si sta leggendo adesso e la giornata di oggi.',
+'Ver la analítica completa' => 'Vedi l’analitica completa',
+'Ver menos' => 'Vedi meno',
 ];

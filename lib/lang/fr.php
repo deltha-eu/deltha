@@ -1167,4 +1167,8 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'Uso de las relacionadas' => 'Utilisation des articles liés',
 '%s clics de %s veces mostradas' => '%s clics sur %s affichages',
 'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Sur le nombre de fois où l’encadré « Liés » est affiché sous un envoi, combien de fois on clique sur l’une de ses actualités. Mesuré depuis le 13/11/2026.',
+'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => 'Avec plus de %s d’aura, tu verras ici l’analytique complète : n’importe quelle plage de dates avec pages, provenance, pays et appareils.',
+'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Avec une aura de %s ou plus, tu verras aussi ce qui se lit en ce moment et la journée d’aujourd’hui.',
+'Ver la analítica completa' => 'Voir l’analytique complète',
+'Ver menos' => 'Voir moins',
 ];
