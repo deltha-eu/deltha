@@ -1099,4 +1099,12 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Aquest missatge ja no es pot editar: el termini és de %d minuts.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Estàs corregint un missatge ja enviat; quedarà marcat com a editat.',
 'ver cálculo' => 'veure càlcul',
+'última noticia' => 'última notícia',
+'seguidores' => 'seguidors',
+'más nuevas' => 'més noves',
+'top hoy' => 'top avui',
+'top semana' => 'top setmana',
+'top mes' => 'top mes',
+'%d seguidores' => '%d seguidors',
+'añadida %s' => 'afegida %s',
 ];

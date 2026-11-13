@@ -1120,4 +1120,12 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Ese mensaje ya no se puede editar: el plazo es de %d minutos.' => 'Bu mesaj artık düzenlenemez: süre %d dakikadır.',
 'Estás corrigiendo un mensaje ya enviado; quedará marcado como editado.' => 'Gönderilmiş bir mesajı düzeltiyorsun; düzenlendi olarak işaretlenecek.',
 'ver cálculo' => 'hesabı gör',
+'última noticia' => 'son haber',
+'seguidores' => 'takipçiler',
+'más nuevas' => 'en yeniler',
+'top hoy' => 'bugünün en iyileri',
+'top semana' => 'haftanın en iyileri',
+'top mes' => 'ayın en iyileri',
+'%d seguidores' => '%d takipçi',
+'añadida %s' => 'eklendi: %s',
 ];

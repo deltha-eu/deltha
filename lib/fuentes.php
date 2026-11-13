@@ -306,6 +306,38 @@ function fuentes_ultima_noticia(PDO $pdo): array {
     }
     return $r;
 }
+/** Seguidores de cada fuente (user_media): [source_id => n]. Para ordenar el catálogo (/fuentes?o=seguidores). */
+function fuentes_seguidores(PDO $pdo): array {
+    try { return array_map('intval', cache_remember('fuentes:seguidores', 60, fn() => $pdo->query("SELECT source_id, COUNT(*) FROM user_media GROUP BY source_id")->fetchAll(PDO::FETCH_KEY_PAIR))); }
+    catch (Throwable $e) { return []; }
+}
+/** Envíos a Deltha de cada fuente en los últimos $dias días: [source_id => n] (/fuentes?o=hoy|semana|mes). Un envío es de la fuente
+ *  cuyo dominio (el de su web) coincide con stories.source; en YouTube todos los canales comparten dominio, así que ahí se casa por
+ *  el vídeo con lo que el canal tiene guardado en source_items (lo que ya caducó del feed no cuenta: el mes puede quedarse corto). */
+function fuentes_envios(PDO $pdo, int $dias): array {
+    try {
+        return cache_remember("fuentes:envios:$dias", 300, function () use ($pdo, $dias) {
+            $st = $pdo->prepare("SELECT source, COUNT(*) FROM stories WHERE status IN ('nuevas','destacadas','archived') AND content_type = 'link' AND source IS NOT NULL AND sent_date >= NOW() - INTERVAL ? DAY GROUP BY source");
+            $st->execute([$dias]);
+            $porDom = $st->fetchAll(PDO::FETCH_KEY_PAIR);
+            $r = []; $yt = [];
+            foreach (fuentes_activas($pdo) as $f) {
+                if (($f['kind'] ?? '') === 'youtube') { $yt[] = (int)$f['source_id']; continue; }
+                $d = (string)source_of((string)$f['home']);
+                if ($d !== '' && isset($porDom[$d])) $r[(int)$f['source_id']] = (int)$porDom[$d];
+            }
+            if ($yt) {
+                $sv = $pdo->prepare("SELECT url FROM stories WHERE status IN ('nuevas','destacadas','archived') AND content_type = 'link' AND source IN ('youtube.com','m.youtube.com','youtu.be') AND sent_date >= NOW() - INTERVAL ? DAY");
+                $sv->execute([$dias]);
+                $vids = [];
+                foreach ($sv->fetchAll(PDO::FETCH_COLUMN) as $url) if (($v = youtube_video_id((string)$url)) !== '') $vids[$v] = ($vids[$v] ?? 0) + 1;
+                if ($vids) foreach ($pdo->query("SELECT source_id, url FROM source_items WHERE source_id IN (" . implode(',', $yt) . ")") as $i)
+                    if (($v = youtube_video_id((string)$i['url'])) !== '' && isset($vids[$v])) $r[(int)$i['source_id']] = ($r[(int)$i['source_id']] ?? 0) + $vids[$v];
+            }
+            return $r;
+        });
+    } catch (Throwable $e) { return []; }
+}
 function medios_menu(PDO $pdo, ?array $u, int $max = 0, string $kind = 'medio'): array {
     $max = $max ?: medios_max($kind);
     $list = mis_medios_recientes($pdo, $u, $kind);   // el filtro de idiomas tambien quita las favoritas en otro
