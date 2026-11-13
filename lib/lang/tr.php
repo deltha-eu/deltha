@@ -1134,4 +1134,5 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Uso de las relacionadas' => 'İlgili haberlerin kullanımı',
 '%s clics de %s veces mostradas' => '%2$s gösterimde %1$s tıklama',
 'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Bir gönderinin altında «İlgili» kutusunun gösterildiği seferlerin kaçında haberlerinden birine tıklandığı. 13/11/2026’dan beri ölçülüyor.',
+'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => '%s üzerinde bir aura ile burada tam analitiği göreceksin: sayfalar, kaynak, ülkeler ve cihazlarla istediğin tarih aralığı.',
 ];

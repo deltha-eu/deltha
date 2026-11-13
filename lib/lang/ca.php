@@ -1113,4 +1113,5 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Uso de las relacionadas' => 'Ús de les relacionades',
 '%s clics de %s veces mostradas' => '%s clics de %s vegades mostrades',
 'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'De les vegades que es mostra la caixa «Relacionades» sota un enviament, en quantes es prem una de les seves notícies. Es mesura des del 13/11/2026.',
+'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => 'Amb més de %s d’aura veuràs aquí l’analítica completa: qualsevol interval de dates amb pàgines, procedència, països i dispositius.',
 ];

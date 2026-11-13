@@ -4,7 +4,7 @@
  *  paises, dispositivos e idiomas. Todo desde hits (detalle, analytics_keep_days dias) y ana_daily (totales, siempre). */
 declare(strict_types=1);
 
-function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
+function ana_admin(PDO $pdo, string $base = '/admin?t=analitica', bool $limitada = false): void {   // $limitada (13/11/2026): solo «Ahora» y «Hoy»; de «Por fechas» hacia abajo, nada
     $n = fn($v) => number_format((int)$v, 0, ',', '.');
     $bu = parse_url($base); parse_str((string)($bu['query'] ?? ''), $bq);   // el formulario GET necesita la ruta y los parametros fijos como hidden
     $link = fn(string $f, string $t) => h($base . (str_contains($base, '?') ? '&' : '?') . "from=$f&to=$t");
@@ -44,6 +44,8 @@ function ana_admin(PDO $pdo, string $base = '/admin?t=analitica'): void {
               [$hoyN("SELECT COUNT(*) FROM votes WHERE created >= CURDATE()"), 'votos'], [$hoyN("SELECT COUNT(*) FROM comments WHERE deleted = 0 AND created >= CURDATE()"), 'comentarios']] as [$v, $l])
         echo "<div class=\"tile\"><b>" . $n($v) . "</b><span>$l</span></div>";
     echo "</div></div>";
+
+    if ($limitada) return;
 
     // ---- rango ----
     echo "<h3>Por fechas</h3><form method=\"get\" class=\"anaform\" action=\"" . h($bu['path'] ?? '/') . "\">";

@@ -1,8 +1,9 @@
 <?php
-/** /analitica — analitica propia, para registrados: visitantes, sesiones y paginas vistas de ayer, del mes y del año.
- *  Cifras cerradas por dias (ana_daily, lib/analitica.php): cambian una vez al dia. Desde aura analytics_full_aura (10) y para el admin
- *  (ana_full()), debajo va la analitica completa de admin (lib/analitica-admin.php: ahora, hoy, por fechas, paginas, procedencia, paises…),
- *  con recarga automatica cada minuto (auto=1 para que no cuente como pagina vista). 16/10/2026. */
+/** /analitica — analitica propia, para registrados: visitantes, sesiones y paginas vistas de ayer, del mes y del año (cifras cerradas
+ *  por dias, ana_daily, lib/analitica.php), la actividad y, de lib/analitica-admin.php, «Ahora» y «Hoy». Es la version limitada.
+ *  Con aura por encima de analytics_full_aura (50) y para el admin (ana_full()) sale todo: ademas, salidas por visitante, uso de las
+ *  relacionadas y la analitica completa de «Por fechas» hacia abajo (paginas, procedencia, paises…). Recarga automatica cada minuto
+ *  (auto=1 para que no cuente como pagina vista). 16/10/2026; niveles del 13/11/2026. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 if (!user()) redirect('/login');
@@ -19,7 +20,7 @@ $n = fn($v) => number_format((int)$v, 0, ',', '.');
 $tile = fn($num, string $label) => "<div class=\"tile\"><b>" . $n($num) . "</b><span>" . h($label) . "</span></div>";
 
 $full = ana_full();
-page_header(t('Analítica'), 'analitica', $full ? refresh_meta(60) : '');
+page_header(t('Analítica'), 'analitica', refresh_meta(60));   // «Ahora» lo ven todos
 echo "<div class=\"statspage\">";
 echo "<p class=\"notice ayuda\" data-k=\"analitica\">" . t('Cifras cerradas por días: se actualizan una vez al día, de madrugada. Medición propia, sin cookies ni servicios de terceros: contamos cada página vista con una huella no reversible que cambia cada día, así que «visitantes» son personas distintas por día (el mes y el año suman los días).') . "</p>";
 if ($first && $first > $anio) echo "<p class=\"meta\">" . t('Datos desde el %s.', date('d/m/Y', strtotime($first))) . "</p>";
@@ -30,6 +31,7 @@ foreach ([['visitors', t('visitantes')], ['sessions', t('sesiones')], ['pageview
     echo $tile($dAnio[$k], t('este año'));
     echo "</div>";
 }
+if ($full) {   // salidas por visitante y uso de las relacionadas: solo en la version completa (13/11/2026)
 // salidas por visitante (13/11/2026, pedido por Angel): ¿la gente pulsa o solo mira titulares? Clics que llevan a un medio (clicks_daily,
 // los mismos de /estadisticas) entre los visitantes de esos dias. Mes y año: suma de salidas entre suma de visitantes de cada dia.
 $sal = function (string $from, string $to) use ($pdo): int {
@@ -56,6 +58,7 @@ echo $relT($ayer, $ayer, t('ayer'));
 echo $relT($mes, $ayer, t('este mes'));
 echo $relT($anio, $ayer, t('este año'));
 echo "</div>";
+}
 // actividad (19/10/2026, pedido por Angel): envios, portadas, votos y comentarios de ayer, del mes y del año, de las tablas de verdad
 $cnt = function (string $sql, string $from, string $to) use ($pdo): int { $st = $pdo->prepare($sql); $st->execute([$from, $to]); return (int)$st->fetchColumn(); };
 $act = [
@@ -71,11 +74,10 @@ foreach ($act as [$lbl, $sql]) {
     echo $tile($ayer >= $anio ? $cnt($sql, $anio, $ayer) : 0, t('este año'));
     echo "</div>";
 }
-if ($full) {
-    require __DIR__ . '/../lib/analitica-admin.php';
-    echo "<div class=\"anafull\"><h2>" . t('Analítica completa') . "</h2>";
-    ana_admin($pdo, '/analitica');
-    echo "</div>";
-} elseif ((float)cfg('analytics_full_aura', 10) > 0) echo "<p class=\"meta\">" . t('Con aura %s o más verás aquí la analítica completa: lo que se está leyendo ahora, el día de hoy y cualquier rango de fechas con páginas, procedencia, países y dispositivos.', rtrim(rtrim(number_format((float)cfg('analytics_full_aura', 10), 2, ',', '.'), '0'), ',')) . "</p>";
+require __DIR__ . '/../lib/analitica-admin.php';
+echo "<div class=\"anafull\">" . ($full ? "<h2>" . t('Analítica completa') . "</h2>" : '');
+ana_admin($pdo, '/analitica', !$full);   // limitada: «Ahora» y «Hoy»; de «Por fechas» hacia abajo, solo la completa
+echo "</div>";
+if (!$full && (float)cfg('analytics_full_aura', 50) > 0) echo "<p class=\"meta\">" . t('Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.', rtrim(rtrim(number_format((float)cfg('analytics_full_aura', 50), 2, ',', '.'), '0'), ',')) . "</p>";
 echo "</div>";
 page_footer();
