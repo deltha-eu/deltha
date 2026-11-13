@@ -1116,4 +1116,6 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Wie oft bei den Einblendungen des Kastens „Verwandt“ unter einem Beitrag auf eine seiner Meldungen geklickt wird. Gemessen seit dem 13.11.2026.',
 'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => 'Mit einer Aura über %s siehst du hier die vollständige Analyse: jeden Datumsbereich mit Seiten, Herkunft, Ländern und Geräten.',
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Ab einer Aura von %s siehst du auch, was gerade gelesen wird, und den heutigen Tag.',
+'Ver la analítica completa' => 'Vollständige Analyse anzeigen',
+'Ver menos' => 'Weniger anzeigen',
 ];
