@@ -258,8 +258,8 @@ function mod_log_post(PDO $pdo, string $page, &$out = null, string $extra = '', 
  *  (envío, artículo, comentario, mensaje del Chat) escribe por qué, y ese motivo se le envía al autor por mensaje privado,
  *  en su idioma, igual que al eliminar un envío. El campo viaja en el POST, así que mod_log_post() lo deja en el registro. */
 function mod_motivo_post(): string { return mb_substr(trim(preg_replace('/\s+/', ' ', post('motivo'))), 0, 300); }
-function mod_motivo_campo(): string {
-    return "<label>Motivo de la edición <small>(obligatorio si cambias el texto: queda en el registro de moderación y se le envía al autor por mensaje)</small></label>"
+function mod_motivo_campo(string $cuando = ''): string {   // $cuando: cuándo es obligatorio, si no es lo habitual
+    return "<label>Motivo de la edición <small>(" . h($cuando !== '' ? $cuando : 'obligatorio si cambias el texto') . ": queda en el registro de moderación y se le envía al autor por mensaje)</small></label>"
          . "<input type=\"text\" name=\"motivo\" maxlength=\"300\" placeholder=\"p. ej. cambiada la palabra «nazi» por «ultra» para evitar problemas legales\" value=\"" . h(post('motivo')) . "\">";
 }
 /** $k: cadena del aviso (va por t_in() al idioma del autor); $a: sus argumentos, ya con el motivo; $path: enlace a lo editado. */
