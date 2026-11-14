@@ -72,13 +72,16 @@ function sigfrid_user(PDO $pdo): ?array {
 /** ¿Le hablan a Sigfrid? «@Sigfrid …» en cualquier sitio, o el mensaje empieza por «Sigfrid» seguido de coma, dos puntos o espacio. */
 function sigfrid_dirigido(string $content, string $login = ''): bool {
     $l = preg_quote($login !== '' ? $login : (string)cfg('sigfrid_login', 'Sigfrid'), '~');
-    return (bool)preg_match("~(?<![\\w@])@$l\\b|^\\s*$l\\s*[,:]?\\s~iu", $content);
+    return (bool)preg_match("~(?<![\\w@])@$l\\b|^\\s*(#\\d+\\s+)*$l\\s*[,:]?\\s~iu", $content);   // «#508 Sigfrid, …» tambien (14/11/2026)
 }
 
 /** Texto en minusculas, sin acentos, sin la mencion a Sigfrid y con los espacios compactados: sobre esto van las reglas. */
 function sigfrid_normaliza(string $t, string $login = ''): string {
     $l = preg_quote($login !== '' ? $login : (string)cfg('sigfrid_login', 'Sigfrid'), '~');
     $t = preg_replace("~(?<![\\w@])@$l\\b|^\\s*$l\\s*[,:]?~iu", ' ', $t);
+    $t = preg_replace('~(?<!\\w)#\\d+\\b~', ' ', $t);   // las citas (#508) no son texto: sin esto «#508 @Sigfrid ¿y para…?» no parecia una continuacion (14/11/2026)
+    $t = preg_replace("~^\\s*$l\\s*[,:]?~iu", ' ', $t);   // «#508 Sigfrid, …»: el nombre tras la cita
+    $t = preg_replace('/[¿¡?!«»"]+/u', ' ', $t);   // «¿y este mes?»: los signos no son texto (sin esto «¿y…» no empezaba por «y» y no era continuacion)
     $t = mb_strtolower($t, 'UTF-8');
     $t = strtr($t, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'ç' => 'c']);
     return trim(preg_replace('/\s+/u', ' ', $t));
@@ -183,8 +186,11 @@ function sigfrid_contexto(PDO $pdo, int $mid, string $login, int $salto = 0): ?a
     $q = $pdo->prepare("SELECT msg_id, content FROM chat WHERE msg_id = ?"); $q->execute([(int)$resp['reply_to']]);
     if (!($preg = $q->fetch())) return null;
     $in = sigfrid_intencion((string)$preg['content'], $login);
-    if ($in !== null && $in['accion'] !== 'ayuda') return $in;
-    if (sigfrid_es_continuacion(sigfrid_normaliza((string)$preg['content'], $login))) return sigfrid_contexto($pdo, (int)$preg['msg_id'], $login, $salto + 1);   // tambien era «¿y hoy?»: mas atras
+    $cont = sigfrid_es_continuacion(sigfrid_normaliza((string)$preg['content'], $login));
+    if ($cont && ($mas = sigfrid_contexto($pdo, (int)$preg['msg_id'], $login, $salto + 1)) && $mas['accion'] === 'reglas')   // «¿y para crear una comunidad?» tras una duda de
+        return $mas + ['previa' => trim(($mas['previa'] ?? '') . ' ' . $preg['content'])];                                  // funcionamiento sigue siendo de reglas, diga lo que diga sola
+    if ($in !== null && $in['accion'] !== 'ayuda') return $in + ['previa' => (string)$preg['content']];   // 'previa': la pregunta anterior, por si la continuacion es de reglas
+    if ($cont) return $mas ?? null;   // tambien era «¿y hoy?»: lo de mas atras
     return null;
 }
 
@@ -532,7 +538,7 @@ function sigfrid_raices(string $t): array {
                     'analitica' => 'analitica', 'estadisticas' => 'analitica', 'columna' => 'columna', 'cajas' => 'columna', 'moderar' => 'modera', 'moderador' => 'modera', 'moderadores' => 'modera',
                     'ip' => 'ip', 'ips' => 'ip', 'propiedad' => 'propiedad', 'reparto' => 'propiedad', 'tope' => 'tope', 'topes' => 'tope', 'maximo' => 'tope', 'maximos' => 'tope', 'maxima' => 'tope', 'maximas' => 'tope', 'limite' => 'tope', 'limites' => 'tope',
                     'cuesta' => 'cuesta', 'gasta' => 'cuesta', 'gastar' => 'cuesta', 'usa' => 'cuesta', 'precio' => 'cuesta', 'coste' => 'cuesta', 'vale' => 'cuesta', 'creditos' => 'cuesta',
-                    'noticia' => 'enviar', 'noticias' => 'enviar', 'enlace' => 'enviar', 'enlaces' => 'enviar', 'link' => 'enviar', 'publicar' => 'enviar', 'hora' => 'hora', 'dia' => 'dia', 'dias' => 'dia'];
+                    'noticia' => 'enviar', 'noticias' => 'enviar', 'enlace' => 'enviar', 'enlaces' => 'enviar', 'link' => 'enviar', 'hora' => 'hora', 'dia' => 'dia', 'dias' => 'dia'];
     $t = sigfrid_normaliza($t);
     $t = strtr($t, ['ñ' => 'n']);
     $out = [];
@@ -547,9 +553,12 @@ function sigfrid_raices(string $t): array {
 
 /** Respuesta inmediata a una duda de funcionamiento: los parametros de config cuya descripcion comparte mas raices con la pregunta.
  *  null si ninguno encaja lo bastante (entonces lo intenta el modelo del PC con todas las reglas a la vista, o la ayuda). */
-function sigfrid_reglas_responder(PDO $pdo, string $content, string $login = ''): ?string {
-    $q = sigfrid_raices(sigfrid_normaliza_mencion($content, $login));
-    if (count($q) === 0) return null;
+function sigfrid_reglas_responder(PDO $pdo, string $content, string $login = '', string $previa = ''): ?string {
+    // $previa: la pregunta anterior en una continuacion («¿y para destacar?»): sus raices ayudan a puntuar, pero cada parametro
+    // elegido tiene que compartir al menos una raiz con lo que se pregunta ahora, o saldria otra vez lo de antes.
+    $ahora = sigfrid_raices(sigfrid_normaliza_mencion($content, $login));
+    $q = $previa === '' ? $ahora : array_values(array_unique(array_merge($ahora, sigfrid_raices(sigfrid_normaliza_mencion($previa, $login)))));
+    if (count($ahora) === 0) return null;
     // cada parametro puntua por las raices que comparte con la pregunta, pesadas por rareza (una raiz que esta en muchas descripciones,
     // como «aura» o «portada», vale poco; «votos» o «archivarse», mucho). Hacen falta al menos dos raices en comun.
     $filas = []; $df = [];
@@ -561,7 +570,7 @@ function sigfrid_reglas_responder(PDO $pdo, string $content, string $login = '')
     $cand = [];
     foreach ($filas as $f) {
         $comunes = array_intersect($q, $f['raices']);
-        if (count($comunes) < 2) continue;
+        if (count($comunes) < 2 || !array_intersect($ahora, $f['raices'])) continue;
         $peso = 0.0;
         foreach ($comunes as $x) $peso += (in_array($x, $f['clave'], true) ? 2 : 1) / $df[$x];   // lo que esta en el nombre del parametro pesa doble
         $cand[] = ['n' => $peso, 'r' => $f['r']];
@@ -761,9 +770,12 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
         $login = (string)$sig['login'];
         if (!sigfrid_dirigido($content, $login)) return;
         $in = sigfrid_intencion($content, $login);
-        if ($in === null) {   // memoria del hilo: «¿y este mes?» hereda la accion de la pregunta anterior; el periodo, si lo dice, es el nuevo
-            $n = sigfrid_normaliza($content, $login);
-            if (sigfrid_es_continuacion($n) && ($ctx = sigfrid_contexto($pdo, $mid, $login))) {
+        $n = sigfrid_normaliza($content, $login);
+        $ctx = sigfrid_es_continuacion($n) ? sigfrid_contexto($pdo, $mid, $login) : null;
+        if ($ctx && $ctx['accion'] === 'reglas') {   // «¿y para crear una comunidad?» tras una duda de funcionamiento sigue siendo una duda de funcionamiento (14/11/2026),
+            $in = ['accion' => 'reglas', 'periodo' => 'semana', 'previa' => (string)($ctx['previa'] ?? '')];   // aunque «comunidad» por si sola fuera la comunidad mas activa
+        } elseif ($in === null) {   // memoria del hilo: «¿y este mes?» hereda la accion de la pregunta anterior; el periodo, si lo dice, es el nuevo
+            if ($ctx) {
                 $pe = sigfrid_periodo_explicito($n);
                 $in = ['accion' => $ctx['accion'], 'periodo' => $pe ?? $ctx['periodo']];
                 if ($pe !== null && !in_array($in['accion'], SIGFRID_CON_PERIODO, true)) $in = null;   // «¿y hoy?» tras el radar no significa nada: que lo decida el modelo o la ayuda
@@ -780,6 +792,7 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
         }
         if ($in['accion'] === 'reglas') {   // como funciona Deltha (14/11/2026): primero la config, si no el PC con las reglas a la vista, si no las paginas de ayuda
             $r = sigfrid_reglas_responder($pdo, $content, $login);
+            if ($r === null && ($in['previa'] ?? '') !== '') $r = sigfrid_reglas_responder($pdo, $content, $login, (string)$in['previa']);   // continuacion: con las palabras de la pregunta anterior
             $alt = $r === null ? sigfrid_intencion($content, $login, false) : null;   // «¿puedo ver el radar?»: sin regla que encaje, vale la accion de siempre
             if ($alt !== null && !in_array($alt['accion'], ['ayuda', 'reglas'], true)) $r = sigfrid_accion($pdo, $alt['accion'], $alt['periodo'], $u);
             if ($r === null && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
