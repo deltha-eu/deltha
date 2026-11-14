@@ -1138,4 +1138,11 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => '%s veya üzeri aura ile şu anda neyin okunduğunu ve bugünü de göreceksin.',
 'Ver la analítica completa' => 'Tam analitiği gör',
 'Ver menos' => 'Daha az göster',
+// Sigfrid: reglas de funcionamiento (14/11/2026)
+'Según la configuración de Deltha:' => 'Deltha ayarlarına göre:',
+'Más en %s.' => 'Daha fazlası: %s.',
+'sí' => 'evet',
+'no' => 'hayır',
+'Eso no lo tengo a mano.' => 'Bu elimin altında yok.',
+'«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«bir yorumu düzenlemek için ne kadar aura gerekir?» (ve Deltha\'nın nasıl çalıştığıyla ilgili her türlü soru)',
 ];
