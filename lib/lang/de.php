@@ -1118,4 +1118,11 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Ab einer Aura von %s siehst du auch, was gerade gelesen wird, und den heutigen Tag.',
 'Ver la analítica completa' => 'Vollständige Analyse anzeigen',
 'Ver menos' => 'Weniger anzeigen',
+// Sigfrid: reglas de funcionamiento (14/11/2026)
+'Según la configuración de Deltha:' => 'Laut der Konfiguration von Deltha:',
+'Más en %s.' => 'Mehr unter %s.',
+'sí' => 'ja',
+'no' => 'nein',
+'Eso no lo tengo a mano.' => 'Das habe ich nicht zur Hand.',
+'«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '„wie viel Aura braucht man, um einen Kommentar zu bearbeiten?“ (und jede andere Frage dazu, wie Deltha funktioniert)',
 ];

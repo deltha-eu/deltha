@@ -1117,4 +1117,11 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => '%s edo gehiagoko aurarekin, orain irakurtzen ari dena eta gaurko eguna ere ikusiko dituzu.',
 'Ver la analítica completa' => 'Ikusi analitika osoa',
 'Ver menos' => 'Ikusi gutxiago',
+// Sigfrid: reglas de funcionamiento (14/11/2026)
+'Según la configuración de Deltha:' => 'Deltharen konfigurazioaren arabera:',
+'Más en %s.' => 'Gehiago: %s.',
+'sí' => 'bai',
+'no' => 'ez',
+'Eso no lo tengo a mano.' => 'Hori ez daukat eskura.',
+'«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«zenbat aura behar da iruzkin bat editatzeko?» (eta Deltha nola dabilen buruzko beste edozein zalantza)',
 ];

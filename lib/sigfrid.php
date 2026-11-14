@@ -14,6 +14,8 @@
  *      pequeño en el propio droplet (LFM3-1.7B con llama-server), no para la capa asincrona de lib/ia.php: el Chat no puede esperar
  *      a que el PC de la redaccion pida trabajo.
  *
+ * Reglas (14/11/2026): las dudas de funcionamiento («¿hace falta aura para editar un comentario?») se contestan con la tabla config
+ *   (sus descripciones) al instante; si ninguna encaja, el PC redacta con todas las reglas en el paquete; sin PC, las paginas de ayuda.
  * Memoria del hilo (sigfrid_contexto): «¿y este mes?» o «¿y hoy?» tras una pregunta heredan su accion con el periodo nuevo.
  * Las respuestas salen de consultas fijas (sigfrid_accion) y solo cuentan lo que cualquiera ve en la web: nada de admin ni privado.
  * Los textos van en el idioma de quien pregunta (t(): la peticion es la suya). Nunca rompe el Chat: todo va en try/catch.
@@ -21,7 +23,7 @@
 declare(strict_types=1);
 
 /** Acciones que Sigfrid sabe hacer (las mismas para las reglas y para el esquema del modelo). */
-const SIGFRID_ACCIONES = ['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'temas', 'top_enviador', 'conectados', 'proximo_ciclo', 'mis_envios', 'ayuda'];
+const SIGFRID_ACCIONES = ['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'temas', 'top_enviador', 'conectados', 'proximo_ciclo', 'mis_envios', 'reglas', 'ayuda'];
 /** Acciones a las que el periodo (hoy / semana / mes) les cambia la respuesta: una continuacion «¿y este mes?» solo tiene sentido con estas. */
 /** Lo que contesta a cualquier pregunta que no vaya de Deltha (decision de Angel, 09/11/2026; sin traducir: es un chiste). Veinte variantes
  *  al estilo de Chiquito de la Calzada, una al azar cada vez (sigfrid_fuera()); todas dicen lo mismo: que solo atiende cosas de Deltha. */
@@ -101,16 +103,22 @@ function sigfrid_periodo_txt(string $periodo): string {
 }
 
 /** Capa 1: reglas. Devuelve ['accion' => …, 'periodo' => …] o null si no entiende la frase. */
-function sigfrid_intencion(string $content, string $login = ''): ?array {
+function sigfrid_intencion(string $content, string $login = '', bool $reglas = true): ?array {   // $reglas = false: sin la regla de funcionamiento (segunda pasada)
     $n = sigfrid_normaliza($content, $login);
     if ($n === '') return ['accion' => 'ayuda', 'periodo' => 'semana'];
     $p = sigfrid_periodo($n);
     if (preg_match('/\b(ayuda|help|comandos|que sabes|que puedes|que haces|quien eres|hola|aide|aiuto|hilfe|ajuda|laguntza|yardim|yardım)\b/u', $n)) return ['accion' => 'ayuda', 'periodo' => $p];
+    // como funciona Deltha: normas, permisos, aura que hace falta, plazos, topes (14/11/2026). Antes que radar, comunidades, portada…:
+    // «¿cuántas comunidades puedo crear?» o «¿cuántos votos hacen falta para portada?» son reglas, no la comunidad mas activa ni la portada.
+    // Solo con marcadores claros; «mis envíos», «mi aura» y «cuánta aura tengo» siguen siendo lo de cada uno (mis_envios, mas abajo).
+    if ($reglas && !preg_match('/\b(mis|mi|my)\s+(env[ií]os?|aura|comentarios?|noticias?)\b|\bcu[aá]nt[ao] aura (tengo|llevo)\b/u', $n)
+        && preg_match('/\b(hace falta|hacen falta|necesari[oa]s?|necesit[oa]|requisitos?|m[ií]nim[oa]s?|se puede|se pueden|puedo|podemos|pueden|permit\w*|permisos?|normas?|reglas?|como funciona|cuanto (dura|duran|tarda|tiempo|cuesta|vale)|plazos?|limites?|topes?|maxim[oa]s?|editar|modificar|corregir|borrar|eliminar|cuesta|archiv\w*|caduca\w*|cuant[ao] aura|se (gana|ganan|pierde|pierden|consigue)|que pasa (si|cuando)|que es (el|la|un|una)|que significa|para que sirve|how (do|does|can|much|many|long)|can i|is it possible|peut-on|puis-je|posso|kann (ich|man)|darf)\b/u', $n))
+        return ['accion' => 'reglas', 'periodo' => $p];
     if (preg_match('/\bradar\b|\b(cola|pendientes?)\b.*\bportada\b/u', $n)) return ['accion' => 'radar', 'periodo' => $p];
     $super = '/\bm[aá]s\s+(leid|visit|clic|lectur|vist|popular|votad|comentad|seguid|activ|movid)|\b(top|mejor|ranking|mas votos|mas lecturas|most|plus|piu|meist|gehien|en cok)\b/u';
     $superIn = '(?:' . substr($super, 1, -2) . ')';   // el mismo patron, agrupado, para meterlo dentro de otra expresion
     // lo mio: mis envios, mi aura, mis comentarios (solo con cuenta; a un anonimo se le dice que entre)
-    if (preg_match('/\b(mis|mi|my|meus?|mes|miei|mie|meine?|nire|benim|els meus|os meus)\b.*\b(env[ií]os?|noticias?|aura|comentarios?|posts?|stats|estad[ií]sticas?|n[uú]meros|cuenta|perfil)\b|\bcu[aá]nt[ao]\s+aura\b|\bcomo voy\b/u', $n)) return ['accion' => 'mis_envios', 'periodo' => $p];
+    if (preg_match('/\b(mis|mi|my|meus?|mes|miei|mie|meine?|nire|benim|els meus|os meus)\b.*\b(env[ií]os?|noticias?|aura|comentarios?|posts?|stats|estad[ií]sticas?|n[uú]meros|cuenta|perfil)\b|\bcu[aá]nt[ao]\s+aura\s+(tengo|llevo)\b|\bcomo voy\b/u', $n)) return ['accion' => 'mis_envios', 'periodo' => $p];
     // cuanta gente hay ahora
     if (preg_match('/\bconectad|\bonline\b|\ben l[ií]nea\b|\bcu[aá]nt[oa]s\s+(estamos|somos|hay|sois)\b|\b(usuarios?|gente|personas?)\b.*\b(hay|activ|ahora)\b|\bwho is here\b|\bnor dago\b/u', $n)) return ['accion' => 'conectados', 'periodo' => $p];
     // proximo ciclo (cuando sube la siguiente a candidatas / portada)
@@ -192,16 +200,16 @@ function sigfrid_ia(string $content, string $login = ''): ?array {
     // Primero decide si la frase va de este sitio (deltha), luego la accion. Con ejemplos: un modelo de 1,7B sin ellos encajaba «¿cómo quedó el
     // Depor?» en radar o conectados (09/11/2026). ~230 tokens; el prompt se cachea entre peticiones.
     $system = "Clasificas frases que la gente escribe a Sigfrid, el ayudante de Deltha, un agregador de noticias. Devuelve JSON. "
-            . "1) deltha: true solo si la frase pregunta por Deltha mismo (sus noticias, portada, radar, comunidades, foros, concurso de relatos, medios, usuarios, aura, conectados, ciclo). "
+            . "1) deltha: true solo si la frase pregunta por Deltha mismo (sus noticias, portada, radar, comunidades, foros, concurso de relatos, medios, usuarios, aura, conectados, ciclo, y tambien sus normas y funcionamiento: que hace falta para hacer algo, cuanta aura, cuanto tiempo, si se puede editar o borrar). "
             . "false si pregunta por el mundo exterior: resultados deportivos, equipos, el tiempo, cultura general, chistes, programacion, otras webs, aunque sea una noticia. "
             . "2) accion: radar=cola de lo que espera para portada; portada=lo que hay en portada; concurso_ganador=quien gana el concurso de relatos; concurso_tema=tema del concurso; "
             . "medio_leido=medio mas leido; noticia_top=noticia mas votada o leida; comunidad_activa=comunidad con mas movimiento; temas=el asunto o noticia del que mas se habla (tematica del dia, tema candente, de que se habla); top_enviador=usuario que mas envia; "
-            . "conectados=cuanta gente hay conectada; proximo_ciclo=cuando sube la siguiente; mis_envios=los envios o aura de quien pregunta; "
+            . "conectados=cuanta gente hay conectada; proximo_ciclo=cuando sube la siguiente; mis_envios=los envios o aura de quien pregunta; reglas=como funciona Deltha (normas, permisos, cuanta aura hace falta para algo, plazos para editar o votar, topes de envio, que es el aura o el ciclo); "
             . "conversar=va de Deltha pero no pide exactamente ninguna de las anteriores (vaga, de ambiente, compara o mezcla); ayuda=saludo o pide ayuda. "
             . "Elige una accion concreta solo si la frase la pide claramente; en la duda, conversar. Si deltha es false, accion=ayuda. 3) periodo: hoy, semana (defecto) o mes. "
             . "Ejemplos: «¿cómo quedó el Depor?» → {\"deltha\":false,\"accion\":\"ayuda\",\"periodo\":\"semana\"}; «¿qué tiempo hace?» → deltha false; "
             . "«muéstrame el radar» → {\"deltha\":true,\"accion\":\"radar\",\"periodo\":\"semana\"}; «¿cuántos estamos conectados?» → conectados; "
-            . "«¿hay ambiente por aquí?» → {\"deltha\":true,\"accion\":\"conversar\",\"periodo\":\"semana\"}; «¿cuál fue el medio más leído este mes?» → medio_leido, mes.";
+            . "«¿hay ambiente por aquí?» → {\"deltha\":true,\"accion\":\"conversar\",\"periodo\":\"semana\"}; «¿hace falta aura para editar un comentario?» → reglas; «¿cuál fue el medio más leído este mes?» → medio_leido, mes.";
     $schema = ['type' => 'object', 'properties' => ['deltha' => ['type' => 'boolean'], 'accion' => ['type' => 'string', 'enum' => array_merge(SIGFRID_ACCIONES, ['conversar'])], 'periodo' => ['type' => 'string', 'enum' => ['hoy', 'semana', 'mes']]], 'required' => ['deltha', 'accion', 'periodo'], 'additionalProperties' => false];
     $body = ['model' => (string)cfg('sigfrid_ia_model', 'sigfrid'), 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $texto]],
              'temperature' => 0, 'max_tokens' => 60, 'stream' => false,
@@ -234,6 +242,7 @@ function sigfrid_ayuda(): string {
     return t('Soy Sigfrid, el ayudante del Chat. Pregúntame con @%s delante:', (string)cfg('sigfrid_login', 'Sigfrid')) . ' '
          . t('«muéstrame el radar» · «¿quién va ganando el concurso de relatos?» · «¿cuál es el tema de la semana?» · «¿cuál es el medio más leído?» · «¿cuál es la noticia más votada hoy?»')
          . ' · ' . t('«¿qué hay en portada?» · «¿cuál es la comunidad más activa?» · «¿cuál es la temática del día?» · «¿quién ha enviado más?» · «¿cuántos estamos conectados?» · «¿cuándo es el próximo ciclo?» · «¿cómo van mis envíos?»')
+         . ' · ' . t('«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)')
          . ' ' . t('Entiendo «hoy», «esta semana» (por defecto) y «este mes».') . ' ' . t('Y si después me preguntas «¿y este mes?», sé de qué hablabas.');
 }
 
@@ -477,6 +486,121 @@ function sigfrid_mis_envios(PDO $pdo, ?array $u, string $periodo): string {
          . ' ' . t('Tu aura es %s.', num_es(round($aura, 1))) . ' ' . sigfrid_enlace(t('Tu perfil'), '/u/' . rawurlencode((string)$u['login']));
 }
 
+/* ---- reglas: como funciona Deltha (14/11/2026) ------------------------------------------------------------------------------------
+ * La tabla config ya explica cada parametro en castellano (columna descr): «Aura minima (estricta: mayor que) para poder editar los
+ * comentarios propios» = 6. Sigfrid responde con eso. Solo entran las claves que describen reglas de cara al usuario
+ * (SIGFRID_REGLAS_KEYS) y nunca tokens, claves, URL ni marcas internas (SIGFRID_REGLAS_NO). */
+const SIGFRID_REGLAS_KEYS = '~^(aura_|comm_|comment_|msg_|delta_|decay_(medios|substacks|canales|edad)|vote_|cycle_(minutes|lottery|cede_turno)|thread_ttl|nuevas_ttl|ghost_|anon_|premod_|article_|media_max|news_max|yt_max|side_user|analytics_|mod_aura|ip_log_days|send_|pin_|pins_enabled|chat_|notif_enabled|portada_|canales_gap|per_page|hardusers|test_mode)~';
+const SIGFRID_REGLAS_NO   = '~token|secret|_key$|seen|url|pass|smtp|platforms|_px$~';
+
+/** Las reglas en vigor: una linea por parametro, «clave = valor — descripcion». Cacheadas en la peticion. */
+function sigfrid_reglas_lineas(PDO $pdo): array {
+    static $out = null;
+    if ($out !== null) return $out;
+    $out = [];
+    try {
+        foreach ($pdo->query("SELECT ckey, cvalue, descr FROM config ORDER BY ckey") as $r) {
+            $k = (string)$r['ckey'];
+            if (!preg_match(SIGFRID_REGLAS_KEYS, $k) || preg_match(SIGFRID_REGLAS_NO, $k) || trim((string)$r['descr']) === '') continue;
+            $out[] = ['ckey' => $k, 'cvalue' => (string)$r['cvalue'], 'descr' => trim((string)$r['descr'])];
+        }
+    } catch (Throwable $e) {}
+    return $out;
+}
+
+/** Raices (5 letras, sin acentos) de las palabras con sustancia de un texto, con sinonimos llevados a la palabra de las descripciones. */
+function sigfrid_raices(string $t): array {
+    static $stop = ['para','poder','puedo','puede','pueden','hace','falta','hacer','tiene','tener','esta','este','esta','estos','estas','desde','hasta','entre','sobre','como','cual','cuales','cuanto','cuanta','cuantos','cuantas','donde','cuando','porque','quien','necesario','necesaria','necesito','necesita','se','que','los','las','del','una','uno','unos','unas','con','sin','por','mas','menos','hay','ser','son','algo','alguien','esto','eso','ello','the','for','with','you','can','are','does','deltha','sigfrid','reglas','regla','normas','norma','permite','permiten','permiso','posible','minimo','minima','minimos','minimas','requisito','requisitos','propio','propios','propia','propias','ahora','mismo','todo','toda','todos','todas','otro','otra','otros','otras','nada','vale','tipo'];
+    static $sin  = ['modificar' => 'editar', 'cambiar' => 'editar', 'corregir' => 'editar', 'retocar' => 'editar', 'edit' => 'editar',
+                    'borrar' => 'eliminar', 'quitar' => 'eliminar', 'delete' => 'eliminar',
+                    'mandar' => 'enviar', 'subir' => 'enviar', 'postear' => 'enviar', 'submit' => 'enviar', 'post' => 'enviar', 'envio' => 'enviar', 'envios' => 'enviar', 'enviado' => 'enviar',
+                    'comentar' => 'comentario', 'comment' => 'comentario', 'comments' => 'comentario', 'comentarios' => 'comentario',
+                    'comunidades' => 'comunidad', 'community' => 'comunidad', 'communities' => 'comunidad', 'crear' => 'crear', 'abrir' => 'crear', 'create' => 'crear',
+                    'privado' => 'privados', 'privados' => 'privados', 'mensaje' => 'mensajes', 'mensajes' => 'mensajes', 'dm' => 'mensajes',
+                    'votar' => 'votos', 'voto' => 'votos', 'votos' => 'votos', 'vote' => 'votos', 'votes' => 'votos', 'llegar' => 'portada', 'llega' => 'portada', 'llegan' => 'portada', 'sube' => 'portada', 'subir' => 'portada', 'suben' => 'portada',
+                    'tiempo' => 'minutos', 'plazo' => 'minutos', 'rato' => 'minutos', 'tardar' => 'minutos', 'tarda' => 'minutos', 'dura' => 'minutos', 'duran' => 'minutos',
+                    'imagen' => 'imagen', 'imagenes' => 'imagen', 'foto' => 'imagen', 'fotos' => 'imagen', 'adjuntar' => 'imagen',
+                    'anonimo' => 'anonimos', 'anonimos' => 'anonimos', 'registrarse' => 'registrado', 'registro' => 'registrado', 'cuenta' => 'registrado',
+                    'ganar' => 'gana', 'gano' => 'gana', 'consigue' => 'gana', 'conseguir' => 'gana', 'suma' => 'gana', 'pierde' => 'pierde', 'perder' => 'pierde', 'baja' => 'pierde',
+                    'destacar' => 'destacar', 'destacado' => 'destacar', 'destacada' => 'destacar', 'pin' => 'destacar',
+                    'portada' => 'portada', 'portadas' => 'portada', 'radar' => 'radar', 'ciclo' => 'ciclos', 'ciclos' => 'ciclos',
+                    'articulo' => 'articulo', 'articulos' => 'articulo', 'original' => 'articulo', 'originales' => 'articulo', 'relato' => 'articulo', 'hilo' => 'hilo',
+                    'palabras' => 'palabras', 'largo' => 'palabras', 'extension' => 'palabras',
+                    'archiva' => 'archivarse', 'archivan' => 'archivarse', 'caduca' => 'archivarse', 'desaparece' => 'archivarse', 'archivo' => 'archivarse',
+                    'hardusers' => 'hardusers', 'ghost' => 'ghost', 'alias' => 'alias', 'chat' => 'chat', 'avisos' => 'avisos', 'campanita' => 'avisos', 'notificaciones' => 'avisos',
+                    'medios' => 'medios', 'medio' => 'medios', 'substack' => 'substack', 'substacks' => 'substack', 'newsletter' => 'substack', 'youtube' => 'youtube', 'canal' => 'canales', 'canales' => 'canales',
+                    'analitica' => 'analitica', 'estadisticas' => 'analitica', 'columna' => 'columna', 'cajas' => 'columna', 'moderar' => 'modera', 'moderador' => 'modera', 'moderadores' => 'modera',
+                    'ip' => 'ip', 'ips' => 'ip', 'propiedad' => 'propiedad', 'reparto' => 'propiedad', 'tope' => 'tope', 'topes' => 'tope', 'maximo' => 'tope', 'maximos' => 'tope', 'maxima' => 'tope', 'maximas' => 'tope', 'limite' => 'tope', 'limites' => 'tope',
+                    'cuesta' => 'cuesta', 'gasta' => 'cuesta', 'gastar' => 'cuesta', 'usa' => 'cuesta', 'precio' => 'cuesta', 'coste' => 'cuesta', 'vale' => 'cuesta', 'creditos' => 'cuesta',
+                    'noticia' => 'enviar', 'noticias' => 'enviar', 'enlace' => 'enviar', 'enlaces' => 'enviar', 'link' => 'enviar', 'publicar' => 'enviar', 'hora' => 'hora', 'dia' => 'dia', 'dias' => 'dia'];
+    $t = sigfrid_normaliza($t);
+    $t = strtr($t, ['ñ' => 'n']);
+    $out = [];
+    foreach (preg_split('/[^a-z0-9]+/u', $t) as $w) {
+        if ($w === '' || mb_strlen($w) < 2 || in_array($w, $stop, true)) continue;
+        $w = $sin[$w] ?? $w;
+        if (mb_strlen($w) < 3) { if (!in_array($w, ['ip', 'dm'], true)) continue; }
+        $out[mb_substr($w, 0, 5)] = true;
+    }
+    return array_keys($out);
+}
+
+/** Respuesta inmediata a una duda de funcionamiento: los parametros de config cuya descripcion comparte mas raices con la pregunta.
+ *  null si ninguno encaja lo bastante (entonces lo intenta el modelo del PC con todas las reglas a la vista, o la ayuda). */
+function sigfrid_reglas_responder(PDO $pdo, string $content, string $login = ''): ?string {
+    $q = sigfrid_raices(sigfrid_normaliza_mencion($content, $login));
+    if (count($q) === 0) return null;
+    // cada parametro puntua por las raices que comparte con la pregunta, pesadas por rareza (una raiz que esta en muchas descripciones,
+    // como «aura» o «portada», vale poco; «votos» o «archivarse», mucho). Hacen falta al menos dos raices en comun.
+    $filas = []; $df = [];
+    foreach (sigfrid_reglas_lineas($pdo) as $r) {
+        $raices = sigfrid_raices(str_replace('_', ' ', $r['ckey']) . ' ' . $r['descr']);
+        $filas[] = ['r' => $r, 'raices' => $raices, 'clave' => sigfrid_raices(str_replace('_', ' ', $r['ckey']))];
+        foreach ($raices as $x) $df[$x] = ($df[$x] ?? 0) + 1;
+    }
+    $cand = [];
+    foreach ($filas as $f) {
+        $comunes = array_intersect($q, $f['raices']);
+        if (count($comunes) < 2) continue;
+        $peso = 0.0;
+        foreach ($comunes as $x) $peso += (in_array($x, $f['clave'], true) ? 2 : 1) / $df[$x];   // lo que esta en el nombre del parametro pesa doble
+        $cand[] = ['n' => $peso, 'r' => $f['r']];
+    }
+    if (!$cand) return null;
+    usort($cand, fn($a, $b) => $b['n'] <=> $a['n']);
+    $max = $cand[0]['n'];
+    $cand = array_slice(array_values(array_filter($cand, fn($c) => $c["n"] >= $max * 0.5)), 0, 3);   // el mejor y los que se le acercan
+    $partes = array_map(fn($c) => sigfrid_reglas_texto($c['r']) . ': **' . sigfrid_reglas_valor($c['r']) . '**', $cand);
+    return t('Según la configuración de Deltha:') . ' ' . implode(' · ', $partes) . ' ' . t('Más en %s.', sigfrid_enlace(t('¿Qué es Deltha?'), '/que-es') . ' · ' . sigfrid_enlace(t('Normas de uso'), '/normas') . ' · ' . sigfrid_enlace(t('Cómo funciona el δ'), '/algoritmo'));
+}
+
+/** ¿Es un interruptor? Valor 0/1 y descripcion del tipo «1 = …; 0 = …». */
+function sigfrid_reglas_interruptor(array $r): bool { return ($r['cvalue'] === '0' || $r['cvalue'] === '1') && preg_match('/\b1 ?=/', $r['descr']) === 1; }
+/** La descripcion tal como se lee: a los interruptores se les quita el «1 = » y la parte del «0 = …». */
+function sigfrid_reglas_texto(array $r): string {
+    $d = $r['descr'];
+    if (sigfrid_reglas_interruptor($r)) { $d = preg_replace('/^\s*1\s*=\s*/', '', $d); $d = trim(preg_split('/;\s*0\s*=|\s0\s*=/', $d)[0]); }
+    return rtrim($d, '. ');
+}
+/** El valor en palabras: los interruptores dicen si/no. */
+function sigfrid_reglas_valor(array $r): string {
+    $v = $r['cvalue'];
+    if (sigfrid_reglas_interruptor($r)) return $v === '1' ? t('sí') : t('no');
+    return $v === '' ? '—' : $v;
+}
+
+/** Cuando no hay respuesta directa ni PC: a las paginas de ayuda. */
+function sigfrid_reglas_fallback(): string {
+    return t('Eso no lo tengo a mano.') . ' ' . t('Más en %s.', sigfrid_enlace(t('¿Qué es Deltha?'), '/que-es') . ' · ' . sigfrid_enlace(t('Normas de uso'), '/normas') . ' · ' . sigfrid_enlace(t('Cómo funciona el δ'), '/algoritmo'));
+}
+
+/** Todas las reglas, para el paquete del modelo (capa 3): una linea por parametro. */
+function sigfrid_reglas_paquete(PDO $pdo): string {
+    $l = [];
+    foreach (sigfrid_reglas_lineas($pdo) as $r) $l[] = $r['ckey'] . ' = ' . ($r['cvalue'] === '' ? '—' : $r['cvalue']) . ' — ' . $r['descr'];
+    return implode("\n", $l);
+}
+
 /** Enlace en las marcas del Chat: [texto](url). md_inline() solo admite URL absolutas (https://…), de ahi abs_url(); el texto va sin
  *  corchetes ni parentesis para no romper la marca. */
 function sigfrid_enlace(string $texto, string $url): string {
@@ -495,6 +619,7 @@ function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = n
         case 'conectados':       return sigfrid_conectados($pdo);
         case 'proximo_ciclo':    return sigfrid_proximo_ciclo($pdo);
         case 'mis_envios':       return sigfrid_mis_envios($pdo, $u, $periodo);
+        case 'reglas':           return sigfrid_reglas_fallback();   // la respuesta con la pregunta a mano la da sigfrid_contestar()
         case 'concurso_ganador': return sigfrid_concurso_ganador($pdo);
         case 'concurso_tema':    return sigfrid_concurso_tema($pdo);
         case 'medio_leido':      return sigfrid_medio_leido($pdo, $periodo);
@@ -518,6 +643,7 @@ function sigfrid_paquete(PDO $pdo, ?array $u): string {
     }
     try { $partes[] = "[temas_hoy] " . sigfrid_accion($pdo, 'temas', 'hoy', $u); } catch (Throwable $e) {}   // «de qué se habla» suele ser de hoy; el de arriba es de la semana
     if ($u) { try { $partes[] = "[mis_envios] " . sigfrid_accion($pdo, 'mis_envios', 'semana', $u); } catch (Throwable $e) {} }
+    try { $partes[] = "[reglas] Cómo funciona Deltha, parámetro a parámetro (clave = valor — qué es):\n" . sigfrid_reglas_paquete($pdo); } catch (Throwable $e) {}   // 14/11/2026: normas, permisos, aura, plazos
     return implode("\n", $partes);
 }
 
@@ -652,7 +778,15 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
             if (($in === null || in_array($in['accion'], ['ayuda', 'fuera'], true)) && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
             $in = $in ?? ['accion' => 'ayuda', 'periodo' => 'semana'];
         }
-        $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . sigfrid_accion($pdo, $in['accion'], $in['periodo'], $u);
+        if ($in['accion'] === 'reglas') {   // como funciona Deltha (14/11/2026): primero la config, si no el PC con las reglas a la vista, si no las paginas de ayuda
+            $r = sigfrid_reglas_responder($pdo, $content, $login);
+            $alt = $r === null ? sigfrid_intencion($content, $login, false) : null;   // «¿puedo ver el radar?»: sin regla que encaje, vale la accion de siempre
+            if ($alt !== null && !in_array($alt['accion'], ['ayuda', 'reglas'], true)) $r = sigfrid_accion($pdo, $alt['accion'], $alt['periodo'], $u);
+            if ($r === null && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
+            $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . ($r ?? sigfrid_reglas_fallback());
+        } else {
+            $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . sigfrid_accion($pdo, $in['accion'], $in['periodo'], $u);
+        }
         $txt = mb_substr($txt, 0, 1000);   // chat.content es VARCHAR(1000); Sigfrid no pasa por chat_max_len
         $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,0)")->execute([(int)$sig['user_id'], '', null, $mid, $txt]);
         $nid = (int)$pdo->lastInsertId();

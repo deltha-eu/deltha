@@ -1117,4 +1117,11 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Amb aura %s o més veuràs també què s’està llegint ara i el dia d’avui.',
 'Ver la analítica completa' => 'Veure l’analítica completa',
 'Ver menos' => 'Veure’n menys',
+// Sigfrid: reglas de funcionamiento (14/11/2026)
+'Según la configuración de Deltha:' => 'Segons la configuració de Deltha:',
+'Más en %s.' => 'Més a %s.',
+'sí' => 'sí',
+'no' => 'no',
+'Eso no lo tengo a mano.' => 'Això no ho tinc a mà.',
+'«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«quanta aura cal per editar un comentari?» (i qualsevol altre dubte sobre com funciona Deltha)',
 ];

@@ -1118,4 +1118,11 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Con aura %s o più vedrai anche che cosa si sta leggendo adesso e la giornata di oggi.',
 'Ver la analítica completa' => 'Vedi l’analitica completa',
 'Ver menos' => 'Vedi meno',
+// Sigfrid: reglas de funcionamiento (14/11/2026)
+'Según la configuración de Deltha:' => 'Secondo la configurazione di Deltha:',
+'Más en %s.' => 'Altro su %s.',
+'sí' => 'sì',
+'no' => 'no',
+'Eso no lo tengo a mano.' => 'Questo non ce l\'ho a portata di mano.',
+'«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«quanta aura serve per modificare un commento?» (e qualsiasi altro dubbio su come funziona Deltha)',
 ];
