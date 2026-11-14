@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach (($_POST['cfg'] ?? []) as $k => $v) {
             if ($k === 'skin_default' && !isset(DDD_SKINS[(string)$v])) $v = 'editorial';   // solo skins existentes
             if ($k === 'processes_votes_who' && !isset(DDD_PROCESSES_VOTES_WHO[(string)$v])) $v = 'todos';   // solo grupos existentes
+            if ($k === 'portada_default' && !isset(DDD_PORTADAS[(string)$v])) $v = 'medios';   // solo portadas existentes
             $st->execute([trim((string)$v), (string)$k]);
         }
         $out[] = 'Config guardada.';
@@ -628,6 +629,12 @@ if ($tab === 'usuarios') {
         if ($c['ckey'] === 'processes_votes_who') {   // quien ve la pestaña Votos de /procesos
             echo "<tr><td><code>processes_votes_who</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><select name=\"cfg[processes_votes_who]\">";
             foreach (DDD_PROCESSES_VOTES_WHO as $k => $lbl) echo "<option value=\"$k\"" . ($c['cvalue'] === $k ? ' selected' : '') . ">" . h($lbl) . "</option>";
+            echo "</select></td></tr>";
+            continue;
+        }
+        if ($c['ckey'] === 'portada_default') {   // portada de la primera visita (portada_defecto())
+            echo "<tr><td><code>portada_default</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><select name=\"cfg[portada_default]\">";
+            foreach (portadas() as $k => $lbl) echo "<option value=\"$k\"" . ($c['cvalue'] === $k ? ' selected' : '') . ">" . h($lbl) . "</option>";
             echo "</select></td></tr>";
             continue;
         }

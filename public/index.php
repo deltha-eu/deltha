@@ -8,7 +8,7 @@ if (user() && (user()['landing'] ?? '') !== '' && empty($_GET) && !preg_match('~
     $to = landing_url($pdo, user());
     if ($to !== '/') redirect($to);
 }
-// Portadas: Medios, Substacks y Canales (YouTube): /?portada=medios | substacks | canales. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o Substacks.
+// Portadas: Medios, Substacks y Canales (YouTube): /?portada=medios | substacks | canales. Sin ?portada= se abre la ultima que se eligio (cookie ddd_portada), o la de config.portada_default (Medios de serie).
 $p = portada_actual();
 $page = page_num();
 $ml = stories_mylang_sql();   // filtro de idiomas: fuera los envios en otro idioma (migra-092/164)
