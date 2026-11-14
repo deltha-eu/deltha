@@ -1462,7 +1462,13 @@ function portada_turno(int $ts): string {
     $cycle = max(1, (int)cfg('cycle_minutes', 5));
     return intdiv(intdiv($ts, 60), $cycle) % 2 === 0 ? 'medios' : 'substacks';
 }
-/** Portada que se esta viendo: ?portada= en la URL (y entonces se recuerda en la cookie ddd_portada) o la ultima elegida; si no, Substacks.
+/** Portada que ve quien llega por primera vez (sin ?portada= ni cookie): config.portada_default (admin > Config; migra-202), Medios de serie.
+ *  Si apunta a una portada que no existe o esta apagada (canales), Medios. */
+function portada_defecto(): string {
+    $d = (string)cfg('portada_default', 'medios');
+    return isset(portadas()[$d]) ? $d : 'medios';
+}
+/** Portada que se esta viendo: ?portada= en la URL (y entonces se recuerda en la cookie ddd_portada) o la ultima elegida; si no, portada_defecto().
  *  (No ?p=: ese es el numero de pagina de paginate().) */
 function portada_actual(): string {
     static $p = null;
@@ -1473,7 +1479,7 @@ function portada_actual(): string {
         return $p = $q;
     }
     $c = (string)($_COOKIE[DDD_PORTADA_COOKIE] ?? '');
-    return $p = isset(portadas()[$c]) ? $c : 'substacks';   // quien llega por primera vez ve Substacks, lo propio de Deltha
+    return $p = isset(portadas()[$c]) ? $c : portada_defecto();
 }
 /** Las piezas del δ de un envío: votos netos que cuentan, su raíz con signo, el bonus del tema y lo que resta la antigüedad. */
 function delta_partes(array $s): array {
