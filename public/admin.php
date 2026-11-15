@@ -429,6 +429,8 @@ function borrar_usuario(PDO $pdo, int $uid): array {
         $u = $pdo->prepare("SELECT login, avatar FROM users WHERE user_id = ? FOR UPDATE"); $u->execute([$uid]); $u = $u->fetch();
         if (!$u) throw new RuntimeException("no existe");
         if ($u['avatar']) $ficheros[] = DDD_MEDIA_DIR . '/avatars/' . $u['avatar'];
+        // imagenes de sus mensajes del Chat (migra-203): las filas caen solas con la cuenta (ON DELETE CASCADE), los ficheros no
+        try { $ci = $pdo->prepare("SELECT image FROM chat WHERE user_id = ? AND image IS NOT NULL"); $ci->execute([$uid]); foreach ($ci->fetchAll(PDO::FETCH_COLUMN) as $img) if (preg_match('~^c/\d{4}/\d{2}/[a-f0-9]{20}\.jpg$~', (string)$img)) $ficheros[] = DDD_MEDIA_DIR . '/' . $img; } catch (Throwable $e) {}
 
         // --- 1. hilos que envió: se llevan por delante todo lo que cuelga de ellos
         $st = $pdo->prepare("SELECT story_id, image FROM stories WHERE user_id = ?"); $st->execute([$uid]);

@@ -977,7 +977,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'El foro «%s» es solo para quien tiene más de %s de aura.' => 'The “%s” forum is only for people with more than %s aura.',
 'Volver a los foros' => 'Back to the forums',
 'Imagen' => 'Image',
-'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida' => 'Attach an image (JPG, PNG, WebP); it is stored reduced',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.' => 'Attach an image (JPG, PNG, WebP); it is stored reduced. You can also paste it with Ctrl+V or drag it onto the box.',
 'quitar la imagen' => 'remove the image',
 'La imagen no es válida: vale JPG, PNG, WebP o AVIF.' => 'The image is not valid: JPG, PNG, WebP or AVIF.',
 'La imagen es demasiado pequeña (%d×%d): hace falta al menos 120×120.' => 'The image is too small (%d×%d): at least 120×120 needed.',

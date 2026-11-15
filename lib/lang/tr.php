@@ -1145,4 +1145,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'no' => 'hayır',
 'Eso no lo tengo a mano.' => 'Bu elimin altında yok.',
 '«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«bir yorumu düzenlemek için ne kadar aura gerekir?» (ve Deltha\'nın nasıl çalıştığıyla ilgili her türlü soru)',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.' => 'Bir görsel ekle (JPG, PNG, WebP); küçültülerek kaydedilir. Ctrl+V ile yapıştırabilir veya kutuya sürükleyebilirsin.',
+'Imagen' => 'Görsel',
+'quitar la imagen' => 'görseli kaldır',
 ];

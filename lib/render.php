@@ -225,7 +225,7 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     echo md_ayuda();
     if (!empty($_SESSION['flash_err'])) { echo "<p class=\"error\">" . h((string)$_SESSION['flash_err']) . "</p>"; unset($_SESSION['flash_err']); }
     echo "<div class=\"crow\">";
-    if ($conImg) echo "<label class=\"cimgpick\" title=\"" . h(t('Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida')) . "\">" . icon('image') . "<span>" . t('Imagen') . "</span><input type=\"file\" name=\"photo\" accept=\"image/*\"></label>";
+    if ($conImg) echo "<label class=\"cimgpick\" title=\"" . h(t('Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.')) . "\" data-quitar=\"" . h(t('quitar la imagen')) . "\">" . icon('image') . "<span>" . t('Imagen') . "</span><input type=\"file\" name=\"photo\" accept=\"image/*\"></label>";
     echo "<button>" . ($parent ? t('Responder') : t('Comentar')) . "</button></div></div></form>";
 }
 

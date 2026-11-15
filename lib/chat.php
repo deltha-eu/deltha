@@ -48,8 +48,20 @@ function chat_can_delete_own(array $m, ?array $u, ?string $key): bool {
     if ($u) return !empty($m['user_id']) && (int)$m['user_id'] === (int)$u['user_id'];
     return $key !== null && empty($m['user_id']) && (string)$m['anon_key'] === $key;
 }
+/** Borra la imagen adjunta de un mensaje (migra-203): el fichero y la columna. Se llama al borrar el mensaje (el autor, moderacion o
+ *  «borrar del todo»); como en los comentarios, deshacer el borrado devuelve el texto pero no la imagen. */
+function chat_image_drop(PDO $pdo, int $id): void {
+    try {
+        $q = $pdo->prepare("SELECT image FROM chat WHERE msg_id = ?"); $q->execute([$id]);
+        if (!($img = $q->fetchColumn())) return;
+        require_once __DIR__ . '/imagen.php';
+        imagen_comentario_borrar((string)$img);
+        $pdo->prepare("UPDATE chat SET image = NULL WHERE msg_id = ?")->execute([$id]);
+    } catch (Throwable $e) {}   // sin la columna (migra-203 sin aplicar) no hay nada que borrar
+}
 /** Borrado de moderacion: el mensaje sigue en el flujo con el texto sustituido; cierra sus reportes. */
 function chat_delete_mod(PDO $pdo, int $id): bool {
+    chat_image_drop($pdo, $id);
     $st = $pdo->prepare("UPDATE chat SET content_orig = IF(deleted = 1, content_orig, content), deleted_at = IF(deleted = 1, deleted_at, NOW()), deleted = 1, content = ? WHERE msg_id = ? AND status = 'ok'");
     $st->execute([DDD_CHAT_DELETED_TXT, $id]);
     try { $pdo->prepare("UPDATE chat_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([user()['user_id'] ?? null, $id]); } catch (Throwable $e) {}
