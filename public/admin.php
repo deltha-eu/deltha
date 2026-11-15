@@ -877,16 +877,19 @@ if ($tab === 'usuarios') {
     $fq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64));
     $llano = fn(string $t): string => strtr(mb_strtolower($t), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ã' => 'a', 'õ' => 'o', 'ç' => 'c', 'ä' => 'a', 'ö' => 'o', 'ß' => 'ss']);
     $fqn = $llano($fq);
-    // orden de la lista (15/11/2026): '' = por nombre; 'act' = por fecha de actualizacion del RSS (la ultima noticia publicada), las mas
-    // recientes primero; 'ant' = las mas antiguas primero (los feeds parados o muertos, arriba). Los formularios y los filtros lo conservan.
+    // orden de la lista (15/11/2026): '' = por nombre; por lectura del RSS (sources.last_fetch): 'lei' = las leidas hace menos primero,
+    // 'lea' = las leidas hace mas primero (las que el cron lleva mas tiempo sin leer, arriba); por ultima noticia publicada: 'act' = las mas
+    // recientes primero, 'ant' = las mas antiguas primero (los feeds parados o muertos, arriba). Los formularios y los filtros lo conservan.
     $fo = (string)($_GET['o'] ?? $_POST['o'] ?? '');
-    if (!in_array($fo, ['act', 'ant'], true)) $fo = '';
+    if (!in_array($fo, ['lei', 'lea', 'act', 'ant'], true)) $fo = '';
     $oq = $fo !== '' ? "&amp;o=$fo" : '';   // para los enlaces de subpestañas, idiomas y «todas»
     $T .= "<input type=\"hidden\" name=\"k\" value=\"$fk\"><input type=\"hidden\" name=\"il\" value=\"" . h($il) . "\"><input type=\"hidden\" name=\"o\" value=\"$fo\">";
     // upd = fecha de la ultima noticia del feed que se conserva (source_items.pub_date); NULL si no hay ninguna
     $selF = "SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu, (SELECT MAX(i.pub_date) FROM source_items i WHERE i.source_id = s.source_id) upd FROM sources s";
     // sin noticias (upd NULL): al final con las recientes primero, al principio con las antiguas primero (es lo mas parado que hay)
-    $ordF = $fo === 'act' ? "(upd IS NULL), upd DESC, s.name" : ($fo === 'ant' ? "(upd IS NOT NULL), upd, s.name" : "s.name");
+    // lo mismo con las nunca leidas (last_fetch NULL)
+    $ordF = ['lei' => "(s.last_fetch IS NULL), s.last_fetch DESC, s.name", 'lea' => "(s.last_fetch IS NOT NULL), s.last_fetch, s.name",
+             'act' => "(upd IS NULL), upd DESC, s.name", 'ant' => "(upd IS NOT NULL), upd, s.name"][$fo] ?? "s.name";
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
@@ -962,7 +965,11 @@ if ($tab === 'usuarios') {
     }
     if (count($rows) > 1) {   // orden de la lista: conserva subpestaña, idioma y busqueda
         $bo = "/admin?t=fuentes&amp;k=$fk" . ($il !== '' ? "&amp;il=" . urlencode($il) : '') . ($fq !== '' ? "&amp;q=" . urlencode($fq) : '');
-        echo "<nav class=\"sub\" title=\"la fecha de actualización del RSS es la de su última noticia publicada\"><a href=\"$bo\"" . ($fo === '' ? ' class="on"' : '') . ">por nombre</a><a href=\"$bo&amp;o=act\"" . ($fo === 'act' ? ' class="on"' : '') . ">actualizadas hace menos</a><a href=\"$bo&amp;o=ant\"" . ($fo === 'ant' ? ' class="on"' : '') . ">actualizadas hace más</a></nav>";
+        echo "<nav class=\"sub\"><a href=\"$bo\"" . ($fo === '' ? ' class="on"' : '') . ">por nombre</a>";
+        foreach (['lei' => ['leídas hace menos', 'por la última lectura del RSS: las recién leídas, primero'], 'lea' => ['leídas hace más', 'por la última lectura del RSS: las que llevan más tiempo sin leerse (o nunca leídas), primero'],
+                  'act' => ['última noticia más reciente', 'por la fecha de la última noticia publicada en el feed'], 'ant' => ['última noticia más antigua', 'por la fecha de la última noticia publicada: los feeds parados (o sin noticias), primero']] as $ok => [$ol, $ot])
+            echo "<a href=\"$bo&amp;o=$ok\" title=\"" . h($ot) . "\"" . ($fo === $ok ? ' class="on"' : '') . ">$ol</a>";
+        echo "</nav>";
     }
     foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
