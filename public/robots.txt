@@ -29,6 +29,8 @@ User-agent: DuckAssistBot
 User-agent: MistralAI-User
 User-agent: PanguBot
 User-agent: Kangaroo Bot
+User-agent: MJ12bot
+User-agent: QlyzeBot
 Disallow: /
 
 # Buscadores: pueden pasar, pero cada pagina lleva noindex salvo las de escaparate
@@ -39,6 +41,7 @@ Disallow: /moderacion
 Disallow: /votar
 Disallow: /ir
 Disallow: /comentar
+Disallow: /enviar
 Disallow: /salir
 Disallow: /delta/clave.php
 Disallow: /activar
