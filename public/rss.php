@@ -60,7 +60,7 @@ if ($topic) {
     $last = $items ? (int)strtotime((string)$items[0]['published_date']) : time();
 }
 
-header('Content-Type: application/rss+xml; charset=utf-8');
+header('Content-Type: application/xml; charset=utf-8');   // no application/rss+xml (15/11/2026): Firefox y otros navegadores lo descargan en vez de mostrarlo y parece roto; los lectores aceptan los dos, y el autodescubrimiento (<link rel="alternate"> y atom:link) sigue anunciando application/rss+xml
 header('Cache-Control: public, max-age=300');
 header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $last) . ' GMT');
 if (($ims = (string)($_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '')) !== '' && strtotime($ims) >= $last) { http_response_code(304); exit; }
