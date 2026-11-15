@@ -8,7 +8,7 @@
  *  mayusculas ni tildes) o /rss?tema=5 (su numero, el de /tema/5). Trae las noticias (enlaces) del tema en cualquier fase visible
  *  (radar, portada o archivadas), de las tres portadas, por fecha de envio: en la portada sola un tema pequeño no tendria nada
  *  que enseñar. Con &fase=portada, solo las que han llegado a portada, por fecha de publicacion. Añadiendo &portada= se limita
- *  ademas a esa portada. Un tema que no existe da 404. */
+ *  ademas a esa portada. Un tema que no existe da 404, y tambien una portada apagada (/rss?portada=canales sin portada de Canales). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 
@@ -44,6 +44,9 @@ if ($topic) {
     $home = abs_url('/tema/' . (int)$topic['topic_id']);
     $last = $items ? (int)strtotime((string)($items[0][$campo] ?: $items[0]['sent_date'])) : time();
 } else {
+    // una portada que existe pero esta apagada (canales con portada_canales = 0): 404, no el feed de otra (15/11/2026: /rss?portada=canales
+    // devolvia el de Substacks y quien se suscribia recibia substacks sin saberlo). Sin ?portada= o con un valor desconocido, Substacks, como siempre.
+    if (isset(DDD_PORTADAS[$q]) && !isset(portadas()[$q])) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo "Esa portada no está activa.\n"; exit; }
     $p = isset(portadas()[$q]) ? $q : 'substacks';
     $st = $pdo->prepare(story_query_base() . " WHERE s.status = 'destacadas' AND s.portada = ? ORDER BY s.published_date DESC LIMIT ?");
     $st->bindValue(1, $p);
@@ -72,7 +75,7 @@ echo "<link>" . $x($home) . "</link>\n";
 echo "<atom:link href=\"" . $x($self) . "\" rel=\"self\" type=\"application/rss+xml\"/>\n";
 echo "<description>" . $x($descr) . "</description>\n";
 echo "<language>" . $x(lang()) . "</language>\n";
-echo "<lastBuildDate>" . $rfc(gmdate('Y-m-d H:i:s', $last)) . "</lastBuildDate>\n";
+echo "<lastBuildDate>" . gmdate('D, d M Y H:i:s', $last) . " GMT</lastBuildDate>\n";   // $last ya es un instante: pasarlo por $rfc() lo leia como hora local y salia una hora (o dos) atrasado (15/11/2026)
 echo "<ttl>5</ttl>\n";
 echo "<image><url>" . $x(abs_url(icon_src(512))) . "</url><title>" . $x($site) . "</title><link>" . $x($home) . "</link></image>\n";
 
