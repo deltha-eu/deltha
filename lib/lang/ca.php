@@ -1124,4 +1124,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'no' => 'no',
 'Eso no lo tengo a mano.' => 'Això no ho tinc a mà.',
 '«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«quanta aura cal per editar un comentari?» (i qualsevol altre dubte sobre com funciona Deltha)',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.' => 'Adjuntar una imatge (JPG, PNG, WebP); es desa reduïda. També la pots enganxar amb Ctrl+V o arrossegar-la al quadre.',
+'Imagen' => 'Imatge',
+'quitar la imagen' => 'treure la imatge',
 ];

@@ -5,6 +5,8 @@
  *  Registrados con su nick; anonimos con alias estable por IP si chat_anon = 1. Borrado propio durante
  *  chat_delete_minutes; reportar → /reportar?chat=N; borrado de moderacion desde /moderacion; los administradores
  *  ademas pueden editar el texto (/editar-chat, queda «editado»).
+ *  Un mensaje puede llevar una imagen (migra-203, 15/11/2026): con cuenta y aura (chat_image_can), desde el boton «Imagen» del cuadro
+ *  o pegandola con Ctrl+V / arrastrandola al cuadro (/app/foto.js); se guarda reducida, como las de los comentarios.
  *  ?m=N lleva a la pagina donde esta el mensaje N (ancla #mN). Se refresca sola cada chat_refresh_sec (60; 0 = nunca).
  *  Con JS lo lleva /app/escribir.js (07/10/2026): pide esta misma pagina con fetch (auto=1) y cambia solo el bloque .chat, sin
  *  recargar: no se mueve el scroll ni se pierde lo escrito, y lo nuevo llega con un realce; por eso con JS se refresca tambien
@@ -18,6 +20,7 @@ require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/chat.php';
 require __DIR__ . '/../lib/moderacion.php';
 require __DIR__ . '/../lib/sigfrid.php';   // Sigfrid, el ayudante del Chat (migra-182)
+require __DIR__ . '/../lib/imagen.php';    // imagen adjunta (migra-203)
 if ((string)cfg('chat_enabled', '1') !== '1') redirect('/');
 
 $u = user();
@@ -28,19 +31,23 @@ $err = null;
 $hilos = (string)($_GET['v'] ?? '') !== 'tiempo';   // por hilos es la vista por defecto; ?v=tiempo, el flujo cronologico (?v=hilos de enlaces antiguos sigue valiendo)
 $base = '/chat' . ($hilos ? '' : '?v=tiempo');   // la vista elegida va en todos los enlaces y redirecciones
 $amp = $hilos ? '?' : '&';
+$conImg = chat_image_can();   // imagen adjunta (migra-203): con cuenta y aura
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// el POST entero supero post_max_size (una imagen enorme) y PHP lo descarto: se avisa en vez de no hacer nada
+if (post_descartado()) $err = t('El envío era demasiado grande (la foto, seguramente) y el servidor lo ha descartado entero. El máximo por foto es %d MB.', imagen_max_mb());
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (post('act') === 'borrar_total' && is_admin()) {   // admin: desaparece sin dejar aviso (status gone, como el borrado propio); queda en el registro y se puede deshacer desde moderacion (migra-176)
         $id = (int)post('id');
         mod_log_post($pdo, 'chat');
         if (function_exists('mod_undo_chat')) mod_undo_chat($pdo, $id);
+        chat_image_drop($pdo, $id);   // la imagen adjunta se va con el mensaje (migra-203); deshacer devuelve el texto, no la imagen
         $pdo->prepare("UPDATE chat SET status = 'gone' WHERE msg_id = ?")->execute([$id]);
         redirect($base . $amp . 'ok=1');
     }
     if (post('act') === 'borrar') {
         $id = (int)post('id');
         $st = $pdo->prepare("SELECT * FROM chat WHERE msg_id = ?"); $st->execute([$id]);
-        if (($m = $st->fetch()) && chat_can_delete_own($m, $u, $u ? null : $anonKey)) $pdo->prepare("UPDATE chat SET status = 'gone' WHERE msg_id = ?")->execute([$id]);
+        if (($m = $st->fetch()) && chat_can_delete_own($m, $u, $u ? null : $anonKey)) { chat_image_drop($pdo, $id); $pdo->prepare("UPDATE chat SET status = 'gone' WHERE msg_id = ?")->execute([$id]); }
         redirect($base);
     }
     if (post('act') === 'anuncio') {   // admin/mod: marcar o quitar «mensaje a la comunidad» (migra-121)
@@ -69,9 +76,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($ref) { $q = $pdo->prepare("SELECT 1 FROM chat WHERE msg_id = ? AND status = 'ok'"); $q->execute([$ref]); if (!$q->fetchColumn()) $ref = null; }
         $anuncio = is_mod() && post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad: solo admin/mod (migra-121)
         $premod = !$u && premod_anon();   // anonimo con premod_anon = 1 (migra-183): entra oculto y lo aprueba un moderador en /moderacion
+        // imagen adjunta (migra-203): solo con cuenta y aura; si falla, el mensaje se publica igual sin ella y se dice por que
+        $image = null;
+        if ($conImg && !empty($_FILES['photo'])) {
+            $image = imagen_comentario_desde_subida($_FILES['photo'], $ierr);
+            if ($ierr) $_SESSION['flash_err'] = $ierr;
+        }
         $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio, status) VALUES (?,?,?,?,?,?,?)")
             ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content, $anuncio, $premod ? 'pending_mod' : 'ok']);
         $mid = (int)$pdo->lastInsertId();
+        if ($image) $pdo->prepare("UPDATE chat SET image = ? WHERE msg_id = ?")->execute([$image, $mid]);   // aparte del INSERT: sin la migra-203 aplicada fallaria solo esto, no el mensaje
         ip_log_add($pdo, 'chat', $u ? (int)$u['user_id'] : null, $mid);   // registro de IP con caducidad (migra-193)
         if ($premod) { mod_premod($pdo, 'chat', $mid, 'ok'); redirect($base . $amp . 'premod=1'); }
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
@@ -165,13 +179,14 @@ echo "<div class=\"chat" . ($hilos ? ' hilos' : '') . "\"" . ($refrescoJs ? " da
 // quien es Sigfrid (09/11/2026): aviso de ayuda cerrable (migra-181), solo si esta encendido; con su nombre en vigor
 if (sigfrid_on()) { $sl = h((string)cfg('sigfrid_login', 'Sigfrid')); echo "<p class=\"notice ayuda\" data-k=\"chat-sigfrid\">" . t('Aquí vive <b>%s</b>, el ayudante del Chat. Es un bot: menciónalo con <b>@%s</b> y pregúntale qué hay en el radar o en portada, quién va ganando el concurso de relatos, cuál es el medio más leído o cómo van tus envíos. Responde debajo de tu mensaje y solo lee datos públicos: no modera ni opina. Escribe «@%s ayuda» para ver todo lo que sabe hacer.', $sl, $sl, $sl) . "</p>"; }
 // el cuadro de escribir: arriba; al responder (?r=N) sale justo debajo del mensaje N si esta en esta pagina (asi no hay que subir)
-$box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base) {
-    echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\">";
+$box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base, $conImg) {
+    echo "<form class=\"chatbox" . ($reply ? ' reply' : '') . "\" method=\"post\" id=\"escribir\"" . ($conImg ? ' enctype="multipart/form-data"' : '') . ">";
     $ph = $u ? t('Escribe como %s', $u['login']) : t('Escribes como %s (anónimo). Con cuenta, con tu nombre.', $anonAlias);
     echo "<textarea name=\"content\" maxlength=\"$maxLen\" rows=\"2\" placeholder=\"" . h($ph) . "\" required" . ($reply ? " autofocus" : "") . ">" . ($reply ? "#$replyTo " : "") . "</textarea>";
     echo md_ayuda();
     echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($reply ? " · <a href=\"" . h($base) . "\">" . t('cancelar') . "</a>" : "") . "</small>";
     if (is_mod()) echo "<label class=\"anuncio\" title=\"" . h(t('marcar como mensaje a la comunidad')) . "\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\">" . icon('mega') . "<span>" . t('Mensaje a la comunidad') . "</span></label>";   // admin/mod (migra-121)
+    if ($conImg) echo "<label class=\"cimgpick\" title=\"" . h(t('Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.')) . "\" data-quitar=\"" . h(t('quitar la imagen')) . "\">" . icon('image') . "<span>" . t('Imagen') . "</span><input type=\"file\" name=\"photo\" accept=\"image/*\"></label>";   // migra-203
     echo "<button>" . t('Enviar') . "</button></div></form>";
 };
 $replyHere = $replyTo > 0 && isset($ids[$replyTo]);   // el mensaje respondido esta en esta pagina: el cuadro va debajo de el
@@ -181,6 +196,7 @@ if ($canWrite) {
     echo "<p class=\"notice\">" . t('Para escribir en el Chat hace falta una cuenta.') . " <a href=\"/login\">" . t('entrar') . "</a></p>";
 }
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
+if (!empty($_SESSION['flash_err'])) { echo "<p class=\"error\">" . h((string)$_SESSION['flash_err']) . "</p>"; unset($_SESSION['flash_err']); }   // la imagen no valio: el mensaje salio sin ella (migra-203)
 if (isset($_GET['premod'])) echo "<p class=\"notice\">" . t('Como no estás registrado, tu mensaje tiene que ser aprobado por un moderador antes de publicarse.') . "</p>";   // migra-183
 if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra-121): los tres ultimos, arriba del flujo, enlazados a su sitio
     // caducan en la franja a los chat_anuncio_dias (migra-186; 0 = nunca): la marca y el resaltado en su sitio se quedan
@@ -209,7 +225,10 @@ foreach ($rows as $m) {
     echo (!empty($m['login']) && !ghost_veiled($m['user_id'])) ? "<a class=\"who\" href=\"/u/" . rawurlencode($m['login']) . "\">" . h($who) . "</a>" : "<b class=\"who anon\">" . h($who) . "</b>";   // velado por ghosteo: como un anonimo mas
     echo "<span class=\"meta\"> · " . h(hace($m['created'])) . (!empty($m['edited_at']) && !$del ? " · " . t('editado') : "") . "</span>" . ($anun ? " <span class=\"anun\">" . icon('mega') . t('Mensaje a la comunidad') . "</span>" : "") . "</div>";
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
-    else      echo chat_format($m['content'], $logins, $ids, $previews);
+    else {
+        echo chat_format($m['content'], $logins, $ids, $previews);
+        if (!empty($m['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($m['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($m['image']) . "\" alt=\"\" loading=\"lazy\"></a>";   // imagen adjunta (migra-203): miniatura; a tamaño completo en otra pestaña
+    }
     $acts = [];
     if (!$del && $canWrite) $acts[] = "<a class=\"replylink\" href=\"" . h($base . $amp) . "r=$id#m$id\">" . icon('reply') . "<span>" . t('responder') . "</span></a>";
     if (!$hilos && !empty($replies[$id])) $acts[] = "<span class=\"reps\">" . t('respuestas:') . " " . implode(' ', array_map(fn($r) => "<a class=\"ref\" href=\"" . (isset($ids[$r]) ? "#m$r" : "/chat?m=$r#m$r") . "\">#$r</a>", $replies[$id])) . "</span>";

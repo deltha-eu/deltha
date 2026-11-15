@@ -146,6 +146,12 @@ function comment_image_can(): bool {
     if (!$u || cfg('comment_images', '1') !== '1') return false;
     return is_mod() || (float)$u['aura'] > (float)cfg('comment_image_min_aura', 6);
 }
+/** ¿Y a un mensaje del Chat? (migra-203) Misma regla, con su interruptor y su aura: chat_images y chat_image_min_aura. */
+function chat_image_can(): bool {
+    $u = user();
+    if (!$u || cfg('chat_images', '1') !== '1') return false;
+    return is_mod() || (float)$u['aura'] > (float)cfg('chat_image_min_aura', 6);
+}
 
 /** Avatar: cuadrado 256x256 en /media/avatars */
 function avatar_desde_subida(array $file): ?string {

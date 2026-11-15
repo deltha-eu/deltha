@@ -1124,4 +1124,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'no' => 'ez',
 'Eso no lo tengo a mano.' => 'Hori ez daukat eskura.',
 '«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«zenbat aura behar da iruzkin bat editatzeko?» (eta Deltha nola dabilen buruzko beste edozein zalantza)',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.' => 'Irudi bat erantsi (JPG, PNG, WebP); txikituta gordetzen da. Ctrl+V bidez itsatsi edo koadrora arrastatu ere egin dezakezu.',
+'Imagen' => 'Irudia',
+'quitar la imagen' => 'kendu irudia',
 ];

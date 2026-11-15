@@ -1125,4 +1125,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'no' => 'nein',
 'Eso no lo tengo a mano.' => 'Das habe ich nicht zur Hand.',
 '«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '„wie viel Aura braucht man, um einen Kommentar zu bearbeiten?“ (und jede andere Frage dazu, wie Deltha funktioniert)',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.' => 'Bild anhängen (JPG, PNG, WebP); es wird verkleinert gespeichert. Du kannst es auch mit Strg+V einfügen oder in das Feld ziehen.',
+'Imagen' => 'Bild',
+'quitar la imagen' => 'Bild entfernen',
 ];

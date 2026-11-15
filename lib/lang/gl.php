@@ -1124,4 +1124,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'no' => 'non',
 'Eso no lo tengo a mano.' => 'Iso non o teño á man.',
 '«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«canta aura fai falta para editar un comentario?» (e calquera outra dúbida sobre como funciona Deltha)',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.' => 'Achegar unha imaxe (JPG, PNG, WebP); gárdase reducida. Tamén podes pegala con Ctrl+V ou arrastrala ao cadro.',
+'Imagen' => 'Imaxe',
+'quitar la imagen' => 'quitar a imaxe',
 ];

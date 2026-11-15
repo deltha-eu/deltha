@@ -1161,4 +1161,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'no' => 'não',
 'Eso no lo tengo a mano.' => 'Isso não tenho à mão.',
 '«¿cuánta aura hace falta para editar un comentario?» (y cualquier otra duda sobre cómo funciona Deltha)' => '«quanta aura é precisa para editar um comentário?» (e qualquer outra dúvida sobre como funciona o Deltha)',
+'Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.' => 'Anexar uma imagem (JPG, PNG, WebP); é guardada reduzida. Também a podes colar com Ctrl+V ou arrastá-la para a caixa.',
+'Imagen' => 'Imagem',
+'quitar la imagen' => 'remover a imagem',
 ];

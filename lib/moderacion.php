@@ -212,6 +212,7 @@ function mod_remove_hidden(PDO $pdo, string $type, int $id, int $by): void {
         $pdo->prepare("UPDATE comments SET content_orig = IF(deleted = 1, content_orig, content), deleted = 1, status = 'rejected' WHERE comment_id = ? AND status = 'pending_mod'")->execute([$id]);
         try { $pdo->prepare("UPDATE comment_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE comment_id = ? AND status = 'open'")->execute([$by, $id]); } catch (Throwable $e) {}
     } else {
+        if (function_exists('chat_image_drop')) chat_image_drop($pdo, $id);   // migra-203
         $pdo->prepare("UPDATE chat SET content_orig = IF(deleted = 1, content_orig, content), deleted_at = IF(deleted = 1, deleted_at, NOW()), deleted = 1, status = 'gone' WHERE msg_id = ? AND status = 'pending_mod'")->execute([$id]);
         try { $pdo->prepare("UPDATE chat_reports SET status = 'deleted', decided_by = ?, decided = NOW() WHERE msg_id = ? AND status = 'open'")->execute([$by, $id]); } catch (Throwable $e) {}
     }

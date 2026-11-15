@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $txt = mb_substr(trim(preg_replace("/\r\n?/", "\n", post('content'))), 0, $maxLen);
     $anuncio = post('anuncio') === '1' ? 1 : 0;   // mensaje a la comunidad (migra-121): se cambia sin que cuente como edicion del texto
     if ($anuncio !== (int)$m['anuncio']) $pdo->prepare("UPDATE chat SET anuncio = ? WHERE msg_id = ?")->execute([$anuncio, $id]);
+    if (post('quitar_img') === '1' && !empty($m['image'])) { chat_image_drop($pdo, $id); $m['image'] = null; }   // imagen adjunta (migra-203)
     $avisar = !empty($m['user_id']) && (int)$m['user_id'] !== (int)user()['user_id'];   // mensaje de otra cuenta: motivo obligatorio, se le envía al autor (13/11/2026); a un anónimo no hay a quién escribir
     $motivo = $avisar ? mod_motivo_post() : '';
     if (mb_strlen($txt) < 1) $err = 'El mensaje no puede quedar vacío.';
@@ -41,6 +42,7 @@ echo "<p class=\"notice\">Edición de administración: el mensaje de <b>" . h(ch
 if ($err) echo "<p class=\"error\">" . h($err) . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"$id\">";
 echo "<label>Texto</label><textarea name=\"content\" rows=\"5\" maxlength=\"$maxLen\" required>" . h((string)$m['content']) . "</textarea>" . md_ayuda();
+if (!empty($m['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($m['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($m['image']) . "\" alt=\"\"></a><label class=\"check\"><input type=\"checkbox\" name=\"quitar_img\" value=\"1\"> Quitar la imagen</label>";   // migra-203
 echo "<label class=\"check\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\"" . ((int)$m['anuncio'] === 1 ? ' checked' : '') . "> Mensaje a la comunidad (sale resaltado y arriba del Chat)</label>";
 if (!empty($m['user_id']) && (int)$m['user_id'] !== (int)user()['user_id']) echo mod_motivo_campo();   // motivo para el autor (13/11/2026)
 echo "<button>Guardar</button></form>";
