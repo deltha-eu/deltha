@@ -877,7 +877,16 @@ if ($tab === 'usuarios') {
     $fq = trim(mb_substr((string)($_GET['q'] ?? ''), 0, 64));
     $llano = fn(string $t): string => strtr(mb_strtolower($t), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ã' => 'a', 'õ' => 'o', 'ç' => 'c', 'ä' => 'a', 'ö' => 'o', 'ß' => 'ss']);
     $fqn = $llano($fq);
-    $T .= "<input type=\"hidden\" name=\"k\" value=\"$fk\"><input type=\"hidden\" name=\"il\" value=\"" . h($il) . "\">";
+    // orden de la lista (15/11/2026): '' = por nombre; 'act' = por fecha de actualizacion del RSS (la ultima noticia publicada), las mas
+    // recientes primero; 'ant' = las mas antiguas primero (los feeds parados o muertos, arriba). Los formularios y los filtros lo conservan.
+    $fo = (string)($_GET['o'] ?? $_POST['o'] ?? '');
+    if (!in_array($fo, ['act', 'ant'], true)) $fo = '';
+    $oq = $fo !== '' ? "&amp;o=$fo" : '';   // para los enlaces de subpestañas, idiomas y «todas»
+    $T .= "<input type=\"hidden\" name=\"k\" value=\"$fk\"><input type=\"hidden\" name=\"il\" value=\"" . h($il) . "\"><input type=\"hidden\" name=\"o\" value=\"$fo\">";
+    // upd = fecha de la ultima noticia del feed que se conserva (source_items.pub_date); NULL si no hay ninguna
+    $selF = "SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu, (SELECT MAX(i.pub_date) FROM source_items i WHERE i.source_id = s.source_id) upd FROM sources s";
+    // sin noticias (upd NULL): al final con las recientes primero, al principio con las antiguas primero (es lo mas parado que hay)
+    $ordF = $fo === 'act' ? "(upd IS NULL), upd DESC, s.name" : ($fo === 'ant' ? "(upd IS NOT NULL), upd, s.name" : "s.name");
     $topics = $pdo->query("SELECT topic_id, name FROM topics ORDER BY name")->fetchAll();
     $fuente_form = function (array $f, string $act) use ($T, $topics): string {
         $h = "<form method=\"post\" class=\"fuente\">$T<input type=\"hidden\" name=\"act\" value=\"$act\"><input type=\"hidden\" name=\"source_id\" value=\"" . (int)($f['source_id'] ?? 0) . "\"><table>";
@@ -913,11 +922,11 @@ if ($tab === 'usuarios') {
     echo "<form method=\"post\" class=\"fuentes-top\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer_todas\"><input type=\"hidden\" name=\"k\" value=\"" . h($fk) . "\">$lb<small>sin esperar al intervalo; como mucho 50 fuentes y ~25 s por pulsación, las más atrasadas primero; el resto lo sigue el cron</small></form>";
     $nk = $pdo->query("SELECT kind, COUNT(*) FROM sources GROUP BY kind")->fetchAll(PDO::FETCH_KEY_PAIR);
     echo "<nav class=\"sub\">";
-    foreach ($FK as $k => $v) echo "<a href=\"/admin?t=fuentes&amp;k=$k\"" . ($k === $fk && $fq === '' ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
+    foreach ($FK as $k => $v) echo "<a href=\"/admin?t=fuentes&amp;k=$k$oq\"" . ($k === $fk && $fq === '' ? ' class="on"' : '') . ">$v <small>" . (int)($nk[$k] ?? 0) . "</small></a>";
     echo "</nav>";
-    echo "<form method=\"get\" action=\"/admin\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"fuentes\"><input type=\"hidden\" name=\"k\" value=\"$fk\"><input type=\"search\" name=\"q\" value=\"" . h($fq) . "\" maxlength=\"64\" placeholder=\"buscar fuente: nombre, slug, descripción, web o RSS (en todos los tipos)\"><button class=\"btn sm\">Buscar</button>" . ($fq !== '' ? " <a href=\"/admin?t=fuentes&amp;k=$fk\">todas</a>" : '') . "</form>";
+    echo "<form method=\"get\" action=\"/admin\" class=\"buscar-u\"><input type=\"hidden\" name=\"t\" value=\"fuentes\"><input type=\"hidden\" name=\"k\" value=\"$fk\">" . ($fo !== '' ? "<input type=\"hidden\" name=\"o\" value=\"$fo\">" : '') . "<input type=\"search\" name=\"q\" value=\"" . h($fq) . "\" maxlength=\"64\" placeholder=\"buscar fuente: nombre, slug, descripción, web o RSS (en todos los tipos)\"><button class=\"btn sm\">Buscar</button>" . ($fq !== '' ? " <a href=\"/admin?t=fuentes&amp;k=$fk$oq\">todas</a>" : '') . "</form>";
     if ($fq !== '') {
-        $rows = array_values(array_filter($pdo->query("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s ORDER BY s.kind, s.name")->fetchAll(),
+        $rows = array_values(array_filter($pdo->query("$selF ORDER BY " . ($fo === '' ? "s.kind, s.name" : $ordF))->fetchAll(),
             fn($f) => str_contains($llano(implode(' ', [$f['name'], $f['slug'], (string)$f['descr'], (string)$f['home'], (string)$f['feed_portada'], (string)$f['feed_nuevas']])), $fqn)));
         echo "<p class=\"notice\">" . count($rows) . " coinciden con «" . h($fq) . "» (todos los tipos e idiomas).</p>";
         if (!$rows) echo "<p class=\"end\">Ninguna fuente coincide.</p>";
@@ -928,16 +937,16 @@ if ($tab === 'usuarios') {
     $ord = array_merge(array_intersect(array_keys(DDD_LANGS), array_keys($nl)), array_diff(array_keys($nl), array_keys(DDD_LANGS), ['']));
     if (isset($nl[''])) $ord[] = '';
     if (count($nl) > 1 || $il !== '') {
-        echo "<nav class=\"sub\"><a href=\"/admin?t=fuentes&amp;k=$fk\"" . ($il === '' ? ' class="on"' : '') . ">todos <small>" . array_sum($nl) . "</small></a>";
+        echo "<nav class=\"sub\"><a href=\"/admin?t=fuentes&amp;k=$fk$oq\"" . ($il === '' ? ' class="on"' : '') . ">todos <small>" . array_sum($nl) . "</small></a>";
         foreach ($ord as $l) {
             $code = $l === '' ? '?' : $l;
             $lbl = $l === '' ? 'sin idioma' : (DDD_LANGS[$l] ?? $l);
-            echo "<a href=\"/admin?t=fuentes&amp;k=$fk&amp;il=" . urlencode($code) . "\"" . ($il === $code ? ' class="on"' : '') . " title=\"" . h($code) . "\">" . h($lbl) . " <small>" . (int)$nl[$l] . "</small></a>";
+            echo "<a href=\"/admin?t=fuentes&amp;k=$fk&amp;il=" . urlencode($code) . "$oq\"" . ($il === $code ? ' class="on"' : '') . " title=\"" . h($code) . "\">" . h($lbl) . " <small>" . (int)$nl[$l] . "</small></a>";
         }
         echo "</nav>";
     }
     $wl = $il === '' ? '' : ($il === '?' ? " AND COALESCE(s.lang, '') = ''" : " AND s.lang = ?");
-    $rows = $pdo->prepare("SELECT s.*, (SELECT COUNT(*) FROM source_items i WHERE i.source_id = s.source_id) n, (SELECT COUNT(*) FROM user_media um WHERE um.source_id = s.source_id) nu FROM sources s WHERE s.kind = ?$wl ORDER BY s.name");
+    $rows = $pdo->prepare("$selF WHERE s.kind = ?$wl ORDER BY $ordF");
     $rows->execute($il === '' || $il === '?' ? [$fk] : [$fk, $il]); $rows = $rows->fetchAll();
     if (!$rows) echo "<p class=\"end\">" . ($il === '' ? "No hay fuentes de este tipo." : "No hay fuentes de este tipo en ese idioma.") . "</p>";
     }   // fin sin busqueda
@@ -951,9 +960,13 @@ if ($tab === 'usuarios') {
         foreach ($todas as $f) echo "<label style=\"display:block\"><input type=\"checkbox\" name=\"f[]\" value=\"{$f['source_id']}\"" . (!empty($f['featured']) ? ' checked' : '') . "> " . h($f['name']) . (($f['lang'] ?? '') !== '' ? " <small>" . h($f['lang']) . "</small>" : '') . "</label>";
         echo "</p><p><button class=\"btn sm\">guardar destacadas</button> <small>en el menú salen las " . medios_max($fk) . " que han publicado más recientemente de estas; en /mis-fuentes, todas</small></p></form></details>";
     }
+    if (count($rows) > 1) {   // orden de la lista: conserva subpestaña, idioma y busqueda
+        $bo = "/admin?t=fuentes&amp;k=$fk" . ($il !== '' ? "&amp;il=" . urlencode($il) : '') . ($fq !== '' ? "&amp;q=" . urlencode($fq) : '');
+        echo "<nav class=\"sub\" title=\"la fecha de actualización del RSS es la de su última noticia publicada\"><a href=\"$bo\"" . ($fo === '' ? ' class="on"' : '') . ">por nombre</a><a href=\"$bo&amp;o=act\"" . ($fo === 'act' ? ' class="on"' : '') . ">actualizadas hace menos</a><a href=\"$bo&amp;o=ant\"" . ($fo === 'ant' ? ' class="on"' : '') . ">actualizadas hace más</a></nav>";
+    }
     foreach ($rows as $f) echo "<form id=\"leer{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_leer\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form><form id=\"foto{$f['source_id']}\" method=\"post\" action=\"/admin\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_foto\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"></form>";
     foreach ($rows as $f) {
-        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . (!empty($f['relay']) ? " · <b>lector local</b>" : "") . " · " . (($f['lang'] ?? '') !== '' ? h($f['lang']) : "<i>idioma ?</i>") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
+        echo "<details class=\"editbox\"><summary><b>" . h($f['name']) . "</b> · " . h($f['kind']) . ($f['status'] === 'off' ? " · <i>apagada</i>" : "") . (!empty($f['featured']) ? " · destacado" : "") . (!empty($f['relay']) ? " · <b>lector local</b>" : "") . " · " . (($f['lang'] ?? '') !== '' ? h($f['lang']) : "<i>idioma ?</i>") . " · {$f['n']} noticias · {$f['nu']} usuarios · " . (!empty($f['upd']) ? "<span title=\"" . h((string)$f['upd']) . "\">última noticia " . h(hace($f['upd'])) . "</span>" : "<i>sin noticias</i>") . " · " . ($f['last_fetch'] ? "leída " . h(hace($f['last_fetch'])) : "sin leer") . ($f['last_error'] ? " · <span style=\"color:var(--neg)\">" . h($f['last_error']) . "</span>" : "") . " · <a href=\"" . h(fuente_url($f)) . "\">ver</a> <button class=\"btn sm\" form=\"leer{$f['source_id']}\" title=\"leer el RSS ahora\">leer ahora</button> <button class=\"btn sm\" form=\"foto{$f['source_id']}\" title=\"diagnostico: por que no hay foto en la ultima noticia sin foto\">probar foto</button></summary>";
         echo $fuente_form($f, 'fuente');
         echo "<p><form method=\"post\" onsubmit=\"return confirm('¿Borrar la fuente y todas sus noticias?')\">$T<input type=\"hidden\" name=\"act\" value=\"fuente_borrar\"><input type=\"hidden\" name=\"source_id\" value=\"{$f['source_id']}\"><button class=\"btn sm\">borrar</button></form></p></details>";
     }
