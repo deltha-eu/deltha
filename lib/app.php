@@ -190,6 +190,29 @@ function saltos(string $html): string {
 }
 /** Titular o entradilla en texto plano: fuera etiquetas HTML (incluidas las que llegan escapadas, como «&lt;span lang="gl"&gt;…»),
  *  entidades decodificadas y espacios normalizados. Para lo que viene de los feeds, de la og:title y de los formularios (08/10/2026). */
+/** Titulos en mayusculas («EL GOBIERNO APRUEBA...»): si mas del 70 % de las letras son mayusculas y hay al menos tres palabras, se
+ *  pasa a frase normal: minusculas, mayuscula inicial y tras . ! ? : y las siglas corrientes (PSOE, UE, EEUU...) se respetan. Lo pidio
+ *  Angel el 16/11/2026 para que no se envien titulares a gritos. Un titulo normal no se toca. */
+function titulo_normalizar(string $t): string {
+    $t = trim($t);
+    $letras = preg_replace('/[^\p{L}]/u', '', $t);
+    if (mb_strlen($letras) < 12 || str_word_count(preg_replace('/[^\p{L}\s]/u', ' ', $t)) < 3) return $t;
+    $may = mb_strlen(preg_replace('/[^\p{Lu}]/u', '', $letras));
+    if ($may / max(1, mb_strlen($letras)) <= 0.7) return $t;
+    $siglas = ['EEUU', 'EE.UU.', 'UE', 'PSOE', 'PP', 'VOX', 'OTAN', 'ONU', 'FMI', 'BCE', 'IA', 'PIB', 'RTVE', 'TVE', 'UCO', 'CIS', 'INE', 'DANA', 'CGPJ', 'TC', 'TS', 'OPA', 'ERE', 'ERTE', 'LGTBI', 'FBI', 'CIA', 'NASA', 'USA', 'UK', 'EU', 'NBA', 'NFL', 'OCDE', 'UEFA', 'FIFA', 'SMI', 'BBVA', 'MIR', 'ETA', 'DNI', 'IVA', 'IRPF', 'ONG', 'PNV', 'ERC', 'BNG', 'OMS', 'ONCE', 'AVE', 'RENFE', 'CEOE', 'UGT', 'CCOO', 'OK', 'TV', 'PC', 'GPT', 'CEO', 'DGT', 'CNMC', 'CNMV', 'BOE', 'ITV', 'ADN', 'VIH', 'SIDA', 'UCI', 'URSS', 'RAE', 'COI', 'JJOO', 'F1', 'LGBT', 'LGTB', 'RRSS', 'IPC', 'PIN', 'SMS', 'GPS', 'EH', 'CUP', 'UPN', 'CC', 'AI', 'US', 'UN', 'NATO', 'EU', 'IMF', 'WHO', 'BBC', 'CNN', 'NYT', 'MIT'];
+    $sig = array_fill_keys(array_map('mb_strtoupper', $siglas), true);
+    $out = ''; $inicio = true;
+    foreach (preg_split('/(\s+)/u', $t, -1, PREG_SPLIT_DELIM_CAPTURE) as $w) {
+        if ($w === '' || preg_match('/^\s+$/u', $w)) { $out .= $w; continue; }
+        $nucleo = trim($w, "¿¡?!.,;:()[]\"'«»“”‘’-–—");
+        if (isset($sig[mb_strtoupper($nucleo)])) { $out .= $w; $inicio = (bool)preg_match('/[.!?:]$/u', $w); continue; }
+        $l = mb_strtolower($w);
+        if ($inicio) $l = preg_replace_callback('/\p{L}/u', fn($m) => mb_strtoupper($m[0]), $l, 1);
+        $out .= $l;
+        $inicio = (bool)preg_match('/[.!?:]$/u', $w);
+    }
+    return $out;
+}
 function texto_plano(?string $s): string {
     $t = html_entity_decode((string)$s, ENT_QUOTES | ENT_HTML5, 'UTF-8');   // primero: «&lt;span&gt;» pasa a ser una etiqueta de verdad
     $t = strip_tags(preg_replace('~<br\s*/?>|</p>~i', ' ', $t));

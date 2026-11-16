@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($te = envio_tope_publicador($pdo, $f['pub'])) $err = $te;
         $f['lang'] = lang_post();   // idioma elegido ('' = detectar)
-        $f['title']   = mb_substr(texto_plano(post('title')), 0, 200);     // sin etiquetas HTML (08/10/2026)
+        $f['title']   = mb_substr(titulo_normalizar(texto_plano(post('title'))), 0, 200);     // sin etiquetas HTML (08/10/2026); sin gritos (16/11/2026)
         $f['content'] = mb_substr(texto_plano(post('content')), 0, 2000);
         $f['topic']   = (int)post('topic');
         $f['community'] = (int)post('community');
