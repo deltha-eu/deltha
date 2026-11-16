@@ -9,12 +9,13 @@ $st->execute([$uid]);
 $u = $st->fetch();
 $hours = (int)cfg('reset_hours', 2);
 header('Cache-Control: no-store');
-page_header(t('Nueva contraseña'));
 $mal = !$u || !$u['reset_token'] || !preg_match('/^[a-f0-9]{32}$/', $t) || !hash_equals((string)$u['reset_token'], $t);
-if ($mal) { echo "<p class=\"error\">" . t('El enlace no es válido o ya se ha usado.') . " <a href=\"/recuperar\">" . t('Pide otro') . "</a>.</p>"; page_footer(); exit; }
-if (strtotime((string)$u['reset_sent']) < time() - $hours * 3600) { echo "<p class=\"error\">" . t('El enlace ha caducado: valía %d horas.', $hours) . " <a href=\"/recuperar\">" . t('Pide otro') . "</a>.</p>"; page_footer(); exit; }
+$caducado = !$mal && strtotime((string)$u['reset_sent']) < time() - $hours * 3600;
 $err = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// el POST se atiende ANTES de pintar nada: la redireccion a /perfil y la cookie de sesion necesitan que no haya salido HTML. Hasta el
+// 16/11/2026 page_header() iba antes y la contraseña se guardaba, pero el header Location fallaba («headers already sent»): la pagina se
+// quedaba en blanco con el titulo «Nueva contraseña» y el usuario creia que no habia pasado nada (lo avisó Foucault-Mandalay en el Chat).
+if (!$mal && !$caducado && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $pass = (string)($_POST['pass'] ?? '');
     if (strlen($pass) < 8) $err = t('Contraseña de al menos 8 caracteres.');
     elseif ($pass !== (string)($_POST['pass2'] ?? '')) $err = t('Las dos contraseñas no coinciden.');
@@ -26,6 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/perfil?clave=1');
     }
 }
+page_header(t('Nueva contraseña'));
+if ($mal) { echo "<p class=\"error\">" . t('El enlace no es válido o ya se ha usado.') . " <a href=\"/recuperar\">" . t('Pide otro') . "</a>.</p>"; page_footer(); exit; }
+if ($caducado) { echo "<p class=\"error\">" . t('El enlace ha caducado: valía %d horas.', $hours) . " <a href=\"/recuperar\">" . t('Pide otro') . "</a>.</p>"; page_footer(); exit; }
 if ($err) echo "<p class=\"error\" role=\"alert\">" . h($err) . "</p>";
 echo "<p class=\"notice\">" . t('Elige una contraseña nueva para %s.', '<b>' . h($u['login']) . '</b>') . "</p>";
 echo "<form class=\"plain\" method=\"post\"><input type=\"hidden\" name=\"u\" value=\"$uid\"><input type=\"hidden\" name=\"t\" value=\"" . h($t) . "\">";
