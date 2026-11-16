@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../lib/app.php';
+require __DIR__ . '/../lib/encuesta.php';   // encuesta en el hilo (migra-204)
 require __DIR__ . '/../lib/imagen.php';
 require __DIR__ . '/../lib/aura.php';
 require __DIR__ . '/../lib/moderacion.php';
@@ -46,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($up = imagen_desde_subida($_FILES['photo'] ?? [])) !== null) $image = $up;
         elseif (($ie = imagen_subida_error($_FILES['photo'] ?? [])) !== null) $err = $ie;   // la foto no entra: se avisa antes de publicar, por si quiere cambiarla
     }
+    // encuesta (migra-204): solo con cuenta; si esta mal rellenada, se avisa antes de publicar
+    $encuesta = null;
+    if (!$err && user()) { $encuesta = encuesta_desde_post($f['title']); if (is_string($encuesta)) { $err = $encuesta; $encuesta = null; } }
     if (!$err) {
         $u = user();
         $premod = !$u && premod_anon();   // anonimo con premod_anon = 1 (migra-183): el hilo entra oculto (pending_mod) y lo aprueba un moderador en /moderacion
@@ -55,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        VALUES ('article', ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?, (SELECT CAST(cvalue AS UNSIGNED) FROM config WHERE ckey = 'act_counter'))")
             ->execute([$u['user_id'] ?? null, $f['topic'], $f['community'] ?: null, $f['title'], lang_detect($f['title'] . ' ' . $f['content']), $f['content'], $image, $status, $f['indexable'], $foros ? (int)$foros[$f['f']]['forum_id'] : null]);
         $sid = (int)$pdo->lastInsertId();
+        if ($encuesta) encuesta_crear($pdo, $encuesta, (int)$u['user_id'], $sid, null);   // encuesta del hilo (migra-204)
         hilo_seguir_propio($pdo, $u['user_id'] ?? null, $sid);   // «Seguir hilos propios»: el hilo nace seguido (migra-192)
         ip_log_add($pdo, 'story', isset($u['user_id']) ? (int)$u['user_id'] : null, $sid);   // registro de IP con caducidad (migra-193)
         // la comunidad se lee de story_communities (como en /enviar); faltaba aqui y los originales no salian en la suya (12/10/2026, migra-141 repone los antiguos)
@@ -102,6 +107,7 @@ if ($comms) {
     echo "</select>";
 }
 echo "" . t('<label>Foto</label>') . "<input type=\"file\" name=\"photo\" accept=\"image/*\">";
+if (user()) echo encuesta_form_html($_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : []);   // encuesta opcional (migra-204); los campos se conservan si el formulario vuelve con error
 if ($canIndex) echo "<label><input type=\"checkbox\" name=\"indexable\" value=\"1\"" . ($f['indexable'] ? ' checked' : '') . "> " . t('Dejar que los buscadores indexen este artículo') . "</label><p class=\"meta\" style=\"padding:0\">" . t('Por defecto nada de %s sale en Google ni en otros buscadores. Si lo marcas, solo este artículo podrá aparecer; los rastreadores de IA siguen vetados.', h(cfg('site_name', 'Deltha'))) . "</p>";
 echo "" . t('<button>Abrir el hilo</button>') . "</form>";
 page_footer();

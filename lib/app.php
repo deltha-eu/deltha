@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 261);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 262);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1753,6 +1753,8 @@ function icon(string $n): string {
         'letter' => '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h7M9 16h7"/>',   // newsletter / substack: hoja con esquina doblada   // marcador: relleno via CSS cuando esta guardado
         'bell'   => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/>',   // avisos (campanita)
         'help'   => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/>',   // interrogacion: «Como empezar» en el Chat (migra-122)
+        'poll'   => '<path d="M5 20V10"/><path d="M12 20V4"/><path d="M19 20v-7"/><path d="M3 20h18"/>',
+        'ok'     => '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
         'mega'   => '<path d="M3 10v4h3l7 4V6l-7 4z"/><path d="M17 9a4.5 4.5 0 0 1 0 6"/><path d="M6 14v4h2"/>',   // megafono: mensaje a la comunidad en el Chat (migra-121)
         'shield' => '<path d="M12 3 5 6v5.5c0 4.3 2.9 7.2 7 8.5 4.1-1.3 7-4.2 7-8.5V6z"/><path d="m9 12 2 2 4-4"/>',   // escudo: aviso de la conversación de moderación (migra-195)
         'sun'    => '<circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',   // me gusta (comentarios)

@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../lib/app.php';
+require __DIR__ . '/../lib/encuesta.php';   // encuesta del hilo (migra-204)
 require __DIR__ . '/../lib/render.php';
 
 $id = (int)($_GET['id'] ?? 0);
@@ -95,6 +96,7 @@ if ($s['content_type'] === 'article') {
     if (!foco()) media_block($s, 'media', null);
     // cada parrafo con su aire (.para): la separacion la da el CSS, no los <br>
     echo md_articulo((string)$s['content']);   // **negrita** *cursiva* > cita [enlace](url), parrafo a parrafo (.para)
+    if ($enc = encuesta_de_hilo($pdo, $id)) echo encuesta_html($pdo, $enc, user(), "/hilo/$id#poll{$enc['poll_id']}");   // encuesta del hilo (migra-204)
 } else {
     if ($s['content']) echo "<p class=\"lead\">" . saltos(md_inline(h($s['content']))) . "</p>";   // **negrita**, *cursiva* y [texto](url) tambien en la entradilla (02/11/2026)
     if (!foco()) media_block($s, 'media', $dest);
