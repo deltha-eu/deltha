@@ -4227,3 +4227,29 @@ form.plain.colform { gap: 6px; }
 form.plain .colbtns { display: flex; gap: 14px; align-items: center; margin: 6px 0 0; }
 form.plain .colbtns button.link { background: transparent; color: var(--muted); font-weight: 400; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
 [data-skin="retro"] .colsel li, [data-skin="manga"] .colsel li, [data-skin="punk"] .colsel li, [data-skin="popart"] .colsel li { border-radius: 0; }
+
+/* encuestas en foros y Chat (migra-204, 16/11/2026) */
+details.pollnew { margin: 8px 0; padding: 6px 10px; border: 1px dashed var(--line); border-radius: 10px; font-size: 14px; }
+details.pollnew > summary { cursor: pointer; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+details.pollnew > summary svg { width: 16px; height: 16px; }
+details.pollnew label { display: block; font-size: 13px; color: var(--muted); margin-top: 6px; }
+details.pollnew input[type=text], details.pollnew textarea { width: 100%; box-sizing: border-box; }
+details.pollnew .row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+details.pollnew .row label { margin-top: 4px; }
+details.pollnew select { font-size: 13px; }
+.poll { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.poll .pollq { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; margin-bottom: 6px; }
+.poll .pollq svg { width: 16px; height: 16px; position: relative; top: 2px; }
+.poll .pollopt { margin: 6px 0; }
+.poll .pollopt label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.poll .polltxt { display: inline-flex; gap: 6px; align-items: center; }
+.poll .polltxt svg { width: 14px; height: 14px; }
+.poll .pollopt.mine .polltxt { font-weight: 600; }
+.poll .pollpct { float: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.poll .bar { clear: both; height: 8px; background: var(--line); border-radius: 4px; margin-top: 3px; overflow: hidden; }
+.poll .bar span { display: block; height: 8px; background: var(--accent); border-radius: 4px; transition: width .4s; }
+.poll .pollopt.mine .bar span { background: var(--life); }
+.poll.closed .bar span { opacity: .7; }
+.poll .row { margin-top: 8px; }
+.poll p.meta { margin: 6px 0 0; font-size: 13px; }
+.poll form.inline { margin-top: 6px; }

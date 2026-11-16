@@ -21,6 +21,7 @@ require __DIR__ . '/../lib/chat.php';
 require __DIR__ . '/../lib/moderacion.php';
 require __DIR__ . '/../lib/sigfrid.php';   // Sigfrid, el ayudante del Chat (migra-182)
 require __DIR__ . '/../lib/imagen.php';    // imagen adjunta (migra-203)
+require __DIR__ . '/../lib/encuesta.php';  // encuestas en los mensajes (migra-204)
 if ((string)cfg('chat_enabled', '1') !== '1') redirect('/');
 
 $u = user();
@@ -70,7 +71,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $content = mb_substr($content, 0, $maxLen);
     if (mb_strlen($content) < 1) redirect($base);
     $limit = (int)cfg($u ? 'chat_per_hour' : 'chat_anon_per_hour', $u ? 30 : 10);
+    $encuesta = $u ? encuesta_desde_post($content) : null;   // encuesta en el mensaje (migra-204): solo con cuenta
     if (chat_recent_count($pdo, $u, $u ? null : $anonKey) >= $limit) $err = t('Demasiados mensajes seguidos: espera un rato.');
+    elseif (is_string($encuesta)) $err = $encuesta;
     else {
         $ref = chat_first_ref($content);
         if ($ref) { $q = $pdo->prepare("SELECT 1 FROM chat WHERE msg_id = ? AND status = 'ok'"); $q->execute([$ref]); if (!$q->fetchColumn()) $ref = null; }
@@ -86,6 +89,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$u ? $u['user_id'] : null, $u ? '' : $anonAlias, $u ? null : $anonKey, $ref, $content, $anuncio, $premod ? 'pending_mod' : 'ok']);
         $mid = (int)$pdo->lastInsertId();
         if ($image) $pdo->prepare("UPDATE chat SET image = ? WHERE msg_id = ?")->execute([$image, $mid]);   // aparte del INSERT: sin la migra-203 aplicada fallaria solo esto, no el mensaje
+        if ($encuesta) { try { encuesta_crear($pdo, $encuesta, (int)$u['user_id'], null, $mid); } catch (Throwable $e) { $_SESSION['flash_err'] = t('No se ha podido crear la encuesta.'); } }   // migra-204
         ip_log_add($pdo, 'chat', $u ? (int)$u['user_id'] : null, $mid);   // registro de IP con caducidad (migra-193)
         if ($premod) { mod_premod($pdo, 'chat', $mid, 'ok'); redirect($base . $amp . 'premod=1'); }
         mod_enqueue($pdo, 'chat', $mid);   // posmoderacion: la IA local lo revisa despues
@@ -166,6 +170,7 @@ if ($mentions) {
 // vista previa del mensaje citado (#N): al pasar el ratón por el enlace sale el texto del mensaje, sin click (CSS, sin JS)
 $previews = [];
 foreach ($rows as $m) $previews[(int)$m['msg_id']] = chat_preview($m, $logins, $ids);
+$encuestas = encuestas_de_chat($pdo, array_keys($ids));   // encuestas de los mensajes de esta pagina (migra-204)
 $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || isset($_GET['premod']) || isset($_GET['anun']) || $err;
 
@@ -184,6 +189,7 @@ $box = function (bool $reply) use ($u, $anonAlias, $maxLen, $replyTo, $base, $co
     $ph = $u ? t('Escribe como %s', $u['login']) : t('Escribes como %s (anónimo). Con cuenta, con tu nombre.', $anonAlias);
     echo "<textarea name=\"content\" maxlength=\"$maxLen\" rows=\"2\" placeholder=\"" . h($ph) . "\" required" . ($reply ? " autofocus" : "") . ">" . ($reply ? "#$replyTo " : "") . "</textarea>";
     echo md_ayuda();
+    if ($u && !$reply) echo encuesta_form_html($err ? $_POST : []);   // encuesta en el mensaje (migra-204): con cuenta, en el cuadro de arriba
     echo "<div class=\"row\"><small class=\"meta\">" . t('#N cita un mensaje · @nick menciona · hasta %d caracteres', $maxLen) . ($reply ? " · <a href=\"" . h($base) . "\">" . t('cancelar') . "</a>" : "") . "</small>";
     if (is_mod()) echo "<label class=\"anuncio\" title=\"" . h(t('marcar como mensaje a la comunidad')) . "\"><input type=\"checkbox\" name=\"anuncio\" value=\"1\">" . icon('mega') . "<span>" . t('Mensaje a la comunidad') . "</span></label>";   // admin/mod (migra-121)
     if ($conImg) echo "<label class=\"cimgpick\" title=\"" . h(t('Adjuntar una imagen (JPG, PNG, WebP); se guarda reducida. También puedes pegarla con Ctrl+V o arrastrarla al cuadro.')) . "\" data-quitar=\"" . h(t('quitar la imagen')) . "\">" . icon('image') . "<span>" . t('Imagen') . "</span><input type=\"file\" name=\"photo\" accept=\"image/*\"></label>";   // migra-203
@@ -227,6 +233,7 @@ foreach ($rows as $m) {
     if ($del) echo "<p class=\"delmsg\"><i>" . h(t(DDD_CHAT_DELETED_TXT)) . "</i> · <a href=\"/normas\">" . t('normas') . "</a></p>";
     else {
         echo chat_format($m['content'], $logins, $ids, $previews);
+        if (!empty($encuestas[$id])) echo encuesta_html($pdo, $encuestas[$id], $u, $base . $amp . "m=$id#m$id");   // encuesta del mensaje (migra-204)
         if (!empty($m['image'])) echo "<a class=\"cimg\" href=\"/media/" . h($m['image']) . "\" target=\"_blank\" rel=\"noopener\"><img src=\"/media/" . h($m['image']) . "\" alt=\"\" loading=\"lazy\"></a>";   // imagen adjunta (migra-203): miniatura; a tamaño completo en otra pestaña
     }
     $acts = [];

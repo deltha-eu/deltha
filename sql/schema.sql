@@ -802,6 +802,36 @@ CREATE TABLE `story_communities` (
   CONSTRAINT `fk_sc_user` FOREIGN KEY (`added_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- encuestas en foros y Chat (migra-204)
+CREATE TABLE IF NOT EXISTS polls (
+  poll_id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  story_id   INT UNSIGNED DEFAULT NULL COMMENT 'hilo de foro al que pertenece',
+  msg_id     INT UNSIGNED DEFAULT NULL COMMENT 'mensaje del Chat al que pertenece',
+  user_id    INT UNSIGNED DEFAULT NULL,
+  question   VARCHAR(200) NOT NULL,
+  multi      TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = se pueden marcar varias opciones',
+  results    ENUM('siempre','final') NOT NULL DEFAULT 'siempre' COMMENT 'cuando se ven los resultados',
+  change_min SMALLINT UNSIGNED NOT NULL DEFAULT 10 COMMENT 'minutos en los que se puede cambiar el voto',
+  ends_at    DATETIME NOT NULL,
+  created    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (poll_id), KEY idx_story (story_id), KEY idx_msg (msg_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS poll_options (
+  option_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  poll_id   INT UNSIGNED NOT NULL,
+  pos       TINYINT UNSIGNED NOT NULL,
+  text      VARCHAR(120) NOT NULL,
+  votes     INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (option_id), KEY idx_poll (poll_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS poll_votes (
+  poll_id   INT UNSIGNED NOT NULL,
+  user_id   INT UNSIGNED NOT NULL,
+  option_id INT UNSIGNED NOT NULL,
+  created   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (poll_id, user_id, option_id), KEY idx_opt (option_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `story_related` (
   story_id   INT UNSIGNED NOT NULL,
   related_id INT UNSIGNED NOT NULL,
@@ -950,6 +980,10 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('mod_enabled',         '0',    '1 = la IA local revisa lo nuevo DESPUES de publicarse (posmoderacion); 0 = no se encola nada'),
 ('delta_min_age_min',   '30',   'Minutos desde el envio antes de poder llegar a portada (y desde los que descuenta la antigüedad)'),
 ('decay_medios',        '0.05', 'Decremento de delta por media hora de espera en Medios (desde que es elegible)'),
+('poll_max_options',    '10', 'encuestas: opciones como mucho (migra-204)'),
+('poll_min_hours',      '24', 'encuestas: duracion minima en horas (migra-204)'),
+('poll_max_days',       '30', 'encuestas: duracion maxima en dias (migra-204)'),
+('poll_change_min',     '10', 'encuestas: minutos en los que se puede cambiar el voto (migra-204)'),
 ('decay_edad',          'actividad', 'qué marca la media hora de la antigüedad del δ: actividad (votos del sitio) o reloj (migra-189)'),
 ('decay_act_k',         '1', 'votos del sitio que equivalen a media hora de espera en el δ (migra-189)'),
 ('act_counter',         '0', 'votos emitidos en todo el sitio; suma uno en /votar (edad del δ por actividad, migra-189)'),
