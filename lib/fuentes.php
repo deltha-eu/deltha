@@ -769,7 +769,14 @@ function fuentes_parse_rss(string $xml): array {
 
         // imagen: media:content / media:thumbnail / enclosure / primer <img> del contenido
         $thumb = '';
-        if (isset($md->content)) foreach ($md->content as $mc) { $u = trim((string)$mc->attributes()->url); if ($u !== '' && (!isset($mc->attributes()->medium) || (string)$mc->attributes()->medium === 'image')) { $thumb = $u; break; } }
+        // con varias media:content gana la que declara type="image/…": The Objective pone delante las miniaturas de sus bloques
+        // «Lee más» (sin type y con la URL rota) y la foto de la noticia al final, con type (17/11/2026); si ninguna lo declara, la primera
+        if (isset($md->content)) foreach ($md->content as $mc) {
+            $u = trim((string)$mc->attributes()->url);
+            if ($u === '' || (isset($mc->attributes()->medium) && (string)$mc->attributes()->medium !== 'image')) continue;
+            if (str_starts_with(strtolower((string)$mc->attributes()->type), 'image/')) { $thumb = $u; break; }
+            if ($thumb === '') $thumb = $u;
+        }
         if ($thumb === '' && isset($md->thumbnail)) $thumb = trim((string)$md->thumbnail->attributes()->url);
         if ($thumb === '' && isset($i->enclosure) && str_starts_with((string)$i->enclosure->attributes()->type, 'image/')) $thumb = trim((string)$i->enclosure->attributes()->url);
         if ($thumb === '' && preg_match("/<img[^>]+src=['\"]([^'\"]+)['\"]/i", $full . $desc, $m)) $thumb = html_entity_decode($m[1]);
