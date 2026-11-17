@@ -21,6 +21,7 @@
         if (!html || html.indexOf('<!') === 0 || html.indexOf('<html') === 0) throw 0;   // una pagina entera (login, error): no es el widget
         var t = document.createElement('div'); t.innerHTML = html;
         if (t.firstElementChild) f.replaceWith(t.firstElementChild); else throw 0;
+        try { sessionStorage.removeItem(K); } catch (_) {}   // no hubo recarga: el punto guardado ya no hace falta (ver el clic en enlaces, abajo)
       })
       .catch(function () {   // recarga clasica, conservando el boton pulsado (v=1|-1), que submit() no envia
         delete f.dataset.busy; f.style.opacity = '';
@@ -41,6 +42,14 @@
     try { sessionStorage.setItem(K, JSON.stringify({ u: url, y: window.scrollY, t: Date.now() })); } catch (_) {}
     e.preventDefault(); location.href = a.href.split('#')[0];
   });
+  // (17/11/2026) Un punto guardado solo vale para la recarga del propio formulario. Votar o guardar por fetch no recarga, asi que
+  // el punto se quedaba vivo 15 s y el siguiente enlace a la misma ruta (pasar de pagina en el radar: /radar?p=2) abria la pagina
+  // nueva a esa altura, abajo, en vez de arriba. Cualquier enlace que no sea «responder» lo descarta.
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.matches('a.replylink')) return;
+    try { sessionStorage.removeItem(K); } catch (_) {}
+  }, true);
   // (19/10/2026) Antes se ponia scrollRestoration = 'manual' siempre y el navegador dejaba de volver al sitio al pulsar «atras»:
   // cada vuelta a la portada empezaba arriba. Ahora solo se toma el mando cuando hay un punto guardado (justo tras votar, guardar,
   // comentar o responder) y se devuelve al navegador en cuanto se ha colocado la pagina.
