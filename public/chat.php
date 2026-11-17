@@ -209,11 +209,11 @@ if ($page === 1 && $goto === 0) {   // mensajes a la comunidad (admin/mod, migra
     $dias = max(0, (int)cfg('chat_anuncio_dias', 7));
     $an = $pdo->query("SELECT c.msg_id, c.content, c.user_id, c.alias, u.login, ub.login AS marcado_por FROM chat c LEFT JOIN users u ON u.user_id = c.user_id LEFT JOIN users ub ON ub.user_id = c.anuncio_by
                         WHERE c.anuncio = 1 AND c.deleted = 0 AND " . chat_visible_sql('c') . ($dias > 0 ? " AND c.created >= NOW() - INTERVAL $dias DAY" : '') . " ORDER BY c.msg_id DESC LIMIT 3")->fetchAll();
-    $an = array_filter($an, fn($a) => !isset($ids[(int)$a['msg_id']]));   // los que ya se ven en esta pagina no se repiten: la franja es para los que han quedado atras
+    // la franja sale siempre, tambien con el aviso a la vista en la pagina (17/11/2026): por hilos, otro hilo con respuesta mas reciente lo adelanta y el aviso dejaba de estar arriba
     if ($an) {
         echo "<div class=\"anuncios\"><div class=\"ch\"><span class=\"anun\">" . icon('mega') . t('Mensajes a la comunidad') . "</span></div>";
         // moderadores: una x al final para quitar la marca sin ir al mensaje (10/10/2026); los demas solo ven el enlace
-        foreach ($an as $a) echo "<p><a class=\"num\" href=\"/chat?m={$a['msg_id']}#m{$a['msg_id']}\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> <span>" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</span>"
+        foreach ($an as $a) echo "<p><a class=\"num\" href=\"" . (isset($ids[(int)$a['msg_id']]) ? '' : "/chat?m={$a['msg_id']}") . "#m{$a['msg_id']}\">#{$a['msg_id']}</a> <b>" . h(chat_who($a)) . "</b> <span>" . h(mb_strimwidth(preg_replace('/\s+/', ' ', (string)$a['content']), 0, 160, '…')) . "</span>"
             . (is_mod() && !empty($a['marcado_por']) && $a['marcado_por'] !== ($a['login'] ?? null) ? " <small class=\"meta\">" . h(t('marcado por %s', (string)$a['marcado_por'])) . "</small>" : '')   // quien lo marco, si no es el autor (migra-186)
             . (is_mod() ? "<form method=\"post\" class=\"inline quitar\"><input type=\"hidden\" name=\"act\" value=\"anuncio\"><input type=\"hidden\" name=\"id\" value=\"{$a['msg_id']}\"><input type=\"hidden\" name=\"back\" value=\"franja\"><button class=\"link\" title=\"" . h(t('quitar la marca de mensaje a la comunidad')) . "\" aria-label=\"" . h(t('quitar la marca de mensaje a la comunidad')) . "\">×</button></form>" : '') . "</p>";
         echo "</div>";
