@@ -1417,6 +1417,47 @@ function foros_sin_leer(): array {
     return $m;
 }
 function foros_sin_leer_total(): int { return array_sum(foros_sin_leer()); }
+/** Primer comentario sin leer de cada hilo dado, para el usuario actual: [story_id => comment_id] (18/11/2026). «Sin leer» = posterior a
+ *  su ultima lectura del hilo o, si nunca lo abrio, a cuando empezo a seguir el foro. Un hilo que nunca abrio y es posterior a ese
+ *  momento no sale: es nuevo entero y se abre por arriba. Solo hilos de foros que sigue. */
+function hilos_primer_nuevo(PDO $pdo, array $sids): array {
+    $u = user(); $sids = array_values(array_unique(array_filter(array_map('intval', $sids))));
+    if (!$u || !$sids) return [];
+    $out = [];
+    try {
+        $st = $pdo->prepare("SELECT c.story_id, MIN(c.comment_id) AS cid FROM comments c JOIN stories s ON s.story_id = c.story_id"
+            . " JOIN user_forums uf ON uf.forum_id = s.forum_id AND uf.user_id = ? LEFT JOIN story_reads r ON r.story_id = c.story_id AND r.user_id = ?"
+            . " WHERE c.story_id IN (" . implode(',', $sids) . ") AND c.status = 'ok' AND c.created > COALESCE(r.read_at, uf.created)"
+            . " AND NOT (r.read_at IS NULL AND s.sent_date > uf.created) GROUP BY c.story_id");
+        $st->execute([$u['user_id'], $u['user_id']]);
+        foreach ($st as $r) $out[(int)$r['story_id']] = (int)$r['cid'];
+    } catch (Throwable $e) {}   // sin migra-170
+    return $out;
+}
+/** A donde lleva «Foros» en el menu cuando hay hilos sin leer (18/11/2026; antes siempre a /foros, el primer foro, tuviera o no lo nuevo):
+ *  con un solo hilo sin leer, a su primer mensaje nuevo; con varios, al foro que los tiene (el primero por orden de pestañas), donde
+ *  cada hilo sin leer enlaza a su primer mensaje nuevo. Sin nada pendiente, null. Se guarda en la misma cache de sesion que el recuento. */
+function foros_sin_leer_href(): ?string {
+    global $pdo;
+    $m = foros_sin_leer();
+    if (!$m || !($u = user())) return null;
+    $c = $_SESSION['ddd_foros_nl'] ?? [];
+    if (array_key_exists('ir', $c)) return $c['ir'];
+    $ir = null;
+    foreach (foros() as $f) if (!empty($m[(int)$f['forum_id']])) { $ir = foro_url($f); break; }
+    if (array_sum($m) === 1) {
+        try {
+            $st = $pdo->prepare("SELECT s.story_id FROM stories s JOIN user_forums uf ON uf.forum_id = s.forum_id AND uf.user_id = ?"
+                . " LEFT JOIN story_reads r ON r.story_id = s.story_id AND r.user_id = ?"
+                . " WHERE s.content_type = 'article' AND s.status IN ('nuevas','destacadas') AND s.last_activity > uf.created"
+                . " AND (r.read_at IS NULL OR s.last_activity > r.read_at)" . stories_mylang_sql() . foros_cerrados_sql() . " LIMIT 1");
+            $st->execute([$u['user_id'], $u['user_id']]);
+            if ($sid = (int)$st->fetchColumn()) { $cid = hilos_primer_nuevo($pdo, [$sid])[$sid] ?? 0; $ir = "/hilo/$sid" . ($cid ? "#c$cid" : ''); }
+        } catch (Throwable $e) {}
+    }
+    if (isset($_SESSION['ddd_foros_nl'])) $_SESSION['ddd_foros_nl']['ir'] = $ir;
+    return $ir;
+}
 /** Apunta que el usuario actual acaba de leer un hilo de foro (al pintar /hilo/N). */
 function story_read_mark(PDO $pdo, array $s): void {
     $u = user(); if (!$u || ($s['content_type'] ?? '') !== 'article') return;
@@ -2001,6 +2042,7 @@ function nav_tabs(string $tab, string $cls): void {
         if ($href === null) { echo "<span class=\"soon\" title=\"" . t('pronto') . "\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
         $n = $k === 'mensajes' ? unread_msgs() : ($k === 'foros' ? foros_sin_leer_total() : 0);   // Foros: hilos sin leer en los foros seguidos (migra-170)
         $badge = $n > 0 ? "<i class=\"badge\" title=\"" . ($k === 'foros' ? h(t('%d hilos sin leer', $n)) : '') . "\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
+        if ($k === 'foros' && $n > 0 && ($ir = foros_sin_leer_href())) $href = $ir;   // con algo sin leer, «Foros» lleva a lo nuevo (18/11/2026)
         echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . "<span>" . h($label) . "</span>" . $badge . "</a>";   // la burbuja, detras del rotulo (en el rail queda a la derecha y el rotulo alineado)
     }
     echo ($ctr ? '</span>' : '') . "</nav>";

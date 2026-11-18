@@ -38,9 +38,10 @@ $st->execute();
 $filas = $st->fetchAll();
 // hilos sin leer (migra-170): solo si se sigue este foro; suelo = desde cuando se sigue
 $pend = foro_seguido($fid) ? story_reads_pendientes($pdo, array_merge($page === 1 ? $pins : [], $filas), foros_seguidos()[$fid]) : [];
+$nuevo = $pend ? hilos_primer_nuevo($pdo, array_keys($pend)) : [];   // primer mensaje sin leer de cada uno: el titulo lleva a el (18/11/2026)
 
 /** Una fila de la lista de hilos: avatar del autor, titulo, y debajo autor · tema · respuestas · ultima actividad. */
-function hilo_fila(PDO $pdo, array $s, bool $pin = false, bool $unread = false): void {
+function hilo_fila(PDO $pdo, array $s, bool $pin = false, bool $unread = false, int $nuevo = 0): void {
     $rev = (int)$s['revealed'] === 1 || ghost_over($s['sent_date']);
     $author = display_name(['login' => $s['login'], 'alias' => $s['author_alias'], 'user_id' => $s['user_id']], $rev);
     $aura = $s['user_id'] ? (float)($s['author_aura'] ?? cfg('aura_start', 5)) : (float)cfg('aura_anon', 5);
@@ -51,7 +52,7 @@ function hilo_fila(PDO $pdo, array $s, bool $pin = false, bool $unread = false):
     // toda la fila es pulsable: el enlace del titulo se extiende a la fila con ::after (CSS); el avatar, por encima, sigue llevando al perfil
     echo "<article class=\"trow" . ($pin ? ' pinned' : '') . ($s['status'] === 'archived' ? ' closed' : '') . ($unread ? ' unread' : '') . "\" id=\"s{$s['story_id']}\"" . ($unread ? " title=\"" . t('sin leer') . "\"" : '') . ">";
     echo who_avatar($s, $rev, $aura, $author);
-    echo "<div class=\"tc\"><h2>" . ($pin ? icon('pin') : '') . "<a href=\"" . ($n > 0 ? "$href#comentarios" : $href) . "\">" . h($s['title']) . "</a></h2>";
+    echo "<div class=\"tc\"><h2>" . ($pin ? icon('pin') : '') . "<a href=\"" . ($nuevo ? "$href#c$nuevo" : ($n > 0 && !$unread ? "$href#comentarios" : $href)) . "\">" . h($s['title']) . "</a></h2>";
     echo "<div class=\"meta\"><b>" . h($author) . "</b> · " . h($s['topic']) . lang_tag($s) . " · " . h(hace($s['sent_date']))
        . ($s['status'] === 'archived' ? " · " . t('cerrado') : '')
        . ($p && pin_tag($p) !== '' ? " · " . pin_tag($p) : '') . "</div></div>";
@@ -73,8 +74,8 @@ if ($f['status'] !== 'on') echo "<p class=\"notice keep\">" . t('Este foro está
 if ((string)$f['descr'] !== '') echo "<p class=\"notice keep\">" . h($f['descr']) . ' <a href="/articulo?f=' . h($f['slug']) . '">' . t('Abre un hilo') . '</a>.</p>';
 echo "<div class=\"hilos\">";
 $n = 0;
-if ($page === 1) foreach ($pins as $s) { hilo_fila($pdo, $s, true, isset($pend[(int)$s['story_id']])); $n++; }   // destacadas, las primeras
-foreach ($filas as $s) { hilo_fila($pdo, $s, false, isset($pend[(int)$s['story_id']])); $n++; }
+if ($page === 1) foreach ($pins as $s) { hilo_fila($pdo, $s, true, isset($pend[(int)$s['story_id']]), $nuevo[(int)$s['story_id']] ?? 0); $n++; }   // destacadas, las primeras
+foreach ($filas as $s) { hilo_fila($pdo, $s, false, isset($pend[(int)$s['story_id']]), $nuevo[(int)$s['story_id']] ?? 0); $n++; }
 echo "</div>";
 if ($n === 0) echo "<p class=\"end\">" . t('Todavía no hay hilos en este foro.') . ' <a href="/articulo?f=' . h($f['slug']) . '">' . t('Abre el primero') . '</a>.</p>';
 paginate(foro_url($f), $page, $total);
