@@ -1172,4 +1172,7 @@ Scade tra %d minuti. Se non sei tu a voler entrare, non condividerlo con nessuno
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'Il voto si può cambiare solo nei primi %d minuti.',
 'No se ha podido crear la encuesta.' => 'Non è stato possibile creare il sondaggio.',
 'Acción desconocida.' => 'Azione sconosciuta.',
+'Registro' => 'Registro',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Tutto quello che è successo a questo invio, dal più recente: chi l\'ha inviato, voti, commenti e arrivi in prima pagina.',
+'Lo ve quien tiene aura por encima de %s.' => 'Lo vede chi ha un\'aura superiore a %s.',
 ];

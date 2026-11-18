@@ -1208,4 +1208,7 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'O voto só pode mudar-se durante os primeiros %d minutos.',
 'No se ha podido crear la encuesta.' => 'Não foi possível criar a sondagem.',
 'Acción desconocida.' => 'Ação desconhecida.',
+'Registro' => 'Registo',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Tudo o que aconteceu com este envio, do mais recente para o mais antigo: quem o enviou, votos, comentários e chegadas à capa.',
+'Lo ve quien tiene aura por encima de %s.' => 'Vê-o quem tem aura acima de %s.',
 ];

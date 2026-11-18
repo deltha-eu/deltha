@@ -1171,4 +1171,7 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'O voto só se pode cambiar durante os primeiros %d minutos.',
 'No se ha podido crear la encuesta.' => 'Non se puido crear a enquisa.',
 'Acción desconocida.' => 'Acción descoñecida.',
+'Registro' => 'Rexistro',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Todo o que pasou con este envío, o máis recente arriba: quen o enviou, votos, comentarios e chegadas a portada.',
+'Lo ve quien tiene aura por encima de %s.' => 'Veo quen ten aura por riba de %s.',
 ];

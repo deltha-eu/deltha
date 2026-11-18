@@ -1446,6 +1446,15 @@ function story_touch(PDO $pdo, int $sid): void {
     try { $pdo->prepare("UPDATE stories s SET s.last_activity = GREATEST(s.sent_date, COALESCE((SELECT MAX(c.created) FROM comments c WHERE c.story_id = s.story_id AND c.status = 'ok'), s.sent_date)) WHERE s.story_id = ?")->execute([$sid]); }
     catch (Throwable $e) {}   // sin migra-170
 }
+/** Quien ve la pestaña «Registro» de un envio (/hilo/N?v=registro, migra-205): moderadores y admin siempre; un registrado, con aura
+ *  por encima de config.story_log_aura (50; 0 = solo moderadores y admin). Moderador = por nivel, no por aura: con mod_aura = 20
+ *  is_mod() dejaria pasar a cualquiera con aura 20, y el registro es para quien pasa de story_log_aura. */
+function registro_envio_ve(): bool {
+    $u = user(); if (!$u) return false;
+    if (in_array($u['level'] ?? 'normal', ['mod', 'admin'], true)) return true;
+    $min = (float)cfg('story_log_aura', 50);
+    return $min > 0 && (float)($u['aura'] ?? 0) > $min;
+}
 /** Minutos minimos entre dos publicaciones en Canales. */
 function canales_gap(): int { return max(1, (int)cfg('canales_gap_min', 15)); }
 /** Instante de la ultima publicacion en Canales (0 = nunca). */

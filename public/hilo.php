@@ -41,7 +41,11 @@ avisos_preload_nicks($pdo, array_merge($s['content_type'] === 'article' ? [(stri
 //    del comentario al que contesta y sangrada segun su nivel (tope 6), sin rayas;
 //  · por tiempo (?v=tiempo): todos seguidos del mas antiguo al mas nuevo, con «en respuesta a X» en los que contestan a otro;
 //  · por votos (?v=votos): todos seguidos, el mejor valorado primero (soles menos lagrimas); a igualdad, el mas antiguo primero.
+//  · registro (?v=registro, migra-205): no son comentarios sino todo lo que ha pasado con el envio (quien lo envia, votos, comentarios,
+//    llegadas a portada), como en /procesos; solo para quien pasa de story_log_aura (registro_envio_ve()).
 $vista = (string)($_GET['v'] ?? '');
+$veReg = registro_envio_ve();
+$enReg = $veReg && $vista === 'registro';
 if (!in_array($vista, ['tiempo', 'votos'], true)) $vista = '';
 $porTiempo = $vista !== '';   // lista plana (por tiempo o por votos), no arbol
 $GLOBALS['DDD_HILO_V'] = $vista;
@@ -177,7 +181,19 @@ if (isset($_GET['comm'])) echo "<p class=\"" . ($_GET['comm'] === 'ok' ? 'notice
 if (isset($_GET['reportado'])) echo "<p class=\"notice\">" . t('Gracias: el comentario queda avisado a los moderadores.') . "</p>";
 if (isset($_GET['premod'])) echo "<p class=\"notice\">" . t('Como no estás registrado, tu comentario tiene que ser aprobado por un moderador antes de publicarse.') . "</p>";   // premoderacion de anonimos (migra-183)
 
-if (count($all) > 1) echo "<nav class=\"sub cvista\"><a href=\"/hilo/$id#comentarios\"" . ($porTiempo ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo/$id?v=tiempo#comentarios\"" . ($vista === 'tiempo' ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a><a href=\"/hilo/$id?v=votos#comentarios\"" . ($vista === 'votos' ? ' class="on"' : '') . ">" . t('Por votos') . "</a></nav>";
+if (count($all) > 1 || $veReg) echo "<nav class=\"sub cvista\"><a href=\"/hilo/$id#comentarios\"" . ($porTiempo || $enReg ? '' : ' class="on"') . ">" . t('Por hilos') . "</a><a href=\"/hilo/$id?v=tiempo#comentarios\"" . ($vista === 'tiempo' ? ' class="on"' : '') . ">" . t('Por tiempo') . "</a><a href=\"/hilo/$id?v=votos#comentarios\"" . ($vista === 'votos' ? ' class="on"' : '') . ">" . t('Por votos') . "</a>"
+    . ($veReg ? "<a href=\"/hilo/$id?v=registro#comentarios\"" . ($enReg ? ' class="on"' : '') . ">" . t('Registro') . "</a>" : '') . "</nav>";
+if ($enReg) {   // el registro del envio en lugar de los comentarios (migra-205); para comentar se vuelve a cualquiera de las otras vistas
+    [$ev, $evTotal] = flujo_de_envio($pdo, $id, page_num(), (int)cfg('per_page', 20));
+    echo "<p class=\"notice\">" . t('Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.')
+       . ((float)cfg('story_log_aura', 50) > 0 ? ' ' . t('Lo ve quien tiene aura por encima de %s.', rtrim(rtrim(number_format((float)cfg('story_log_aura', 50), 1, ',', ''), '0'), ',')) : '') . "</p>";
+    $evU = flujo_usuarios($pdo, $ev);
+    foreach ($ev as $e) echo flujo_fila($pdo, $e, $evU, [], true);
+    paginate("/hilo/$id?v=registro", page_num(), $evTotal);
+    echo "</div>";
+    page_footer();
+    exit;
+}
 foreach ($threads as $list) {
     echo "<div class=\"thread\">";
     $n = count($list);

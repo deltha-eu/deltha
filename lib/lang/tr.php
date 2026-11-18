@@ -1192,4 +1192,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'Oy yalnızca ilk %d dakika içinde değiştirilebilir.',
 'No se ha podido crear la encuesta.' => 'Anket oluşturulamadı.',
 'Acción desconocida.' => 'Bilinmeyen eylem.',
+'Registro' => 'Günlük',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Bu gönderiyle ilgili olup biten her şey, en yenisi üstte: kimin gönderdiği, oylar, yorumlar ve ön sayfaya çıkışlar.',
+'Lo ve quien tiene aura por encima de %s.' => 'Aurası %s üzerinde olanlar görür.',
 ];

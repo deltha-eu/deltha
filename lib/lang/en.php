@@ -1223,4 +1223,7 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'The vote can only be changed during the first %d minutes.',
 'No se ha podido crear la encuesta.' => 'The poll could not be created.',
 'Acción desconocida.' => 'Unknown action.',
+'Registro' => 'Log',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Everything that has happened to this post, most recent first: who posted it, votes, comments and arrivals on a front page.',
+'Lo ve quien tiene aura por encima de %s.' => 'Visible to those with aura above %s.',
 ];

@@ -229,6 +229,85 @@ function composer(int $story_id, ?array $parent = null, bool $has_next = false):
     echo "<button>" . ($parent ? t('Responder') : t('Comentar')) . "</button></div></div></form>";
 }
 
+/* ---- flujo de actividad: /procesos y el registro de cada envio (/hilo/N?v=registro, 18/11/2026) ----------------------------
+ * Un evento = fila con kind (envio | comentario | voto | portada), story_id, ref, ts, user_id, alias, value, title, status,
+ * revealed, sent_date, delta y txt (el SELECT de cada tipo esta en flujo_sql_envio). Quien envia, comenta o vota sale con su alias
+ * Ghost del hilo hasta que pasa el plazo; despues, con su nombre. */
+/** user_id => [login, avatar, aura] de los usuarios de una tanda de eventos (una consulta). */
+function flujo_usuarios(PDO $pdo, array $ev): array {
+    $ids = array_values(array_unique(array_filter(array_map(fn($e) => (int)$e['user_id'], $ev))));
+    $U = [];
+    if ($ids) foreach ($pdo->query("SELECT user_id, login, avatar, aura FROM users WHERE user_id IN (" . implode(',', $ids) . ")") as $r) $U[(int)$r['user_id']] = $r;
+    return $U;
+}
+/** La fila de un evento. $TOPE: story_id => [publicador, n] de los envios que pasan del tope diario (solo /procesos).
+ *  $enHilo: la fila se pinta dentro de su propio hilo, asi que no repite el titulo en votos, comentarios y portadas. */
+function flujo_fila(PDO $pdo, array $e, array $U, array $TOPE = [], bool $enHilo = false): string {
+    $sid = (int)$e['story_id'];
+    $href = "/hilo/$sid";
+    $title = "<a class=\"t\" href=\"$href\">" . h($e['title']) . "</a>";
+    $u = $e['user_id'] ? ($U[(int)$e['user_id']] ?? null) : null;
+    $aura = $u ? (float)$u['aura'] : (float)cfg('aura_anon', 5);
+    $row = ['login' => $u['login'] ?? null, 'avatar' => $u['avatar'] ?? null];
+
+    switch ($e['kind']) {
+        case 'envio':
+            $rev = (int)$e['revealed'] === 1 || ghost_over($e['sent_date']);
+            $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
+            $lead = who_avatar($row, $rev, $aura, $name);
+            $txt = "<b>" . h($name) . "</b> " . t('envía') . " $title";
+            if (isset($TOPE[$sid])) $txt .= " <span class=\"tope\" title=\"" . h(t('este publicador ha llegado al máximo diario de envíos')) . "\">" . h(t('%d hoy de %s', $TOPE[$sid][1], str_starts_with($TOPE[$sid][0], 'yt:') ? t('ese canal de YouTube') : $TOPE[$sid][0])) . "</span>";
+            $ic = 'new'; break;
+        case 'comentario':
+            $rev = ghost_over_comment($e['ts']);
+            $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
+            $lead = who_avatar($row, $rev, $aura, $name);
+            // el comentario (recortado) y, debajo, el hilo (11/10/2026; antes solo «comenta en <hilo>»); en su hilo, un «ver» que baja hasta el
+            $frag = trim(preg_replace('/\s+/', ' ', (string)($e['txt'] ?? '')));
+            $txt = "<b>" . h($name) . "</b>" . ($frag !== '' ? ": <span class=\"ctxt\">" . h(mb_strimwidth($frag, 0, 220, '…')) . "</span>" : ' ' . t('comenta'))
+                 . ($enHilo ? " <small class=\"enhilo\"><a class=\"t\" href=\"$href#c{$e['ref']}\">" . t('ver') . "</a></small>"
+                            : "<br><small class=\"enhilo\">" . t('en') . " <a class=\"t\" href=\"$href#c{$e['ref']}\">" . h($e['title']) . "</a></small>");
+            $ic = 'reply'; break;
+        case 'voto':
+            $rev = ghost_over($e['ts']);
+            $alias = $e['alias'] ?: alias_user($pdo, $sid, (int)$e['user_id']);   // voto anterior a los alias: se le asigna ahora
+            $name = display_name(['login' => $row['login'], 'alias' => $alias], $rev);
+            $lead = who_avatar($row, $rev, $aura, $name);
+            $pos = (int)$e['value'] > 0;
+            $txt = "<b>" . h($name) . "</b> " . t('vota') . " <span class=\"" . ($pos ? 'pos' : 'neg') . "\">" . ($pos ? '+1' : '−1') . "</span>" . ($enHilo ? '' : " " . t('a') . " $title");
+            $ic = $pos ? 'up' : 'down'; break;
+        default: // portada
+            $lead = "<span class=\"av sys\">" . icon('home') . "</span>";
+            $txt = ($enHilo ? '' : "$title ") . (isset(DDD_PORTADAS[(string)$e['value']]) ? t('llega a <b>%s</b>', t(DDD_PORTADAS[$e['value']])) : t('llega a <b>portada</b>')) . " <span class=\"delta\">δ " . number_format((float)$e['delta'], 1, ',', '') . "</span>";
+            $ic = 'home';
+    }
+    return "<div class=\"fz k-{$e['kind']}\">$lead<div class=\"fzt\">$txt<span class=\"meta\"> · " . h(hace($e['ts'])) . "</span></div>" . icon($ic) . "</div>";
+}
+/** Todo lo que ha pasado con un envio, lo mas reciente arriba: [eventos de la pagina, total]. Mismos tipos y columnas que el flujo de
+ *  /procesos, sin ventana de dias: el envio, sus comentarios visibles, sus votos y sus llegadas a portada. */
+function flujo_de_envio(PDO $pdo, int $sid, int $page, int $per): array {
+    $sql = "SELECT 'envio' AS kind, s.story_id, s.story_id AS ref, s.sent_date AS ts, s.user_id, s.author_alias AS alias, NULL AS value,
+                   s.title, s.status, s.revealed, s.sent_date, s.delta, NULL AS txt
+              FROM stories s WHERE s.story_id = :a
+            UNION ALL
+            SELECT 'comentario', c.story_id, c.comment_id, c.created, c.user_id, c.alias, NULL,
+                   s.title, s.status, s.revealed, s.sent_date, s.delta, IF(c.deleted = 1, NULL, c.content)
+              FROM comments c JOIN stories s ON s.story_id = c.story_id WHERE c.story_id = :b AND c.status = 'ok'
+            UNION ALL
+            SELECT 'voto', vt.story_id, vt.story_id, vt.created, vt.user_id, ta.alias, vt.value,
+                   s.title, s.status, s.revealed, s.sent_date, s.delta, NULL
+              FROM votes vt JOIN stories s ON s.story_id = vt.story_id
+         LEFT JOIN thread_aliases ta ON ta.story_id = vt.story_id AND ta.user_id = vt.user_id WHERE vt.story_id = :c
+            UNION ALL
+            SELECT 'portada', p.story_id, p.id, p.created, NULL, NULL, p.portada,
+                   s.title, s.status, s.revealed, s.sent_date, p.delta, NULL
+              FROM promo_log p JOIN stories s ON s.story_id = p.story_id WHERE p.story_id = :d";
+    $ids = [':a' => $sid, ':b' => $sid, ':c' => $sid, ':d' => $sid];
+    $cnt = $pdo->prepare("SELECT COUNT(*) FROM ($sql) x"); $cnt->execute($ids); $total = (int)$cnt->fetchColumn();
+    $st = $pdo->prepare("$sql ORDER BY ts DESC, kind DESC, ref DESC LIMIT " . max(1, $per) . " OFFSET " . max(0, ($page - 1) * $per));
+    $st->execute($ids);
+    return [$st->fetchAll(), $total];
+}
 function paginate(string $base, int $page, int $total, ?int $per = null): void {
     $per = $per ?: (int)cfg('per_page', 20);
     $pages = max(1, (int)ceil($total / $per));

@@ -1172,4 +1172,7 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'Die Stimme kann nur in den ersten %d Minuten geändert werden.',
 'No se ha podido crear la encuesta.' => 'Die Umfrage konnte nicht erstellt werden.',
 'Acción desconocida.' => 'Unbekannte Aktion.',
+'Registro' => 'Protokoll',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Alles, was mit diesem Beitrag passiert ist, das Neueste zuerst: wer ihn eingereicht hat, Stimmen, Kommentare und Ankünfte auf einer Startseite.',
+'Lo ve quien tiene aura por encima de %s.' => 'Sichtbar für alle mit einer Aura über %s.',
 ];
