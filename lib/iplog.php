@@ -2,13 +2,14 @@
 /** lib/iplog.php — registro de IP con caducidad (migra-193, 11/11/2026).
  *  Para dos cosas y ninguna más: detectar multicuentas y poder responder a un requerimiento formal de un juzgado o de la policía.
  *  Se apunta la IP (client_ip(), la de verdad: ver ip_de_proxy en lib/app.php) al registrarse, al abrir sesión y al publicar
- *  (envío, artículo, comentario, mensaje del Chat), con cuenta o sin ella. Los votos no se apuntan: siguen con su huella.
+ *  (envío, artículo, comentario, mensaje del Chat), con cuenta o sin ella, y desde la migra-206 (18/11/2026) al votar un envío
+ *  (antes los votos quedaban fuera y no había forma de ver cuentas que votan a la vez). Los soles y lágrimas a comentarios, no.
  *  Cada fila caduca a los config.ip_log_days días (365; 0 = no se guarda nada y se borra lo que hubiera): lo purga el ciclo.
  *  Solo lo consulta el administrador (/ips) y cada consulta queda en el registro de moderación (mod_log, acción ips:consulta).
  *  Las huellas HMAC de votos, anónimos, topes y analítica no cambian: ahí la IP sigue sin guardarse. */
 declare(strict_types=1);
 
-const IP_LOG_KINDS = ['registro' => 'registro', 'login' => 'inicio de sesión', 'story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat'];
+const IP_LOG_KINDS = ['registro' => 'registro', 'login' => 'inicio de sesión', 'story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat', 'vote' => 'voto'];
 
 /** Días que se conserva cada fila (0 = el registro está apagado). */
 function ip_log_days(): int { return max(0, (int)cfg('ip_log_days', 365)); }
@@ -84,7 +85,7 @@ function ip_log_filas(PDO $pdo, string $by, $val, int $limit = 300): array {
 function ip_log_href(PDO $pdo, array $r): string {
     $ref = (int)$r['ref_id'];
     if ($ref <= 0) return '';
-    if ($r['kind'] === 'story') return "/hilo/$ref";
+    if ($r['kind'] === 'story' || $r['kind'] === 'vote') return "/hilo/$ref";   // el voto apunta a su envio
     if ($r['kind'] === 'chat')  return "/chat?m=$ref#m$ref";
     if ($r['kind'] === 'comment') {
         try { $q = $pdo->prepare("SELECT story_id FROM comments WHERE comment_id = ?"); $q->execute([$ref]); $sid = (int)$q->fetchColumn(); }

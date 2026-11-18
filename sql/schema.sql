@@ -452,7 +452,7 @@ CREATE TABLE `image_seen` (
 CREATE TABLE `ip_log` (
   `log_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned DEFAULT NULL COMMENT 'NULL = anónimo',
-  `kind` enum('registro','login','story','comment','chat') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `kind` enum('registro','login','story','comment','chat','vote') COLLATE utf8mb4_unicode_ci NOT NULL,
   `ref_id` int unsigned NOT NULL DEFAULT '0' COMMENT 'id del envío, comentario o mensaje; 0 en registro y login',
   `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

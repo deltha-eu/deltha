@@ -15,7 +15,7 @@ $qu  = trim(mb_substr((string)($_GET['u'] ?? ''), 0, 32));
 $qip = trim(mb_substr((string)($_GET['ip'] ?? ''), 0, 45));
 $qk  = (string)($_GET['k'] ?? '');
 $qref = (int)($_GET['ref'] ?? 0);
-if (!in_array($qk, ['story', 'comment', 'chat'], true)) $qk = '';
+if (!in_array($qk, ['story', 'comment', 'chat', 'vote'], true)) $qk = '';
 
 $fecha = fn($d) => h(date('d/m/Y H:i:s', strtotime((string)$d)));
 $ipa   = fn($ip) => "<a href=\"/ips?ip=" . rawurlencode((string)$ip) . "\"><code>" . h((string)$ip) . "</code></a>";
@@ -36,12 +36,12 @@ $tabla = function (array $rows) use ($pdo, $fecha, $ipa, $ua) {
 
 page_header('Registro de IP');
 echo "<div class=\"admin\"><nav class=\"tabs\"><a href=\"/admin\">← Admin</a><a href=\"/admin?t=registro\">Registro</a><a href=\"/ips\" class=\"on\">IP</a></nav><h1>Registro de IP</h1>";
-echo "<p><small>Desde qué IP se registra, entra y publica cada cual (los votos no se apuntan). Se guarda para dos cosas: detectar multicuentas y responder a un requerimiento formal, por escrito, de un juzgado o de la policía. "
+echo "<p><small>Desde qué IP se registra, entra, publica y vota envíos cada cual (los votos, desde la migra-206; soles y lágrimas no se apuntan). Se guarda para dos cosas: detectar multicuentas y responder a un requerimiento formal, por escrito, de un juzgado o de la policía. "
    . ($days > 0 ? "Cada fila se borra sola a los <b>$days días</b> (<code>ip_log_days</code> en Config)." : "<b>Ahora está apagado</b> (<code>ip_log_days</code> = 0): no se guarda nada.")
    . " Solo lo ve el administrador y <b>cada consulta queda apuntada</b> en el <a href=\"/moderacion?t=registro\">registro de moderación</a>.</small></p>";
 echo "<form method=\"get\" action=\"/ips\" class=\"buscar-u\"><input type=\"text\" name=\"u\" value=\"" . h($qu) . "\" placeholder=\"usuario\" maxlength=\"32\"> <input type=\"text\" name=\"ip\" value=\"" . h($qip) . "\" placeholder=\"IP\" maxlength=\"45\"> <button class=\"btn sm\">Buscar</button></form>";
 echo "<form method=\"get\" action=\"/ips\" class=\"buscar-u\"><select name=\"k\">";
-foreach (['story' => 'envío', 'comment' => 'comentario', 'chat' => 'mensaje del Chat'] as $k => $n) echo "<option value=\"$k\"" . ($qk === $k ? ' selected' : '') . ">$n</option>";
+foreach (['story' => 'envío', 'comment' => 'comentario', 'chat' => 'mensaje del Chat', 'vote' => 'votos de un envío'] as $k => $n) echo "<option value=\"$k\"" . ($qk === $k ? ' selected' : '') . ">$n</option>";
 echo "</select> <input type=\"number\" name=\"ref\" min=\"1\" value=\"" . ($qref ?: '') . "\" placeholder=\"número (#)\"> <button class=\"btn sm\">Ver su IP</button></form>";
 
 try {
@@ -85,7 +85,7 @@ try {
     } elseif ($qk !== '' && $qref > 0) {
         ip_log_audit($pdo, IP_LOG_KINDS[$qk] . " #$qref");
         echo "<h3>IP de: " . h(IP_LOG_KINDS[$qk]) . " #$qref</h3>";
-        $tabla(ip_log_filas($pdo, 'item', [$qk, $qref], 20));
+        $tabla(ip_log_filas($pdo, 'item', [$qk, $qref], $qk === 'vote' ? 500 : 20));   // un envio tiene muchos votos
     } else {
         $n = $pdo->query("SELECT COUNT(*) AS n, MIN(created) AS first FROM ip_log")->fetch();
         echo "<p><small>" . (int)$n['n'] . " apuntes" . ($n['first'] ? ", el más antiguo del " . h(date('d/m/Y', strtotime((string)$n['first']))) : '') . ". Busca por usuario, por IP o por el número de un envío, comentario o mensaje.</small></p>";

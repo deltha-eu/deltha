@@ -18,6 +18,7 @@ try {
         $undo = max(0, (int)cfg('vote_undo_minutes', 5));   // anular el voto: la misma flecha otra vez, durante vote_undo_minutes (migra-121)
         if ($old === false) {
             $pdo->prepare("INSERT INTO votes (story_id, user_id, value, fp) VALUES (?,?,?,?)")->execute([$id, $u['user_id'], $v, vote_fp($id)]);   // huella: un voto por conexion y envio en el δ
+            ip_log_add($pdo, 'vote', (int)$u['user_id'], $id);   // registro de IP: tambien los votos a envios (migra-206), para ver cuentas que votan a la vez
             $pdo->exec("UPDATE config SET cvalue = cvalue + 1 WHERE ckey = 'act_counter'");   // actividad del sitio: la edad del δ por votos (migra-189)
             alias_user($pdo, $id, (int)$u['user_id']);   // alias Ghost con el que se vera el voto en /procesos
             $col = $v === 1 ? 'votes_pos' : 'votes_neg';
