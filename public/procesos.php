@@ -256,12 +256,7 @@ $st->bindValue(2, page_offset($page), PDO::PARAM_INT);
 $st->execute();
 $ev = $st->fetchAll();
 
-// datos de los usuarios implicados (una consulta)
-$ids = array_values(array_unique(array_filter(array_map(fn($e) => (int)$e['user_id'], $ev))));
-$U = [];
-if ($ids) {
-    foreach ($pdo->query("SELECT user_id, login, avatar, aura FROM users WHERE user_id IN (" . implode(',', $ids) . ")") as $r) $U[(int)$r['user_id']] = $r;
-}
+$U = flujo_usuarios($pdo, $ev);   // datos de los usuarios implicados (una consulta)
 
 // publicadores que pasan del tope diario (lib/topes.php, 15/10/2026): «· N hoy de dominio» en rojo junto al envio
 $TOPE = []; $maxPub = (int)cfg('send_domain_per_day', 5);
@@ -281,45 +276,6 @@ if ($maxPub > 0 && ($sids = array_values(array_unique(array_map(fn($e) => (int)$
 $ventana = $d === 'hoy' ? t('solo hoy') : ($d === 'todo' ? t('todo el histórico') : t('últimos %d días', $DIAS));
 echo "<p class=\"notice ayuda\" data-k=\"procesos-registro\">" . t('Lo que pasa en el sitio, en orden (%s). Quien envía, comenta o vota aparece con su alias Ghost del hilo hasta %d min después; luego con su nombre.', $ventana, (int)cfg('ghost_minutes', 30)) . "</p>";
 if (!$ev) echo "<p class=\"end\">" . t('Todavía no hay actividad de este tipo.') . "</p>";
-foreach ($ev as $e) {
-    $sid = (int)$e['story_id'];
-    $href = "/hilo/$sid";
-    $title = "<a class=\"t\" href=\"$href\">" . h($e['title']) . "</a>";
-    $u = $e['user_id'] ? ($U[(int)$e['user_id']] ?? null) : null;
-    $aura = $u ? (float)$u['aura'] : (float)cfg('aura_anon', 5);
-    $row = ['login' => $u['login'] ?? null, 'avatar' => $u['avatar'] ?? null];
-
-    switch ($e['kind']) {
-        case 'envio':
-            $rev = (int)$e['revealed'] === 1 || ghost_over($e['sent_date']);
-            $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
-            $lead = who_avatar($row, $rev, $aura, $name);
-            $txt = "<b>" . h($name) . "</b> " . t('envía') . " $title";
-            if (isset($TOPE[$sid])) $txt .= " <span class=\"tope\" title=\"" . h(t('este publicador ha llegado al máximo diario de envíos')) . "\">" . h(t('%d hoy de %s', $TOPE[$sid][1], str_starts_with($TOPE[$sid][0], 'yt:') ? t('ese canal de YouTube') : $TOPE[$sid][0])) . "</span>";
-            $ic = 'new'; break;
-        case 'comentario':
-            $rev = ghost_over_comment($e['ts']);
-            $name = display_name(['login' => $row['login'], 'alias' => $e['alias']], $rev);
-            $lead = who_avatar($row, $rev, $aura, $name);
-            // el comentario (recortado) y, debajo, el hilo (11/10/2026; antes solo «comenta en <hilo>»)
-            $frag = trim(preg_replace('/\s+/', ' ', (string)($e['txt'] ?? '')));
-            $txt = "<b>" . h($name) . "</b>" . ($frag !== '' ? ": <span class=\"ctxt\">" . h(mb_strimwidth($frag, 0, 220, '…')) . "</span>" : ' ' . t('comenta'))
-                 . "<br><small class=\"enhilo\">" . t('en') . " <a class=\"t\" href=\"$href#c{$e['ref']}\">" . h($e['title']) . "</a></small>";
-            $ic = 'reply'; break;
-        case 'voto':
-            $rev = ghost_over($e['ts']);
-            $alias = $e['alias'] ?: alias_user($pdo, $sid, (int)$e['user_id']);   // voto anterior a los alias: se le asigna ahora
-            $name = display_name(['login' => $row['login'], 'alias' => $alias], $rev);
-            $lead = who_avatar($row, $rev, $aura, $name);
-            $pos = (int)$e['value'] > 0;
-            $txt = "<b>" . h($name) . "</b> " . t('vota') . " <span class=\"" . ($pos ? 'pos' : 'neg') . "\">" . ($pos ? '+1' : '−1') . "</span> " . t('a') . " $title";
-            $ic = $pos ? 'up' : 'down'; break;
-        default: // portada
-            $lead = "<span class=\"av sys\">" . icon('home') . "</span>";
-            $txt = "$title " . (isset(DDD_PORTADAS[(string)$e['value']]) ? t('llega a <b>%s</b>', t(DDD_PORTADAS[$e['value']])) : t('llega a <b>portada</b>')) . " <span class=\"delta\">δ " . number_format((float)$e['delta'], 1, ',', '') . "</span>";
-            $ic = 'home';
-    }
-    echo "<div class=\"fz k-{$e['kind']}\">$lead<div class=\"fzt\">$txt<span class=\"meta\"> · " . h(hace($e['ts'])) . "</span></div>" . icon($ic) . "</div>";
-}
+foreach ($ev as $e) echo flujo_fila($pdo, $e, $U, $TOPE);   // la fila, en lib/render.php: la comparte el registro de cada envio (/hilo/N?v=registro)
 paginate("/procesos?v=$v$qd", $page, $total);
 page_footer();

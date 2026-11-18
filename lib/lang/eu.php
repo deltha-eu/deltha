@@ -1171,4 +1171,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'Botoa lehen %d minutuetan bakarrik alda daiteke.',
 'No se ha podido crear la encuesta.' => 'Ezin izan da inkesta sortu.',
 'Acción desconocida.' => 'Ekintza ezezaguna.',
+'Registro' => 'Erregistroa',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Bidalketa honekin gertatu den guztia, berriena goian: nork bidali zuen, botoak, iruzkinak eta azalera iritsierak.',
+'Lo ve quien tiene aura por encima de %s.' => '%s baino aura handiagoa dutenek ikusten dute.',
 ];

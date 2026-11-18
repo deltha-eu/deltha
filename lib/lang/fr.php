@@ -1222,4 +1222,7 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'El voto solo se puede cambiar durante los primeros %d minutos.' => 'Le vote ne peut être changé que pendant les %d premières minutes.',
 'No se ha podido crear la encuesta.' => 'Le sondage n\'a pas pu être créé.',
 'Acción desconocida.' => 'Action inconnue.',
+'Registro' => 'Journal',
+'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Tout ce qui s\'est passé avec cet envoi, le plus récent en haut : qui l\'a envoyé, votes, commentaires et arrivées à la une.',
+'Lo ve quien tiene aura por encima de %s.' => 'Visible par ceux dont l\'aura dépasse %s.',
 ];
