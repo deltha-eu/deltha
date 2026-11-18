@@ -512,6 +512,7 @@ echo "<div class=\"admin\">";
 echo "<nav class=\"tabs\">";
 foreach ($TABS as $k => $v) echo "<a href=\"/admin?t=$k\"" . ($k === $tab ? ' class="on"' : '') . ">$v</a>";
 echo "<a href=\"/ips\" title=\"registro de IP: multicuentas y requerimientos (migra-193)\">IP</a>";   // página aparte (/ips), solo administradores
+echo "<a href=\"/votos-coincidentes\" title=\"cuentas que votan a la vez los mismos envíos (sin IP)\">Votos coincidentes</a>";   // página aparte, solo administradores (18/11/2026)
 echo "</nav>";
 if ($out) echo "<pre>" . h(implode("\n", $out)) . "</pre>";
 if (!empty($pedir_confirmacion)) {
