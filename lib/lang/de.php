@@ -1175,4 +1175,15 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'Registro' => 'Protokoll',
 'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Alles, was mit diesem Beitrag passiert ist, das Neueste zuerst: wer ihn eingereicht hat, Stimmen, Kommentare und Ankünfte auf einer Startseite.',
 'Lo ve quien tiene aura por encima de %s.' => 'Sichtbar für alle mit einer Aura über %s.',
+// Usenet en Foros (migra-206, 19/11/2026)
+'Volver a los grupos' => 'Zurück zu den Gruppen',
+'Ese grupo no existe.' => 'Diese Gruppe gibt es nicht.',
+'Usenet está apagado: solo lo ves tú (admin). Se enciende en admin → Usenet.' => 'Usenet ist ausgeschaltet: Nur du (Admin) siehst es. Eingeschaltet wird es unter admin → Usenet.',
+'%d mensajes' => '%d Nachrichten',
+'Grupo de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet-Newsgroup, nur lesend: Was hier zu lesen ist, wird außerhalb von Deltha geschrieben.',
+'Todavía no hay mensajes de este grupo.' => 'Aus dieser Gruppe gibt es noch keine Nachrichten.',
+'Grupos de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet-Newsgroups, nur lesend: Was hier zu lesen ist, wird außerhalb von Deltha geschrieben.',
+'hilos' => 'Threads',
+'último mensaje' => 'letzte Nachricht',
+'Todavía no hay grupos.' => 'Es gibt noch keine Gruppen.',
 ];

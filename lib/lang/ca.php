@@ -1174,4 +1174,15 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Registro' => 'Registre',
 'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Tot el que ha passat amb aquest enviament, el més recent a dalt: qui el va enviar, vots, comentaris i arribades a portada.',
 'Lo ve quien tiene aura por encima de %s.' => 'El veu qui té aura per sobre de %s.',
+// Usenet en Foros (migra-206, 19/11/2026)
+'Volver a los grupos' => 'Torna als grups',
+'Ese grupo no existe.' => 'Aquest grup no existeix.',
+'Usenet está apagado: solo lo ves tú (admin). Se enciende en admin → Usenet.' => 'Usenet està apagat: només el veus tu (admin). S\'encén a admin → Usenet.',
+'%d mensajes' => '%d missatges',
+'Grupo de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Grup de notícies d\'Usenet, només de lectura: el que es llegeix aquí s\'escriu fora de Deltha.',
+'Todavía no hay mensajes de este grupo.' => 'Encara no hi ha missatges d\'aquest grup.',
+'Grupos de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Grups de notícies d\'Usenet, només de lectura: el que es llegeix aquí s\'escriu fora de Deltha.',
+'hilos' => 'fils',
+'último mensaje' => 'últim missatge',
+'Todavía no hay grupos.' => 'Encara no hi ha grups.',
 ];

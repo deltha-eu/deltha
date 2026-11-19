@@ -16,6 +16,7 @@ require __DIR__ . '/../lib/ciclo.php';
 require __DIR__ . '/../lib/fuentes.php';
 require_once __DIR__ . '/../lib/moderacion.php';
 require_once __DIR__ . '/../lib/ia.php';   // pestaña IA (migra-173)
+require_once __DIR__ . '/../lib/usenet.php';   // pestaña Usenet (migra-206)
 if (!is_admin()) { http_response_code(403); exit('Solo admin'); }
 
 $out = [];
@@ -162,6 +163,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$slug, $nm, mb_substr(trim(post('descr')), 0, 300), post('on') === '1' ? 'on' : 'off', $pos, post('orden') === 'actividad' ? 'actividad' : 'fecha']);
             $out[] = "Foro «" . h($nm) . "» creado (/foros?f=$slug), " . (post('on') === '1' ? 'activado.' : 'apagado: solo lo ves tú hasta que lo actives.');
         }
+    } elseif ($act === 'usenet_servidor') {   // Usenet (migra-206): servidor NNTP, usuario, clave y si /usenet lo ve todo el mundo
+        $host = strtolower(trim(post('host')));
+        if ($host !== '' && !preg_match('/^[a-z0-9.\-]{3,190}$/', $host)) $out[] = 'Servidor no válido: solo el nombre (p. ej. news.eternal-september.org), sin nntp:// ni puerto.';
+        else {
+            $up = $pdo->prepare("UPDATE config SET cvalue = ? WHERE ckey = ?");
+            $up->execute([$host, 'usenet_host']);
+            $up->execute([(string)max(1, min(65535, (int)post('port', '563'))), 'usenet_port']);
+            $up->execute([trim(post('user')), 'usenet_user']);
+            if ((string)($_POST['pass'] ?? '') !== '') $up->execute([(string)$_POST['pass'], 'usenet_pass']);   // vacio = se queda la que hay
+            elseif (post('pass_borrar') === '1') $up->execute(['', 'usenet_pass']);
+            $up->execute([post('on') === '1' ? '1' : '0', 'usenet_on']);
+            $out[] = 'Servidor de Usenet guardado.';
+            foreach ($pdo->query("SELECT ckey, cvalue FROM config WHERE ckey LIKE 'usenet\\_%'") as $r) $CFG[$r['ckey']] = $r['cvalue'];
+            if ($host !== '') {   // se prueba la conexion con lo guardado
+                try { $nn = usenet_conectar(); $nn->cerrar(); $out[] = 'Conexión con ' . h($host) . ' correcta.'; }
+                catch (Throwable $e) { $out[] = 'No conecta: ' . h($e->getMessage()); }
+            }
+        }
+    } elseif ($act === 'usenet_lista') {   // trae la lista completa de grupos del servidor (lo marcado no se toca)
+        @set_time_limit(180);
+        try { $out[] = 'Lista de grupos actualizada: el servidor ofrece ' . num_es(usenet_grupos_traer($pdo)) . ' grupos.'; }
+        catch (Throwable $e) { $out[] = 'No se ha podido traer la lista: ' . h($e->getMessage()); }
+    } elseif ($act === 'usenet_marcar') {   // casillas: de los grupos que habia en pantalla (gvis), marcados los que vienen en gon
+        $vis = array_values(array_filter(array_map('intval', explode(',', post('gvis')))));
+        $on = array_map('intval', array_keys((array)($_POST['gon'] ?? [])));
+        if ($vis) {
+            $in = implode(',', $vis);
+            $si = array_intersect($vis, $on);
+            $a = $si ? $pdo->exec("UPDATE usenet_groups SET activo = 1 WHERE activo = 0 AND group_id IN (" . implode(',', $si) . ")") : 0;
+            $b = $pdo->exec("UPDATE usenet_groups SET activo = 0 WHERE activo = 1 AND group_id IN ($in)" . ($si ? " AND group_id NOT IN (" . implode(',', $si) . ")" : ''));
+            $out[] = "Grupos guardados: $a marcados y $b desmarcados. Los recién marcados se leen en la siguiente pasada del cron (o con «Leer ahora»).";
+        }
+    } elseif ($act === 'usenet_leer') {   // sin esperar al intervalo: lee ya los grupos marcados (~25 s por pulsacion)
+        @set_time_limit(90);
+        $r = usenet_tick($pdo, true, 25);
+        $out = array_merge($out, $r ? array_map('h', $r) : ['Nada nuevo en los grupos marcados (o no hay ninguno marcado).']);
+    } elseif ($act === 'usenet_limpiar') {   // borra los mensajes guardados de los grupos que ya no estan marcados
+        $out[] = 'Borrados ' . num_es(usenet_podar($pdo, true)) . ' mensajes de grupos desmarcados (y de hilos caducados, si hay usenet_keep_days).';
     } elseif ($act === 'comunidad_fusionar') {   // fusionar dos comunidades (28/10/2026): la de origen desaparece y todo pasa a la de destino
         if (post('seguro') !== '1') $out[] = 'Marca la casilla de confirmación para fusionar las comunidades.';
         else {
@@ -502,7 +541,7 @@ function borrar_usuario(PDO $pdo, int $uid): array {
     return $log;
 }
 
-$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'comunidades' => 'Comunidades', 'foros' => 'Foros', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'ia' => 'IA', 'avisos' => 'Avisos', 'registro' => 'Registro'];
+$TABS = ['usuarios' => 'Usuarios', 'ciclo' => 'Ciclo', 'config' => 'Config', 'temas' => 'Temas', 'comunidades' => 'Comunidades', 'foros' => 'Foros', 'usenet' => 'Usenet', 'fuentes' => 'Fuentes', 'lateral' => 'Lateral', 'logo' => 'Logo', 'privacidad' => 'Páginas', 'analitica' => 'Analítica', 'agentes' => 'Agentes', 'ia' => 'IA', 'avisos' => 'Avisos', 'registro' => 'Registro'];
 $tab = (string)($_GET['t'] ?? $_POST['t'] ?? 'usuarios');
 if (!isset($TABS[$tab])) $tab = 'usuarios';
 $T = "<input type=\"hidden\" name=\"t\" value=\"$tab\">";   // cada formulario vuelve a su pestaña
@@ -629,6 +668,7 @@ if ($tab === 'usuarios') {
     foreach ($pdo->query("SELECT * FROM config ORDER BY ckey") as $c) {
         if (isset(DDD_CFG_GRUPOS[$c['ckey']])) continue;   // van arriba, como interruptores
         if (str_starts_with($c['ckey'], 'logo_')) continue;   // se gestiona en la pestaña Logo (logo_light, logo_dark, logo_icon)
+        if ($c['ckey'] === 'usenet_pass') continue;   // la clave del servidor de noticias se pone en la pestaña Usenet y no se enseña (migra-206)
         if ($c['ckey'] === 'processes_votes_who') {   // quien ve la pestaña Votos de /procesos
             echo "<tr><td><code>processes_votes_who</code><br><small>" . h($c['descr']) . "</small></td><td style=\"width:45%\"><select name=\"cfg[processes_votes_who]\">";
             foreach (DDD_PROCESSES_VOTES_WHO as $k => $lbl) echo "<option value=\"$k\"" . ($c['cvalue'] === $k ? ' selected' : '') . ">" . h($lbl) . "</option>";
@@ -864,6 +904,56 @@ if ($tab === 'usuarios') {
         echo "<input type=\"text\" name=\"slug\" placeholder=\"slug (url, p. ej. microrrelatos)\" maxlength=\"16\" pattern=\"[a-z0-9-]{2,16}\" required style=\"width:13em\"> <input type=\"text\" name=\"name\" placeholder=\"nombre\" maxlength=\"48\" required style=\"width:11em\"> <input type=\"text\" name=\"descr\" placeholder=\"descripción\" maxlength=\"300\" style=\"flex:1;min-width:16em\"> hilos por <select name=\"orden\"><option value=\"fecha\">fecha</option><option value=\"actividad\" selected>actividad</option></select> <label><input type=\"checkbox\" name=\"on\" value=\"1\"> activo</label> <button class=\"btn\">Crear foro</button></form>";
         echo "<p><small>No hay borrado: un foro que sobre se apaga. <b>Aura mín.</b> (migra-165): 0 = abierto; N = el foro, sus hilos y sus búsquedas solo existen para quien tenga más de N de aura (admin y moderadores, siempre); Hardusers nace con 20. Lo que había en Originales está, hilo a hilo, en el foro «originales» (migra-159). Las normas de cada foro van en su descripción; la de Originales (nada ya publicado en otro sitio) la enseña además el formulario de nuevo hilo.</small></p>";
     } catch (Throwable $e) { echo "<p class=\"error\">Falta la tabla forums (migra-159): " . h($e->getMessage()) . "</p>"; }
+
+} elseif ($tab === 'usenet') {   // Usenet (migra-206): servidor, lista completa de grupos con casillas y lectura
+    echo "<h3>Usenet</h3><p><small>Grupos de noticias de Usenet dentro de <a href=\"/usenet\">Foros → Usenet</a>, en solo lectura. Deltha se conecta por NNTP a un servidor de noticias, trae <b>la lista completa de grupos</b> y aquí se marcan los que se quieren: el cron lee solo los marcados (cada <code>usenet_interval_min</code> minutos, hasta <code>usenet_per_fetch</code> mensajes por grupo) y al marcar uno trae sus últimos <code>usenet_first_n</code> mensajes. No se guardan binarios, mensajes enviados a muchos grupos a la vez (spam) ni los que piden no archivarse; del remitente solo se guarda el nombre. El resto de ajustes (<code>usenet_*</code>) están en Config.</small></p>";
+    try {
+        $tot = $pdo->query("SELECT COUNT(*) n, COALESCE(SUM(activo), 0) a, MAX(seen) s, COALESCE(SUM(msgs), 0) m FROM usenet_groups")->fetch();
+        $tiene = (string)cfg('usenet_pass', '') !== '';
+        echo "<h4>Servidor</h4><form method=\"post\" autocomplete=\"off\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_servidor\">";
+        echo "<input type=\"text\" name=\"host\" value=\"" . h((string)cfg('usenet_host', '')) . "\" placeholder=\"news.eternal-september.org\" style=\"width:17em\"> puerto <input type=\"number\" name=\"port\" value=\"" . (int)cfg('usenet_port', 563) . "\" min=\"1\" max=\"65535\" style=\"width:6em\" title=\"563 = con TLS; 119 = sin cifrar\">";
+        echo " usuario <input type=\"text\" name=\"user\" value=\"" . h((string)cfg('usenet_user', '')) . "\" autocomplete=\"off\" style=\"width:10em\"> clave <input type=\"password\" name=\"pass\" value=\"\" autocomplete=\"new-password\" placeholder=\"" . ($tiene ? 'guardada: vacío = no cambia' : 'sin clave') . "\" style=\"width:13em\">";
+        if ($tiene) echo " <label><input type=\"checkbox\" name=\"pass_borrar\" value=\"1\"> quitar la clave</label>";
+        echo " <label title=\"desmarcado = /usenet y su pestaña en Foros solo los ves tú\"><input type=\"checkbox\" name=\"on\" value=\"1\"" . ((string)cfg('usenet_on', '0') === '1' ? ' checked' : '') . "> <b>visible para todos</b></label> <button class=\"btn\">Guardar y probar</button></form>";
+        if (!usenet_configurado()) echo "<p class=\"notice keep\">Falta el servidor. Hace falta una cuenta en un servidor de noticias de texto (Eternal September es gratuito); con ella, aquí van su nombre, el usuario y la clave.</p>";
+        else {
+            echo "<p><form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_lista\"><button class=\"btn\">Traer la lista de grupos del servidor</button></form> ";
+            echo "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_leer\"><button class=\"btn sm\">Leer ahora los marcados</button></form> ";
+            echo "<form method=\"post\" style=\"display:inline\" onsubmit=\"return confirm('¿Borrar los mensajes guardados de los grupos desmarcados?')\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_limpiar\"><button class=\"btn sm\">Borrar mensajes de los desmarcados</button></form> ";
+            echo "<small>" . ((int)$tot['n'] ? num_es($tot['n']) . " grupos en la lista (traída " . h(hace((string)$tot['s'])) . "), <b>" . (int)$tot['a'] . " marcados</b>, " . num_es($tot['m']) . " mensajes guardados" : 'la lista está vacía: tráela con el primer botón (tarda unos segundos, son decenas de miles de grupos)') . "</small></p>";
+        }
+        if ((int)$tot['n']) {
+            // filtros: texto (nombre o descripcion), jerarquia (lo de antes del primer punto) y solo marcados; 500 por pagina, los marcados siempre los primeros
+            $q = trim((string)($_GET['q'] ?? '')); $j = strtolower(trim((string)($_GET['j'] ?? ''))); $solo = ($_GET['m'] ?? '') === '1';
+            $pg = max(1, (int)($_GET['p'] ?? 1)); $per = 500;
+            $w = []; $a = [];
+            if ($q !== '') { $w[] = "(name LIKE ? OR descr LIKE ?)"; $lk = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $q) . '%'; $a[] = $lk; $a[] = $lk; }
+            if ($j !== '' && preg_match('/^[a-z0-9+_\-]{1,40}$/', $j)) { $w[] = "(name LIKE ? OR name = ?)"; $a[] = str_replace('_', '\\_', $j) . '.%'; $a[] = $j; } else $j = '';
+            if ($solo) $w[] = "activo = 1";
+            $where = $w ? ' WHERE ' . implode(' AND ', $w) : '';
+            $c = $pdo->prepare("SELECT COUNT(*) FROM usenet_groups$where"); $c->execute($a); $n = (int)$c->fetchColumn();
+            $st = $pdo->prepare("SELECT * FROM usenet_groups$where ORDER BY activo DESC, name LIMIT $per OFFSET " . (($pg - 1) * $per)); $st->execute($a);
+            $rows = $st->fetchAll();
+            $jer = $pdo->query("SELECT SUBSTRING_INDEX(name, '.', 1) j, COUNT(*) n FROM usenet_groups GROUP BY j ORDER BY n DESC, j")->fetchAll();
+            echo "<h4>Grupos</h4><form method=\"get\" action=\"/admin\" style=\"display:flex;gap:8px;align-items:center;flex-wrap:wrap\"><input type=\"hidden\" name=\"t\" value=\"usenet\">";
+            echo "<input type=\"search\" name=\"q\" value=\"" . h($q) . "\" placeholder=\"buscar en nombre o descripción\" style=\"width:20em\"> <select name=\"j\"><option value=\"\">todas las jerarquías (" . count($jer) . ")</option>";
+            foreach ($jer as $x) echo "<option value=\"" . h($x['j']) . "\"" . ($x['j'] === $j ? ' selected' : '') . ">" . h($x['j']) . ".* (" . (int)$x['n'] . ")</option>";
+            echo "</select> <label><input type=\"checkbox\" name=\"m\" value=\"1\"" . ($solo ? ' checked' : '') . "> solo marcados</label> <button class=\"btn sm\">Filtrar</button>" . ($where ? " <a href=\"/admin?t=usenet\">quitar filtros</a>" : '') . " <small>" . num_es($n) . " grupos</small></form>";
+            $qs = '/admin?t=usenet' . ($q !== '' ? '&q=' . rawurlencode($q) : '') . ($j !== '' ? '&j=' . rawurlencode($j) : '') . ($solo ? '&m=1' : '');
+            echo "<form method=\"post\" action=\"" . h($qs . ($pg > 1 ? "&p=$pg" : '')) . "\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_marcar\"><input type=\"hidden\" name=\"gvis\" value=\"" . implode(',', array_column($rows, 'group_id')) . "\">";
+            echo "<table><tr><th style=\"width:30px\"></th><th>grupo</th><th>descripción</th><th title=\"mensajes que dice tener el servidor (aproximado)\">en servidor</th><th>guardados</th><th>última lectura</th></tr>";
+            foreach ($rows as $g) {
+                $id = (int)$g['group_id'];
+                $srv = max(0, (int)$g['srv_high'] - (int)$g['srv_low'] + ((int)$g['srv_high'] >= (int)$g['srv_low'] && (int)$g['srv_high'] > 0 ? 1 : 0));
+                echo "<tr" . ((int)$g['activo'] ? ' style="font-weight:600"' : '') . "><td style=\"text-align:center\"><input type=\"checkbox\" id=\"g$id\" name=\"gon[$id]\" value=\"1\"" . ((int)$g['activo'] ? ' checked' : '') . "></td>";
+                echo "<td><label for=\"g$id\"><code>" . h($g['name']) . "</code></label>" . ((int)$g['activo'] ? " <a href=\"" . h(usenet_url($g['name'])) . "\">ver</a>" : '') . ($g['posting'] === 'm' ? ' <small title="grupo moderado">mod.</small>' : '') . "</td>";
+                echo "<td style=\"font-weight:400\"><small>" . h($g['descr']) . "</small></td><td class=\"num\">" . num_es($srv) . "</td><td class=\"num\">" . ((int)$g['msgs'] ? num_es($g['msgs']) . " <small>(" . (int)$g['threads'] . " hilos)</small>" : '') . "</td>";
+                echo "<td style=\"font-weight:400\"><small>" . ($g['last_error'] !== '' ? '<span class="error">' . h($g['last_error']) . '</span>' : ($g['last_fetch'] ? h(hace((string)$g['last_fetch'])) : ((int)$g['activo'] ? 'pendiente' : ''))) . "</small></td></tr>";
+            }
+            echo "</table><p><button class=\"btn\">Guardar los marcados</button> <small>se guardan las casillas de esta página; los marcados salen siempre los primeros</small></p></form>";
+            if ($n > $per) { echo "<p>"; for ($i = 1; $i <= (int)ceil($n / $per); $i++) echo $i === $pg ? "<b>$i</b> " : "<a href=\"" . h($qs . "&p=$i") . "\">$i</a> "; echo "</p>"; }
+        }
+    } catch (Throwable $e) { echo "<p class=\"error\">Faltan las tablas de Usenet (migra-206): " . h($e->getMessage()) . "</p>"; }
 
 } elseif ($tab === 'fuentes') {
     // subpestañas por tipo de fuente: Substack (newsletter), Medios, YouTube, Agregadores; los formularios vuelven a la subpestaña (campo oculto k)
