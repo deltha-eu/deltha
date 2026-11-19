@@ -7,6 +7,7 @@
  *  del foro) van las primeras en la pagina 1. Los hilos no pasan por el radar ni van a las portadas: se leen, se votan y se comentan aqui. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
+require __DIR__ . '/../lib/usenet.php';   // pestaña Usenet (migra-206)
 foco_por_defecto();   // los foros se leen en modo sin distracciones salvo que el lector lo haya quitado (lib/app.php)
 $GLOBALS['DDD_SIN_GHOST'] = true;   // en los foros no hay velo Ghost: el autor del hilo sale con su nombre desde el primer minuto (20/10/2026)
 
@@ -67,6 +68,7 @@ echo "<nav class=\"sub foros\">";
 $nl = foros_sin_leer();   // hilos sin leer por foro seguido (migra-170): burbuja en la pestaña
 foreach ($visibles as $x) echo "<a href=\"" . h(foro_url($x)) . "\"" . ((int)$x['forum_id'] === $fid ? ' class="on"' : '') . ">" . h($x['name']) . ($x['status'] !== 'on' ? " <small>(" . t('apagado') . ")</small>" : '')
     . (!empty($nl[(int)$x['forum_id']]) ? "<i class=\"badge\" title=\"" . h(t('%d hilos sin leer', $nl[(int)$x['forum_id']])) . "\">" . ($nl[(int)$x['forum_id']] > 99 ? '99+' : $nl[(int)$x['forum_id']]) . "</i>" : '') . "</a>";
+if (usenet_pestana($pdo)) echo "<a href=\"/usenet\">Usenet" . ((string)cfg('usenet_on', '0') !== '1' ? " <small>(" . t('apagado') . ")</small>" : '') . "</a>";   // grupos de noticias, en solo lectura (migra-206)
 echo "<span class=\"acts\">" . foro_seguir_form($f) . "<a class=\"ayuda\" href=\"/articulo?f=" . h($f['slug']) . "\">" . icon('plus') . t('Nuevo hilo') . "</a></span>";
 echo "</nav>";
 if (isset($_GET['premod'])) echo "<p class=\"notice\">" . t('Como no estás registrado, tu envío al foro tiene que ser aprobado por un moderador antes de publicarse.') . "</p>";   // premoderacion de anonimos (migra-183)

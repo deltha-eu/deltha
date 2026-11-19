@@ -4253,3 +4253,14 @@ details.pollnew select { font-size: 13px; }
 .poll .row { margin-top: 8px; }
 .poll p.meta { margin: 6px 0 0; font-size: 13px; }
 .poll form.inline { margin-top: 6px; }
+
+/* Usenet en Foros (migra-206, v265): /usenet reutiliza .hilos .trow (sin avatar); el hilo, un mensaje tras otro en texto plano */
+.unet { padding: 4px 16px 8px; }
+.unet h1 { font-family: var(--serif); font-size: 24px; line-height: 1.2; margin: 14px 0 4px; padding: 0; border: 0; }
+.unet > .meta { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.unet-msg { border-top: 1px solid var(--line); padding: 12px 0 14px; }
+.unet-msg .meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+.unet-msg .meta b { color: var(--fg, inherit); }
+.unet-body { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.5; }
+.unet-body .q { color: var(--muted); }
+.unet-body a { word-break: break-all; }

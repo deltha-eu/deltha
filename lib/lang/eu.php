@@ -1174,4 +1174,15 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Registro' => 'Erregistroa',
 'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Bidalketa honekin gertatu den guztia, berriena goian: nork bidali zuen, botoak, iruzkinak eta azalera iritsierak.',
 'Lo ve quien tiene aura por encima de %s.' => '%s baino aura handiagoa dutenek ikusten dute.',
+// Usenet en Foros (migra-206, 19/11/2026)
+'Volver a los grupos' => 'Itzuli taldeetara',
+'Ese grupo no existe.' => 'Talde hori ez dago.',
+'Usenet está apagado: solo lo ves tú (admin). Se enciende en admin → Usenet.' => 'Usenet itzalita dago: zuk bakarrik ikusten duzu (admin). admin → Usenet atalean pizten da.',
+'%d mensajes' => '%d mezu',
+'Grupo de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet berri-taldea, irakurtzeko soilik: hemen irakurtzen dena Delthatik kanpo idazten da.',
+'Todavía no hay mensajes de este grupo.' => 'Oraindik ez dago talde honetako mezurik.',
+'Grupos de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet berri-taldeak, irakurtzeko soilik: hemen irakurtzen dena Delthatik kanpo idazten da.',
+'hilos' => 'hariak',
+'último mensaje' => 'azken mezua',
+'Todavía no hay grupos.' => 'Oraindik ez dago talderik.',
 ];
