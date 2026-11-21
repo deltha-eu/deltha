@@ -205,6 +205,19 @@ function fuentes_tipo_actual(PDO $pdo, ?string $k = null): string {
     $c = (string)($_COOKIE[DDD_FKIND_COOKIE] ?? '');
     return isset($tipos[$c]) ? $c : array_key_first($tipos);
 }
+/** Orden de «Todas las fuentes» que el usuario eligio la ultima vez (users.fuentes_orden, migra-207), o '' = ultima noticia.
+ *  Solo con cuenta: a quien no ha entrado no se le pone una cookie mas para esto y ve el orden de siempre. */
+function fuentes_orden_guardado(PDO $pdo): string {
+    $u = user(); if (!$u) return '';
+    try { $st = $pdo->prepare("SELECT fuentes_orden FROM users WHERE user_id = ?"); $st->execute([(int)$u['user_id']]); return (string)$st->fetchColumn(); }
+    catch (Throwable $e) { return ''; }   // sin migra-207
+}
+/** Recuerda el orden elegido (solo si cambia). Nunca lanza. */
+function fuentes_orden_guardar(PDO $pdo, string $o): void {
+    $u = user(); if (!$u) return;
+    try { $pdo->prepare("UPDATE users SET fuentes_orden = ? WHERE user_id = ? AND fuentes_orden <> ?")->execute([$o, (int)$u['user_id'], $o]); }
+    catch (Throwable $e) {}   // sin migra-207
+}
 /** Sub-navegacion por tipo: en /mis-fuentes «Mis medios · Mis substacks · …» con cuantas sigue de cada uno; en /fuentes «Medios ·
  *  Substacks · …» con cuantas hay en el catalogo (y «todas»). $extra: enlaces adicionales al final (p. ej. «todas»). */
 function fuentes_subnav(PDO $pdo, string $base, string $k, bool $mias, string $extra = ''): string {

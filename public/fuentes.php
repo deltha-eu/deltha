@@ -4,7 +4,8 @@
  *  tipo arriba (Medios · Substacks · Canales · Agregadores · todas), que se abre por el ultimo tipo usado (cookie ddd_fk, la misma que
  *  /mis-fuentes); ?todas=1 enseña los cuatro grupos seguidos. ?il=<idioma> filtra por idioma (fila de idiomas bajo la casilla).
  *  Dentro de cada grupo, la fuente con la noticia mas reciente primero; ?o= cambia el orden (13/11/2026): seguidores (las que mas
- *  gente sigue), nuevas (las ultimas en entrar en el catalogo), hoy | semana | mes (las que mas envios a Deltha tienen en 1, 7 o 30 dias). ?q=texto (09/10/2026): buscador para la gente, por nombre,
+ *  gente sigue), nuevas (las ultimas en entrar en el catalogo), hoy | semana | mes (las que mas envios a Deltha tienen en 1, 7 o 30 dias);
+ *  con cuenta se recuerda el ultimo orden elegido (users.fuentes_orden, migra-207) y ?o=ultima vuelve al de siempre. ?q=texto (09/10/2026): buscador para la gente, por nombre,
  *  descripcion o dominio, sin distinguir mayusculas ni tildes; con busqueda se miran todos los grupos a la vez (el selector no filtra). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
@@ -25,7 +26,12 @@ $qn = $llano($q);
 $coincide = fn(array $m): bool => $qn === '' || str_contains($llano($m['name'] . ' ' . (string)$m['descr'] . ' ' . (string)$m['home']), $qn);
 // orden dentro de cada grupo (13/11/2026): '' = ultima noticia (el de siempre)
 $ORDENES = ['' => t('última noticia'), 'seguidores' => t('seguidores'), 'nuevas' => t('más nuevas'), 'hoy' => t('top hoy'), 'semana' => t('top semana'), 'mes' => t('top mes')];
-$o = (string)($_GET['o'] ?? ''); if (!isset($ORDENES[$o])) $o = '';
+// se recuerda el ultimo que eligio (21/11/2026, migra-207; con cuenta): ?o= manda y se guarda, sin ?o= se usa el guardado.
+// «última noticia» va como ?o=ultima para poder volver a ella: sin parametro ya no significa «el de siempre» sino «el guardado».
+$o = (string)($_GET['o'] ?? '');
+if ($o === 'ultima') $o = '';
+if (isset($_GET['o']) && isset($ORDENES[$o])) fuentes_orden_guardar($pdo, $o);
+else { $o = fuentes_orden_guardado($pdo); if (!isset($ORDENES[$o])) $o = ''; }   // sin ?o= (o con uno que no existe): el guardado
 $DIAS = ['hoy' => 1, 'semana' => 7, 'mes' => 30];
 $qo = $o !== '' ? "&amp;o=$o" : '';   // para conservar el orden en los demas enlaces
 page_header(t('Todas las fuentes'), 'fuentes');
@@ -57,7 +63,7 @@ if (count($porIdioma) > 1) {
 // fila de orden: conserva tipo, idioma y busqueda
 $qb = ($k ? "k=$k" : 'todas=1') . ($il !== '' ? '&amp;il=' . h($il) : '') . ($q !== '' ? '&amp;q=' . rawurlencode($q) : '');
 echo "<nav class=\"sub fecha orden\" aria-label=\"" . h(t('ordenar por')) . "\"><span class=\"meta\">" . t('ordenar por') . "</span>";
-foreach ($ORDENES as $ok => $lbl) echo "<a href=\"/fuentes?$qb" . ($ok !== '' ? "&amp;o=$ok" : '') . "\"" . ($o === $ok ? ' class="on"' : '') . ">" . h($lbl) . "</a>";
+foreach ($ORDENES as $ok => $lbl) echo "<a href=\"/fuentes?$qb&amp;o=" . ($ok !== '' ? $ok : 'ultima') . "\"" . ($o === $ok ? ' class="on"' : '') . ">" . h($lbl) . "</a>";
 echo "</nav>";
 $segs = $o === 'seguidores' ? fuentes_seguidores($pdo) : [];
 $envs = isset($DIAS[$o]) ? fuentes_envios($pdo, $DIAS[$o]) : [];
