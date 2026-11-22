@@ -13,7 +13,11 @@ timeout = 180
 nombre  = Qwen3.8-Flash-Next-IQ2_XS
 
 [worker]
-; trabajos que pide en cada pasada, segundos de espera con la cola vacia y tras un error
-lote         = 4
-espera       = 20
+; trabajos que pide en cada pasada: de uno en uno, para que lo urgente (Sigfrid, con una persona esperando en el Chat)
+; no aguarde detras de un lote. El worker solo descansa con la cola vacia, asi que no pierde ritmo
+lote         = 1
+; sondeo largo: segundos que Deltha retiene la peticion con la cola vacia; la suelta en cuanto entra un trabajo (0 = no; tope 25)
+sondeo       = 20
+; segundos de espera con la cola vacia si no hay sondeo largo, y tras un error
+espera       = 5
 espera_error = 60

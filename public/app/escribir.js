@@ -76,6 +76,10 @@
         var msN = nuevo.querySelectorAll('article.cm[id^="m"]');
         for (var j = 0; j < msN.length; j++) if (!habia[msN[j].id]) msN[j].classList.add('nuevo');
         viejo.replaceWith(nuevo);
+        // el ritmo lo dice la pagina que acaba de llegar (22/11/2026): mas deprisa mientras Sigfrid tiene una respuesta pendiente y
+        // de vuelta al normal cuando llega; antes se quedaba para siempre con el de la primera carga
+        var segN = parseInt(nuevo.dataset.refresh, 10);
+        if (segN > 0) seg = segN;
         // el scroll, donde estaba: el mismo mensaje a la misma altura
         if (a) {
           var el = document.getElementById(a.id);

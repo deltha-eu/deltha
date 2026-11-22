@@ -96,11 +96,12 @@ function ia_handler(string $task, callable $fn): void { global $IA_HANDLERS; $IA
  * Reserva hasta $n trabajos para el worker (status processing, leased_until). Devuelve lo que el worker necesita:
  * id, task, user, y la ficha de la tarea la pide aparte (?act=tareas). Trabajos de tareas apagadas no se sirven.
  */
-function ia_lease(PDO $pdo, int $n): array {
+function ia_lease(PDO $pdo, int $n, int $minPrio = 0): array {   // $minPrio (migra-208): solo los trabajos de esa prioridad o mas (los que pasan delante de la moderacion)
     $out = [];
+    $minPrio = max(0, $minPrio);
     $pdo->beginTransaction();
     $q = $pdo->prepare("SELECT j.job_id, j.task_key, j.input, t.lease_sec FROM ia_jobs j JOIN ia_tasks t ON t.task_key = j.task_key
-                         WHERE t.enabled = 1 AND (j.status = 'queued' OR (j.status = 'processing' AND j.leased_until < NOW()))
+                         WHERE t.enabled = 1 AND j.priority >= $minPrio AND (j.status = 'queued' OR (j.status = 'processing' AND j.leased_until < NOW()))
                          ORDER BY j.priority DESC, j.job_id ASC LIMIT $n FOR UPDATE");
     $q->execute();
     foreach ($q->fetchAll() as $j) {
@@ -111,6 +112,14 @@ function ia_lease(PDO $pdo, int $n): array {
     }
     $pdo->commit();
     return $out;
+}
+
+/** ¿Hay algo que servir en ia_jobs? Consulta sin bloqueos, para el sondeo largo de /api/ia.php?act=lease&wait=N (migra-208). */
+function ia_hay_trabajo(PDO $pdo): bool {
+    try {
+        return (bool)$pdo->query("SELECT 1 FROM ia_jobs j JOIN ia_tasks t ON t.task_key = j.task_key
+                                   WHERE t.enabled = 1 AND (j.status = 'queued' OR (j.status = 'processing' AND j.leased_until < NOW())) LIMIT 1")->fetchColumn();
+    } catch (Throwable $e) { return false; }
 }
 
 /** El worker devuelve el resultado: se guarda y se aplica el handler de la tarea. Devuelve el estado final. */

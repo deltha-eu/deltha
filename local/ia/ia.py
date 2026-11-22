@@ -39,7 +39,7 @@ def cargar_config(ruta: Path) -> configparser.ConfigParser:
     cfg.read_dict({
         "deltha": {"url": "https://deltha.eu", "token": ""},
         "modelo": {"url": "http://127.0.0.1:8080", "api_key": "", "timeout": "180", "nombre": "Qwen3.8-Flash-Next-IQ2_XS"},
-        "worker": {"lote": "4", "espera": "20", "espera_error": "60"},
+        "worker": {"lote": "1", "espera": "5", "espera_error": "60", "sondeo": "20"},
     })
     if ruta.exists():
         cfg.read(ruta, encoding="utf-8-sig")   # -sig: PowerShell suele guardar con BOM
@@ -88,7 +88,11 @@ class Deltha:
             self.hash = r.get("hash")
         return self.tareas
 
-    def lease(self, n):
+    def lease(self, n, sondeo=0):
+        """Con sondeo > 0 (migra-208) Deltha retiene la peticion hasta ese numero de segundos si la cola esta vacia y la suelta
+        en cuanto entra un trabajo: el worker se entera al momento sin preguntar cada pocos segundos."""
+        if sondeo > 0:
+            return http_json(f"{self.base}?act=lease&n={n}&wait={sondeo}", cabeceras=self.cab, timeout=sondeo + 15)
         return http_json(f"{self.base}?act=lease&n={n}", cabeceras=self.cab)
 
     def resultado(self, job_id, res, modelo, ms=None, tokens=None):
@@ -106,6 +110,7 @@ class Modelo:
         self.nombre = cfg["modelo"]["nombre"]
         self.cab = {"Authorization": f"Bearer {cfg['modelo']['api_key']}"} if cfg["modelo"]["api_key"] else {}
         self.formato = "json_schema"   # si el servidor no lo admite, se baja a json_object y luego a texto libre
+        self.ultimo_prompt = ""
 
     def listo(self):
         # llama-server devuelve {"status":"ok"}; Strata responde 200 con otro cuerpo: vale cualquier 200 que no diga lo contrario
@@ -148,7 +153,11 @@ class Modelo:
                 raise
         salida = r["choices"][0]["message"].get("content") or ""
         ms = int((time.time() - t0) * 1000)
-        tokens = (r.get("usage") or {}).get("completion_tokens")
+        uso = r.get("usage") or {}
+        tokens = uso.get("completion_tokens")
+        # cuanto del prompt ya estaba leido de la peticion anterior (si el servidor lo cuenta): al registro, para ver si el prefijo se reutiliza
+        reut = (uso.get("prompt_tokens_details") or {}).get("cached_tokens")
+        self.ultimo_prompt = f"prompt {uso.get('prompt_tokens')} tokens, {reut} reutilizados" if reut is not None and uso.get("prompt_tokens") else ""
         if tarea.get("schema"):
             return interpretar(salida, tarea["schema"]), ms, tokens
         return {"text": re.sub(r"<think>.*?</think>", "", salida, flags=re.S).strip()}, ms, tokens
@@ -183,9 +192,9 @@ def interpretar(salida: str, esquema: dict) -> dict:
 
 
 # ---------------------------------------------------------------- bucle
-def pasada(deltha: Deltha, modelo: Modelo, lote: int) -> int:
+def pasada(deltha: Deltha, modelo: Modelo, lote: int, sondeo: int = 0) -> int:
     tareas = deltha.bajar_tareas()
-    r = deltha.lease(lote)
+    r = deltha.lease(lote, sondeo)
     if not r.get("enabled", False):
         log.info("la IA esta apagada en Deltha (ia_enabled = 0 y moderacion apagada)")
         return 0
@@ -201,6 +210,7 @@ def pasada(deltha: Deltha, modelo: Modelo, lote: int) -> int:
                 log.error("%s: no pude avisar del fallo: %s", etiqueta, e2)
             continue
         try:
+            modelo.ultimo_prompt = ""
             if tarea.get("kind") == "embed":
                 res, ms, tokens = modelo.embeddings(tarea, j["user"])
             else:
@@ -218,7 +228,8 @@ def pasada(deltha: Deltha, modelo: Modelo, lote: int) -> int:
             log.error("%s: Deltha no acepto el resultado: %s", etiqueta, e)
             continue
         resumen = json.dumps(res, ensure_ascii=False)
-        log.info("%s → %s (%s ms) %s", etiqueta, out.get("status"), ms, resumen[:160] + ("…" if len(resumen) > 160 else ""))
+        extra = f"{ms} ms; {modelo.ultimo_prompt}" if modelo.ultimo_prompt else f"{ms} ms"
+        log.info("%s → %s (%s) %s", etiqueta, out.get("status"), extra, resumen[:160] + ("…" if len(resumen) > 160 else ""))
     return len(jobs)
 
 
@@ -228,6 +239,7 @@ def bucle(cfg, una_vez=False):
         sys.exit("Falta [deltha] token en ia.ini (el mismo que [ia] token, o [mod] token, en /etc/deltha/config.ini).")
     lote = int(cfg["worker"]["lote"])
     espera, espera_error = int(cfg["worker"]["espera"]), int(cfg["worker"]["espera_error"])
+    sondeo = 0 if una_vez else max(0, min(25, int(cfg["worker"]["sondeo"])))
     avisado = False
     while True:
         try:
@@ -242,10 +254,12 @@ def bucle(cfg, una_vez=False):
             if avisado:
                 log.info("modelo listo")
                 avisado = False
-            n = pasada(deltha, modelo, lote)
+            t0 = time.time()
+            n = pasada(deltha, modelo, lote, sondeo)
             if una_vez:
                 return
-            if n == 0:
+            # con sondeo largo la espera ya la ha hecho Deltha; si volvio enseguida y sin nada (servidor sin sondeo, IA apagada), se espera aqui
+            if n == 0 and (sondeo == 0 or time.time() - t0 < sondeo / 2):
                 time.sleep(espera)
         except KeyboardInterrupt:
             log.info("parado")

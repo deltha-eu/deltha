@@ -62,9 +62,36 @@ if ($act === 'tareas') {
 
 if ($act === 'lease') {
     $n = max(1, min(20, (int)($_GET['n'] ?? 4)));
+    // Sondeo largo (migra-208, 22/11/2026): con wait=N (tope 25 s) y la cola vacia, la peticion se queda abierta y se suelta en cuanto entra
+    // un trabajo, en vez de que el worker pregunte cada pocos segundos. Mientras espera solo hace dos consultas sin bloqueo cada 0,4 s.
+    // Sin wait (workers anteriores) responde al momento, como siempre.
+    // Si el worker se va mientras espera (se reinicia, se corta la red), no hay que reservarle nada: el trabajo se quedaria retenido hasta
+    // caducar la reserva y Sigfrid diria «no he podido mirarlo». PHP solo se entera de que el otro lado colgo al escribir, asi que cada
+    // segundo sale un espacio (el JSON admite espacios delante) y, si ya no hay nadie, la peticion termina sin tocar la cola.
+    $wait = max(0, min(25, (int)($_GET['wait'] ?? 0)));
+    if ($wait > 0) {
+        @set_time_limit($wait + 30);
+        ignore_user_abort(true);
+        while (ob_get_level() > 0) @ob_end_flush();
+        $fin = microtime(true) + $wait; $latido = microtime(true) + 1;
+        $hayMod = $pdo->prepare("SELECT 1 FROM mod_queue WHERE status = 'queued' OR (status = 'processing' AND leased_until < NOW()) LIMIT 1");
+        while (microtime(true) < $fin) {
+            if (ia_on() && ia_hay_trabajo($pdo)) break;
+            if ($moderaAqui) { $hayMod->execute(); $hay = $hayMod->fetchColumn(); $hayMod->closeCursor(); if ($hay) break; }
+            if (!ia_on() && !$moderaAqui) break;
+            usleep(400000);
+            if (microtime(true) >= $latido) { echo ' '; @flush(); $latido = microtime(true) + 1; }
+            if (connection_aborted()) exit;
+        }
+        echo ' '; @flush();
+        if (connection_aborted()) exit;
+    }
     $jobs = [];
-    // la moderacion pasa delante (prioridad 9 de serie): lo que aun quede de cupo se sirve de ia_jobs
-    if ($moderaAqui) foreach (mod_lease($pdo, $n) as $it)
+    // Primero lo que tenga MAS prioridad que la moderacion (migra-208: la tarea «sigfrid» pasa a 10; hay una persona esperando en el Chat);
+    // luego la moderacion (prioridad 9 de serie) y lo que aun quede de cupo se sirve del resto de ia_jobs
+    $prioMod = (int)(ia_tarea($pdo, 'moderacion')['priority'] ?? 9);
+    if ($moderaAqui && ia_on()) foreach (ia_lease($pdo, $n, $prioMod + 1) as $j) $jobs[] = $j;
+    if ($moderaAqui && count($jobs) < $n) foreach (mod_lease($pdo, $n - count($jobs)) as $it)
         $jobs[] = ['id' => 'm' . $it['id'], 'task' => 'moderacion', 'user' => ($it['context'] !== '' ? "Contexto: {$it['context']}\n\n" : '') . "<texto>\n{$it['text']}\n</texto>"];
     if (ia_on() && count($jobs) < $n) foreach (ia_lease($pdo, $n - count($jobs)) as $j) $jobs[] = $j;
     api_out(['enabled' => ia_on() || $moderaAqui, 'jobs' => $jobs]);
