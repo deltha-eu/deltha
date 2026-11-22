@@ -1073,6 +1073,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('mod_max_retries',     '3',    'Fallos del modelo con un mismo elemento antes de pasarlo a revision humana'),
 ('chat_anuncio_dias',   '7',    'Dias que un mensaje a la comunidad sigue saliendo en la franja de arriba del Chat (0 = siempre); la marca y el resaltado no caducan'),
 ('sigfrid_espera_seg',  '120',  'Segundos que Sigfrid espera la respuesta redactada por el worker de IA antes de rendirse (sustituye el «un momento» por una disculpa)'),
+('sigfrid_pc_primero',  '1',    '1 = lo que las reglas de Sigfrid no entienden va directo al modelo del PC si el worker esta a la vista (el «un momento» sale al instante); 0 = primero el clasificador del droplet, como antes'),
+('sigfrid_refresco_seg', '2',   'Segundos entre refrescos del Chat mientras Sigfrid tiene una respuesta pendiente del PC'),
 ('premod_anon',         '1',    '1 = lo que escriben los anonimos (comentarios, chat, hilos en los foros) queda pendiente de que lo apruebe un moderador; 0 = se publica al momento'),
 ('ip_log_days',         '365',  'Registro de IP (multicuentas y requerimientos judiciales o policiales): dias que se conserva cada fila; 0 = no se guarda nada. Solo lo ve el admin en /ips'),
 ('ip_proxies',          '',     'Rangos CIDR extra, separados por comas, a los que se les cree la cabecera CF-Connecting-IP (los de Cloudflare ya van en el codigo)'),

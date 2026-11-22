@@ -652,8 +652,13 @@ function sigfrid_paquete(PDO $pdo, ?array $u): string {
     }
     try { $partes[] = "[temas_hoy] " . sigfrid_accion($pdo, 'temas', 'hoy', $u); } catch (Throwable $e) {}   // «de qué se habla» suele ser de hoy; el de arriba es de la semana
     if ($u) { try { $partes[] = "[mis_envios] " . sigfrid_accion($pdo, 'mis_envios', 'semana', $u); } catch (Throwable $e) {} }
-    try { $partes[] = "[reglas] Cómo funciona Deltha, parámetro a parámetro (clave = valor — qué es):\n" . sigfrid_reglas_paquete($pdo); } catch (Throwable $e) {}   // 14/11/2026: normas, permisos, aura, plazos
     return implode("\n", $partes);
+}
+
+/** La parte del paquete que no cambia de una pregunta a otra (14/11/2026: normas, permisos, aura, plazos). Va aparte y delante de todo en el
+ *  mensaje (migra-208) para que el modelo reutilice ese prefijo ya leido: solo cambia cuando alguien toca la config. Sin idioma: es igual para todos. */
+function sigfrid_paquete_reglas(PDO $pdo): string {
+    try { return "[reglas] Cómo funciona Deltha, parámetro a parámetro (clave = valor — qué es):\n" . sigfrid_reglas_paquete($pdo); } catch (Throwable $e) { return ''; }
 }
 
 /** Los mensajes anteriores del hilo (lo que cita #N, hasta tres hacia atras), para que el modelo sepa de que se hablaba. */
@@ -686,10 +691,15 @@ function sigfrid_conversar(PDO $pdo, int $mid, string $content, ?array $u, strin
     $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,0)")->execute([(int)$sig['user_id'], '', null, $mid, $txt]);
     $nid = (int)$pdo->lastInsertId();
     $hilo = sigfrid_hilo($pdo, $mid);
-    $user = "Idioma de la respuesta: " . lang() . ". Quien pregunta: " . ($u ? $u['login'] : 'una persona sin cuenta') . ".\n"
+    // Orden (migra-208, 22/11/2026): de lo que menos cambia a lo que mas. El modelo del PC reutiliza el prefijo que ya leyo en la peticion
+    // anterior, asi que las reglas (fijas mientras no se toque la config) van primero, luego los datos del momento y al final lo unico que
+    // es siempre distinto: el hilo y la pregunta. Antes la pregunta iba delante y lo releia todo cada vez.
+    $reglas = sigfrid_paquete_reglas($pdo);
+    $user = "<datos>\nPAQUETE DE DATOS (lo que Sigfrid sabe ahora mismo; cada linea empieza por el nombre de la accion):\n"
+          . ($reglas !== '' ? $reglas . "\n" : '') . sigfrid_paquete($pdo, $u) . "\n</datos>\n"
           . ($hilo !== '' ? "<datos>\nMensajes anteriores del hilo:\n$hilo\n</datos>\n" : '')
-          . "<datos>\nPREGUNTA: $pregunta\n</datos>\n"
-          . "<datos>\nPAQUETE DE DATOS (lo que Sigfrid sabe ahora mismo; cada linea empieza por el nombre de la accion):\n" . sigfrid_paquete($pdo, $u) . "\n</datos>";
+          . "Idioma de la respuesta: " . lang() . ". Quien pregunta: " . ($u ? $u['login'] : 'una persona sin cuenta') . ".\n"
+          . "<datos>\nPREGUNTA: $pregunta\n</datos>";
     $job = ia_pedir($pdo, 'sigfrid', ['user' => $user, 'mid' => $mid, 'quien' => $quien, 'login' => $login, 'lang' => lang()], 'chat', $nid);
     if ($job === null) {   // no se pudo encolar (tope diario, tarea apagada entre medias): se retira el «un momento» y que siga la ayuda
         $pdo->prepare("DELETE FROM chat WHERE msg_id = ?")->execute([$nid]);
@@ -783,6 +793,9 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
         }
         $quien = $u ? '@' . $u['login'] : ($alias !== '' ? $alias : '');
         if ($in === null) {
+            // El PC primero (migra-208, 22/11/2026): si el worker esta a la vista, el «un momento» sale ya y lo redacta el modelo grande, que
+            // tiene todas las acciones en el paquete; el clasificador del droplet (2-4 s dentro del POST del Chat) queda para cuando no hay PC.
+            if ((string)cfg('sigfrid_pc_primero', '1') === '1' && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
             $in = sigfrid_ia($content, $login);
             // capa 3 (migra-187): ni las reglas ni el clasificador lo encajan en una accion → lo redacta el PC con todos los datos a la vista
             // 'fuera' del clasificador tambien pasa por aqui (09/11/2026, 22:50): LFM3 se equivocaba en las dos direcciones («el comentario mas

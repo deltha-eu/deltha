@@ -175,8 +175,10 @@ $replyTo = (int)($_GET['r'] ?? 0);
 $writing = $replyTo > 0 || isset($_GET['ok']) || isset($_GET['premod']) || isset($_GET['anun']) || $err;
 
 $refrescoJs = max(0, (int)cfg('chat_refresh_sec', 60));   // con JS (fetch, sin recargar): siempre; 0 = nunca
-// Sigfrid conversacional (migra-187): si en esta pagina hay un «un momento, que lo miro» esperando al PC, se refresca cada 6 s hasta que llegue
-if (sigfrid_pendientes($pdo, array_keys($ids))) $refrescoJs = $refrescoJs > 0 ? min($refrescoJs, 6) : 6;
+// Sigfrid conversacional (migra-187): si en esta pagina hay un «un momento, que lo miro» esperando al PC, se refresca mas deprisa hasta que llegue
+// (sigfrid_refresco_seg, 2 s desde la migra-208; antes 6 fijos). escribir.js vuelve al ritmo normal en cuanto la pagina deja de pedirlo.
+$sigRef = max(1, (int)cfg('sigfrid_refresco_seg', 2));
+if (sigfrid_pendientes($pdo, array_keys($ids))) $refrescoJs = $refrescoJs > 0 ? min($refrescoJs, $sigRef) : $sigRef;
 $refresco = $writing ? 0 : $refrescoJs;                      // sin JS (meta refresh): no mientras se escribe
 page_header(t('Chat'), 'chat', $refresco ? '<noscript>' . refresh_meta($refresco) . '</noscript>' : '');
 echo "<nav class=\"sub\"><a href=\"/chat\"" . ($hilos ? ' class="on"' : '') . ">" . t('Por hilos') . "</a><a href=\"/chat?v=tiempo\"" . ($hilos ? '' : ' class="on"') . ">" . t('Por tiempo') . "</a><a class=\"ayuda\" href=\"/empezar\">" . icon('help') . "<span>" . t('Cómo empezar') . "</span></a></nav>";   // la FAQ de arranque (migra-122), a la derecha
