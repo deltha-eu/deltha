@@ -408,6 +408,15 @@ CREATE TABLE `ia_jobs` (
   KEY idx_created (created)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `sigfrid_etiquetas` (
+  `clave` char(40) NOT NULL COMMENT 'sha1 del idioma y los titulares del grupo, ordenados',
+  `lang` varchar(5) NOT NULL DEFAULT 'es',
+  `tema` varchar(80) NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`clave`),
+  KEY `idx_created` (`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='nombres cortos de los asuntos de Sigfrid, ya pedidos al modelo del droplet (migra-209)';
+
 CREATE TABLE `ia_tasks` (
   task_key      VARCHAR(32)  NOT NULL,
   name          VARCHAR(80)  NOT NULL,

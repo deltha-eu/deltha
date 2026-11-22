@@ -384,7 +384,7 @@ function sigfrid_asuntos(PDO $pdo, string $periodo): string {
     $orden = function (array $g): array { usort($g, fn($a, $b) => [(int)$b['v'], $b['status'] === 'destacadas'] <=> [(int)$a['v'], $a['status'] === 'destacadas']); return $g; };
     $enlace = fn(array $r) => sigfrid_enlace((string)$r['title'], '/hilo/' . (int)$r['story_id']);
     $lang = lang();
-    $nombre = fn(array $g) => '**' . sigfrid_etiqueta(array_column($g, 'title'), $lang) . '**';
+    $nombre = fn(array $g) => '**' . sigfrid_etiqueta(array_column($g, 'title'), $lang, $pdo) . '**';
     $primero = $orden(array_shift($grupos)); [$n, $v, $c] = $peso($primero);
     $txt = t('%s el tema con más envíos es %s: %d envíos desde distintos enfoques (%d votos, %d comentarios)', ucfirst(sigfrid_periodo_txt($periodo)), $nombre($primero), $n, $v, $c)
          . ' — ' . implode(' · ', array_map($enlace, array_slice($primero, 0, 3))) . (count($primero) > 3 ? ' …' : '') . '.';
@@ -394,10 +394,23 @@ function sigfrid_asuntos(PDO $pdo, string $periodo): string {
 
 /** Nombre corto de un asunto a partir de los titulares de su grupo («Abascal en La Revuelta», «los Javis»): se lo pide al modelo pequeño
  *  del droplet (el clasificador, ~1 s) y, si no hay o falla, lo saca de las palabras con mayuscula que se repiten en los titulares. */
-function sigfrid_etiqueta(array $titulos, string $lang): string {
+function sigfrid_etiqueta(array $titulos, string $lang, ?PDO $pdo = null): string {
     $titulos = array_values(array_filter(array_map(fn($t) => trim((string)$t), $titulos)));
+    // Guardadas (migra-209, 22/11/2026): cada nombre le cuesta 1-4 s al modelo del droplet y el paquete de la capa 3 lleva hasta seis
+    // (temas de la semana y de hoy), asi que el POST del Chat tardaba 20 s en devolver el «un momento». El nombre de un mismo grupo de
+    // titulares no cambia: se guarda en sigfrid_etiquetas y solo se pide al modelo la primera vez.
+    $clave = '';
+    if ($pdo && count($titulos) >= 2) {
+        $orden = $titulos; sort($orden, SORT_STRING);
+        $clave = sha1($lang . "\n" . implode("\n", $orden));
+        try {
+            $q = $pdo->prepare("SELECT tema FROM sigfrid_etiquetas WHERE clave = ?"); $q->execute([$clave]);
+            $ya = $q->fetchColumn();
+            if (is_string($ya) && $ya !== '') return $ya;
+        } catch (Throwable $e) { $clave = ''; }   // sin la migra-209: como antes, sin guardar
+    }
     $url = trim((string)cfg('sigfrid_ia_url', ''));
-    if ($url !== '' && function_exists('curl_init') && count($titulos) >= 2) {
+    if ($url !== '' && sigfrid_etiqueta_modelo() && function_exists('curl_init') && count($titulos) >= 2) {
         $idioma = DDD_LANGS[$lang] ?? 'español';
         $system = "Te dan titulares de noticias que tratan el mismo asunto. Devuelve JSON con \"tema\": el nombre del asunto en $idioma, de dos a seis palabras, "
                 . "con los nombres propios tal cual (personas, programas, obras, lugares), sin verbo, sin punto final y sin comillas. Ejemplo: titulares sobre la visita de un político a un programa → {\"tema\":\"Abascal en La Revuelta\"}.";
@@ -416,7 +429,10 @@ function sigfrid_etiqueta(array $titulos, string $lang): string {
             $j = json_decode((string)$out, true);
             if (preg_match('/\{.*\}/su', (string)($j['choices'][0]['message']['content'] ?? ''), $m)) {
                 $tema = trim((string)(json_decode($m[0], true)['tema'] ?? ''), " \t\n.«»\"'");
-                if ($tema !== '' && mb_strlen($tema) <= 60 && !preg_match('/<|https?:/u', $tema)) return $tema;
+                if ($tema !== '' && mb_strlen($tema) <= 60 && !preg_match('/<|https?:/u', $tema)) {
+                    if ($clave !== '') { try { $pdo->prepare("INSERT IGNORE INTO sigfrid_etiquetas (clave, lang, tema) VALUES (?,?,?)")->execute([$clave, $lang, $tema]); } catch (Throwable $e) {} }
+                    return $tema;
+                }
             }
         }
     }
@@ -436,6 +452,24 @@ function sigfrid_etiqueta(array $titulos, string $lang): string {
     foreach ($titulos as $t) { $k = count(array_filter($rep, fn($w) => mb_stripos($t, $w) !== false)); if ($k > $max) { $max = $k; $mejor = $t; } }
     usort($rep, fn($a, $b) => mb_stripos($mejor, $a) <=> mb_stripos($mejor, $b));
     return implode(' ', $rep);
+}
+
+/** ¿Puede sigfrid_etiqueta() llamar al modelo del droplet si el nombre no esta guardado? Si, salvo mientras se monta el paquete de la capa 3
+ *  dentro del POST del Chat (migra-209): ahi, lo que no este guardado sale con las palabras repetidas y el cron lo nombra en el siguiente ciclo. */
+function sigfrid_etiqueta_modelo(?bool $v = null): bool {
+    static $on = true;
+    if ($v !== null) $on = $v;
+    return $on;
+}
+
+/** Cron (scripts/promocionar.php, una vez por ciclo): deja nombrados y guardados los asuntos de hoy y de la semana, que son los que van en el
+ *  paquete, para que el Chat no tenga que esperarlos; y olvida los nombres de hace mas de 30 dias. En el idioma por defecto del sitio. */
+function sigfrid_calentar(PDO $pdo): void {
+    if (!sigfrid_on() || trim((string)cfg('sigfrid_ia_url', '')) === '') return;
+    try {
+        foreach (['hoy', 'semana'] as $p) sigfrid_asuntos($pdo, $p);
+        $pdo->exec("DELETE FROM sigfrid_etiquetas WHERE created < NOW() - INTERVAL 30 DAY");
+    } catch (Throwable $e) { /* sin la migra-209 o sin datos: nada que calentar */ }
 }
 
 /** Los temas (secciones) con mas envios en el periodo, con sus votos (lo usa sigfrid_asuntos cuando ningun asunto se repite). */
@@ -647,11 +681,13 @@ function sigfrid_accion(PDO $pdo, string $accion, string $periodo, ?array $u = n
 /** Todo lo que Sigfrid sabe ahora mismo, ya redactado por las acciones (en el idioma de quien pregunta, con sus enlaces). */
 function sigfrid_paquete(PDO $pdo, ?array $u): string {
     $partes = [];
+    $antes = sigfrid_etiqueta_modelo(); sigfrid_etiqueta_modelo(false);   // migra-209: aqui no se espera al modelo del droplet (esto corre dentro del POST del Chat)
     foreach (['radar', 'portada', 'concurso_ganador', 'concurso_tema', 'medio_leido', 'noticia_top', 'comunidad_activa', 'temas', 'top_enviador', 'conectados', 'proximo_ciclo'] as $a) {
         try { $partes[] = "[$a] " . sigfrid_accion($pdo, $a, 'semana', $u); } catch (Throwable $e) {}
     }
     try { $partes[] = "[temas_hoy] " . sigfrid_accion($pdo, 'temas', 'hoy', $u); } catch (Throwable $e) {}   // «de qué se habla» suele ser de hoy; el de arriba es de la semana
     if ($u) { try { $partes[] = "[mis_envios] " . sigfrid_accion($pdo, 'mis_envios', 'semana', $u); } catch (Throwable $e) {} }
+    sigfrid_etiqueta_modelo($antes);
     return implode("\n", $partes);
 }
 

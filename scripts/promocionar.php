@@ -17,6 +17,9 @@ $lock = fopen('/tmp/deltha-promo.lock', 'c');
 if (!flock($lock, LOCK_EX | LOCK_NB)) exit(0);
 if ($force || ciclo_toca(time())) {
     foreach (run_cycle($pdo) as $l) echo date('c') . "  $l\n";
+    // Sigfrid (migra-209): los nombres de los asuntos de hoy y de la semana, ya pedidos al modelo del droplet y guardados, para que el Chat no los espere
+    try { require_once __DIR__ . '/../lib/chat.php'; require_once __DIR__ . '/../lib/sigfrid.php'; sigfrid_calentar($pdo); }
+    catch (Throwable $e) { echo date('c') . "  sigfrid: ERROR " . $e->getMessage() . "\n"; }
 }
 try { foreach (fuentes_tick($pdo, $force) as $l) echo date('c') . "  $l\n"; }
 catch (Throwable $e) { echo date('c') . "  fuentes: ERROR " . $e->getMessage() . "\n"; }
