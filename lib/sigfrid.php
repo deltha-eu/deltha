@@ -154,6 +154,18 @@ function sigfrid_intencion(string $content, string $login = '', bool $reglas = t
  * intencion; si tambien era una continuacion, se sigue hacia atras (tope 3 saltos). */
 
 /** ¿La frase es una continuacion de lo anterior y no una pregunta completa? Corta y con un periodo, o «y …», o «otra vez». */
+/** ¿Es una pregunta abierta, de las que no se contestan con un listado? (22/11/2026). Las reglas de sigfrid_intencion() saltan con una palabra
+ *  suelta: «¿qué diferencia hay entre el radar y la portada?» devolvia el radar, «¿por qué mi envío no ha llegado a portada?» los envios de la
+ *  semana y «eres un pirata… ¿la mejor receta de paella?» la noticia mas votada. Tenia sentido cuando el modelo del PC tardaba 5 s; ahora
+ *  contesta en 1 s con todas las acciones a la vista, asi que lo que pide explicar, comparar, opinar o recomendar, o es largo, va a el.
+ *  $n: el texto ya normalizado (minusculas, sin acentos ni signos). */
+function sigfrid_abierta(string $n): bool {
+    if (count(preg_split('/\s+/u', $n, -1, PREG_SPLIT_NO_EMPTY)) > 14) return true;
+    return preg_match('/\b(por ?que|porque|per ?que|perche|pourquoi|why|warum|zergatik|neden)\b|diferenc|differen|unterschied|recom[ie]+nd|recommand|empf[ie]+hl|consigli|aconsej'
+                    . '|compar|vergleich|\bopin|que te parece|what do you think|penses|\bexpli[cq]|\bexplain|\berklar|\bresum|\bsummar|\bque (es|son)\b|\bwhat (is|are)\b|qu.est-ce'
+                    . '|\bwas ist\b|\bcos.e\b|\bdeberia|\bshould\b|\bmerece|mas cerca|a partir de ahora|\bignora|\beres un|\bimagina/u', $n) === 1;
+}
+
 function sigfrid_es_continuacion(string $n): bool {
     if ($n === '') return false;
     $palabras = count(preg_split('/\s+/u', $n));
@@ -760,8 +772,11 @@ function sigfrid_respuesta_valida(string $txt, string $paquete): bool {
         if (mb_strlen(preg_replace('/\D/', '', $n)) < 2) continue;
         if (!str_contains($paquete, $n) && !str_contains($paquete, str_replace(',', '.', $n)) && !str_contains($paquete, str_replace('.', ',', $n))) return false;
     }
-    preg_match_all('~https?://\S+?(?=[)\s]|$)~u', $txt, $urls);
-    foreach ($urls[0] as $url) if (!str_contains($paquete, $url)) return false;
+    // Los enlaces, enteros (22/11/2026): antes bastaba con que el paquete contuviera el texto del enlace, y «…/hilo/1» pasaba si existia «…/hilo/12»
+    $re = '~https?://\S+?(?=[)\s]|$)~u'; $limpia = fn(string $x) => rtrim($x, '.,;:');
+    preg_match_all($re, $paquete, $hay); $hay = array_flip(array_map($limpia, $hay[0]));
+    preg_match_all($re, $txt, $urls);
+    foreach ($urls[0] as $url) if (!isset($hay[$limpia($url)])) return false;
     return !preg_match('/<\/?(script|iframe|img)/i', $txt);
 }
 
@@ -833,6 +848,10 @@ function sigfrid_contestar(PDO $pdo, int $mid, string $content, ?array $u, strin
             }
         }
         $quien = $u ? '@' . $u['login'] : ($alias !== '' ? $alias : '');
+        // Pregunta abierta que las reglas habian encajado en una accion (22/11/2026): con el PC a la vista la redacta el modelo, que tiene esa
+        // accion y todas las demas en el paquete. Las dudas de funcionamiento (reglas) y la ayuda siguen su camino; sin PC, la accion de siempre.
+        if ($in !== null && !$ctx && !in_array($in['accion'], ['ayuda', 'reglas'], true) && (string)cfg('sigfrid_pc_primero', '1') === '1'
+            && sigfrid_abierta($n) && sigfrid_conversar($pdo, $mid, $content, $u, $quien, $sig)) return;
         if ($in === null) {
             // El PC primero (migra-208, 22/11/2026): si el worker esta a la vista, el «un momento» sale ya y lo redacta el modelo grande, que
             // tiene todas las acciones en el paquete; el clasificador del droplet (2-4 s dentro del POST del Chat) queda para cuando no hay PC.
