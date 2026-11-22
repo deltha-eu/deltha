@@ -15,6 +15,8 @@ Uso:
     python ia.py --una-vez               una sola pasada y sale
     python ia.py --tareas                lista las tareas activas que sirve Deltha y sale
     python ia.py --prueba TAREA "texto"  pasa un texto por el modelo con el prompt de esa tarea, sin tocar la cola
+    python ia.py --bateria [FICHERO]     ensayo de Sigfrid: pasa las preguntas de sigfrid-bateria.txt por Deltha y por el modelo
+                                         sin escribir en el Chat, y deja el detalle en sigfrid-bateria.resultado.json
 
 Solo biblioteca estandar (Python 3.9+). Configuracion en ia.ini (copiar de ia.ini.example).
 """
@@ -39,7 +41,7 @@ def cargar_config(ruta: Path) -> configparser.ConfigParser:
     cfg.read_dict({
         "deltha": {"url": "https://deltha.eu", "token": ""},
         "modelo": {"url": "http://127.0.0.1:8080", "api_key": "", "timeout": "180", "nombre": "Qwen3.8-Flash-Next-IQ2_XS"},
-        "worker": {"lote": "1", "espera": "5", "espera_error": "60", "sondeo": "20"},
+        "worker": {"lote": "1", "espera": "5", "espera_error": "60", "sondeo": "20", "bateria_login": ""},
     })
     if ruta.exists():
         cfg.read(ruta, encoding="utf-8-sig")   # -sig: PowerShell suele guardar con BOM
@@ -97,6 +99,14 @@ class Deltha:
 
     def resultado(self, job_id, res, modelo, ms=None, tokens=None):
         return http_json(f"{self.base}?act=result", {"id": job_id, "result": res, "model": modelo, "ms": ms, "tokens": tokens}, self.cab)
+
+    def sigfrid_prueba(self, pregunta, lang="es", login=""):
+        """Lo que Sigfrid haria con la pregunta, sin tocar el Chat: via accion (ya respondida) o via pc (con el mensaje para el modelo)."""
+        return http_json(f"{self.base}?act=sigfrid_prueba&lang={lang}", {"pregunta": pregunta, "login": login}, self.cab, 60)
+
+    def sigfrid_valida(self, texto, user, lang="es"):
+        """Que haria Sigfrid con lo que ha redactado el modelo: fuera, ok o rechazada, y el texto que se publicaria."""
+        return http_json(f"{self.base}?act=sigfrid_valida&lang={lang}", {"texto": texto, "user": user}, self.cab, 30)
 
     def fallo(self, job_id, error):
         return http_json(f"{self.base}?act=fail", {"id": job_id, "error": str(error)[:300]}, self.cab)
@@ -271,12 +281,58 @@ def bucle(cfg, una_vez=False):
             time.sleep(espera_error)
 
 
+# ---------------------------------------------------------------- bateria de Sigfrid
+def bateria(cfg, fichero: Path):
+    """Cada linea del fichero: esperado | idioma | pregunta. Esperado: una accion (radar, portada...), pc (lo redacta el modelo y se publica),
+    fuera (no va de Deltha) o varias separadas por coma si vale cualquiera. Nada de esto se publica en el Chat ni pasa por la cola."""
+    deltha, modelo = Deltha(cfg), Modelo(cfg)
+    tarea = deltha.bajar_tareas().get("sigfrid")
+    if not tarea:
+        sys.exit("Deltha no tiene activa la tarea sigfrid")
+    if not modelo.listo():
+        sys.exit(f"el modelo no responde en {modelo.base}")
+    login = cfg["worker"].get("bateria_login", "")
+    filas, bien = [], 0
+    for linea in fichero.read_text(encoding="utf-8-sig").splitlines():
+        linea = linea.strip()
+        if not linea or linea.startswith("#") or linea.count("|") < 2:
+            continue
+        esperado, lang, pregunta = [x.strip() for x in linea.split("|", 2)]
+        f = {"esperado": esperado, "lang": lang, "pregunta": pregunta}
+        try:
+            r = deltha.sigfrid_prueba(pregunta, lang, login)
+            f["ms_deltha"] = r.get("ms")
+            if r.get("via") == "accion":
+                f.update(via="accion", salida=r.get("accion"), texto=r.get("texto"))
+            else:
+                modelo.ultimo_prompt = ""
+                res, ms, tokens = modelo.completar(tarea, r["user"])
+                v = deltha.sigfrid_valida(res.get("text", ""), r["user"], lang)
+                f.update(via="pc", salida="fuera" if v.get("estado") == "fuera" else "pc", estado=v.get("estado"), ms_modelo=ms, tokens=tokens,
+                         prompt=modelo.ultimo_prompt, modelo_dijo=res.get("text", ""), texto=v.get("texto"), prompt_car=len(r["user"]))
+        except Exception as e:
+            f.update(via="error", salida="error", texto=str(e)[:300])
+        admite = [x.strip() for x in esperado.split(",")]
+        f["acierto"] = f["salida"] in admite and f.get("estado", "ok") != "rechazada"
+        bien += f["acierto"]
+        filas.append(f)
+        print(f"{'ok ' if f['acierto'] else 'MAL'} {f['salida']:17} {str(f.get('ms_modelo', '')):>6}  {pregunta[:70]}")
+        if not f["acierto"] or f["via"] == "pc":
+            print("      " + (f.get("texto") or "").replace("\n", " ")[:200])
+    salida = fichero.with_suffix(".resultado.json")
+    salida.write_text(json.dumps({"modelo": modelo.nombre, "cuando": time.strftime("%Y-%m-%d %H:%M"), "aciertos": bien, "total": len(filas), "filas": filas},
+                                 ensure_ascii=False, indent=1), encoding="utf-8")
+    tiempos = sorted(f["ms_modelo"] for f in filas if f.get("ms_modelo"))
+    print(f"\n{bien} de {len(filas)} como se esperaba. Modelo: {len(tiempos)} respuestas" + (f", mediana {tiempos[len(tiempos) // 2]} ms, maxima {tiempos[-1]} ms" if tiempos else "") + f". Detalle en {salida.name}")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Worker generico de IA de Deltha")
     ap.add_argument("--config", default=str(AQUI / "ia.ini"))
     ap.add_argument("--una-vez", action="store_true")
     ap.add_argument("--tareas", action="store_true")
     ap.add_argument("--prueba", nargs=2, metavar=("TAREA", "TEXTO"))
+    ap.add_argument("--bateria", nargs="?", const=str(AQUI / "sigfrid-bateria.txt"), metavar="FICHERO")
     a = ap.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(message)s", datefmt="%H:%M:%S",
@@ -293,6 +349,8 @@ def main():
         for k, t in sorted(Deltha(cfg).bajar_tareas().items()):
             print(f"{k:14} {t.get('kind'):5} temp {t.get('temperature')} · {t.get('max_tokens')} tokens · "
                   f"{'con esquema' if t.get('schema') else 'texto libre'} · prompt {len(t.get('system') or '')} car.")
+    elif a.bateria:
+        bateria(cfg, Path(a.bateria))
     elif a.prueba:
         tareas = Deltha(cfg).bajar_tareas()
         tarea = tareas.get(a.prueba[0])

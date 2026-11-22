@@ -12,6 +12,7 @@
  *                                      id numerico = ia_jobs; "m123" = elemento 123 de mod_queue (tarea «moderacion»: mismo flujo
  *                                      que /api/moderacion.php, lib/moderacion.php decide y la cola humana no cambia)
  *   POST ?act=result {"id","result":{...},"model","ms","tokens"}   -> {"ok":true,"status":"done|failed|ok|flag|hidden"}
+ *   POST ?act=sigfrid_prueba / sigfrid_valida                         -> ensayo de Sigfrid sin tocar el Chat (ver abajo)
  *   POST ?act=fail   {"id","error"}                                 -> {"ok":true,"status":"queued|needs_human"}
  */
 define('DDD_PUBLIC', 1);   // sin la puerta de la clave de acceso: la protege el token
@@ -95,6 +96,22 @@ if ($act === 'lease') {
         $jobs[] = ['id' => 'm' . $it['id'], 'task' => 'moderacion', 'user' => ($it['context'] !== '' ? "Contexto: {$it['context']}\n\n" : '') . "<texto>\n{$it['text']}\n</texto>"];
     if (ia_on() && count($jobs) < $n) foreach (ia_lease($pdo, $n - count($jobs)) as $j) $jobs[] = $j;
     api_out(['enabled' => ia_on() || $moderaAqui, 'jobs' => $jobs]);
+}
+
+// Ensayo de Sigfrid (22/11/2026), para la bateria del worker (ia.py --bateria): nada de esto escribe en el Chat ni en la cola.
+//   POST ?act=sigfrid_prueba[&lang=xx] {"pregunta", "login"?}  -> lo que haria Sigfrid: {"via":"accion","accion","texto"} o {"via":"pc","user"}
+//   POST ?act=sigfrid_valida[&lang=xx] {"texto", "user"}       -> que haria con esa redaccion del modelo: {"estado":"fuera|ok|rechazada","texto"}
+if ($act === 'sigfrid_prueba') {
+    $preg = trim((string)($body['pregunta'] ?? ''));
+    if ($preg === '') api_out(['error' => 'falta pregunta'], 400);
+    $u = null;
+    if (($lg = trim((string)($body['login'] ?? ''))) !== '') { $q = $pdo->prepare("SELECT * FROM users WHERE login = ?"); $q->execute([$lg]); $u = $q->fetch() ?: null; }
+    $t0 = microtime(true);
+    $r = sigfrid_ensayo($pdo, $preg, $u);
+    api_out($r + ['ms' => (int)((microtime(true) - $t0) * 1000), 'lang' => lang()]);
+}
+if ($act === 'sigfrid_valida') {
+    api_out(sigfrid_veredicto((string)($body['texto'] ?? ''), (string)($body['user'] ?? ''), lang(), (string)cfg('sigfrid_login', 'Sigfrid')));
 }
 
 if ($act === 'result' || $act === 'fail') {

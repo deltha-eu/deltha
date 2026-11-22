@@ -717,6 +717,46 @@ function sigfrid_conversar_posible(PDO $pdo): bool {
     return $seen !== '' && time() - strtotime($seen) < 180;
 }
 
+/** El mensaje de usuario que ve el modelo del PC (capa 3). Lo usan la pregunta real (sigfrid_conversar) y el ensayo (sigfrid_ensayo).
+ *  Orden (migra-208, 22/11/2026): de lo que menos cambia a lo que mas. El modelo reutiliza el prefijo que ya leyo en la peticion anterior,
+ *  asi que las reglas (fijas mientras no se toque la config) van primero, luego los datos del momento y al final lo unico que es siempre
+ *  distinto: el hilo y la pregunta. Antes la pregunta iba delante y lo releia todo cada vez. */
+function sigfrid_mensaje_pc(PDO $pdo, string $pregunta, ?array $u, string $hilo = ''): string {
+    $reglas = sigfrid_paquete_reglas($pdo);
+    return "<datos>\nPAQUETE DE DATOS (lo que Sigfrid sabe ahora mismo; cada linea empieza por el nombre de la accion):\n"
+         . ($reglas !== '' ? $reglas . "\n" : '') . sigfrid_paquete($pdo, $u) . "\n</datos>\n"
+         . ($hilo !== '' ? "<datos>\nMensajes anteriores del hilo:\n$hilo\n</datos>\n" : '')
+         . "Idioma de la respuesta: " . lang() . ". Quien pregunta: " . ($u ? $u['login'] : 'una persona sin cuenta') . ".\n"
+         . "<datos>\nPREGUNTA: $pregunta\n</datos>";
+}
+
+/** Que hace Sigfrid con lo que redacta el modelo: ['estado' => fuera | ok | rechazada, 'texto' => lo que se publicaria]. Lo usan el handler
+ *  de la tarea y el ensayo, para que la bateria de pruebas juzgue con la misma vara que el Chat. */
+function sigfrid_veredicto(string $txt, string $paquete, string $lg, string $login): array {
+    $txt = preg_replace('/^#\d+\s+/', '', trim($txt));   // por si repite la cita
+    if (str_contains($txt, 'FUERA_DE_DELTHA')) return ['estado' => 'fuera', 'texto' => sigfrid_fuera($lg)];
+    if (!sigfrid_respuesta_valida($txt, $paquete)) return ['estado' => 'rechazada', 'texto' => t_in($lg, 'No he sabido responder a eso.') . ' ' . t_in($lg, 'Escribe «@%s ayuda» para ver lo que sé hacer.', $login)];
+    return ['estado' => 'ok', 'texto' => $txt];
+}
+
+/** Ensayo (22/11/2026): lo que Sigfrid haria con una pregunta, sin escribir en el Chat ni encolar nada. Sigue el camino de sigfrid_contestar
+ *  con el PC a la vista y sin hilo previo: ['via' => 'accion', 'accion', 'texto'] si lo resuelven las reglas, o ['via' => 'pc', 'user'] con el
+ *  mensaje que recibiria el modelo. Lo sirve /api/ia.php?act=sigfrid_prueba para la bateria del worker (ia.py --bateria). */
+function sigfrid_ensayo(PDO $pdo, string $content, ?array $u): array {
+    $sig = sigfrid_user($pdo);
+    $login = (string)($sig['login'] ?? cfg('sigfrid_login', 'Sigfrid'));
+    $pc = fn() => ['via' => 'pc', 'user' => sigfrid_mensaje_pc($pdo, trim(sigfrid_normaliza_mencion($content, $login)), $u)];
+    $in = sigfrid_intencion($content, $login);
+    if ($in === null) return $pc();
+    if ($in['accion'] === 'reglas') {
+        $r = sigfrid_reglas_responder($pdo, $content, $login);
+        $alt = $r === null ? sigfrid_intencion($content, $login, false) : null;
+        if ($alt !== null && !in_array($alt['accion'], ['ayuda', 'reglas'], true)) return ['via' => 'accion', 'accion' => $alt['accion'], 'texto' => sigfrid_accion($pdo, $alt['accion'], $alt['periodo'], $u)];
+        return $r === null ? $pc() : ['via' => 'accion', 'accion' => 'reglas', 'texto' => $r];
+    }
+    return ['via' => 'accion', 'accion' => $in['accion'], 'texto' => sigfrid_accion($pdo, $in['accion'], $in['periodo'], $u)];
+}
+
 /** Publica el «un momento» citando la pregunta y encola el trabajo. Devuelve false si no se puede (y Sigfrid sigue con la ayuda). */
 function sigfrid_conversar(PDO $pdo, int $mid, string $content, ?array $u, string $quien, array $sig): bool {
     if (!sigfrid_conversar_posible($pdo)) return false;
@@ -726,16 +766,7 @@ function sigfrid_conversar(PDO $pdo, int $mid, string $content, ?array $u, strin
     $txt = "#$mid " . ($quien !== '' ? "$quien " : '') . t('Un momento, que lo miro…');
     $pdo->prepare("INSERT INTO chat (user_id, alias, anon_key, reply_to, content, anuncio) VALUES (?,?,?,?,?,0)")->execute([(int)$sig['user_id'], '', null, $mid, $txt]);
     $nid = (int)$pdo->lastInsertId();
-    $hilo = sigfrid_hilo($pdo, $mid);
-    // Orden (migra-208, 22/11/2026): de lo que menos cambia a lo que mas. El modelo del PC reutiliza el prefijo que ya leyo en la peticion
-    // anterior, asi que las reglas (fijas mientras no se toque la config) van primero, luego los datos del momento y al final lo unico que
-    // es siempre distinto: el hilo y la pregunta. Antes la pregunta iba delante y lo releia todo cada vez.
-    $reglas = sigfrid_paquete_reglas($pdo);
-    $user = "<datos>\nPAQUETE DE DATOS (lo que Sigfrid sabe ahora mismo; cada linea empieza por el nombre de la accion):\n"
-          . ($reglas !== '' ? $reglas . "\n" : '') . sigfrid_paquete($pdo, $u) . "\n</datos>\n"
-          . ($hilo !== '' ? "<datos>\nMensajes anteriores del hilo:\n$hilo\n</datos>\n" : '')
-          . "Idioma de la respuesta: " . lang() . ". Quien pregunta: " . ($u ? $u['login'] : 'una persona sin cuenta') . ".\n"
-          . "<datos>\nPREGUNTA: $pregunta\n</datos>";
+    $user = sigfrid_mensaje_pc($pdo, $pregunta, $u, sigfrid_hilo($pdo, $mid));
     $job = ia_pedir($pdo, 'sigfrid', ['user' => $user, 'mid' => $mid, 'quien' => $quien, 'login' => $login, 'lang' => lang()], 'chat', $nid);
     if ($job === null) {   // no se pudo encolar (tope diario, tarea apagada entre medias): se retira el «un momento» y que siga la ayuda
         $pdo->prepare("DELETE FROM chat WHERE msg_id = ?")->execute([$nid]);
@@ -769,12 +800,9 @@ ia_handler('sigfrid', function (PDO $pdo, array $job, array $res): void {
     $nid = (int)$job['ref_id']; $in = $job['input'];
     $mid = (int)($in['mid'] ?? 0); $quien = (string)($in['quien'] ?? '');
     $paquete = (string)($in['user'] ?? '');
-    $txt = trim((string)($res['text'] ?? $res['respuesta'] ?? ''));
-    $txt = preg_replace('/^#\d+\s+/', '', $txt);   // por si repite la cita
     // fuera de Deltha (migra-188): el modelo devuelve FUERA_DE_DELTHA y Sigfrid despacha con una de Chiquito (castellano) o la neutra en el idioma de quien pregunta
     $lg = (string)($in['lang'] ?? 'es');   // idioma de quien pregunto (el handler corre en /api/ia.php, donde lang() es el del worker)
-    if (str_contains($txt, 'FUERA_DE_DELTHA')) $txt = sigfrid_fuera($lg);
-    elseif (!sigfrid_respuesta_valida($txt, $paquete)) $txt = t_in($lg, 'No he sabido responder a eso.') . ' ' . t_in($lg, 'Escribe «@%s ayuda» para ver lo que sé hacer.', (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')));
+    $txt = sigfrid_veredicto((string)($res['text'] ?? $res['respuesta'] ?? ''), $paquete, $lg, (string)($in['login'] ?? cfg('sigfrid_login', 'Sigfrid')))['texto'];
     $final = mb_substr("#$mid " . ($quien !== '' ? "$quien " : '') . $txt, 0, 1000);
     $sig = sigfrid_user($pdo);
     $pdo->prepare("UPDATE chat SET content = ? WHERE msg_id = ? AND user_id = ?")->execute([$final, $nid, (int)($sig['user_id'] ?? 0)]);
