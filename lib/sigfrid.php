@@ -754,7 +754,12 @@ function sigfrid_normaliza_mencion(string $t, string $login): string {
 function sigfrid_respuesta_valida(string $txt, string $paquete): bool {
     if (trim($txt) === '' || mb_strlen($txt) > 900) return false;
     preg_match_all('/\d[\d.,]*\d/u', $txt, $nums);
-    foreach ($nums[0] as $n) if (mb_strlen(preg_replace('/\D/', '', $n)) >= 2 && !str_contains($paquete, $n)) return false;
+    // La cifra vale si esta en el paquete tal cual o con el otro separador decimal (22/11/2026): la config dice «0.05» y el modelo, que
+    // contesta en castellano, escribe «0,05»; con la comparacion literal una respuesta correcta acababa en «No he sabido responder a eso».
+    foreach ($nums[0] as $n) {
+        if (mb_strlen(preg_replace('/\D/', '', $n)) < 2) continue;
+        if (!str_contains($paquete, $n) && !str_contains($paquete, str_replace(',', '.', $n)) && !str_contains($paquete, str_replace('.', ',', $n))) return false;
+    }
     preg_match_all('~https?://\S+?(?=[)\s]|$)~u', $txt, $urls);
     foreach ($urls[0] as $url) if (!str_contains($paquete, $url)) return false;
     return !preg_match('/<\/?(script|iframe|img)/i', $txt);
