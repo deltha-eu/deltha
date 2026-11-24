@@ -168,6 +168,8 @@ return [
 'Esto es todo lo que hay ahora.' => 'Şimdilik hepsi bu.',
 'Flujo — fotos al lado, más noticias en pantalla' => 'Akış — fotoğraflar yanda, ekranda daha çok haber',
 'Foto' => 'Fotoğraf',
+'Foto %d de %d' => 'Fotoğraf %d / %d',
+'Elige la foto' => 'Fotoğrafı seç',
 'Gracias: el comentario queda avisado a los moderadores.' => 'Teşekkürler: yorum moderatörlere bildirildi.',
 'Guardado.' => 'Kaydedildi.',
 'hace %d d' => '%d g önce',

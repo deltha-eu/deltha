@@ -168,6 +168,8 @@ return [
 'Esto es todo lo que hay ahora.' => 'That is all there is for now.',
 'Flujo — fotos al lado, más noticias en pantalla' => 'Flow — photos on the side, more stories per screen',
 'Foto' => 'Photo',
+'Foto %d de %d' => 'Photo %d of %d',
+'Elige la foto' => 'Choose the photo',
 'Gracias: el comentario queda avisado a los moderadores.' => 'Thanks: the comment has been flagged to the moderators.',
 'Guardado.' => 'Saved.',
 'hace %d d' => '%dd ago',

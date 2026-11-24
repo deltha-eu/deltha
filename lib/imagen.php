@@ -484,10 +484,10 @@ function imagen_url_absoluta(string $img, string $pageUrl): string {
     $dir = preg_replace('#/[^/]*$#', '/', (string)($p['path'] ?? '/')) ?: '/';
     return $base . $dir . $img;
 }
-/** Candidatas a foto dentro del cuerpo del articulo, en orden de aparicion (hasta 3). Se mira <article>, si no <main>, si no todo el
+/** Candidatas a foto dentro del cuerpo del articulo, en orden de aparicion (hasta $max). Se mira <article>, si no <main>, si no todo el
  *  <body>. De cada <img>: data-src / data-lazy-src / data-original, el primer src de srcset o src. Fuera: data:, .svg, .gif, nombres
  *  de logo o relleno (imagen_nombre_generico), pixeles (width o height < 100 en atributos) y los avatares (/avatar). */
-function imagen_candidatas_cuerpo(string $html, string $pageUrl): array {
+function imagen_candidatas_cuerpo(string $html, string $pageUrl, int $max = 3): array {
     $zona = $html;
     if (preg_match('~<article\b[^>]*>(.*?)</article>~is', $html, $m) && strlen($m[1]) > 500) $zona = $m[1];
     elseif (preg_match('~<main\b[^>]*>(.*?)</main>~is', $html, $m) && strlen($m[1]) > 500) $zona = $m[1];
@@ -509,9 +509,77 @@ function imagen_candidatas_cuerpo(string $html, string $pageUrl): array {
         $w = (int)$attr('width'); $h = (int)$attr('height');
         if (($w && $w < 100) || ($h && $h < 100)) continue;   // iconos y pixeles de seguimiento
         if (!in_array($src, $out, true)) $out[] = $src;
-        if (count($out) >= 3) break;
+        if (count($out) >= max(1, $max)) break;
     }
     return $out;
+}
+
+/** Candidatas a foto de una página, para elegir en /enviar (24/11/2026): og:image (las que haya), twitter:image, JSON-LD y las del
+ *  cuerpo, en ese orden, deducidas y hasta $max. Solo devuelve URLs: no descarga nada. */
+function imagen_candidatas(string $html, string $pageUrl, int $max = 6): array {
+    $out = [];
+    $add = function (string $u) use (&$out, $pageUrl, $max): void {
+        $u = imagen_url_absoluta($u, $pageUrl);
+        if (!preg_match('#^https?://#i', $u) || preg_match('/\.(svg|gif|ico)(\?|$)/i', $u)) return;
+        if (count($out) < $max && !in_array($u, $out, true)) $out[] = $u;
+    };
+    foreach ([
+        '~<meta[^>]+(?:property|name)=["\']og:image(?::secure_url|:url)?["\'][^>]+content=["\']([^"\']+)["\']~i',
+        '~<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\']og:image["\']~i',
+        '~<meta[^>]+(?:name|property)=["\']twitter:image(?::src)?["\'][^>]+content=["\']([^"\']+)["\']~i',
+    ] as $re) if (preg_match_all($re, $html, $m)) foreach ($m[1] as $u) $add($u);
+    if (preg_match_all('~"image"\s*:\s*(?:\{[^}]*"url"\s*:\s*)?"(https?:[^"]+)"~i', $html, $m)) foreach ($m[1] as $u) $add($u);
+    foreach (imagen_candidatas_cuerpo($html, $pageUrl, $max) as $u) $add($u);
+    return $out;
+}
+
+/** Miniaturas de las candidatas de /enviar: descarga cada URL (tope de bytes y presupuesto de tiempo total), la recorta como la foto
+ *  final (img_w:img_h) y guarda un JPEG de $px de ancho en $dir. Devuelve [indice => fichero] con los que han salido bien; los fallos se
+ *  quedan fuera y, si el presupuesto se agota, se corta con lo que haya. Nunca lanza. */
+function imagen_miniaturas(array $urls, string $dir, int $px = 320, int $maxSecs = 5): array {
+    if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) return [];
+    $ok = []; $t0 = microtime(true);
+    foreach (array_values($urls) as $i => $u) {
+        if ($ok && microtime(true) - $t0 > $maxSecs) break;   // presupuesto agotado: con las que haya
+        $bytes = http_get((string)$u, max(1, min(3, (int)cfg('og_timeout_sec', 3))), 4000000);
+        $src = $bytes ? imagen_decodificar($bytes) : null;
+        if (!$src) continue;
+        $sw = imagesx($src); $sh = imagesy($src);
+        if ($sw < 160 || $sh < 120) { imagedestroy($src); continue; }   // icono o marcador de carga
+        $R = max(1, (int)cfg('img_w', 1200)) / max(1, (int)cfg('img_h', 900));   // mismo recorte que la foto publicada
+        if ($sw / $sh > $R) { $cw = (int)round($sh * $R); $ch = $sh; $cx = intdiv($sw - $cw, 2); $cy = 0; }
+        else                { $cw = $sw; $ch = (int)round($sw / $R); $cx = 0; $cy = intdiv($sh - $ch, 2); }
+        $dw = $px; $dh = max(1, (int)round($px / $R));
+        $dst = imagecreatetruecolor($dw, $dh);
+        imagecopyresampled($dst, $src, 0, 0, $cx, $cy, $dw, $dh, $cw, $ch);
+        imagedestroy($src);
+        $f = rtrim($dir, '/') . '/' . ($i + 1) . '.jpg';
+        if (imagejpeg($dst, $f, 80)) $ok[$i + 1] = $f;
+        imagedestroy($dst);
+    }
+    return $ok;
+}
+
+/** Borra la carpeta temporal de candidatas de un envío (token de 16 hex). Nunca lanza. */
+function imagen_cand_borrar(string $tok): void {
+    if (!preg_match('/^[a-f0-9]{16}$/', $tok)) return;
+    $dir = DDD_MEDIA_DIR . '/cand/' . $tok;
+    foreach (glob($dir . '/*') ?: [] as $f) @unlink($f);
+    @rmdir($dir);
+}
+
+/** Barre las carpetas de candidatas que quedaron de envíos abandonados (más de $horas). Devuelve cuántas ha borrado. */
+function imagen_cand_barrer(int $horas = 4, int $max = 500): int {
+    $base = DDD_MEDIA_DIR . '/cand';
+    if (!is_dir($base)) return 0;
+    $lim = time() - max(1, $horas) * 3600; $n = 0;
+    foreach (glob($base . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+        $st = @stat($dir);
+        if (!$st || $st['mtime'] > $lim) continue;
+        imagen_cand_borrar(basename($dir));
+        if (++$n >= $max) break;
+    }
+    return $n;
 }
 
 /** Miniatura de un video de YouTube: la que se ve en su pagina. Se prueban por orden maxresdefault (1280x720), sddefault
@@ -527,14 +595,16 @@ function imagen_youtube(string $id): ?string {
 }
 
 /** Lee la pagina y devuelve ['title','description','image'] (image = fichero ya procesado en /media o null).
- *  $conImagen = false: no descarga la og:image (el llamante ya tiene foto, p. ej. la del RSS de un medio). */
-function extraer_meta(string $url, bool $conImagen = true): array {
-    $out = ['title' => '', 'description' => '', 'image' => null, 'channel' => null, 'canonical' => null];   // channel: id del canal (UC…) si es un video de YouTube (topes de envio, 15/10/2026); canonical: el <head> para url_resolver (migra-168)
+ *  $conImagen = false: no descarga la og:image (el llamante ya tiene foto, p. ej. la del RSS de un medio).
+ *  $candidatas = true: devuelve ademas 'imgs', las URLs de las fotos que ofrece la pagina, para elegir una en /enviar (24/11/2026). */
+function extraer_meta(string $url, bool $conImagen = true, bool $candidatas = false): array {
+    $out = ['title' => '', 'description' => '', 'image' => null, 'channel' => null, 'canonical' => null, 'imgs' => []];   // channel: id del canal (UC…) si es un video de YouTube (topes de envio, 15/10/2026); canonical: el <head> para url_resolver (migra-168)
     $yt = youtube_video_id($url);   // video de YouTube: sus propios datos mandan sobre lo que diga la pagina (29/10/2026)
     if ($yt !== '' && $conImagen) $out['image'] = imagen_youtube($yt);   // no depende de la pagina: cuando llegaba la de consentimiento o la de «no eres un bot», el envio se quedaba sin foto
     $html = http_get($url, (int)cfg('og_timeout_sec', 3), og_max_bytes());
     if (!$html) return $out;
     $out['canonical'] = substr($html, 0, 60000);   // solo la cabecera: canonical y og:url van ahi
+    if ($candidatas) $out['imgs'] = imagen_candidatas($html, $url);
     if (preg_match('/itemprop=["\']channelId["\'][^>]*content=["\'](UC[\w-]{20,40})["\']/i', $html, $m)
      || preg_match('/content=["\'](UC[\w-]{20,40})["\'][^>]*itemprop=["\']channelId["\']/i', $html, $m)
      || preg_match('/"channelId"\s*:\s*"(UC[\w-]{20,40})"/', $html, $m)) $out['channel'] = $m[1];

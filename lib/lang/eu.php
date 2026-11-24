@@ -168,6 +168,8 @@ return [
 'Esto es todo lo que hay ahora.' => 'Hau da oraingoz dagoen guztia.',
 'Flujo — fotos al lado, más noticias en pantalla' => 'Fluxua — argazkiak alboan, albiste gehiago pantailan',
 'Foto' => 'Argazkia',
+'Foto %d de %d' => '%2$d argazkitik %1$d',
+'Elige la foto' => 'Aukeratu argazkia',
 'Gracias: el comentario queda avisado a los moderadores.' => 'Eskerrik asko: iruzkina moderatzaileei jakinarazi zaie.',
 'Guardado.' => 'Gordeta.',
 'hace %d d' => 'duela %d e',
