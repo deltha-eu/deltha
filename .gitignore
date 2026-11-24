@@ -11,6 +11,7 @@ local/moderador/*.log
 local/moderador/__pycache__/
 local/ia/ia.ini
 local/ia/*.log
+local/ia/*.resultado.json
 local/ia/__pycache__/
 
 # trabajo ajeno a Deltha
