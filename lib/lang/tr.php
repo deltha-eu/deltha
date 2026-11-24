@@ -1219,4 +1219,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'Sol menü (yalnızca geniş ekranlarda) aynı şekilde sıralanır: sürükle ya da okları kullan, görmek istemediklerinin işaretini kaldır. Mobilde hiçbir şey değişmez.',
 'Menú guardado.' => 'Menü kaydedildi.',
 'Vuelves a ver el menú como lo tiene Deltha.' => 'Menüyü yeniden Deltha\'nın sunduğu gibi görüyorsun.',
+// Tope diario de envíos por persona (migra-214, 24/11/2026)
+'Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.' => 'Günlük en fazla %d gönderi sınırına ulaştın. İlk gönderilerinin üzerinden 24 saat geçince yenilerini gönderebilirsin.',
+'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'Substacks ana sayfası için günlük en fazla %d gönderi sınırına ulaştın. Bugün hâlâ medya haberleri gönderebilirsin, toplamda %d taneye kadar.',
+'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'Medya ana sayfası için günlük en fazla %d gönderi sınırına ulaştın. Bugün hâlâ substack gönderebilirsin, toplamda %d taneye kadar.',
 ];

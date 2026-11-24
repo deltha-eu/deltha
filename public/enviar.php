@@ -44,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // tope por persona (anonimo por huella, cuenta por user_id): se avisa ya en el paso 1, antes de rellenar nada
     if (!$err && $f['url'] !== '' && ($tp = envio_tope_persona($pdo, user(), (string)$anonKey))) { $err = $tp; $step = '1'; }
+    // tope diario por persona (migra-214): 15 al dia, y no mas de 10 a Medios ni de 10 a Substacks; tambien en el paso 1 y al guardar
+    if (!$err && $f['url'] !== '' && ($td = envio_tope_dia($pdo, user(), (string)$anonKey, $f['url']))) { $err = $td; $step = '1'; }
 
     if (!$err && $step === '1') {
         if ($f['url'] === '') redirect('/articulo');

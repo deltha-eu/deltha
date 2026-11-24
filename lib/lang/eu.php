@@ -1198,4 +1198,8 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'Ezkerreko menua (pantaila zabaletan soilik) berdin ordenatzen da: arrastatu edo erabili geziak, eta kendu marka ikusi nahi ez duzunari. Mugikorrean ez da ezer aldatzen.',
 'Menú guardado.' => 'Menua gorde da.',
 'Vuelves a ver el menú como lo tiene Deltha.' => 'Menua Delthak duen bezala ikusten duzu berriro.',
+// Tope diario de envíos por persona (migra-214, 24/11/2026)
+'Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.' => 'Eguneko gehienezko %d bidalketetara iritsi zara. Gehiago bidali ahal izango dituzu lehenengoetatik 24 ordu igarotzean.',
+'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'Substacks azalera eguneko gehienezko %d bidalketetara iritsi zara. Gaur oraindik hedabideetako albisteak bidal ditzakezu, guztira %d arte.',
+'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'Hedabideen azalera eguneko gehienezko %d bidalketetara iritsi zara. Gaur oraindik substackak bidal ditzakezu, guztira %d arte.',
 ];
