@@ -4266,3 +4266,10 @@ details.pollnew select { font-size: 13px; }
 .unet-body { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.5; }
 .unet-body .q { color: var(--muted); }
 .unet-body a { word-break: break-all; }
+
+/* Comentarios de Deltha bajo un hilo de Usenet (migra-212, v267): mismas piezas que los comentarios de un hilo (.post.reply, .composer) */
+.unet-coms { border-top: 2px solid var(--line); margin-top: 8px; }
+.unet-coms h2 { font-family: var(--serif); font-size: 19px; margin: 14px 16px 2px; }
+.unet-coms > .meta { color: var(--muted); font-size: 13px; margin: 0 16px 8px; }
+.unet-coms form.inl button.modlink { background: none; border: 0; padding: 0; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; }
+.unet-dc { color: var(--accent); font-weight: 600; }

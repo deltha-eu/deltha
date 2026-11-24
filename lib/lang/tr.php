@@ -1206,4 +1206,12 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'hilos' => 'başlıklar',
 'último mensaje' => 'son mesaj',
 'Todavía no hay grupos.' => 'Henüz grup yok.',
+// Comentarios de Deltha en los hilos de Usenet (migra-212, 24/11/2026)
+'Escribe algo antes de enviar.' => 'Göndermeden önce bir şeyler yaz.',
+'Espera unos segundos antes de volver a comentar.' => 'Yeniden yorum yapmadan önce birkaç saniye bekle.',
+'Comentarios en Deltha' => 'Deltha\'daki yorumlar',
+'Lo que escribas aquí se queda en Deltha: no se envía a Usenet. Un hilo con comentarios se conserva; los demás se borran a los %d días sin actividad.' => 'Buraya yazdıkların Deltha\'da kalır: Usenet\'e gönderilmez. Yorum yapılan başlık saklanır; diğerleri %d gün hareketsiz kalınca silinir.',
+'cuenta eliminada' => 'silinmiş hesap',
+'¿Eliminar este comentario?' => 'Bu yorum silinsin mi?',
+'%d en Deltha' => 'Deltha\'da %d',
 ];

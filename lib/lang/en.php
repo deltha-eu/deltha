@@ -1237,4 +1237,12 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'hilos' => 'threads',
 'último mensaje' => 'last message',
 'Todavía no hay grupos.' => 'There are no groups yet.',
+// Comentarios de Deltha en los hilos de Usenet (migra-212, 24/11/2026)
+'Escribe algo antes de enviar.' => 'Write something before sending.',
+'Espera unos segundos antes de volver a comentar.' => 'Wait a few seconds before commenting again.',
+'Comentarios en Deltha' => 'Comments on Deltha',
+'Lo que escribas aquí se queda en Deltha: no se envía a Usenet. Un hilo con comentarios se conserva; los demás se borran a los %d días sin actividad.' => 'What you write here stays on Deltha: it is not sent to Usenet. A thread with comments is kept; the rest are deleted after %d days without activity.',
+'cuenta eliminada' => 'deleted account',
+'¿Eliminar este comentario?' => 'Delete this comment?',
+'%d en Deltha' => '%d on Deltha',
 ];

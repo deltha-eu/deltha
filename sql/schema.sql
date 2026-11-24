@@ -461,7 +461,7 @@ CREATE TABLE `image_seen` (
 CREATE TABLE `ip_log` (
   `log_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned DEFAULT NULL COMMENT 'NULL = anónimo',
-  `kind` enum('registro','login','story','comment','chat') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `kind` enum('registro','login','story','comment','chat','usenet') COLLATE utf8mb4_unicode_ci NOT NULL,
   `ref_id` int unsigned NOT NULL DEFAULT '0' COMMENT 'id del envío, comentario o mensaje; 0 en registro y login',
   `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1012,12 +1012,28 @@ CREATE TABLE usenet_msgs (
   sent      DATETIME NOT NULL,
   body      MEDIUMTEXT NOT NULL,
   replies   INT UNSIGNED NOT NULL DEFAULT 0,            -- solo en el que abre hilo
+  dcomments INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'comentarios de Deltha visibles (solo en el que abre hilo; migra-212)',
   last_act  DATETIME NOT NULL,                          -- solo en el que abre hilo: fecha del ultimo mensaje
   PRIMARY KEY (msg_id),
   UNIQUE KEY uq_mid (group_id, mid_hash),
   KEY idx_thr (group_id, thr_hash),
   KEY idx_lista (group_id, root_id, last_act),
   KEY idx_hilo (root_id, sent)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Comentarios de Deltha en hilos de Usenet (migra-212, añadida a mano)
+CREATE TABLE usenet_comments (
+  ucomment_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  root_id     BIGINT UNSIGNED NOT NULL,                 -- usenet_msgs.msg_id del mensaje que abre el hilo
+  group_id    INT UNSIGNED NOT NULL,
+  user_id     INT UNSIGNED NULL,                        -- NULL = cuenta dada de baja (lo escrito se conserva anonimo, como en comments)
+  content     TEXT NOT NULL,
+  status      ENUM('ok','rejected') NOT NULL DEFAULT 'ok',   -- rejected = retirado por su autor o por moderacion
+  created     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (ucomment_id),
+  KEY idx_uc_hilo (root_id, status, created),
+  KEY idx_uc_user (user_id, created),
+  CONSTRAINT fk_uc_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -1073,7 +1089,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('usenet_first_n',       '300', 'Usenet: al marcar un grupo, cuantos de sus ultimos mensajes se traen (el resto del historico no se importa)'),
 ('usenet_max_kb',        '64',  'Usenet: tamaño maximo de un mensaje en KB; los mayores (binarios, adjuntos) se saltan'),
 ('usenet_max_crosspost', '4',   'Usenet: un mensaje enviado a mas grupos que estos a la vez se salta (casi siempre es spam); 0 = sin limite'),
-('usenet_keep_days',     '0',   'Usenet: dias que se conservan los hilos sin actividad; 0 = no se borra nada'),
+('usenet_keep_days',     '7',   'Usenet: dias que se conservan los hilos sin actividad; pasados, se borran salvo los que tienen comentarios de Deltha, que se quedan; 0 = no se borra nada'),
+('usenet_comments',      '1',   'Usenet (migra-212): 1 = los usuarios registrados pueden comentar los hilos de /usenet; los comentarios se quedan en Deltha, no se envian a Usenet. 0 = solo lectura'),
 ('analytics_live_aura', '10',   'Aura desde la que un registrado ve en /analitica la version limitada (ahora y hoy, ademas de las cifras cerradas); 0 = solo quien ve la completa'),
 ('thread_ttl_hours',    '48',   'Vida del hilo (destacadas -> archivo)'),
 ('nuevas_ttl_hours',    '168',  'Horas que puede pasar un envio en el radar sin llegar a portada antes de archivarse (168 = una semana; 0 = nunca)'),

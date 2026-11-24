@@ -34,7 +34,7 @@ foreach (ana_tick($pdo) as $l) echo date('c') . "  $l\n";   // analitica: cierra
 // lecturas de hilos de foro (migra-170): se olvidan las de hilos archivados y las de mas de forum_reads_days dias (una vez al dia, en la primera pasada tras las 4:00)
 if ((int)date('G') === 4 && (int)date('i') < 2) { try {
     $d = max(7, (int)cfg('forum_reads_days', 180));
-    $n = $pdo->prepare("DELETE r FROM story_reads r JOIN stories s ON s.story_id = r.story_id WHERE s.status = 'archived' OR r.read_at < DATE_SUB(NOW(), INTERVAL ? DAY)"); $n->execute([$d]);
+    $n = $pdo->prepare("DELETE r FROM story_reads r JOIN stories s ON s.story_id = r.story_id WHERE s.status = 'archived' OR (r.read_at < DATE_SUB(NOW(), INTERVAL ? DAY) AND s.last_activity < DATE_SUB(NOW(), INTERVAL ? DAY))"); $n->execute([$d, $d]);   // los hilos de foro ya no caducan (migra-212): la lectura se olvida cuando el hilo lleva ese tiempo parado, y un hilo asi ya no cuenta como pendiente (foros_reads_sql)
     if ($n->rowCount()) echo date('c') . "  foros: podadas " . $n->rowCount() . " lecturas\n";
 } catch (Throwable $e) {} }
 if ((int)date('G') === 4 && (int)date('i') < 2) { try { $n = usenet_podar($pdo); if ($n) echo date('c') . "  usenet: podados $n mensajes\n"; } catch (Throwable $e) {} }   // hilos caducados (usenet_keep_days)

@@ -1185,4 +1185,12 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'hilos' => 'fils',
 'último mensaje' => 'últim missatge',
 'Todavía no hay grupos.' => 'Encara no hi ha grups.',
+// Comentarios de Deltha en los hilos de Usenet (migra-212, 24/11/2026)
+'Escribe algo antes de enviar.' => 'Escriu alguna cosa abans d\'enviar.',
+'Espera unos segundos antes de volver a comentar.' => 'Espera uns segons abans de tornar a comentar.',
+'Comentarios en Deltha' => 'Comentaris a Deltha',
+'Lo que escribas aquí se queda en Deltha: no se envía a Usenet. Un hilo con comentarios se conserva; los demás se borran a los %d días sin actividad.' => 'El que escriguis aquí es queda a Deltha: no s\'envia a Usenet. Un fil amb comentaris es conserva; la resta s\'esborren als %d dies sense activitat.',
+'cuenta eliminada' => 'compte eliminat',
+'¿Eliminar este comentario?' => 'Vols eliminar aquest comentari?',
+'%d en Deltha' => '%d a Deltha',
 ];
