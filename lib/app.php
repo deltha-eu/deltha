@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 267);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 268);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -2021,7 +2021,9 @@ function page_header(string $title, string $tab = '', string $head = '', string 
 }
 /* Dos menus: arriba el contenido (las dos portadas, el radar del que se nutren y los foros), abajo la comunidad y las
  * herramientas. href null = pestaña anunciada pero sin pagina todavia (Mensajes). */
-function nav_tabs(string $tab, string $cls): void {
+/** Pestañas de un menu ($cls: tabs-top | rail-top | tabs-bottom | rail-bottom), ya filtradas por lo que esta encendido y por quien mira:
+ *  clave => [href, rotulo, icono]. Aparte de nav_tabs() para que el rail pueda pintarlas una a una en el orden del usuario (migra-213). */
+function nav_tabs_def(string $cls): array {
     $tabs = in_array($cls, ['tabs-top', 'rail-top'], true) ? [
         'medios'       => ['/?portada=medios', t('Medios'), 'news'],
         'substacks'    => ['/?portada=substacks', t('Substacks'), 'letter'],
@@ -2045,19 +2047,28 @@ function nav_tabs(string $tab, string $cls): void {
     if (isset($tabs['analitica']) && ($cls === 'tabs-bottom' || !user() || !ana_on())) unset($tabs['analitica']);
     if (isset($tabs['chat']) && (string)cfg('chat_enabled', '1') !== '1') unset($tabs['chat']);
     if (isset($tabs['chat']) && $cls === 'rail-top') $tabs['chat'][1] = t('Chat / Ayuda');   // en escritorio (rail) la pestaña anuncia tambien la ayuda; en movil sigue «Chat», que no cabe mas (07/10/2026)
+    return $tabs;
+}
+/** Una pestaña: enlace con icono, rotulo y burbuja (mensajes sin leer, hilos de foro sin leer). */
+function nav_tab_a(string $k, array $def, string $tab): string {
+    [$href, $label, $ic] = $def;
+    if ($href === null) return "<span class=\"soon\" title=\"" . t('pronto') . "\">" . icon($ic) . "<span>" . h($label) . "</span></span>";
+    $n = $k === 'mensajes' ? unread_msgs() : ($k === 'foros' ? foros_sin_leer_total() : 0);   // Foros: hilos sin leer en los foros seguidos (migra-170)
+    $badge = $n > 0 ? "<i class=\"badge\" title=\"" . ($k === 'foros' ? h(t('%d hilos sin leer', $n)) : '') . "\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
+    if ($k === 'foros' && $n > 0 && ($ir = foros_sin_leer_href())) $href = $ir;   // con algo sin leer, «Foros» lleva a lo nuevo (18/11/2026)
+    return "<a href=\"" . h($href) . "\"" . ($k === $tab ? ' class="on"' : '') . ">" . icon($ic) . "<span>" . h($label) . "</span>" . $badge . "</a>";   // la burbuja, detras del rotulo (en el rail queda a la derecha y el rotulo alineado)
+}
+function nav_tabs(string $tab, string $cls): void {
+    $tabs = nav_tabs_def($cls);
     // pestañas de arriba: Radar va en el centro exacto en movil (v160). Lo de antes y lo de despues se envuelve en dos grupos
     // (span.g, display: contents salvo en movil) que ocupan mitades iguales; Radar lleva la clase «radar» y se destaca un poco.
     $keys = array_keys($tabs); $ri = $cls === 'tabs-top' ? array_search('radar', $keys, true) : false;
     $ctr = $ri !== false && $ri > 0 && $ri < count($keys) - 1;
     echo "<nav class=\"$cls" . ($ctr ? ' ctr' : '') . "\">" . ($ctr ? '<span class="g l">' : '');
-    foreach ($tabs as $k => [$href, $label, $ic]) {
-        $on = $k === $tab ? ' class="on"' : '';
+    foreach ($tabs as $k => $def) {
+        [$href, $label, $ic] = $def;
         if ($ctr && $k === 'radar') { echo "</span><a class=\"radar" . ($k === $tab ? ' on' : '') . "\" href=\"" . h($href) . "\">" . icon($ic) . "<span>" . h($label) . "</span></a><span class=\"g r\">"; continue; }
-        if ($href === null) { echo "<span class=\"soon\" title=\"" . t('pronto') . "\">" . icon($ic) . "<span>" . h($label) . "</span></span>"; continue; }
-        $n = $k === 'mensajes' ? unread_msgs() : ($k === 'foros' ? foros_sin_leer_total() : 0);   // Foros: hilos sin leer en los foros seguidos (migra-170)
-        $badge = $n > 0 ? "<i class=\"badge\" title=\"" . ($k === 'foros' ? h(t('%d hilos sin leer', $n)) : '') . "\">" . ($n > 99 ? '99+' : $n) . "</i>" : '';
-        if ($k === 'foros' && $n > 0 && ($ir = foros_sin_leer_href())) $href = $ir;   // con algo sin leer, «Foros» lleva a lo nuevo (18/11/2026)
-        echo "<a href=\"" . h($href) . "\"$on>" . icon($ic) . "<span>" . h($label) . "</span>" . $badge . "</a>";   // la burbuja, detras del rotulo (en el rail queda a la derecha y el rotulo alineado)
+        echo nav_tab_a($k, $def, $tab);
     }
     echo ($ctr ? '</span>' : '') . "</nav>";
 }

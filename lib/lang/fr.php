@@ -1244,4 +1244,9 @@ Il expire dans %d minutes. Si ce n’est pas vous qui essayez de vous connecter,
 'cuenta eliminada' => 'compte supprimé',
 '¿Eliminar este comentario?' => 'Supprimer ce commentaire ?',
 '%d en Deltha' => '%d sur Deltha',
+// Menú de la izquierda por usuario (migra-213, 24/11/2026)
+'Menú de la izquierda' => 'Menu de gauche',
+'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'Le menu de gauche (écrans larges uniquement) s\'ordonne de la même façon : faites glisser ou utilisez les flèches, et décochez ce que vous ne voulez pas voir. Rien ne change sur mobile.',
+'Menú guardado.' => 'Menu enregistré.',
+'Vuelves a ver el menú como lo tiene Deltha.' => 'Vous revoyez le menu tel que Deltha le propose.',
 ];

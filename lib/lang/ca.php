@@ -1193,4 +1193,9 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'cuenta eliminada' => 'compte eliminat',
 '¿Eliminar este comentario?' => 'Vols eliminar aquest comentari?',
 '%d en Deltha' => '%d a Deltha',
+// Menú de la izquierda por usuario (migra-213, 24/11/2026)
+'Menú de la izquierda' => 'Menú de l\'esquerra',
+'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'El menú de l\'esquerra (només en pantalles amples) s\'ordena igual: arrossega o fes servir les fletxes, i desmarca el que no vulguis veure. Al mòbil no canvia res.',
+'Menú guardado.' => 'Menú desat.',
+'Vuelves a ver el menú como lo tiene Deltha.' => 'Tornes a veure el menú com el té Deltha.',
 ];

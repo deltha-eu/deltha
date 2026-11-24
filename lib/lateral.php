@@ -15,11 +15,19 @@ function rail(string $tab): void {
     // (21/10/2026, pedido por Angel) perfil y avisos arriba, bajo el logo: una fila con la cuenta (avatar, nombre, aura) y la campana; antes iban al final
     echo "<div class=\"who\">" . ($u ? "<a class=\"me\" href=\"/perfil\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<span><b>" . h($u['login']) . "</b><small>" . t('aura') . " " . number_format((float)$u['aura'], 1, ',', '') . "</small></span></a>" . avisos_bell('rail-bell') : "<a class=\"me\" href=\"/login\">" . icon('user') . "<span><b>" . t('entrar') . "</b><small>" . t('o crear una cuenta') . "</small></span></a>") . "</div>";
     if (buscar_on()) echo "<form class=\"rail-search\" action=\"/buscar\" method=\"get\" role=\"search\"><input type=\"search\" name=\"q\" placeholder=\"" . t('Buscar') . "\" aria-label=\"" . t('Buscar') . "\" maxlength=\"80\"><button type=\"submit\" aria-label=\"" . t('Buscar') . "\">" . icon('search') . "</button></form>";   // buscador (migra-085): solo escritorio; en movil, la lupa de la cabecera
-    nav_tabs($tab, 'rail-top');
-    echo "<a class=\"pub\" href=\"/enviar\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>";   // (20/10/2026) bajo las pestañas de contenido, a la vista sin bajar; antes iba al final, tras Mis fuentes
-    nav_tabs($tab, 'rail-bottom');
-    rail_skins();
-    rail_medios();
+    // Piezas del menu (pestañas, «Publicar», desplegables y fuentes), en el orden de Deltha o en el que haya elegido el usuario en
+    // «Mi barra lateral» (migra-213). Las pestañas seguidas del mismo grupo comparten <nav>, asi que con el orden de Deltha el HTML
+    // es el de siempre: nav.rail-top, a.pub, nav.rail-bottom, los desplegables y las fuentes.
+    $piezas = rail_piezas($tab);
+    $abierto = '';
+    foreach (rail_orden_actual() as $k => $ver) {
+        if (!$ver || !isset($piezas[$k])) continue;
+        [, $grupo, $pinta] = $piezas[$k];
+        $nav = $grupo === 'top' ? 'rail-top' : ($grupo === 'bottom' ? 'rail-bottom' : '');
+        if ($nav !== $abierto) { if ($abierto !== '') echo "</nav>"; if ($nav !== '') echo "<nav class=\"$nav\">"; $abierto = $nav; }
+        $pinta();
+    }
+    if ($abierto !== '') echo "</nav>";
     // pie (¿Que es Deltha?, manifiesto, privacidad, normas...) al final del rail: asi las dos columnas laterales terminan igual
     echo "<footer class=\"sidefoot\"><a class=\"ctr\" href=\"https://contralgoritmia.com/\" rel=\"noopener\" title=\"" . t('Manifiesto contralgorítmico') . "\"><img src=\"/img/contralgoritmia.png\" alt=\"" . t('Sello contralgorítmico') . "\"></a><p>" . footer_links() . "</p></footer>";
     echo "</aside>";
@@ -32,45 +40,108 @@ function rail_dd(string $icon, string $label, string $current, array $items, str
         echo "<a href=\"" . h($href) . "\"" . (($on || $extra) ? ' class="' . trim(($on ? 'on ' : '') . $extra) . '"' : '') . ">" . ($sw ? "<i class=\"sw sw-$sw\"></i>" : '') . h($txt) . "</a>"; }
     echo "</div></details>";
 }
-function rail_skins(): void {
+/** Uno de los desplegables del tercer grupo: skin | aspecto | foco | hacker | idioma (cada uno es una pieza del menu, migra-213). */
+function rail_dd_pieza(string $k): void {
     $u = user();
-    // plantilla
-    $cur = skin();
-    $items = [];
-    foreach (DDD_SKINS as $k => $v) $items[] = ["/cambiar-skin?s=$k", $v, $k === $cur, $k];
-    $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');
-    if ($saved !== '') $items[] = ["/cambiar-skin?s=", t('la del sitio'), false, null, 'reset'];
-    rail_dd('skin', t('Skin'), DDD_SKINS[$cur] ?? $cur, $items, 'skins');
-    // aspecto: claro / oscuro / como el sistema
-    $th = theme() ?? 'auto';
-    $opts = ['auto' => t('Como el sistema'), 'light' => t('Claro'), 'dark' => t('Oscuro')];
-    $items = [];
-    foreach ($opts as $k => $v) $items[] = ["/cambiar-skin?t=$k", $v, $k === $th, null];
-    rail_dd('theme', t('Aspecto'), $opts[$th], $items);
-    // sin distracciones (escritorio): sin columna derecha, columna central ancha y fotos a la derecha del titular
-    $fz = foco_pref();   // '' = solo en Foros (por defecto; antes «Solo en Originales») | '1' = siempre | '0' = nunca
-    $fo = ['' => t('Solo en Foros'), '1' => t('Siempre'), '0' => t('Nunca')];
-    $items = [];
-    foreach ($fo as $k => $v) $items[] = ["/cambiar-skin?z=$k", $v, $k === $fz, null];
-    rail_dd('focus', t('Sin distracciones'), $fo[$fz], $items, 'foco');
-    // modo hacker (20/10/2026): solo se ve en pantallas de 2400 px o mas (CSS); cinco columnas, todo a la vista
-    $hk = hacker();
-    rail_dd('hacker', t('Modo hacker'), $hk ? t('Activo') : t('Apagado'), [["/cambiar-skin?k=1", t('Activo'), $hk, null], ["/cambiar-skin?k=0", t('Apagado'), !$hk, null]], 'hacker');
-    // idioma
-    $cl = lang();
-    $items = [];
-    foreach (DDD_LANGS as $k => $v) $items[] = ["/cambiar-skin?l=$k", $v, $k === $cl, null];
-    rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
+    if ($k === 'skin') {
+        $cur = skin();
+        $items = [];
+        foreach (DDD_SKINS as $sk => $v) $items[] = ["/cambiar-skin?s=$sk", $v, $sk === $cur, $sk];
+        $saved = $u ? (string)($u['skin'] ?? '') : (string)($_COOKIE[DDD_SKIN_COOKIE] ?? '');
+        if ($saved !== '') $items[] = ["/cambiar-skin?s=", t('la del sitio'), false, null, 'reset'];
+        rail_dd('skin', t('Skin'), DDD_SKINS[$cur] ?? $cur, $items, 'skins');
+    } elseif ($k === 'aspecto') {   // claro / oscuro / como el sistema
+        $th = theme() ?? 'auto';
+        $opts = ['auto' => t('Como el sistema'), 'light' => t('Claro'), 'dark' => t('Oscuro')];
+        $items = [];
+        foreach ($opts as $o => $v) $items[] = ["/cambiar-skin?t=$o", $v, $o === $th, null];
+        rail_dd('theme', t('Aspecto'), $opts[$th], $items);
+    } elseif ($k === 'foco') {   // sin distracciones (escritorio): sin columna derecha, columna central ancha y fotos a la derecha del titular
+        $fz = foco_pref();   // '' = solo en Foros (por defecto; antes «Solo en Originales») | '1' = siempre | '0' = nunca
+        $fo = ['' => t('Solo en Foros'), '1' => t('Siempre'), '0' => t('Nunca')];
+        $items = [];
+        foreach ($fo as $o => $v) $items[] = ["/cambiar-skin?z=$o", $v, $o === $fz, null];
+        rail_dd('focus', t('Sin distracciones'), $fo[$fz], $items, 'foco');
+    } elseif ($k === 'hacker') {   // modo hacker (20/10/2026): solo se ve en pantallas de 2400 px o mas (CSS); cinco columnas, todo a la vista
+        $hk = hacker();
+        rail_dd('hacker', t('Modo hacker'), $hk ? t('Activo') : t('Apagado'), [["/cambiar-skin?k=1", t('Activo'), $hk, null], ["/cambiar-skin?k=0", t('Apagado'), !$hk, null]], 'hacker');
+    } elseif ($k === 'idioma') {
+        $cl = lang();
+        $items = [];
+        foreach (DDD_LANGS as $l => $v) $items[] = ["/cambiar-skin?l=$l", $v, $l === $cl, null];
+        rail_dd('lang', t('Idioma'), DDD_LANGS[$cl] ?? $cl, $items);
+    }
 }
+function rail_skins(): void { foreach (['skin', 'aspecto', 'foco', 'hacker', 'idioma'] as $k) rail_dd_pieza($k); }
+
+/* ---- menu de la izquierda por usuario (migra-213, 24/11/2026, pedido por Angel: «que la barra lateral izquierda se pueda reordenar
+ * como la derecha. Mismas condiciones») ----
+ * Cada pieza del rail (cada pestaña, «Publicar», cada desplegable y los dos bloques de fuentes) se puede mover u ocultar desde
+ * «Mi barra lateral» (/mi-columna), con la misma regla que las cajas de la derecha: aura >= side_user_aura; moderadores y admin, siempre.
+ * users.rail_order guarda las claves en orden, con «-» delante las ocultas; NULL = el orden de Deltha. Solo afecta al rail de escritorio:
+ * las pestañas de arriba y el muelle del movil no cambian. */
+/** Todas las claves, en el orden de Deltha. */
+const DDD_RAIL_ORDEN = ['medios', 'substacks', 'canales', 'radar', 'foros', 'chat', 'publicar', 'temas', 'comunidades', 'usuarios', 'procesos', 'estadisticas', 'analitica', 'mensajes', 'skin', 'aspecto', 'foco', 'hacker', 'idioma', 'misfuentes', 'fuentes'];
+/** Piezas que hoy puede ver quien mira: clave => [nombre, grupo (top | bottom | ''), funcion que la pinta]. */
+function rail_piezas(string $tab = ''): array {
+    global $pdo;
+    $p = [];
+    foreach (nav_tabs_def('rail-top') as $k => $d) $p[$k] = [$d[1], 'top', function () use ($k, $d, $tab) { echo nav_tab_a($k, $d, $tab); }];
+    $p['publicar'] = [t('Publicar'), '', function () { echo "<a class=\"pub\" href=\"/enviar\">" . icon('plus') . "<span>" . t('Publicar') . "</span></a>"; }];   // (20/10/2026) bajo las pestañas de contenido, a la vista sin bajar
+    foreach (nav_tabs_def('rail-bottom') as $k => $d) $p[$k] = [$d[1], 'bottom', function () use ($k, $d, $tab) { echo nav_tab_a($k, $d, $tab); }];
+    foreach (['skin' => t('Skin'), 'aspecto' => t('Aspecto'), 'foco' => t('Sin distracciones'), 'hacker' => t('Modo hacker'), 'idioma' => t('Idioma')] as $k => $n) $p[$k] = [$n, '', function () use ($k) { rail_dd_pieza($k); }];
+    require_once __DIR__ . '/fuentes.php';
+    if (fuentes_on() && fuentes_tipos($pdo)) {
+        $p['misfuentes'] = [t('Mis fuentes'), '', function () { rail_medios('mis'); }];
+        $p['fuentes'] = [t('Todas las fuentes'), '', function () { rail_medios('todas'); }];
+    }
+    $o = [];
+    foreach (DDD_RAIL_ORDEN as $k) if (isset($p[$k])) $o[$k] = $p[$k];
+    return $o + $p;
+}
+/** De lo guardado («a,-b,c») a [clave => se ve], con todas las claves de DDD_RAIL_ORDEN: las que no estaban al guardar (una seccion
+ *  nueva, o una que entonces estaba apagada) entran detras de la que las precede en el orden de Deltha, y a la vista. */
+function rail_parse(string $csv): array {
+    $o = [];
+    foreach (explode(',', $csv) as $x) {
+        $x = trim($x); $ver = !str_starts_with($x, '-'); $k = ltrim($x, '-');
+        if (in_array($k, DDD_RAIL_ORDEN, true) && !isset($o[$k])) $o[$k] = $ver;
+    }
+    foreach (DDD_RAIL_ORDEN as $i => $k) {
+        if (isset($o[$k])) continue;
+        $pos = 0;   // detras de la anterior del orden de Deltha que si este; si no hay ninguna, la primera
+        for ($j = $i - 1; $j >= 0; $j--) { $at = array_search(DDD_RAIL_ORDEN[$j], array_keys($o), true); if ($at !== false) { $pos = $at + 1; break; } }
+        $o = array_slice($o, 0, $pos, true) + [$k => true] + array_slice($o, $pos, null, true);
+    }
+    return $o;
+}
+/** Lo elegido por el usuario actual (users.rail_order) o null si no ha elegido, no puede o falta la migra-213. */
+function rail_user_order(): ?array {
+    static $c = false; global $pdo;
+    if ($c !== false) return $c;
+    $c = null; $u = user();
+    if ($u && side_user_can($u)) {
+        try {
+            $st = $pdo->prepare("SELECT rail_order FROM users WHERE user_id = ?"); $st->execute([(int)$u['user_id']]);
+            $v = $st->fetchColumn();
+            if ($v !== null && $v !== false && $v !== '') $c = rail_parse((string)$v);
+        } catch (Throwable $e) { /* migra-213 sin aplicar */ }
+    }
+    return $c;
+}
+/** Orden en vigor para quien mira: [clave => se ve]. */
+function rail_orden_actual(): array { return rail_user_order() ?? array_fill_keys(DDD_RAIL_ORDEN, true); }
 
 /** Cuarto grupo del rail (08/10/2026): dos cabeceras con el mismo aspecto que Plantilla / Aspecto / Idioma.
  *   - «Mis fuentes» → /mis-fuentes: debajo, los nombres de las que han publicado mas recientemente entre todas las que sigue (de
  *     cualquier tipo, hasta media_max_per_user) o, si no sigue ninguna / no tiene cuenta, las destacadas en admin; y «todas · N».
  *   - «Todas las fuentes» → /fuentes: debajo, un enlace por tipo con cuantas hay en el catalogo (Medios · Substacks · Canales · Agregadores). */
-function rail_medios(): void {
+function rail_medios(string $solo = ''): void {   // $solo: 'mis' | 'todas' | '' (los dos); cada bloque es una pieza del menu (migra-213)
     global $pdo; require_once __DIR__ . '/fuentes.php';
     if (!fuentes_on() || !($tipos = fuentes_tipos($pdo))) return;
     $u = user();
+    $tab = current_tab();
+    if ($solo !== 'todas') {
     $ult = fuentes_ultima_noticia($pdo);
     $mias = []; $nm = 0;
     foreach ($tipos as $k => $v) { $l = mis_medios_recientes($pdo, $u, $k); $nm += count($l); $mias = array_merge($mias, $l); }
@@ -80,12 +151,13 @@ function rail_medios(): void {
     usort($mias, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
     $max = medios_max('medio');
     $list = array_slice($mias, 0, $max);
-    $tab = current_tab();
     $sub = $nm ? t('%d elegidos', $nm) : ($dest ? t('destacados') : t('recientes'));
     echo "<details class=\"rail-dd medios\" open><summary><a href=\"/mis-fuentes\"" . ($tab === 'misfuentes' ? ' class="on"' : '') . " title=\"" . h(t('lo último de las fuentes que sigues')) . "\">" . icon('news') . "<span>" . t('Mis fuentes') . "<small>" . h($sub) . "</small></span></a></summary><div class=\"list\">";
     foreach ($list as $m) echo "<a href=\"" . h(fuente_url($m)) . "\"" . ($tab === 'fuente:' . $m['slug'] ? ' class="on"' : '') . ">" . h($m['name']) . "</a>";
     if ($nm > count($list)) echo "<a class=\"more\" href=\"/mis-fuentes\">" . t('todos') . " · $nm</a>";
     echo "</div></details>";
+    }
+    if ($solo === 'mis') return;
     $nt = 0; foreach ($tipos as $k => $v) $nt += count(fuentes_visibles($pdo, $k));
     echo "<details class=\"rail-dd medios todas\" open><summary><a href=\"/fuentes\"" . ($tab === 'fuentes' ? ' class="on"' : '') . " title=\"" . h(t('el catálogo entero, para seguir las que quieras')) . "\">" . icon('agg') . "<span>" . t('Todas las fuentes') . "<small>" . h(t('%d fuentes', $nt)) . "</small></span></a></summary><div class=\"list\">";
     foreach ($tipos as $k => $v) echo "<a href=\"/fuentes?k=$k\">" . h($k === 'youtube' ? 'YouTube' : t(['medio' => 'Medios', 'newsletter' => 'Substacks', 'agregador' => 'Agregadores'][$k])) . " <small>" . count(fuentes_visibles($pdo, $k)) . "</small></a>";

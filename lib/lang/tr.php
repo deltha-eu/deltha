@@ -1214,4 +1214,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'cuenta eliminada' => 'silinmiş hesap',
 '¿Eliminar este comentario?' => 'Bu yorum silinsin mi?',
 '%d en Deltha' => 'Deltha\'da %d',
+// Menú de la izquierda por usuario (migra-213, 24/11/2026)
+'Menú de la izquierda' => 'Sol menü',
+'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'Sol menü (yalnızca geniş ekranlarda) aynı şekilde sıralanır: sürükle ya da okları kullan, görmek istemediklerinin işaretini kaldır. Mobilde hiçbir şey değişmez.',
+'Menú guardado.' => 'Menü kaydedildi.',
+'Vuelves a ver el menú como lo tiene Deltha.' => 'Menüyü yeniden Deltha\'nın sunduğu gibi görüyorsun.',
 ];

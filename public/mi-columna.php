@@ -1,7 +1,9 @@
 <?php
 /** /mi-columna — pestaña «Mi barra lateral» del perfil (migra-179, 06/11/2026): cada usuario con aura >= side_user_aura elige qué cajas
  *  de la columna derecha (escritorio) ve y en qué orden. Se guarda en users.side_order (claves separadas por comas; NULL = el orden
- *  de admin -> Lateral). Sin JS: casillas, botones ↑/↓ (cada uno guarda) y «Guardar»; con /app/columna.js, además arrastrar y soltar. */
+ *  de admin -> Lateral). Sin JS: casillas, botones ↑/↓ (cada uno guarda) y «Guardar»; con /app/columna.js, además arrastrar y soltar.
+ *  Debajo, lo mismo para el menú de la izquierda (migra-213, 24/11/2026): sus piezas (rail_piezas) se ordenan y se ocultan igual;
+ *  se guarda en users.rail_order (claves en orden, con «-» las ocultas; NULL = el orden de Deltha). act = rail_guardar | rail_restablecer. */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/lateral.php';
@@ -13,6 +15,23 @@ $ok = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $puede) {
     $act = post('act');
+    if ($act === 'rail_restablecer') {
+        try { $pdo->prepare("UPDATE users SET rail_order = NULL WHERE user_id = ?")->execute([(int)$u['user_id']]); } catch (Throwable $e) {}
+        redirect('/mi-columna?ok=4#menu');
+    }
+    if ($act === 'rail_guardar') {   // menú de la izquierda: mismo formulario que las cajas (w[] en el orden del DOM, on[k] marcadas)
+        $pz = rail_piezas();
+        $orden = [];
+        foreach ((array)($_POST['w'] ?? []) as $k) { $k = (string)$k; if (isset($pz[$k]) && !in_array($k, $orden, true)) $orden[] = $k; }
+        foreach ($pz as $k => $x) if (!in_array($k, $orden, true)) $orden[] = $k;
+        if (preg_match('/^(up|down):([a-z_]+)$/', post('mv'), $m) && isset($pz[$m[2]])) {
+            $i = array_search($m[2], $orden, true); $j = $m[1] === 'up' ? $i - 1 : $i + 1;
+            if ($i !== false && $j >= 0 && $j < count($orden)) { [$orden[$i], $orden[$j]] = [$orden[$j], $orden[$i]]; }
+        }
+        $csv = implode(',', array_map(fn($k) => (!empty($_POST['on'][$k]) ? '' : '-') . $k, $orden));
+        try { $pdo->prepare("UPDATE users SET rail_order = ? WHERE user_id = ?")->execute([$csv, (int)$u['user_id']]); } catch (Throwable $e) { /* migra-213 sin aplicar */ }
+        redirect('/mi-columna?ok=3#menu');
+    }
     if ($act === 'restablecer') {
         try { $pdo->prepare("UPDATE users SET side_order = NULL WHERE user_id = ?")->execute([(int)$u['user_id']]); } catch (Throwable $e) {}
         redirect('/mi-columna?ok=2');
@@ -31,7 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $puede) {
     try { $pdo->prepare("UPDATE users SET side_order = ? WHERE user_id = ?")->execute([implode(',', $on), (int)$u['user_id']]); } catch (Throwable $e) { /* migra-179 sin aplicar */ }
     redirect('/mi-columna?ok=1');
 }
-if (isset($_GET['ok'])) $ok = $_GET['ok'] === '2' ? t('Vuelves a ver la columna como la tiene Deltha.') : t('Columna guardada.');
+$okMenu = null;
+if (in_array($_GET['ok'] ?? '', ['3', '4'], true)) $okMenu = $_GET['ok'] === '4' ? t('Vuelves a ver el menú como lo tiene Deltha.') : t('Menú guardado.');
+elseif (isset($_GET['ok'])) $ok = $_GET['ok'] === '2' ? t('Vuelves a ver la columna como la tiene Deltha.') : t('Columna guardada.');
 
 page_header(t('Mi barra lateral'));
 echo "<div class=\"profile\">" . avatar((float)$u['aura'], $u['login'], $u['avatar']) . "<div><h1>" . h($u['login']) . "</h1>";
@@ -68,5 +89,25 @@ foreach ($lista as $k) {
 echo "</ol>";
 echo "<small class=\"hint\">" . t('Marca las que quieras ver y ordénalas arrastrando (o con las flechas). La columna solo aparece a partir de 1100 px de ancho; en el móvil no cambia nada.') . ($max > 0 ? " " . h(t('Se pintan como mucho %d cajas, las primeras de la lista.', $max)) : '') . "</small>";
 echo "<p class=\"colbtns\"><button>" . t('Guardar') . "</button>" . ($propio !== null ? " <button class=\"link\" name=\"act\" value=\"restablecer\">" . t('Volver al orden de Deltha') . "</button>" : '') . "</p></form>";
+
+// ---- menú de la izquierda (migra-213): las mismas casillas, flechas y arrastre
+$pz = rail_piezas();
+$rpropio = rail_user_order();
+$rord = array_intersect_key($rpropio ?? rail_orden_actual(), $pz);   // solo lo que hoy puede ver
+echo "<h3 class=\"sec grupo\" id=\"menu\">" . t('Menú de la izquierda') . "</h3>";
+echo "<p class=\"notice ayuda\" data-k=\"mi-menu\">" . t('El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.') . "</p>";
+if ($okMenu) echo "<p class=\"notice\">" . h($okMenu) . "</p>";
+echo "<form class=\"plain colform\" method=\"post\" action=\"/mi-columna#menu\"><input type=\"hidden\" name=\"act\" value=\"rail_guardar\">";
+echo "<ol class=\"colsel\" id=\"railsel\">";
+$n = count($rord); $i = 0;
+foreach ($rord as $k => $ver) {
+    $i++;
+    echo "<li draggable=\"true\" data-k=\"$k\"><input type=\"hidden\" name=\"w[]\" value=\"$k\">"
+       . "<span class=\"grip\" aria-hidden=\"true\" title=\"" . h(t('arrastra para ordenar')) . "\">⋮⋮</span>"
+       . "<label><input type=\"checkbox\" name=\"on[$k]\" value=\"1\"" . ($ver ? ' checked' : '') . "> <span><b>" . h($pz[$k][0]) . "</b></span></label>"
+       . "<span class=\"mv\"><button name=\"mv\" value=\"up:$k\" title=\"" . h(t('subir')) . "\"" . ($i === 1 ? ' disabled' : '') . ">" . icon('up') . "</button><button name=\"mv\" value=\"down:$k\" title=\"" . h(t('bajar')) . "\"" . ($i === $n ? ' disabled' : '') . ">" . icon('down') . "</button></span></li>";
+}
+echo "</ol>";
+echo "<p class=\"colbtns\"><button>" . t('Guardar') . "</button>" . ($rpropio !== null ? " <button class=\"link\" name=\"act\" value=\"rail_restablecer\">" . t('Volver al orden de Deltha') . "</button>" : '') . "</p></form>";
 echo "<script src=\"/app/columna.js?v=" . DDD_CSS_VER . "\" defer></script>";
 page_footer();
