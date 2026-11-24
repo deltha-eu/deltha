@@ -1245,4 +1245,9 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'cuenta eliminada' => 'deleted account',
 '¿Eliminar este comentario?' => 'Delete this comment?',
 '%d en Deltha' => '%d on Deltha',
+// Menú de la izquierda por usuario (migra-213, 24/11/2026)
+'Menú de la izquierda' => 'Left-hand menu',
+'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'The left-hand menu (wide screens only) is ordered the same way: drag or use the arrows, and untick whatever you do not want to see. Nothing changes on mobile.',
+'Menú guardado.' => 'Menu saved.',
+'Vuelves a ver el menú como lo tiene Deltha.' => 'You see the menu again as Deltha has it.',
 ];

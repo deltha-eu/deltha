@@ -1193,4 +1193,9 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'cuenta eliminada' => 'ezabatutako kontua',
 '¿Eliminar este comentario?' => 'Iruzkin hau ezabatu?',
 '%d en Deltha' => '%d Delthan',
+// Menú de la izquierda por usuario (migra-213, 24/11/2026)
+'Menú de la izquierda' => 'Ezkerreko menua',
+'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'Ezkerreko menua (pantaila zabaletan soilik) berdin ordenatzen da: arrastatu edo erabili geziak, eta kendu marka ikusi nahi ez duzunari. Mugikorrean ez da ezer aldatzen.',
+'Menú guardado.' => 'Menua gorde da.',
+'Vuelves a ver el menú como lo tiene Deltha.' => 'Menua Delthak duen bezala ikusten duzu berriro.',
 ];

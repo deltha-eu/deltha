@@ -2,8 +2,9 @@
  * flechas sin recargar. Sin JS todo sigue funcionando: las flechas son botones que guardan, y «Guardar» manda el orden del DOM
  * (los input w[] van en el orden de las filas, asi que mover un <li> ya cambia lo que se envia). En movil/tactil el arrastre
  * nativo no va bien: quedan las flechas. */
-(function () {
-  var ol = document.getElementById('colsel');
+/* Vale para las dos listas de /mi-columna: las cajas de la derecha (#colsel) y el menú de la izquierda (#railsel, migra-213). */
+['colsel', 'railsel'].forEach(function (id) {
+  var ol = document.getElementById(id);
   if (!ol) return;
   ol.classList.add('dnd');
   var dragging = null;
@@ -56,4 +57,4 @@
     flechas();
   });
   flechas();
-})();
+});

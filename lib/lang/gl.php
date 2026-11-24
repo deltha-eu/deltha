@@ -1193,4 +1193,9 @@ Caduca en %d minutos. Se non es ti quen intenta entrar, non o compartas con ning
 'cuenta eliminada' => 'conta eliminada',
 '¿Eliminar este comentario?' => 'Eliminar este comentario?',
 '%d en Deltha' => '%d en Deltha',
+// Menú de la izquierda por usuario (migra-213, 24/11/2026)
+'Menú de la izquierda' => 'Menú da esquerda',
+'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'O menú da esquerda (só en pantallas anchas) ordénase igual: arrastra ou usa as frechas, e desmarca o que non queiras ver. No móbil non cambia nada.',
+'Menú guardado.' => 'Menú gardado.',
+'Vuelves a ver el menú como lo tiene Deltha.' => 'Volves ver o menú como o ten Deltha.',
 ];

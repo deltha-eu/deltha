@@ -950,6 +950,7 @@ CREATE TABLE `users` (
   `follow_own` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = los hilos que abre se marcan solos para seguimiento (migra-192)',
   `fuentes_orden` varchar(12) NOT NULL DEFAULT '' COMMENT 'ultimo orden elegido en /fuentes; vacio = ultima noticia (migra-207)',
   `side_order` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'cajas de la columna derecha elegidas por el usuario, en orden (migra-179); NULL = las de config.side_order',
+  `rail_order` varchar(400) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'menu de la izquierda elegido por el usuario: claves en orden, con - delante las ocultas (migra-213); NULL = el de Deltha',
   `help_hidden` varchar(1500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'avisos de ayuda cerrados (migra-181): claves separadas por comas; * = todos apagados',
   `aura` decimal(6,3) NOT NULL DEFAULT '5.000',
   `aura_suelo` decimal(8,3) NOT NULL DEFAULT '0.000',

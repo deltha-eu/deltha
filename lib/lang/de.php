@@ -1194,4 +1194,9 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'cuenta eliminada' => 'gelöschtes Konto',
 '¿Eliminar este comentario?' => 'Diesen Kommentar löschen?',
 '%d en Deltha' => '%d auf Deltha',
+// Menú de la izquierda por usuario (migra-213, 24/11/2026)
+'Menú de la izquierda' => 'Linkes Menü',
+'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'Das linke Menü (nur auf breiten Bildschirmen) wird genauso sortiert: ziehen oder die Pfeile benutzen, und abwählen, was du nicht sehen willst. Auf dem Handy ändert sich nichts.',
+'Menú guardado.' => 'Menü gespeichert.',
+'Vuelves a ver el menú como lo tiene Deltha.' => 'Du siehst das Menü wieder so, wie Deltha es vorgibt.',
 ];
