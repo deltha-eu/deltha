@@ -9,6 +9,8 @@
  *     El publicador es el dominio sin www (killbait.com); en YouTube es el canal (yt:UC…, leido de la pagina del video);
  *     en las plataformas compartidas de send_domain_platforms (x.com, medium.com…) no hay tope por dominio, solo por persona.
  *     Las fuentes del catalogo (Mis medios / Mis substacks) estan exentas: ahi cinco al dia se queda corto y no son el problema.
+ *   - send_person_per_day (15), send_person_per_day_medios (10), send_person_per_day_substacks (10): tope diario por persona
+ *     (migra-214, 24/11/2026): en 24 h, 15 noticias como mucho, y de ellas no mas de 10 a Medios ni mas de 10 a Substacks.
  *   0 = sin tope. Todo en admin -> Config.
  */
 declare(strict_types=1);
@@ -79,6 +81,37 @@ function envio_tope_persona(PDO $pdo, ?array $u, string $anonKey): ?string {
             if ((int)$st->fetchColumn() >= $max) return t('Sin cuenta se pueden enviar %d noticias por hora y ya las has enviado. <a href="/registro">Regístrate</a> para enviar sin ese límite.', $max);
         }
     } catch (Throwable $e) {}   // sin la columna (migracion pendiente) no hay tope
+    return null;
+}
+
+/** Tope diario por persona (migra-214, 24/11/2026; pedido por Angel tras un usuario que envio 67 noticias en un dia): en las ultimas
+ *  24 horas, send_person_per_day (15) noticias como mucho y, de ellas, send_person_per_day_medios (10) a la portada de Medios y
+ *  send_person_per_day_substacks (10) a la de Substacks. Con $url se mira ademas el tope de la portada a la que iria esa noticia.
+ *  Cuenta por user_id o, sin cuenta, por huella (anon_key); cuentan todos sus envios de enlaces, tambien los descartados (si no,
+ *  enviar basura no gastaria cupo). No cuentan los hilos de foro. El admin no tiene tope. Devuelve el error o null. */
+function envio_tope_dia(PDO $pdo, ?array $u, string $anonKey, ?string $url = null): ?string {
+    if ($u && ($u['level'] ?? '') === 'admin') return null;
+    $maxT = (int)cfg('send_person_per_day', 15);
+    $maxP = ['medios' => (int)cfg('send_person_per_day_medios', 10), 'substacks' => (int)cfg('send_person_per_day_substacks', 10)];
+    if ($maxT <= 0 && $maxP['medios'] <= 0 && $maxP['substacks'] <= 0) return null;
+    try {
+        $st = $pdo->prepare("SELECT url, source FROM stories WHERE " . ($u ? "user_id = ?" : "anon_key = ?") . " AND content_type = 'link' AND sent_date >= NOW() - INTERVAL 1 DAY");
+        $st->execute([$u ? (int)$u['user_id'] : $anonKey]);
+        $n = ['medios' => 0, 'substacks' => 0]; $total = 0;
+        foreach ($st as $r) {   // la portada se calcula igual que al publicar (stories.portada puede estar vacia en lo recien enviado o lo ya archivado)
+            $total++;
+            $p = portada_de($pdo, ['url' => $r['url'], 'source' => $r['source']]);
+            if (isset($n[$p])) $n[$p]++;
+        }
+        if ($maxT > 0 && $total >= $maxT) return t('Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.', $maxT);
+        if ($url !== null && $url !== '') {
+            $p = portada_de($pdo, ['url' => $url, 'source' => source_of($url)]);
+            if (isset($n[$p]) && $maxP[$p] > 0 && $n[$p] >= $maxP[$p])
+                return $p === 'substacks'
+                    ? t('Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.', $maxP[$p], $maxT)
+                    : t('Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.', $maxP[$p], $maxT);
+        }
+    } catch (Throwable $e) {}   // sin las columnas de la migra-155 no hay tope
     return null;
 }
 

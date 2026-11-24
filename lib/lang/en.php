@@ -1250,4 +1250,8 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'The left-hand menu (wide screens only) is ordered the same way: drag or use the arrows, and untick whatever you do not want to see. Nothing changes on mobile.',
 'Menú guardado.' => 'Menu saved.',
 'Vuelves a ver el menú como lo tiene Deltha.' => 'You see the menu again as Deltha has it.',
+// Tope diario de envíos por persona (migra-214, 24/11/2026)
+'Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.' => 'You have reached the maximum of %d submissions per day. You can send more once 24 hours have passed since your first ones.',
+'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'You have reached the maximum of %d submissions per day to the Substacks front page. Today you can still send news from media outlets, up to %d in total.',
+'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'You have reached the maximum of %d submissions per day to the Media front page. Today you can still send substacks, up to %d in total.',
 ];

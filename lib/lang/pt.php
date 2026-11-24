@@ -1235,4 +1235,8 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'O menu da esquerda (só em ecrãs largos) ordena-se da mesma forma: arrasta ou usa as setas, e desmarca o que não queiras ver. No telemóvel não muda nada.',
 'Menú guardado.' => 'Menu guardado.',
 'Vuelves a ver el menú como lo tiene Deltha.' => 'Voltas a ver o menu como o Deltha o tem.',
+// Tope diario de envíos por persona (migra-214, 24/11/2026)
+'Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.' => 'Chegaste ao máximo de %d envios por dia. Poderás enviar mais quando passarem 24 horas desde os primeiros.',
+'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'Chegaste ao máximo de %d envios por dia para a capa de Substacks. Hoje ainda podes enviar notícias de meios, até %d no total.',
+'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'Chegaste ao máximo de %d envios por dia para a capa de Meios. Hoje ainda podes enviar substacks, até %d no total.',
 ];

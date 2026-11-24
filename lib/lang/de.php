@@ -1199,4 +1199,8 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'Das linke Menü (nur auf breiten Bildschirmen) wird genauso sortiert: ziehen oder die Pfeile benutzen, und abwählen, was du nicht sehen willst. Auf dem Handy ändert sich nichts.',
 'Menú guardado.' => 'Menü gespeichert.',
 'Vuelves a ver el menú como lo tiene Deltha.' => 'Du siehst das Menü wieder so, wie Deltha es vorgibt.',
+// Tope diario de envíos por persona (migra-214, 24/11/2026)
+'Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.' => 'Du hast das Maximum von %d Einsendungen pro Tag erreicht. Weitere sind möglich, sobald seit deinen ersten 24 Stunden vergangen sind.',
+'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'Du hast das Maximum von %d Einsendungen pro Tag für die Substacks-Titelseite erreicht. Heute kannst du noch Nachrichten aus Medien einsenden, insgesamt bis zu %d.',
+'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'Du hast das Maximum von %d Einsendungen pro Tag für die Medien-Titelseite erreicht. Heute kannst du noch Substacks einsenden, insgesamt bis zu %d.',
 ];

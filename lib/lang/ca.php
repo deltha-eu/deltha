@@ -1198,4 +1198,8 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'El menú de la izquierda (solo en pantallas anchas) se ordena igual: arrastra o usa las flechas, y desmarca lo que no quieras ver. En el móvil no cambia nada.' => 'El menú de l\'esquerra (només en pantalles amples) s\'ordena igual: arrossega o fes servir les fletxes, i desmarca el que no vulguis veure. Al mòbil no canvia res.',
 'Menú guardado.' => 'Menú desat.',
 'Vuelves a ver el menú como lo tiene Deltha.' => 'Tornes a veure el menú com el té Deltha.',
+// Tope diario de envíos por persona (migra-214, 24/11/2026)
+'Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.' => 'Has arribat al màxim de %d enviaments al dia. En podràs enviar més quan hagin passat 24 hores des dels primers.',
+'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'Has arribat al màxim de %d enviaments al dia a la portada de Substacks. Avui encara pots enviar notícies de mitjans, fins a %d en total.',
+'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'Has arribat al màxim de %d enviaments al dia a la portada de Mitjans. Avui encara pots enviar substacks, fins a %d en total.',
 ];
