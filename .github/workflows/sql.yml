@@ -1,0 +1,16 @@
+# Comprueba en cada PR que ningún nombre de CONSTRAINT se repite entre tablas (MySQL 8: ERROR 1826). Ver scripts/comprobar-fk.php.
+name: SQL
+on:
+  pull_request:
+    paths: ['sql/**', 'scripts/comprobar-fk.php', '.github/workflows/sql.yml']
+  push:
+    branches: [main]
+    paths: ['sql/**']
+permissions:
+  contents: read
+jobs:
+  constraints:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: php scripts/comprobar-fk.php

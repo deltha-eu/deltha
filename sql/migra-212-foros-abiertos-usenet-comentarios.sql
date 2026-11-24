@@ -9,6 +9,9 @@
 --     (usenet_podar, usenet_keep_days, que pasa de 0 a 7) borra los hilos sin actividad desde hace una semana salvo los comentados.
 --     ip_log.kind admite 'usenet' (el comentario se apunta como cualquier otra publicación, migra-193).
 -- Idempotente.
+-- Corregida el mismo 24/11/2026 (aviso de SLM): la clave foránea de usenet_comments se llamaba fk_uc_user, que ya existe en
+--  user_communities (migra-142). En MySQL 8 el nombre de una FK es único en toda la base, no por tabla: ERROR 1826 y la migración
+--  no pasaba de ahí. Ahora es fk_usenet_comments_user. (En MariaDB no fallaba, y por eso no saltó en las pruebas.)
 SET NAMES utf8mb4;
 
 -- 1. foros: todos los hilos abiertos
@@ -29,7 +32,7 @@ CREATE TABLE IF NOT EXISTS usenet_comments (
   PRIMARY KEY (ucomment_id),
   KEY idx_uc_hilo (root_id, status, created),
   KEY idx_uc_user (user_id, created),
-  CONSTRAINT fk_uc_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE SET NULL
+  CONSTRAINT fk_usenet_comments_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET @ya = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usenet_msgs' AND COLUMN_NAME = 'dcomments');
