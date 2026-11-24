@@ -1195,4 +1195,15 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Registro' => 'Günlük',
 'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Bu gönderiyle ilgili olup biten her şey, en yenisi üstte: kimin gönderdiği, oylar, yorumlar ve ön sayfaya çıkışlar.',
 'Lo ve quien tiene aura por encima de %s.' => 'Aurası %s üzerinde olanlar görür.',
+// Usenet en Foros (migra-206, 19/11/2026)
+'Volver a los grupos' => 'Gruplara dön',
+'Ese grupo no existe.' => 'Böyle bir grup yok.',
+'Usenet está apagado: solo lo ves tú (admin). Se enciende en admin → Usenet.' => 'Usenet kapalı: yalnızca sen (admin) görüyorsun. admin → Usenet bölümünden açılır.',
+'%d mensajes' => '%d mesaj',
+'Grupo de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet haber grubu, salt okunur: burada okunanlar Deltha dışında yazılır.',
+'Todavía no hay mensajes de este grupo.' => 'Bu gruptan henüz mesaj yok.',
+'Grupos de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet haber grupları, salt okunur: burada okunanlar Deltha dışında yazılır.',
+'hilos' => 'başlıklar',
+'último mensaje' => 'son mesaj',
+'Todavía no hay grupos.' => 'Henüz grup yok.',
 ];

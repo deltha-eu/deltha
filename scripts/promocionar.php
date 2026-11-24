@@ -5,7 +5,8 @@
  *  ejecucion, imprevisible desde fuera (ciclo_toca, lib/app.php; cycle_jitter = 0 -> el minuto 0); el resto de veces sale en silencio.
  *  Con --force se ejecuta siempre (pruebas a mano).
  *  Con --huerfanas barre ya las fotos huerfanas de /media (fuentes_barrer_huerfanas; si no, una vez al dia a las 4:00).
- *  Ademas lee las fuentes externas (lib/fuentes.php) cuando vence su intervalo (sources.interval_min). */
+ *  Ademas lee las fuentes externas (lib/fuentes.php) cuando vence su intervalo (sources.interval_min) y los grupos de Usenet
+ *  marcados (lib/usenet.php, usenet_interval_min). */
 declare(strict_types=1);
 $_SERVER['REQUEST_METHOD'] = 'CLI';
 if (function_exists('proc_nice')) @proc_nice(10);   // el cron cede la CPU a la web (php-fpm): leer feeds y convertir fotos puede esperar
@@ -27,6 +28,8 @@ require __DIR__ . '/../lib/agente.php';   // agentes: envios al radar de noticia
 foreach (lang_tick($pdo) as $l) echo date('c') . "  $l\n";   // idioma de los envios sin el (migra-092)
 foreach (url_key_tick($pdo) as $l) echo date('c') . "  $l\n";   // clave canonica del enlace en los envios anteriores (migra-168)
 try { foreach (agentes_tick($pdo) as $l) echo date('c') . "  $l\n"; } catch (Throwable $e) { echo date('c') . "  agentes: ERROR " . $e->getMessage() . "\n"; }
+require __DIR__ . '/../lib/usenet.php';   // Usenet (migra-206): mensajes nuevos de los grupos marcados en admin → Usenet
+try { foreach (usenet_tick($pdo, $force) as $l) echo date('c') . "  $l\n"; } catch (Throwable $e) { echo date('c') . "  usenet: ERROR " . $e->getMessage() . "\n"; }
 foreach (ana_tick($pdo) as $l) echo date('c') . "  $l\n";   // analitica: cierra los dias completos en ana_daily y poda hits
 // lecturas de hilos de foro (migra-170): se olvidan las de hilos archivados y las de mas de forum_reads_days dias (una vez al dia, en la primera pasada tras las 4:00)
 if ((int)date('G') === 4 && (int)date('i') < 2) { try {
@@ -34,6 +37,7 @@ if ((int)date('G') === 4 && (int)date('i') < 2) { try {
     $n = $pdo->prepare("DELETE r FROM story_reads r JOIN stories s ON s.story_id = r.story_id WHERE s.status = 'archived' OR r.read_at < DATE_SUB(NOW(), INTERVAL ? DAY)"); $n->execute([$d]);
     if ($n->rowCount()) echo date('c') . "  foros: podadas " . $n->rowCount() . " lecturas\n";
 } catch (Throwable $e) {} }
+if ((int)date('G') === 4 && (int)date('i') < 2) { try { $n = usenet_podar($pdo); if ($n) echo date('c') . "  usenet: podados $n mensajes\n"; } catch (Throwable $e) {} }   // hilos caducados (usenet_keep_days)
 // fotos huerfanas de la raiz de /media (08/11/2026): una vez al dia, con la poda de las 4:00, o a mano con --huerfanas
 if (in_array('--huerfanas', $argv, true) || ((int)date('G') === 4 && (int)date('i') < 2)) {
     try { foreach (fuentes_barrer_huerfanas($pdo) as $l) echo date('c') . "  $l\n"; } catch (Throwable $e) { echo date('c') . "  media: ERROR " . $e->getMessage() . "\n"; }

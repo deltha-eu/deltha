@@ -1226,4 +1226,15 @@ It expires in %d minutes. If it is not you trying to log in, do not share it wit
 'Registro' => 'Log',
 'Todo lo que ha pasado con este envío, lo más reciente arriba: quién lo envió, votos, comentarios y llegadas a portada.' => 'Everything that has happened to this post, most recent first: who posted it, votes, comments and arrivals on a front page.',
 'Lo ve quien tiene aura por encima de %s.' => 'Visible to those with aura above %s.',
+// Usenet en Foros (migra-206, 19/11/2026)
+'Volver a los grupos' => 'Back to the groups',
+'Ese grupo no existe.' => 'That group does not exist.',
+'Usenet está apagado: solo lo ves tú (admin). Se enciende en admin → Usenet.' => 'Usenet is off: only you (admin) can see it. Turn it on in admin → Usenet.',
+'%d mensajes' => '%d messages',
+'Grupo de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet newsgroup, read-only: what you read here is written outside Deltha.',
+'Todavía no hay mensajes de este grupo.' => 'There are no messages from this group yet.',
+'Grupos de noticias de Usenet, en solo lectura: lo que se lee aquí se escribe fuera de Deltha.' => 'Usenet newsgroups, read-only: what you read here is written outside Deltha.',
+'hilos' => 'threads',
+'último mensaje' => 'last message',
+'Todavía no hay grupos.' => 'There are no groups yet.',
 ];
