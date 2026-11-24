@@ -1072,6 +1072,13 @@ function page_body(array $pg): string {
         '{ttl}'  => (string)(int)cfg('thread_ttl_hours', 48),
         '{gm}'   => (string)(int)cfg('ghost_minutes', 30),
         '{ipdays}' => (string)ip_log_days(),   // dias que se conserva el registro de IP (migra-193/194; pagina de privacidad)
+        // topes de envio (migra-155 y migra-214; apartado «Cuanto se puede enviar» de las normas, migra-215)
+        '{sendday}'  => (string)(int)cfg('send_person_per_day', 15),
+        '{senddaym}' => (string)(int)cfg('send_person_per_day_medios', 10),
+        '{senddays}' => (string)(int)cfg('send_person_per_day_substacks', 10),
+        '{sendhour}' => (string)(int)cfg('send_user_per_hour', 10),
+        '{sendanon}' => (string)(int)cfg('send_anon_per_hour', 3),
+        '{senddom}'  => (string)(int)cfg('send_domain_per_day', 5),
         // parametros del algoritmo (pagina «Como funciona el δ»)
         '{cycle}'    => (string)(int)cfg('cycle_minutes', 5),
         '{minage}'   => (string)(int)cfg('delta_min_age_min', 30),

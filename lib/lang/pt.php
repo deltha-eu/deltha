@@ -1237,6 +1237,6 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'Vuelves a ver el menú como lo tiene Deltha.' => 'Voltas a ver o menu como o Deltha o tem.',
 // Tope diario de envíos por persona (migra-214, 24/11/2026)
 'Has llegado al máximo de %d envíos al día. Podrás enviar más cuando pasen 24 horas desde los primeros.' => 'Chegaste ao máximo de %d envios por dia. Poderás enviar mais quando passarem 24 horas desde os primeiros.',
-'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'Chegaste ao máximo de %d envios por dia para a capa de Substacks. Hoje ainda podes enviar notícias de meios, até %d no total.',
-'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'Chegaste ao máximo de %d envios por dia para a capa de Meios. Hoje ainda podes enviar substacks, até %d no total.',
+'Has llegado al máximo de %d envíos al día a la portada de Substacks. Hoy aún puedes enviar noticias de medios, hasta %d en total.' => 'Chegaste ao máximo de %d envios por dia para a capa de Newsletters. Hoje ainda podes enviar notícias de meios, até %d no total.',
+'Has llegado al máximo de %d envíos al día a la portada de Medios. Hoy aún puedes enviar substacks, hasta %d en total.' => 'Chegaste ao máximo de %d envios por dia para a capa de Meios. Hoje ainda podes enviar newsletters, até %d no total.',
 ];
