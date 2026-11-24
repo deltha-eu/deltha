@@ -125,7 +125,7 @@ function story_post(PDO $pdo, array $s, string $mode = "full"): void {
     vote_widget($s);
     echo story_contadores($s);   // lecturas y clics al medio (migra-120)
     echo mod_edit_link($s) . own_edit_link($s);   // mods y admin: «editar» a un clic; el autor, en plazo, tambien
-    if (is_fav((int)$s['story_id'])) echo fav_link($s);   // en el feed solo si ya esta guardado: marca y permite quitarlo (se guarda desde el hilo)
+    echo fav_link($s);   // guardar desde el propio listado (24/11/2026, propuesta de un usuario): sin guardar, solo el icono; guardado, icono relleno y «guardado»
     echo share_link($s);
     echo pin_form($pdo, 'story', (int)$s['story_id'], pin_grupo_story($s), pin_en_portada($s));   // «Destacar» (migra-111)
     echo "</div>";
@@ -373,7 +373,7 @@ function fav_link(array $s): string {
     $id = (int)$s['story_id'];
     $on = is_fav($id);
     return "<form class=\"fav" . ($on ? ' on' : '') . "\" method=\"post\" action=\"/favorito\"><input type=\"hidden\" name=\"id\" value=\"$id\"><input type=\"hidden\" name=\"act\" value=\"" . ($on ? 'quitar' : 'guardar') . "\">"
-         . "<button title=\"" . h($on ? t('quitar de favoritos') : t('guardar en favoritos')) . "\">" . icon('fav') . "<span>" . ($on ? t('guardado') : t('guardar')) . "</span></button></form>";
+         . "<button title=\"" . h($on ? t('quitar de favoritos') : t('guardar en favoritos')) . "\" aria-label=\"" . h($on ? t('quitar de favoritos') : t('guardar en favoritos')) . "\">" . icon('fav') . "<span>" . ($on ? t('guardado') : t('guardar')) . "</span></button></form>";
 }
 
 /** Pestañas del perfil propio (perfil.php, favoritos.php): datos, envios guardados y «Mis fuentes» (/mis-fuentes, que ya es pagina propia). */

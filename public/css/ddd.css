@@ -190,6 +190,8 @@ form.fav button:hover { color: var(--fg); }
 form.fav .i { width: 18px; height: 18px; }
 form.fav.on button { color: var(--accent); }
 form.fav.on .i { fill: currentColor; }
+.actions form.fav:not(.on) span { display: none; }   /* en las tarjetas del listado, sin guardar: solo el icono (v266) */
+@media (max-width: 480px) { .actions form.fav span { display: none; } }   /* en móvil tampoco el «guardado»: basta el icono relleno, y la fila no salta de línea */
 .hilo .stats form.fav button { font-size: 14px; }
 [data-fam="comunidad"] .hilo .stats form.fav button { color: #fff; }
 
