@@ -1034,7 +1034,7 @@ CREATE TABLE usenet_comments (
   PRIMARY KEY (ucomment_id),
   KEY idx_uc_hilo (root_id, status, created),
   KEY idx_uc_user (user_id, created),
-  CONSTRAINT fk_uc_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE SET NULL
+  CONSTRAINT fk_usenet_comments_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
