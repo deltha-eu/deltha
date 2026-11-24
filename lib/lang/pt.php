@@ -1222,4 +1222,12 @@ Expira em %d minutos. Se não és tu quem está a tentar entrar, não o partilhe
 'hilos' => 'tópicos',
 'último mensaje' => 'última mensagem',
 'Todavía no hay grupos.' => 'Ainda não há grupos.',
+// Comentarios de Deltha en los hilos de Usenet (migra-212, 24/11/2026)
+'Escribe algo antes de enviar.' => 'Escreve alguma coisa antes de enviar.',
+'Espera unos segundos antes de volver a comentar.' => 'Espera uns segundos antes de voltar a comentar.',
+'Comentarios en Deltha' => 'Comentários no Deltha',
+'Lo que escribas aquí se queda en Deltha: no se envía a Usenet. Un hilo con comentarios se conserva; los demás se borran a los %d días sin actividad.' => 'O que escreveres aqui fica no Deltha: não é enviado para a Usenet. Um tópico com comentários é conservado; os restantes são apagados após %d dias sem atividade.',
+'cuenta eliminada' => 'conta eliminada',
+'¿Eliminar este comentario?' => 'Eliminar este comentário?',
+'%d en Deltha' => '%d no Deltha',
 ];

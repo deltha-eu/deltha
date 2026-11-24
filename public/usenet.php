@@ -2,7 +2,9 @@
 /** /usenet — grupos de noticias de Usenet dentro de Foros (migra-206, 19/11/2026), en solo lectura. Los grupos los marca el admin en
  *  admin → Usenet (lista completa del servidor, con casillas) y los lee el cron (lib/usenet.php). Tres vistas:
  *  /usenet (grupos marcados) · /usenet?g=grupo (hilos, el de ultima actividad arriba) · /usenet?g=grupo&h=N (los mensajes del hilo).
- *  Con usenet_on = 0 solo lo ve el admin, como un foro apagado. Nada de esto se vota, se comenta ni va al radar o a las portadas. */
+ *  Con usenet_on = 0 solo lo ve el admin, como un foro apagado. Nada de esto se vota ni va al radar o a las portadas.
+ *  Comentarios (migra-212): bajo los mensajes del hilo, los registrados pueden comentar; el comentario se queda en Deltha (no se envia a
+ *  Usenet) y el hilo comentado ya no caduca. POST act=comentar (g, h, content) y act=quitar (c: el autor o un moderador). */
 require __DIR__ . '/../lib/app.php';
 require __DIR__ . '/../lib/render.php';
 require __DIR__ . '/../lib/usenet.php';
@@ -18,6 +20,28 @@ $g = null;
 foreach ($grupos as $x) if ($x['name'] === $gname) $g = $x;
 if ($gname !== '' && !$g) usenet_404(t('Ese grupo no existe.'));
 $page = page_num();
+
+// ---- comentar / retirar un comentario (se quedan en Deltha)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $u = user();
+    if (!$u) redirect('/login');
+    $act = post('act');
+    try {
+        if ($act === 'quitar') {
+            $rid = usenet_comentario_quitar($pdo, (int)post('c'), $u);
+            if ($rid && $g) redirect(usenet_url($g['name'], $rid) . '#comentarios');
+        } elseif ($act === 'comentar' && $g && $hid && usenet_comentarios_on()) {
+            $st = $pdo->prepare("SELECT msg_id, group_id FROM usenet_msgs WHERE msg_id = ? AND group_id = ? AND root_id = 0"); $st->execute([$hid, (int)$g['group_id']]);
+            if ($root = $st->fetch()) {
+                $r = usenet_comentar($pdo, $root, $u, (string)($_POST['content'] ?? ''));
+                if (is_int($r)) redirect(usenet_url($g['name'], $hid) . "#uc$r");
+                $_SESSION['flash_err'] = $r;
+                redirect(usenet_url($g['name'], $hid) . '#comentarios');
+            }
+        }
+    } catch (Throwable $e) { error_log('usenet comentar: ' . $e->getMessage()); }
+    redirect($g ? usenet_url($g['name'], $hid) : '/usenet');
+}
 
 /** Pestañas de Foros con «Usenet» encendida. */
 function usenet_nav(): void {
@@ -48,13 +72,42 @@ if ($g && $hid) {   // ---- un hilo
     }
     echo "</div>";
     paginate(h(usenet_url($g['name'], $hid)), $page, $total, $per);
+    // comentarios de Deltha (migra-212): no se envian a Usenet; el hilo comentado no caduca
+    $coms = usenet_comentarios($pdo, $hid);
+    $u = user();
+    if ($coms || usenet_comentarios_on()) {
+        echo "<div class=\"unet-coms\" id=\"comentarios\"><h2>" . t('Comentarios en Deltha') . ($coms ? " · " . count($coms) : '') . "</h2>";
+        echo "<p class=\"meta\">" . t('Lo que escribas aquí se queda en Deltha: no se envía a Usenet. Un hilo con comentarios se conserva; los demás se borran a los %d días sin actividad.', max(1, (int)cfg('usenet_keep_days', 7))) . "</p>";
+        foreach ($coms as $c) {
+            $baja = empty($c['login']);
+            $n = $baja ? t('cuenta eliminada') : (string)$c['login'];
+            $fold = !$baja && ghost_folded((int)$c['user_id']);
+            echo "<article class=\"post reply root\" id=\"uc{$c['ucomment_id']}\">" . ($baja ? avatar((float)cfg('aura_anon', 5), '') : avatar((float)$c['aura'], $n, $c['avatar'] ?? null, '/u/' . rawurlencode($n))) . "<div class=\"pc\">";
+            echo "<div class=\"l1\"><b>" . ($baja ? h($n) : "<a href=\"/u/" . rawurlencode($n) . "\">" . h($n) . "</a>") . "</b><span class=\"meta\"> · " . h(hace($c['created'])) . "</span></div>";
+            if ($fold) echo "<details class=\"gfold\"><summary>" . t('Comentario de alguien a quien has silenciado') . "</summary>";
+            echo md_comentario($c['content']);
+            if ($fold) echo "</details>";
+            if ($u && ((int)$c['user_id'] === (int)$u['user_id'] || is_mod()))
+                echo "<div class=\"actions\"><form class=\"inl\" method=\"post\" action=\"" . h(usenet_url($g['name'], $hid)) . "\" data-q=\"" . h(t('¿Eliminar este comentario?')) . "\" onsubmit=\"return confirm(this.dataset.q)\"><input type=\"hidden\" name=\"act\" value=\"quitar\"><input type=\"hidden\" name=\"c\" value=\"{$c['ucomment_id']}\"><button class=\"modlink\">" . t('eliminar') . "</button></form></div>";
+            echo "</div></article>";
+        }
+        if (!usenet_comentarios_on()) { /* solo lectura: lo ya comentado se ve */ }
+        elseif (!$u) echo "<p class=\"end\">" . t('<a href="/login">Entra</a> para comentar.') . "</p>";
+        else {
+            echo "<form class=\"composer\" id=\"ucomentar\" method=\"post\" action=\"" . h(usenet_url($g['name'], $hid)) . "\"><input type=\"hidden\" name=\"act\" value=\"comentar\">" . avatar((float)$u['aura'], (string)$u['login']) . "<div class=\"cbox\">";
+            echo "<textarea name=\"content\" maxlength=\"4000\" placeholder=\"" . h(t('Escribe como %s', (string)$u['login'])) . "\" required></textarea>" . md_ayuda();
+            if (!empty($_SESSION['flash_err'])) { echo "<p class=\"error\">" . h((string)$_SESSION['flash_err']) . "</p>"; unset($_SESSION['flash_err']); }
+            echo "<div class=\"crow\"><button>" . t('Comentar') . "</button></div></div></form>";
+        }
+        echo "</div>";
+    }
     page_footer(); exit;
 }
 
 if ($g) {   // ---- hilos de un grupo
     $gid = (int)$g['group_id'];
     $per = (int)cfg('per_page', 20);
-    $st = $pdo->prepare("SELECT msg_id, subject, author, sent, replies, last_act FROM usenet_msgs WHERE group_id = ? AND root_id = 0 ORDER BY last_act DESC, msg_id DESC LIMIT $per OFFSET " . page_offset($page));
+    $st = $pdo->prepare("SELECT * FROM usenet_msgs WHERE group_id = ? AND root_id = 0 ORDER BY last_act DESC, msg_id DESC LIMIT $per OFFSET " . page_offset($page));   // * y no la lista de columnas: dcomments no existe antes de la migra-212
     $st->execute([$gid]);
     $filas = $st->fetchAll();
     page_crumb('/usenet', 'Usenet');
@@ -65,7 +118,8 @@ if ($g) {   // ---- hilos de un grupo
     foreach ($filas as $s) {
         $n = (int)$s['replies'];
         echo "<article class=\"trow\"><div class=\"tc\"><h2><a href=\"" . h(usenet_url($g['name'], (int)$s['msg_id'])) . "\">" . h($s['subject']) . "</a></h2>";
-        echo "<div class=\"meta\"><b>" . h($s['author']) . "</b> · " . h(hace($s['sent'])) . "</div></div>";
+        $dc = (int)($s['dcomments'] ?? 0);
+        echo "<div class=\"meta\"><b>" . h($s['author']) . "</b> · " . h(hace($s['sent'])) . ($dc ? " · <b class=\"unet-dc\">" . t('%d en Deltha', $dc) . "</b>" : '') . "</div></div>";
         echo "<div class=\"tn\"><span class=\"n\" title=\"" . t('respuestas') . "\">" . icon('reply') . "<span>$n</span></span>" . ($n > 0 ? "<span class=\"last\" title=\"" . t('última respuesta') . "\">" . h(hace($s['last_act'])) . "</span>" : '') . "</div></article>";
     }
     echo "</div>";

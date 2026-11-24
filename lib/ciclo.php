@@ -39,16 +39,17 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
     $newTtl   = (int)cfg('nuevas_ttl_hours', 168);
     $turno    = portada_turno(ciclo_ventana($now));
 
-    // 1. lo que lleva nuevas_ttl_hours en el radar sin llegar a portada caduca (se archiva)
+    // 1. lo que lleva nuevas_ttl_hours en el radar sin llegar a portada caduca (se archiva). Los hilos de foro (content_type
+    //    'article') no: no caducan, se quedan abiertos (24/11/2026, migra-212; un moderador puede cerrar sus comentarios a mano)
     if ($newTtl > 0) {
-        $c = $pdo->prepare("UPDATE stories SET status='archived' WHERE status = 'nuevas' AND sent_date <= NOW() - INTERVAL ? HOUR");
+        $c = $pdo->prepare("UPDATE stories SET status='archived' WHERE status = 'nuevas' AND content_type <> 'article' AND sent_date <= NOW() - INTERVAL ? HOUR");
         $c->execute([$newTtl]);
         if ($c->rowCount()) $log[] = "caducadas en el radar sin llegar a portada: {$c->rowCount()}";
     }
 
     // 2. portada de destino, votos que cuentan y delta de todo el radar. La portada se recalcula en cada ciclo: asi da igual por
     //    donde entro el envio (formulario, RSS, edicion del enlace) o si el catalogo de newsletters ha cambiado.
-    $rows = $pdo->query("SELECT story_id, content_type, url, source, portada FROM stories WHERE status = 'nuevas'")->fetchAll();
+    $rows = $pdo->query("SELECT story_id, content_type, url, source, portada FROM stories WHERE status = 'nuevas' AND content_type <> 'article'")->fetchAll();   // los hilos de foro no tienen portada y, como ya no caducan (migra-212), serian cada vez mas
     $upd = $pdo->prepare("UPDATE stories SET portada = ? WHERE story_id = ?");
     foreach ($rows as $r) {
         $p = portada_de($pdo, $r);
@@ -142,7 +143,7 @@ function run_cycle(PDO $pdo, ?int $now = null): array {
 
     // 5. archivar hilos que cumplen su vida
     $a = $pdo->prepare("UPDATE stories SET status='archived'
-                         WHERE status='destacadas' AND published_date <= NOW() - INTERVAL ? HOUR");
+                         WHERE status='destacadas' AND content_type <> 'article' AND published_date <= NOW() - INTERVAL ? HOUR");   // un hilo de foro destacado tampoco se archiva (migra-212)
     $a->execute([$ttlHours]);
     if ($a->rowCount()) $log[] = "archivadas: {$a->rowCount()}";
 

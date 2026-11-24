@@ -4,6 +4,8 @@
  *  editan en admin → Usenet): trae la lista completa de grupos a usenet_groups (LIST ACTIVE + LIST NEWSGROUPS), el admin marca los
  *  que quiere (usenet_groups.activo) y el cron (usenet_tick, desde scripts/promocionar.php) lee solo esos y guarda los mensajes en
  *  usenet_msgs. Se ven en /usenet (pestaña «Usenet» de Foros), en solo lectura: desde Deltha no se escribe en Usenet.
+ *  Comentarios (migra-212, 24/11/2026): los registrados pueden comentar un hilo, pero el comentario se queda en Deltha (usenet_comments),
+ *  no se envia a Usenet. Un hilo comentado no se poda; los demas se borran a los usenet_keep_days (7) dias sin actividad.
  *  Lo que NO se guarda: binarios y adjuntos (yEnc, uuencode, no-texto), mensajes de mas de usenet_max_kb, los enviados a mas de
  *  usenet_max_crosspost grupos (spam), los de control y los que piden no archivarse (X-No-Archive: yes). Del remitente se guarda
  *  solo el nombre, nunca la direccion de correo, y en el texto las direcciones salen recortadas.
@@ -298,22 +300,61 @@ function usenet_tick(PDO $pdo, bool $force = false, int $segundos = 20): array {
     $n->cerrar();
     return $out;
 }
-/** Poda (una vez al dia): con usenet_keep_days > 0, fuera los hilos sin actividad desde hace mas dias; y los mensajes de grupos desmarcados
- *  si $desmarcados (boton de admin → Usenet). Recuenta los grupos. */
+/** Poda (una vez al dia): con usenet_keep_days > 0, fuera los hilos sin actividad desde hace mas dias, salvo los que tienen comentarios de
+ *  Deltha, que se quedan (migra-212). $desmarcados (boton de admin → Usenet): ademas, todo lo de los grupos que ya no estan marcados,
+ *  comentarios incluidos. Recuenta los grupos. */
 function usenet_podar(PDO $pdo, bool $desmarcados = false): int {
     $n = 0;
-    $d = (int)cfg('usenet_keep_days', 0);
+    $d = (int)cfg('usenet_keep_days', 7);
+    $con = '';
+    try { $pdo->query("SELECT 1 FROM usenet_comments LIMIT 1"); $con = " AND NOT EXISTS (SELECT 1 FROM usenet_comments c WHERE c.root_id = r.msg_id AND c.status = 'ok')"; } catch (Throwable $e) {}   // sin migra-212
     if ($d > 0) {
-        $st = $pdo->prepare("DELETE m FROM usenet_msgs m JOIN usenet_msgs r ON r.msg_id = IF(m.root_id = 0, m.msg_id, m.root_id) WHERE r.last_act < DATE_SUB(NOW(), INTERVAL ? DAY)");
+        $st = $pdo->prepare("DELETE m FROM usenet_msgs m JOIN usenet_msgs r ON r.msg_id = IF(m.root_id = 0, m.msg_id, m.root_id) WHERE r.last_act < DATE_SUB(NOW(), INTERVAL ? DAY)$con");
         $st->execute([$d]); $n += $st->rowCount();
     }
     if ($desmarcados) {
         $n += $pdo->exec("DELETE m FROM usenet_msgs m JOIN usenet_groups g ON g.group_id = m.group_id WHERE g.activo = 0");
         $pdo->exec("UPDATE usenet_groups SET last_num = 0, last_fetch = NULL WHERE activo = 0");
     }
+    if ($con !== '') $pdo->exec("DELETE c FROM usenet_comments c LEFT JOIN usenet_msgs m ON m.msg_id = c.root_id WHERE m.msg_id IS NULL");   // comentarios (retirados o de grupos desmarcados) de hilos que ya no estan
     if ($n) $pdo->exec("UPDATE usenet_groups g LEFT JOIN (SELECT group_id, COUNT(*) m, SUM(root_id = 0) t, MAX(sent) u FROM usenet_msgs GROUP BY group_id) x ON x.group_id = g.group_id
                         SET g.msgs = COALESCE(x.m, 0), g.threads = COALESCE(x.t, 0), g.last_msg = x.u WHERE g.msgs > 0 OR x.m IS NOT NULL");
     return $n;
+}
+
+/* ---- comentarios de Deltha en un hilo de Usenet (migra-212): se quedan aqui, no se envian a Usenet ---- */
+/** ¿Se puede comentar? (config usenet_comments; con 0, /usenet vuelve a ser solo lectura y lo ya comentado se sigue viendo) */
+function usenet_comentarios_on(): bool { return (string)cfg('usenet_comments', '1') === '1'; }
+/** Comentarios visibles de un hilo ($root = msg_id del que lo abre), del mas antiguo al mas reciente, con los datos de su autor. */
+function usenet_comentarios(PDO $pdo, int $root): array {
+    try {
+        $st = $pdo->prepare("SELECT c.*, u.login, u.avatar, u.aura FROM usenet_comments c LEFT JOIN users u ON u.user_id = c.user_id WHERE c.root_id = ? AND c.status = 'ok' ORDER BY c.created, c.ucomment_id");
+        $st->execute([$root]);
+        return $st->fetchAll();
+    } catch (Throwable $e) { return []; }   // sin migra-212
+}
+/** Publica un comentario del usuario $u en el hilo $root (fila de usenet_msgs con root_id = 0). Devuelve su id o, si no se puede, el motivo.
+ *  El hilo sube en la lista del grupo (last_act) y deja de caducar. */
+function usenet_comentar(PDO $pdo, array $root, array $u, string $content) {
+    $content = trim(mb_substr($content, 0, 4000));
+    if (mb_strlen($content) < 2) return t('Escribe algo antes de enviar.');
+    $uid = (int)$u['user_id'];
+    $q = $pdo->prepare("SELECT COUNT(*) FROM usenet_comments WHERE user_id = ? AND created > DATE_SUB(NOW(), INTERVAL 20 SECOND)"); $q->execute([$uid]);
+    if ((int)$q->fetchColumn()) return t('Espera unos segundos antes de volver a comentar.');
+    $pdo->prepare("INSERT INTO usenet_comments (root_id, group_id, user_id, content) VALUES (?,?,?,?)")->execute([(int)$root['msg_id'], (int)$root['group_id'], $uid, $content]);
+    $cid = (int)$pdo->lastInsertId();
+    $pdo->prepare("UPDATE usenet_msgs SET dcomments = dcomments + 1, last_act = NOW() WHERE msg_id = ?")->execute([(int)$root['msg_id']]);
+    if (function_exists('ip_log_add')) ip_log_add($pdo, 'usenet', $uid, $cid);   // como cualquier otra publicacion (migra-193)
+    return $cid;
+}
+/** Retira un comentario: su autor o un moderador. Devuelve el msg_id del hilo (0 si no existe o no le toca). */
+function usenet_comentario_quitar(PDO $pdo, int $cid, array $u): int {
+    $st = $pdo->prepare("SELECT root_id, user_id FROM usenet_comments WHERE ucomment_id = ? AND status = 'ok'"); $st->execute([$cid]);
+    $c = $st->fetch();
+    if (!$c || !((int)$c['user_id'] === (int)$u['user_id'] || user_is_mod($u))) return 0;
+    $pdo->prepare("UPDATE usenet_comments SET status = 'rejected' WHERE ucomment_id = ?")->execute([$cid]);
+    $pdo->prepare("UPDATE usenet_msgs SET dcomments = (SELECT COUNT(*) FROM usenet_comments c WHERE c.root_id = ? AND c.status = 'ok') WHERE msg_id = ?")->execute([(int)$c['root_id'], (int)$c['root_id']]);
+    return (int)$c['root_id'];
 }
 
 /* ---- pintar ---- */

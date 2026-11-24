@@ -223,6 +223,9 @@ Desde el 19/10/2026 (`sql/migra-165-hardusers.sql`) el foro Areópago, que no se
 
 Desde el 20/10/2026 **el velo Ghost queda solo para los envíos**: en los foros (`$GLOBALS['DDD_SIN_GHOST']` en `/foros` y en `/hilo` de un texto propio) y en **todos los comentarios** (`ghost_over_comment()` en lib/app.php, que devuelve siempre true; para volver atrás, `return ghost_over($dt)`) el nombre sale desde el primer minuto, como en el chat. El velo de «Silenciar» no cambia. La frase de las normas sobre los {gm} minutos conviene acotarla a los envíos (admin › Páginas).
 
+## Los hilos de los foros no caducan (migra-212)
+24/11/2026, pedido por Ángel: «Los hilos en los foros no caducan, déjalos todos abiertos». Hasta ahora un hilo de foro (`content_type = 'article'`) se archivaba —y dejaba de admitir comentarios— como un envío del radar: a las `nuevas_ttl_hours` (una semana), o a las `thread_ttl_hours` si estaba destacado. Ya no: `run_cycle()` deja fuera los `article` al archivar, y la migración reabre los que estaban archivados (dándolos antes por leídos a quienes siguen el foro, para que no aparezcan de golpe como pendientes). Cerrar los comentarios de un hilo concreto sigue siendo cosa de moderación (`comments_closed`, migra-183). Como las lecturas (`story_reads`) se olvidan a los `forum_reads_days` (180), un hilo que lleva ese tiempo parado deja de contar como pendiente (`foros_reads_sql()`), y su lectura solo se poda entonces.
+
 ## Usenet en Foros (migra-206)
 19/11/2026, pedido por Ángel: «que aparezcan en config todos y marcamos». Grupos de noticias de Usenet dentro de Foros, en **solo lectura** (desde Deltha no se escribe en Usenet). `lib/usenet.php` trae un cliente NNTP mínimo por sockets (sin la extensión imap; TLS en el puerto 563) y todo lo demás.
 
@@ -234,6 +237,14 @@ Desde el 20/10/2026 **el velo Ghost queda solo para los envíos**: en los foros 
 - **Hilos** (`usenet_msgs`): `thr_hash` = md5 del primer `References` (el mensaje que abrió el hilo) o del propio `Message-ID`; el primer mensaje de un grupo con ese hash abre hilo (`root_id = 0`) y los demás cuelgan de él, esté o no el original en la base (pasa con las respuestas a hilos anteriores a los 300 primeros).
 - **Dónde se ve**: `/usenet` (pestaña «Usenet» al final de las de Foros): grupos marcados → hilos del grupo (el de última actividad arriba) → mensajes del hilo. Con `usenet_on = 0` (como nace) solo lo ve el admin, con «(apagado)», igual que un foro apagado; se abre a todos con la casilla «visible para todos». No se vota, no se comenta, no va al radar ni a las portadas, y como el resto del sitio sale `noindex`.
 - **Poda**: `usenet_keep_days` (0 = no se borra nada): con N, a las 4:00 se van los hilos sin actividad desde hace más de N días. «Borrar mensajes de los desmarcados» quita lo guardado de los grupos que ya no están marcados (desmarcar por sí solo no borra: deja de leerse y de verse).
+
+### Comentarios de Deltha y poda semanal (migra-212)
+24/11/2026, pedido por Ángel: «Permite que los usuarios comenten las news pero solo en Deltha. Los hilos comentados se mantienen, los no comentados de Usenet desaparecen a la semana».
+
+- Bajo los mensajes de cada hilo de `/usenet` hay un bloque **«Comentarios en Deltha»**: los registrados comentan con las marcas de siempre (`md_comentario`). El comentario se guarda en `usenet_comments` y **no se envía a Usenet**. Lista plana, por orden de llegada; lo retira su autor o un moderador («eliminar»). `usenet_comments = 0` vuelve a dejarlo en solo lectura (lo ya comentado se sigue viendo).
+- Al comentar, el hilo sube en la lista del grupo (`last_act`) y en ella sale «N en Deltha» (`usenet_msgs.dcomments`). 20 s entre comentarios de un mismo usuario. La IP se apunta como en cualquier otra publicación (`ip_log.kind = 'usenet'`).
+- **Poda**: `usenet_keep_days` pasa a 7. A las 4:00 se borran los hilos sin actividad (ni mensajes nuevos de Usenet ni comentarios) desde hace más de 7 días, **salvo los que tienen algún comentario visible de Deltha**, que se quedan. Ojo: al marcar un grupo se traen sus últimos 300 mensajes, y los de hilos parados hace más de una semana se van en la primera poda.
+- Lo que estos comentarios **no** tienen (son una tabla aparte de `comments`): votos, respuestas anidadas, avisos y menciones, edición, reportes, cola de moderación con IA, ni premoderación (por eso solo comentan registrados).
 
 Pendiente si se quiere: escribir desde Deltha (`POST`), que exige decidir con qué identidad sale cada mensaje y un tope por aura, porque lo publicado en Usenet no se puede retirar y un abuso cierra la cuenta del servidor entera.
 

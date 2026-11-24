@@ -8,7 +8,7 @@
  *  Las huellas HMAC de votos, anónimos, topes y analítica no cambian: ahí la IP sigue sin guardarse. */
 declare(strict_types=1);
 
-const IP_LOG_KINDS = ['registro' => 'registro', 'login' => 'inicio de sesión', 'story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat'];
+const IP_LOG_KINDS = ['registro' => 'registro', 'login' => 'inicio de sesión', 'story' => 'envío', 'comment' => 'comentario', 'chat' => 'chat', 'usenet' => 'comentario en Usenet'];
 
 /** Días que se conserva cada fila (0 = el registro está apagado). */
 function ip_log_days(): int { return max(0, (int)cfg('ip_log_days', 365)); }

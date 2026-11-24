@@ -41,7 +41,7 @@ echo "<p><small>Desde qué IP se registra, entra y publica cada cual (los votos 
    . " Solo lo ve el administrador y <b>cada consulta queda apuntada</b> en el <a href=\"/moderacion?t=registro\">registro de moderación</a>.</small></p>";
 echo "<form method=\"get\" action=\"/ips\" class=\"buscar-u\"><input type=\"text\" name=\"u\" value=\"" . h($qu) . "\" placeholder=\"usuario\" maxlength=\"32\"> <input type=\"text\" name=\"ip\" value=\"" . h($qip) . "\" placeholder=\"IP\" maxlength=\"45\"> <button class=\"btn sm\">Buscar</button></form>";
 echo "<form method=\"get\" action=\"/ips\" class=\"buscar-u\"><select name=\"k\">";
-foreach (['story' => 'envío', 'comment' => 'comentario', 'chat' => 'mensaje del Chat'] as $k => $n) echo "<option value=\"$k\"" . ($qk === $k ? ' selected' : '') . ">$n</option>";
+foreach (['story' => 'envío', 'comment' => 'comentario', 'chat' => 'mensaje del Chat', 'usenet' => 'comentario en Usenet'] as $k => $n) echo "<option value=\"$k\"" . ($qk === $k ? ' selected' : '') . ">$n</option>";
 echo "</select> <input type=\"number\" name=\"ref\" min=\"1\" value=\"" . ($qref ?: '') . "\" placeholder=\"número (#)\"> <button class=\"btn sm\">Ver su IP</button></form>";
 
 try {

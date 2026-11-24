@@ -1186,4 +1186,12 @@ Er läuft in %d Minuten ab. Wenn nicht du dich anmelden willst, gib ihn an niema
 'hilos' => 'Threads',
 'último mensaje' => 'letzte Nachricht',
 'Todavía no hay grupos.' => 'Es gibt noch keine Gruppen.',
+// Comentarios de Deltha en los hilos de Usenet (migra-212, 24/11/2026)
+'Escribe algo antes de enviar.' => 'Schreib etwas, bevor du abschickst.',
+'Espera unos segundos antes de volver a comentar.' => 'Warte ein paar Sekunden, bevor du erneut kommentierst.',
+'Comentarios en Deltha' => 'Kommentare auf Deltha',
+'Lo que escribas aquí se queda en Deltha: no se envía a Usenet. Un hilo con comentarios se conserva; los demás se borran a los %d días sin actividad.' => 'Was du hier schreibst, bleibt auf Deltha: Es wird nicht ins Usenet gesendet. Ein kommentierter Thread bleibt erhalten; die übrigen werden nach %d Tagen ohne Aktivität gelöscht.',
+'cuenta eliminada' => 'gelöschtes Konto',
+'¿Eliminar este comentario?' => 'Diesen Kommentar löschen?',
+'%d en Deltha' => '%d auf Deltha',
 ];

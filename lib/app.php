@@ -17,7 +17,7 @@ define('DDD_MEDIA_DIR', DDD_ROOT . '/public/media');
 const DDD_BAJA_MOTIVOS = ['' => 'Prefiero no contestar', 'entiendo' => 'No entiendo la plataforma', 'gusta' => 'No me gusta la plataforma',
                           'usuarios' => 'He tenido una mala experiencia con otros usuarios', 'admin' => 'He tenido una mala experiencia con la administración', 'otra' => 'Otra (cuéntanos abajo)'];
 define('DDD_SESSION', 'ddd_s');
-define('DDD_CSS_VER', 266);   // subir al cambiar ddd.css
+define('DDD_CSS_VER', 267);   // subir al cambiar ddd.css
 
 /* ---- credenciales fuera del repo ---------------------------------- */
 $ini = @parse_ini_file('/etc/deltha/config.ini', true);
@@ -1397,6 +1397,9 @@ function foro_seguir_form(array $f): string {
          . "<button title=\"$title\">" . h($on ? t('Siguiendo') : t('Seguir')) . "</button></form>";
 }
 /** Hilos sin leer por foro seguido: [forum_id => n] (solo los que tienen alguno). Cacheado en sesion. */
+/** Trozo de WHERE: un hilo que lleva forum_reads_days dias parado no cuenta como pendiente. Desde que los hilos no caducan (migra-212)
+ *  hace falta: su lectura se olvida a ese plazo (scripts/promocionar.php) y sin esto volveria a salir como sin leer. */
+function foros_reads_sql(string $a = 's'): string { return " AND $a.last_activity > DATE_SUB(NOW(), INTERVAL " . max(7, (int)cfg('forum_reads_days', 180)) . " DAY)"; }
 function foros_sin_leer(): array {
     static $m = null; global $pdo;
     if ($m !== null) return $m;
@@ -1409,7 +1412,7 @@ function foros_sin_leer(): array {
         $st = $pdo->prepare("SELECT s.forum_id, COUNT(*) AS n FROM stories s JOIN user_forums uf ON uf.forum_id = s.forum_id AND uf.user_id = ?"
             . " LEFT JOIN story_reads r ON r.story_id = s.story_id AND r.user_id = ?"
             . " WHERE s.content_type = 'article' AND s.status IN ('nuevas','destacadas') AND s.last_activity > uf.created"
-            . " AND (r.read_at IS NULL OR s.last_activity > r.read_at)" . stories_mylang_sql() . foros_cerrados_sql() . " GROUP BY s.forum_id");
+            . " AND (r.read_at IS NULL OR s.last_activity > r.read_at)" . foros_reads_sql() . stories_mylang_sql() . foros_cerrados_sql() . " GROUP BY s.forum_id");
         $st->execute([$u['user_id'], $u['user_id']]);
         foreach ($st as $r) $m[(int)$r['forum_id']] = (int)$r['n'];
     } catch (Throwable $e) { $m = []; }
@@ -1450,7 +1453,7 @@ function foros_sin_leer_href(): ?string {
             $st = $pdo->prepare("SELECT s.story_id FROM stories s JOIN user_forums uf ON uf.forum_id = s.forum_id AND uf.user_id = ?"
                 . " LEFT JOIN story_reads r ON r.story_id = s.story_id AND r.user_id = ?"
                 . " WHERE s.content_type = 'article' AND s.status IN ('nuevas','destacadas') AND s.last_activity > uf.created"
-                . " AND (r.read_at IS NULL OR s.last_activity > r.read_at)" . stories_mylang_sql() . foros_cerrados_sql() . " LIMIT 1");
+                . " AND (r.read_at IS NULL OR s.last_activity > r.read_at)" . foros_reads_sql() . stories_mylang_sql() . foros_cerrados_sql() . " LIMIT 1");
             $st->execute([$u['user_id'], $u['user_id']]);
             if ($sid = (int)$st->fetchColumn()) { $cid = hilos_primer_nuevo($pdo, [$sid])[$sid] ?? 0; $ir = "/hilo/$sid" . ($cid ? "#c$cid" : ''); }
         } catch (Throwable $e) {}
@@ -1474,9 +1477,11 @@ function story_reads_pendientes(PDO $pdo, array $stories, string $suelo): array 
     try {
         $st = $pdo->prepare("SELECT story_id, read_at FROM story_reads WHERE user_id = ? AND story_id IN (" . implode(',', $ids) . ")"); $st->execute([$u['user_id']]);
         $leido = []; foreach ($st as $r) $leido[(int)$r['story_id']] = (string)$r['read_at'];
+        $viejo = date('Y-m-d H:i:s', time() - max(7, (int)cfg('forum_reads_days', 180)) * 86400);
         foreach ($stories as $s) {
             $la = (string)($s['last_activity'] ?? $s['sent_date']);
             if (($s['status'] ?? '') === 'archived') continue;   // los cerrados no cuentan (y su lectura se poda)
+            if ($la <= $viejo) continue;   // ni los que llevan forum_reads_days parados (migra-212)
             if ($la > $suelo && (!isset($leido[(int)$s['story_id']]) || $la > $leido[(int)$s['story_id']])) $out[(int)$s['story_id']] = true;
         }
     } catch (Throwable $e) {}

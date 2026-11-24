@@ -919,7 +919,7 @@ if ($tab === 'usuarios') {
         else {
             echo "<p><form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_lista\"><button class=\"btn\">Traer la lista de grupos del servidor</button></form> ";
             echo "<form method=\"post\" style=\"display:inline\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_leer\"><button class=\"btn sm\">Leer ahora los marcados</button></form> ";
-            echo "<form method=\"post\" style=\"display:inline\" onsubmit=\"return confirm('¿Borrar los mensajes guardados de los grupos desmarcados?')\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_limpiar\"><button class=\"btn sm\">Borrar mensajes de los desmarcados</button></form> ";
+            echo "<form method=\"post\" style=\"display:inline\" onsubmit=\"return confirm('¿Borrar los mensajes guardados de los grupos desmarcados? Se van también los comentarios de Deltha de esos hilos.')\">$T<input type=\"hidden\" name=\"act\" value=\"usenet_limpiar\"><button class=\"btn sm\">Borrar mensajes de los desmarcados</button></form> ";
             echo "<small>" . ((int)$tot['n'] ? num_es($tot['n']) . " grupos en la lista (traída " . h(hace((string)$tot['s'])) . "), <b>" . (int)$tot['a'] . " marcados</b>, " . num_es($tot['m']) . " mensajes guardados" : 'la lista está vacía: tráela con el primer botón (tarda unos segundos, son decenas de miles de grupos)') . "</small></p>";
         }
         if ((int)$tot['n']) {
