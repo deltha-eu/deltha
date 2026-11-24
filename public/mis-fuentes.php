@@ -2,7 +2,8 @@
 /** /mis-fuentes?k=medio|newsletter|youtube|agregador — «Mis fuentes» (08/10/2026): una sola pagina para las fuentes externas que sigue
  *  el usuario, con el selector de tipo arriba (Mis medios · Mis substacks · Mis canales · Mis agregadores; se abre el ultimo que uso,
  *  cookie ddd_fk) y, debajo, lo ultimo que han publicado (antes /ultimo). Entre medias, los nombres de las que sigue y un desplegable
- *  «Seguir y dejar de seguir» con la lista completa, el catalogo de las que aun no sigue y «añadir pegando la direccion» (migra-108).
+ *  «Seguir y dejar de seguir» con la lista completa (por orden alfabetico de nombre), el catalogo de las que aun no sigue y «añadir
+ *  pegando la direccion» (migra-108).
  *  Sin favoritos en ese tipo (o sin cuenta): las destacadas en admin o, si no hay, las que han publicado mas recientemente, con la
  *  invitacion a elegir. Las noticias son lo publicado en los ultimos config.ultimo_days dias, paginado (si no hay nada, las diez ultimas).
  *  /ultimo?k= redirige aqui. El catalogo entero esta en /fuentes («Todas las fuentes»). */
@@ -62,7 +63,9 @@ if ($u && fuentes_on()) {
     echo "<details class=\"editbox gestion\" id=\"anadir\"" . ($add ? ' open' : '') . "><summary>" . t('Seguir y dejar de seguir') . "</summary>";
     if ($mias) {
         echo "<h3 class=\"sec\">" . t('Los que sigues') . " · " . count($mias) . "</h3>";
-        $lst = $mias; usort($lst, fn($a, $b) => strcmp((string)($ult[$b['source_id']] ?? ''), (string)($ult[$a['source_id']] ?? '')));
+        // orden alfabetico por nombre, sin mayusculas ni tildes (24/11/2026): es una lista para gestionar, no un feed de novedades
+        $llano = fn(string $t): string => strtr(mb_strtolower($t), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ã' => 'a', 'õ' => 'o', 'ç' => 'c', 'ä' => 'a', 'ö' => 'o', 'ß' => 'ss']);
+        $lst = $mias; usort($lst, fn($a, $b) => strcmp($llano((string)$a['name']), $llano((string)$b['name'])));
         foreach ($lst as $m) echo $fila($m);
     }
     // los del catalogo que aun no sigue (respeta el filtro de idiomas), el que ha publicado mas recientemente primero
