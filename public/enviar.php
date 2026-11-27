@@ -12,7 +12,7 @@ $comms  = $pdo->query("SELECT community_id, name FROM communities WHERE status =
 $err = null; $aviso = null;
 $step = post('step') ?: '1';
 $anonKey = user() ? null : envio_anon_key();
-$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null, 'lang' => '', 'pub' => null];   // lang: '' = detectar al guardar; pub: publicador (tope diario)
+$f = ['url' => '', 'title' => '', 'content' => '', 'topic' => 0, 'community' => 0, 'image' => null, 'lang' => '', 'pub' => null, 'cand' => '', 'pics' => [], 'pic' => 0];   // lang: '' = detectar al guardar; pub: publicador (tope diario); cand/pics/pic: galeria de fotos de la pagina (24/11/2026)
 
 // Prerrelleno por GET (boton «enviar al radar» de un medio en /fuente, o un marcador): ?url=…&title=…&content=…&topic=ID
 // equivale a haber pasado el paso 1 con esa URL; titular y entradilla del feed mandan sobre los de la pagina si vienen.
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $img = (string)$q->fetchColumn();
                 if ($copia = imagen_copiar($img)) $pre['image'] = $copia;
             }
-            $m = extraer_meta($f['url'], empty($pre['image']));   // con foto del RSS no hace falta bajar la og:image
+            $m = extraer_meta($f['url'], empty($pre['image']), user() !== null);   // con cuenta, ademas las fotos de la pagina para elegir (24/11/2026)
             if (!empty($m['canonical']) && ($uc = url_resolver($f['url'], $m['canonical'])) !== $f['url']) {   // la pagina declara su URL canonica (sin ?m=1, sin /amp): se envia esa (migra-168)
                 $f['url'] = $uc;
                 $d = $pdo->prepare("SELECT story_id FROM stories WHERE (url_key = ? OR url = ?) AND status NOT IN ('rejected','discard') AND sent_date > NOW() - INTERVAL 30 DAY");
@@ -94,6 +94,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($pre['content'] !== '') $f['content'] = $pre['content'];
                 if ($pre['topic'] && in_array($pre['topic'], array_column($topics, 'topic_id'), false)) $f['topic'] = $pre['topic'];
             }
+            // galeria de fotos de la pagina (24/11/2026, solo con cuenta): miniaturas a /media/cand/<token>/ y el paso 2 enseña una
+            // rejilla para elegir. La elegida se descarga a tamaño completo al enviar; la carpeta se borra (y el cron barre las que queden).
+            if (user() !== null && count($m['imgs']) > 1) {
+                $tok = bin2hex(random_bytes(8)); $dir = DDD_MEDIA_DIR . '/cand/' . $tok;
+                $th = imagen_miniaturas($m['imgs'], $dir);
+                if (count($th) > 1) {
+                    $urls = [];
+                    foreach (array_keys($th) as $i) $urls[$i] = $m['imgs'][$i - 1];
+                    @file_put_contents($dir . '/map.json', json_encode(['urls' => $urls], JSON_UNESCAPED_SLASHES));
+                    $f['cand'] = $tok; $f['pics'] = array_keys($th);
+                } else imagen_cand_borrar($tok);
+            }
             // tope diario del publicador (dominio o canal de YouTube): si ya esta lleno, se dice aqui y no se pasa al paso 2
             $f['pub'] = envio_pub_key($f['url'], $m['channel'] ?? null);
             if ($te = envio_tope_publicador($pdo, $f['pub'])) { $err = $te; $step = '1'; }
@@ -119,6 +131,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($f['community'] && !in_array($f['community'], array_column($comms, 'community_id'), false)) $f['community'] = 0;
         $f['image']   = post('image') ?: null;
         if ($f['image'] && (!preg_match('/^[a-f0-9]{24}\.jpg$/', $f['image']) || !is_file(DDD_MEDIA_DIR . '/' . $f['image']))) $f['image'] = null;
+        // foto elegida en la rejilla (24/11/2026): se descarga la candidata y se procesa como cualquier foto de pagina; si falla, se
+        // queda la de por defecto del paso 1
+        $candTok = (string)post('cand'); $candPic = (int)post('pic');
+        if ($candTok !== '' && $candPic > 0 && preg_match('/^[a-f0-9]{16}$/', $candTok) && user() !== null) {
+            $map = json_decode((string)@file_get_contents(DDD_MEDIA_DIR . '/cand/' . $candTok . '/map.json'), true);
+            $cu  = is_array($map) ? (string)($map['urls'][$candPic] ?? '') : '';
+            if ($cu !== '' && preg_match('#^https?://#i', $cu) && url_publica_ok($cu)) {
+                $cb = http_get($cu, (int)cfg('og_timeout_sec', 3));
+                if ($cb && ($cf = imagen_de_pagina($cb, $f['url'], $cu))) $f['image'] = $cf;
+            }
+            // si el formulario vuelve con un error (titular corto, tema…), la rejilla sigue ahi: la carpeta solo se borra al publicar
+            $ps = [];
+            foreach (glob(DDD_MEDIA_DIR . '/cand/' . $candTok . '/*.jpg') ?: [] as $g) $ps[] = (int)basename($g, '.jpg');
+            sort($ps);
+            if (count($ps) > 1) { $f['cand'] = $candTok; $f['pics'] = $ps; $f['pic'] = $candPic; }
+        }
         if (post('quitar') === '1') $f['image'] = null;
         if ($up = imagen_desde_subida($_FILES['photo'] ?? [])) $f['image'] = $up;
         elseif (($ie = imagen_subida_error($_FILES['photo'] ?? [])) !== null) $err = $ie;   // la foto no entra: se avisa antes de publicar (12/10/2026)
@@ -144,6 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mod_enqueue($pdo, 'story', $sid);
             if ($u) aura_add($pdo, (int)$u['user_id'], (float)cfg('aura_envio', 0.1), 'envio', $sid);
             $pdo->commit();
+            if ($candTok !== '') imagen_cand_borrar($candTok);   // ya no hace falta la galeria (24/11/2026)
             story_relacionadas_calcular($pdo, $sid);   // vector del titular y «Relacionadas» del hilo (lib/vectores.php, migra-175); si el servicio no esta, lo rellena el ciclo
             redirect("/hilo/$sid");
         }
@@ -190,7 +219,17 @@ if ($step === '1') {
         foreach ($comms as $co) echo "<option value=\"{$co['community_id']}\"" . ((int)$f['community'] === (int)$co['community_id'] ? ' selected' : '') . ">" . h($co['name']) . "</option>";
         echo "</select>";
     }
-    if ($f['image']) {
+    if ($f['pics'] && $f['image']) {
+        echo "<input type=\"hidden\" name=\"image\" value=\"" . h($f['image']) . "\">";
+        echo "<input type=\"hidden\" name=\"cand\" value=\"" . h($f['cand']) . "\">";
+        echo "<label>" . t('Elige la foto') . "</label><div class=\"picks\">";
+        $np = count($f['pics']); $sel = $f['pic'] ?: $f['pics'][0];
+        foreach ($f['pics'] as $pi) echo "<input type=\"radio\" name=\"pic\" id=\"pic$pi\" value=\"$pi\"" . ($pi === $sel ? ' checked' : '') . ">"
+            . "<label for=\"pic$pi\"><img src=\"/media/cand/" . h($f['cand'] . '/' . $pi . '.jpg') . "\" alt=\"" . h(t('Foto %d de %d', $pi, $np)) . "\" loading=\"lazy\"></label>";
+        echo "</div>";
+        echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"1\"" . t('> no usar esta foto</label>') . "";
+        echo "" . t('<label>O sube otra</label>') . "";
+    } elseif ($f['image']) {
         echo "<input type=\"hidden\" name=\"image\" value=\"" . h($f['image']) . "\">";
         echo "" . t('<label>Foto encontrada en la página</label>') . "<div class=\"media sm\" style=\"background-image:url('/media/" . h($f['image']) . "')\"></div>";
         echo "<label><input type=\"checkbox\" name=\"quitar\" value=\"1\"" . t('> no usar esta foto</label>') . "";

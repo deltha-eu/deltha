@@ -168,6 +168,8 @@ return [
 'Esto es todo lo que hay ahora.' => 'Das ist im Moment alles.',
 'Flujo — fotos al lado, más noticias en pantalla' => 'Flow — Fotos seitlich, mehr Nachrichten pro Bildschirm',
 'Foto' => 'Foto',
+'Foto %d de %d' => 'Foto %d von %d',
+'Elige la foto' => 'Wähle das Foto',
 'Gracias: el comentario queda avisado a los moderadores.' => 'Danke: Der Kommentar wurde den Moderatoren gemeldet.',
 'Guardado.' => 'Gespeichert.',
 'hace %d d' => 'vor %d T.',

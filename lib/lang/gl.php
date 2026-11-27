@@ -168,6 +168,8 @@ return [
 'Esto es todo lo que hay ahora.' => 'Isto é todo o que hai agora.',
 'Flujo — fotos al lado, más noticias en pantalla' => 'Fluxo — fotos ao lado, máis noticias en pantalla',
 'Foto' => 'Foto',
+'Foto %d de %d' => 'Foto %d de %d',
+'Elige la foto' => 'Escolle a foto',
 'Gracias: el comentario queda avisado a los moderadores.' => 'Grazas: o comentario queda avisado aos moderadores.',
 'Guardado.' => 'Gardado.',
 'hace %d d' => 'hai %d d',

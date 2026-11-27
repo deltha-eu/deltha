@@ -168,6 +168,8 @@ return [
 'Esto es todo lo que hay ahora.' => 'Això és tot el que hi ha ara.',
 'Flujo — fotos al lado, más noticias en pantalla' => 'Flux — fotos al costat, més notícies en pantalla',
 'Foto' => 'Foto',
+'Foto %d de %d' => 'Foto %d de %d',
+'Elige la foto' => 'Tria la foto',
 'Gracias: el comentario queda avisado a los moderadores.' => 'Gràcies: el comentari queda avisat als moderadors.',
 'Guardado.' => 'Desat.',
 'hace %d d' => 'fa %d d',

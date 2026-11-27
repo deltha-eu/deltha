@@ -41,5 +41,8 @@ if ((int)date('G') === 4 && (int)date('i') < 2) { try { $n = usenet_podar($pdo);
 // fotos huerfanas de la raiz de /media (08/11/2026): una vez al dia, con la poda de las 4:00, o a mano con --huerfanas
 if (in_array('--huerfanas', $argv, true) || ((int)date('G') === 4 && (int)date('i') < 2)) {
     try { foreach (fuentes_barrer_huerfanas($pdo) as $l) echo date('c') . "  $l\n"; } catch (Throwable $e) { echo date('c') . "  media: ERROR " . $e->getMessage() . "\n"; }
+    // galeria de fotos de /enviar (24/11/2026): carpetas de envios que se quedaron a medias
+    try { require_once __DIR__ . '/../lib/imagen.php'; $nc = imagen_cand_barrer(); if ($nc) echo date('c') . "  media: $nc galerias temporales borradas\n"; }
+    catch (Throwable $e) { echo date('c') . "  media: ERROR " . $e->getMessage() . "\n"; }
 }
 flock($lock, LOCK_UN);
