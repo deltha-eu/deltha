@@ -44,9 +44,11 @@ function story_contadores(array $s): string {
 /* ---- uso de las «Relacionadas» del hilo (migra-200, 13/11/2026) ------------------------------------------------------------- */
 
 /** ¿Se usan las relacionadas? Apunta en related_daily cuántas veces se ha mostrado la caja ('shown': una por persona, hilo y día) y
- *  cuántas se ha pulsado uno de sus enlaces ('clicks': una por persona, origen, destino y día). Misma huella y mismos filtros que
- *  story_cuenta(): sin bots, precargas ni recargas automáticas; sin Redis se cuenta sin deduplicar. Nunca rompe la página. */
-function rel_cuenta(PDO $pdo, string $col, int $de, int $a = 0): void {
+ *  en cuántas de esas veces se ha pulsado alguna de sus noticias ('clicks': una por persona, caja y día, se pulse el enlace que se
+ *  pulse: dos noticias distintas de la misma caja son una sola pulsación). Así los clics nunca superan los mostrados y /analitica los
+ *  enseña como porcentaje (antes se apuntaba una por destino y salían cosas como «127,7 %», 27/11/2026). Misma huella y mismos
+ *  filtros que story_cuenta(): sin bots, precargas ni recargas automáticas; sin Redis se cuenta sin deduplicar. Nunca rompe la página. */
+function rel_cuenta(PDO $pdo, string $col, int $de): void {
     global $DDD_SECRET;
     if (!in_array($col, ['shown', 'clicks'], true) || PHP_SAPI === 'cli' || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') return;
     $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
@@ -56,7 +58,9 @@ function rel_cuenta(PDO $pdo, string $col, int $de, int $a = 0): void {
     $fp = substr(hash_hmac('sha256', client_ip() . '|' . $ua . '|' . date('Y-m-d'), $DDD_SECRET), 0, 16);
     $r = redis_conn();
     if ($r) {
-        try { if (!$r->set("cnt:rel:$col:$de:$a:$fp", 1, ['nx', 'ex' => 86400])) return; }
+        // la clave no lleva el destino (27/11/2026): pulsar dos noticias distintas de la misma caja cuenta una sola vez, y el «mostrado»
+        // conserva su clave de antes (el hueco que ocupaba el destino va como 0) para no contar dos veces el día del cambio.
+        try { if (!$r->set("cnt:rel:$col:$de:0:$fp", 1, ['nx', 'ex' => 86400])) return; }
         catch (Throwable $e) { /* Redis caido a medias: se cuenta sin deduplicar */ }
     }
     try { $pdo->exec("INSERT INTO related_daily (day, $col) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE $col = $col + 1"); }
@@ -67,3 +71,5 @@ function rel_sum(PDO $pdo, string $from, string $to): array {
     try { $st = $pdo->prepare("SELECT COALESCE(SUM(shown),0) shown, COALESCE(SUM(clicks),0) clicks FROM related_daily WHERE day BETWEEN ? AND ?"); $st->execute([$from, $to]); return array_map('intval', $st->fetch()); }
     catch (Throwable $e) { return ['shown' => 0, 'clicks' => 0]; }
 }
+/** Desde este día 'clicks' son cajas pulsadas y no clics sueltos: lo anterior no se puede recalcular y no se suma (27/11/2026). */
+const REL_CUENTA_DESDE = '2026-11-27';
