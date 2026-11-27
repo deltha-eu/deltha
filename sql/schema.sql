@@ -1095,6 +1095,8 @@ INSERT INTO config (ckey, cvalue, descr) VALUES
 ('send_person_per_day',           '15', 'Tope diario de envios por persona (migra-214): noticias que una cuenta o un anonimo puede enviar en 24 horas, de cualquier portada; 0 = sin tope'),
 ('send_person_per_day_medios',    '10', 'Tope diario por persona de noticias que van a la portada de Medios (dentro del total de send_person_per_day); 0 = sin tope'),
 ('send_person_per_day_substacks', '10', 'Tope diario por persona de noticias que van a la portada de Substacks (dentro del total de send_person_per_day); 0 = sin tope'),
+('rel_max_clicks_dia', '20',  'Relacionadas (migra-216): cajas «Relacionadas» pulsadas que se le cuentan como mucho a un mismo visitante en un dia, para /analitica; 0 = sin maximo'),
+('rel_max_shown_dia',  '200', 'Relacionadas (migra-216): cajas «Relacionadas» vistas que se le cuentan como mucho a un mismo visitante en un dia, para /analitica; 0 = sin maximo'),
 ('analytics_live_aura', '10',   'Aura desde la que un registrado ve en /analitica la version limitada (ahora y hoy, ademas de las cifras cerradas); 0 = solo quien ve la completa'),
 ('thread_ttl_hours',    '48',   'Vida del hilo (destacadas -> archivo)'),
 ('nuevas_ttl_hours',    '168',  'Horas que puede pasar un envio en el radar sin llegar a portada antes de archivarse (168 = una semana; 0 = nunca)'),

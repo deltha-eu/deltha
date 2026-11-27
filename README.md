@@ -210,6 +210,9 @@ Caja nueva de la columna derecha (`side_medios_nuevos()`, clave `medios_nuevos`)
 veces que se enseña la caja (ayer, el mes y el año). Hasta el 27/11/2026 el clic se apuntaba por noticia de destino y no
 por caja, así que una caja con dos noticias pulsadas contaba doble y el porcentaje pasaba de 100 («127,7 %»); desde ese
 día `rel_cuenta()` deduplica por persona y caja y `/analitica` solo suma los días nuevos (`REL_CUENTA_DESDE`).
+Contra los robots (`sql/migra-216-relacionadas-sin-robots.sql`, 27/11/2026; el 26/11 uno dejó 10.253 clics sobre 8.032 mostradas): el clic
+solo cuenta si se pulsa desde una página de Deltha (`rel_de_dentro()`: `Sec-Fetch-Site: same-origin` o, sin esa cabecera, `Referer` del
+sitio) y cada visitante tiene un máximo diario, `rel_max_clicks_dia` (20) cajas pulsadas y `rel_max_shown_dia` (200) vistas (con Redis).
 - **Fecha de alta**: `sources.listed_at`, que pone `fuente_alta_marca()` al crear la fuente desde admin → Fuentes o desde moderación (alta directa y propuesta aceptada) y al publicar la que un usuario se había añadido para sí (`listed` 0 → 1). Solo la primera vez. Las fuentes anteriores a la migración no la tienen: salen detrás, por orden de creación (`source_id`), y sin «hace…».
 - **Visibilidad**: la del catálogo (`fuentes_visibles()`): encendidas, listadas y del idioma elegido; los canales de YouTube, solo desde `fuentes_nivel_aura`. Los agregadores no entran.
 - **No entra sola en la columna**: se marca en admin → Lateral (orden por defecto) o cada usuario en «Mi barra lateral». Una línea por medio: el nombre cortado con puntos suspensivos y el tipo a la derecha (`.mod.medios-nuevos`, CSS v257).
