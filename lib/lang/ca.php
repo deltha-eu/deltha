@@ -1112,7 +1112,7 @@ Caduca en %d minuts. Si no ets tu qui intenta entrar, no el comparteixis amb nin
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Clics que porten a un mitjà, un substack o un canal, dividits entre els visitants del mateix període: quant es prem a més de mirar titulars.',
 'Uso de las relacionadas' => 'Ús de les relacionades',
 '%s clics de %s veces mostradas' => '%s clics de %s vegades mostrades',
-'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'De les vegades que es mostra la caixa «Relacionades» sota un enviament, en quantes es prem una de les seves notícies. Es mesura des del 13/11/2026.',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa alguna de sus noticias: una caja con dos noticias pulsadas cuenta una vez. Se mide desde el 27/11/2026.' => 'De les vegades que es mostra la caixa «Relacionades» sota un enviament, en quantes es prem alguna de les seves notícies: una caixa amb dues notícies premudes compta una vegada. Es mesura des del 27/11/2026.',
 'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => 'Amb més de %s d’aura veuràs aquí l’analítica completa: qualsevol interval de dates amb pàgines, procedència, països i dispositius.',
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => 'Amb aura %s o més veuràs també què s’està llegint ara i el dia d’avui.',
 'Ver la analítica completa' => 'Veure l’analítica completa',

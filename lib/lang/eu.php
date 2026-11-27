@@ -1112,7 +1112,7 @@ Caduca en %d minutos. Si no eres tú quien intenta entrar, no lo compartas con n
 'Clics que llevan a un medio, un substack o un canal, divididos entre los visitantes del mismo periodo: cuánto se pulsa además de mirar titulares.' => 'Hedabide, substack edo kanal batera daramaten klikak, aldi bereko bisitarien artean zatituta: titularrak begiratzeaz gain zenbat sakatzen den.',
 'Uso de las relacionadas' => 'Erlazionatuen erabilera',
 '%s clics de %s veces mostradas' => '%s klik, %s aldiz erakutsita',
-'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa una de sus noticias. Se mide desde el 13/11/2026.' => 'Bidalketa baten azpian «Erlazionatuak» kutxa erakusten den aldietatik, zenbatetan sakatzen den bertako albisteren bat. 2026/11/13tik neurtzen da.',
+'De las veces que se enseña la caja «Relacionadas» bajo un envío, en cuántas se pulsa alguna de sus noticias: una caja con dos noticias pulsadas cuenta una vez. Se mide desde el 27/11/2026.' => 'Bidalketa baten azpian «Erlazionatuak» kutxa erakusten den aldietatik, zenbatetan sakatzen den bertako albisteren bat: bi albiste sakatu dituen kutxak behin balio du. 2026/11/27tik neurtzen da.',
 'Con más de %s de aura verás aquí la analítica completa: cualquier rango de fechas con páginas, procedencia, países y dispositivos.' => '%s baino aura handiagoarekin analitika osoa ikusiko duzu hemen: edozein data-tarte, orriekin, jatorriarekin, herrialdeekin eta gailuekin.',
 'Con aura %s o más verás también lo que se está leyendo ahora y el día de hoy.' => '%s edo gehiagoko aurarekin, orain irakurtzen ari dena eta gaurko eguna ere ikusiko dituzu.',
 'Ver la analítica completa' => 'Ikusi analitika osoa',

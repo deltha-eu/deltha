@@ -83,7 +83,7 @@ robots_index(story_indexable($s));   // solo articulos abiertos a buscadores por
 // Open Graph del hilo: titular, entradilla y la foto del envio (o el icono del sitio si no hay)
 // llegada desde la caja «Relacionadas» de otro hilo (?rel=N, migra-200): se apunta el clic y se sigue a la dirección limpia
 if (isset($_GET['rel'])) {
-    if (($de = (int)$_GET['rel']) > 0 && $de !== $id) rel_cuenta($pdo, 'clicks', $de, $id);
+    if (($de = (int)$_GET['rel']) > 0 && $de !== $id) rel_cuenta($pdo, 'clicks', $de);
     header('X-Robots-Tag: noindex, nofollow');
     redirect("/hilo/$id");
 }
