@@ -48,6 +48,16 @@ function story_contadores(array $s): string {
  *  pulse: dos noticias distintas de la misma caja son una sola pulsación). Así los clics nunca superan los mostrados y /analitica los
  *  enseña como porcentaje (antes se apuntaba una por destino y salían cosas como «127,7 %», 27/11/2026). Misma huella y mismos
  *  filtros que story_cuenta(): sin bots, precargas ni recargas automáticas; sin Redis se cuenta sin deduplicar. Nunca rompe la página. */
+/** ¿Llega la petición desde una página del propio sitio? Lo dice el navegador en Sec-Fetch-Site (same-origin); los que no mandan esa
+ *  cabecera, en Referer. Un robot que sigue enlaces sin navegador no manda ninguna de las dos, y un enlace pegado o abierto desde fuera
+ *  llega como «none» o «cross-site». */
+function rel_de_dentro(): bool {
+    $sfs = strtolower(trim((string)($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '')));
+    if ($sfs !== '') return $sfs === 'same-origin';
+    $ref = strtolower((string)parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_HOST));
+    $yo  = strtolower((string)preg_replace('/:\d+$/', '', (string)($_SERVER['HTTP_HOST'] ?? '')));
+    return $ref !== '' && $ref === $yo;
+}
 function rel_cuenta(PDO $pdo, string $col, int $de): void {
     global $DDD_SECRET;
     if (!in_array($col, ['shown', 'clicks'], true) || PHP_SAPI === 'cli' || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') return;
@@ -55,6 +65,9 @@ function rel_cuenta(PDO $pdo, string $col, int $de): void {
     if ($ua === '' || preg_match('~bot|crawl|spider|slurp|fetch|monitor|curl|wget|python|headless|lighthouse|preview~i', $ua)) return;
     if (($_SERVER['HTTP_SEC_PURPOSE'] ?? $_SERVER['HTTP_PURPOSE'] ?? '') !== '') return;
     if (($_GET['auto'] ?? '') === '1') return;
+    // contra los robots (27/11/2026, migra-216): el 26/11 uno recorrió los hilos siguiendo los enlaces de la caja (8.032 mostradas y 10.253
+    // clics en un día). El clic solo cuenta si se pulsa desde una página de Deltha, y cada visitante tiene un máximo diario (abajo).
+    if ($col === 'clicks' && !rel_de_dentro()) return;
     $fp = substr(hash_hmac('sha256', client_ip() . '|' . $ua . '|' . date('Y-m-d'), $DDD_SECRET), 0, 16);
     $r = redis_conn();
     if ($r) {
@@ -62,6 +75,16 @@ function rel_cuenta(PDO $pdo, string $col, int $de): void {
         // conserva su clave de antes (el hueco que ocupaba el destino va como 0) para no contar dos veces el día del cambio.
         try { if (!$r->set("cnt:rel:$col:$de:0:$fp", 1, ['nx', 'ex' => 86400])) return; }
         catch (Throwable $e) { /* Redis caido a medias: se cuenta sin deduplicar */ }
+        // máximo por visitante y día: rel_max_clicks_dia (20) cajas pulsadas y rel_max_shown_dia (200) cajas vistas; lo que pase de ahí no
+        // es una persona leyendo y no se apunta. 0 = sin máximo. Necesita Redis, como la deduplicación.
+        try {
+            $max = (int)cfg($col === 'clicks' ? 'rel_max_clicks_dia' : 'rel_max_shown_dia', $col === 'clicks' ? 20 : 200);
+            if ($max > 0) {
+                $n = (int)$r->incr("cnt:rel:n:$col:$fp");
+                if ($n === 1) $r->expire("cnt:rel:n:$col:$fp", 86400);
+                if ($n > $max) return;
+            }
+        } catch (Throwable $e) { /* sin el máximo */ }
     }
     try { $pdo->exec("INSERT INTO related_daily (day, $col) VALUES (CURDATE(), 1) ON DUPLICATE KEY UPDATE $col = $col + 1"); }
     catch (Throwable $e) { /* tabla aun sin crear (migra-200 pendiente) */ }
